@@ -18,7 +18,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "check-types": "tsc --noEmit",
-    "prepare": "husky",
+    "prepare": "[ -n \"$HUSKY\" ] || husky",
     "validate": "npm run check-types && npm run lint && npm run test"
   },
   "lint-staged": {

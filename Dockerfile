@@ -8,8 +8,11 @@ COPY package.json pnpm-lock.yaml ./
 # Install pnpm
 RUN npm install -g pnpm@10.7.0
 
+# Disable Husky during Docker build
+ENV HUSKY=0
+
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Copy source code
 COPY . .
@@ -17,8 +20,9 @@ COPY . .
 # Build TypeScript code
 RUN pnpm run build
 
-# Remove dev dependencies
-RUN pnpm prune --prod
+# Clean up dev dependencies and install production dependencies
+RUN rm -rf node_modules && \
+    pnpm install --frozen-lockfile --prod --ignore-scripts
 
 # Expose the port the app runs on
 EXPOSE 3000
