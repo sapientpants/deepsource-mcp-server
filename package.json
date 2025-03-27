@@ -1,6 +1,6 @@
 {
   "name": "deepsource-mcp-server",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "DeepSource MCP Server",
   "type": "module",
   "main": "dist/index.js",

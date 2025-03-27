@@ -1,14 +1,27 @@
 # DeepSource MCP Server
 
-A Model Context Protocol server implementation for DeepSource integration. This server allows AI models to interact with DeepSource's API to list projects and retrieve issues.
+A Model Context Protocol (MCP) server that integrates with DeepSource to provide AI assistants with access to code quality metrics, issues, and analysis results.
 
-## Prerequisites
+## Overview
 
-- Node.js (v16 or higher recommended)
-- pnpm (v10.7.0 or higher)
-- DeepSource API Key
+The DeepSource MCP Server enables AI assistants to interact with DeepSource's code quality analysis capabilities through the Model Context Protocol. This integration allows AI assistants to:
+
+* Retrieve code metrics and analysis results
+* Access and filter issues
+* Check quality status
+* Analyze project quality over time
+
+## Features
+
+* **DeepSource API Integration**: Connects to DeepSource via REST API
+* **MCP Protocol Support**: Implements the Model Context Protocol for AI assistant integration
+* **TypeScript/Node.js**: Built with TypeScript for type safety and modern JavaScript features
+* **Cross-Platform**: Works on Linux, macOS, and Windows
+* **Robust Error Handling**: Comprehensive error handling for network, authentication, and parsing issues
 
 ## Installation
+
+### From Source
 
 1. Clone the repository:
 ```bash
@@ -21,97 +34,102 @@ cd deepsource-mcp-server
 pnpm install
 ```
 
-3. Set up your environment variables:
-```bash
-export DEEPSOURCE_API_KEY=your_api_key_here
-```
-
-## Development
-
-To start the development server with hot-reload:
-
-```bash
-pnpm run dev
-```
-
-To watch for changes and automatically recompile:
-
-```bash
-pnpm run watch
-```
-
-## Building
-
-To build the project:
-
+3. Build the project:
 ```bash
 pnpm run build
 ```
 
-This will create a `dist` directory with the compiled JavaScript files.
+### From Docker
 
-## Running in Production
-
-To run the compiled version:
-
+Pull and run the Docker image:
 ```bash
-pnpm run start
+docker pull ghcr.io/yourusername/deepsource-mcp-server:latest
 ```
 
-## Server Endpoints
+### Integration with Claude Desktop
 
-The server exposes two HTTP endpoints:
+1. Edit `claude_desktop_config.json`:
+   - Open Claude Desktop
+   - Go to `Settings` -> `Developer` -> `Edit Config`
+   - Add the following configuration to the `mcpServers` section:
 
-- `GET /sse` - Server-Sent Events endpoint for MCP clients to connect
-- `POST /messages` - Endpoint for MCP clients to send messages
-
-## Available Tools
-
-### list-projects
-
-Lists all DeepSource projects accessible with your API key.
-
-Example usage:
-```typescript
-const result = await client.callTool({
-  name: "list-projects",
-  arguments: {}
-});
-```
-
-### get-project-issues
-
-Retrieves all issues for a specific DeepSource project.
-
-Example usage:
-```typescript
-const result = await client.callTool({
-  name: "get-project-issues",
-  arguments: {
-    projectKey: "your-project-key"
+```json
+{
+  "mcpServers": {
+    "deepsource": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "DEEPSOURCE_API_KEY",
+        "ghcr.io/yourusername/deepsource-mcp-server:latest"
+      ],
+      "env": {
+        "DEEPSOURCE_API_KEY": "your-deepsource-api-key"
+      }
+    }
   }
-});
+}
 ```
 
-## Available Prompts
+2. Restart Claude Desktop to apply the changes
 
-- `list-projects` - Prompt for listing all projects
-- `get-project-issues` - Prompt for getting issues from a specific project
-
-## Project Structure
-
+To check MCP logs, use:
+```bash
+tail -n 20 -f ~/Library/Logs/Claude/mcp*.log
 ```
-deepsource-mcp-server/
-├── src/
-│   ├── index.ts        # Main server implementation
-│   └── deepsource.ts   # DeepSource API client
-├── dist/               # Compiled files (generated)
-├── node_modules/       # Dependencies
-├── package.json        # Project configuration
-├── tsconfig.json       # TypeScript configuration
-└── README.md          # This file
-```
+
+### Available Tools
+
+The DeepSource MCP Server provides the following tools:
+
+1. `mcp_sonarqube_sonarqube_get_metrics`: Retrieve code metrics for a project
+   * Parameters:
+     * `project_key` (required)
+     * `metrics` (optional array of metric keys)
+
+2. `mcp_sonarqube_sonarqube_get_issues`: Retrieve issues for a project
+   * Parameters:
+     * `project_key` (required)
+     * `severities` (optional array)
+     * `types` (optional array)
+     * `statuses` (optional array)
+     * `impact_severities` (optional array)
+     * `impact_software_qualities` (optional array)
+     * And many more filtering options...
+
+3. `mcp_sonarqube_sonarqube_get_quality_gate`: Retrieve quality gate status for a project
+   * Parameters:
+     * `project_key` (required)
+
+4. `mcp_sonarqube_sonarqube_list_projects`: List all projects
+   * Parameters:
+     * `page` (optional)
+     * `page_size` (optional)
+
+## Development
+
+### Prerequisites
+
+* Node.js 20 or higher
+* pnpm 10.7.0 or higher
+* Docker (for container builds)
+
+### Environment Variables
+
+* `DEEPSOURCE_API_KEY`: Your DeepSource API key
+
+### Scripts
+
+* `pnpm run build` - Build the TypeScript code
+* `pnpm run start` - Start the server
+* `pnpm run dev` - Start the server in development mode
+* `pnpm run test` - Run tests
+* `pnpm run lint` - Run ESLint
+* `pnpm run format` - Format code with Prettier
 
 ## License
 
-ISC 
+MIT 
