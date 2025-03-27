@@ -64,7 +64,7 @@ docker pull ghcr.io/yourusername/deepsource-mcp-server:latest
         "--rm",
         "-e",
         "DEEPSOURCE_API_KEY",
-        "ghcr.io/yourusername/deepsource-mcp-server:latest"
+        "sapientpants/deepsource-mcp-server"
       ],
       "env": {
         "DEEPSOURCE_API_KEY": "your-deepsource-api-key"

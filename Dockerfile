@@ -10,6 +10,7 @@ RUN npm install -g pnpm@10.7.0
 
 # Disable Husky during Docker build
 ENV HUSKY=0
+ENV NODE_ENV=production
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile --ignore-scripts
@@ -28,4 +29,4 @@ RUN rm -rf node_modules && \
 EXPOSE 3000
 
 # Start the server
-CMD ["node", "dist/index.js"] 
+CMD ["node", "--experimental-specifier-resolution=node", "dist/index.js"] 

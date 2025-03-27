@@ -1,14 +1,14 @@
 {
   "name": "deepsource-mcp-server",
-  "version": "0.0.0",
-  "description": "DeepSource MCP Server",
+  "version": "1.0.0",
+  "description": "Model Context Protocol server for DeepSource",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts",
+    "start": "node --experimental-specifier-resolution=node dist/index.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "watch": "tsc -w",
     "test": "jest",
     "test:watch": "jest --watch",
