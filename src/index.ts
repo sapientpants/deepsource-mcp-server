@@ -1,9 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { DeepSourceClient } from './deepsource.js';
-import { Server } from 'http';
 
 // Get API key from environment variable
 const DEEPSOURCE_API_KEY = process.env.DEEPSOURCE_API_KEY;
@@ -120,7 +119,7 @@ const app = express();
 const transports: { [sessionId: string]: SSEServerTransport } = {};
 
 // Add error handling middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: Error, _req: Request, res: Response) => {
   console.error('Express error:', err);
   res.status(500).send('Internal Server Error');
 });
@@ -131,9 +130,7 @@ app.get('/sse', async (req: Request, res: Response) => {
   try {
     const transport = new SSEServerTransport('/messages', res);
     transports[transport.sessionId] = transport;
-    
     console.log(`SSE transport created with sessionId: ${transport.sessionId}`);
-    
     res.on('close', () => {
       console.log(`SSE connection closed for sessionId: ${transport.sessionId}`);
       delete transports[transport.sessionId];
@@ -155,7 +152,7 @@ app.get('/sse', async (req: Request, res: Response) => {
 app.post('/messages', async (req: Request, res: Response) => {
   const sessionId = req.query.sessionId as string;
   console.log(`Received message for sessionId: ${sessionId}`);
-  
+
   try {
     const transport = transports[sessionId];
     if (transport) {
