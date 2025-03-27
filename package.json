@@ -1,18 +1,24 @@
 {
   "name": "deepsource-mcp-server",
-  "version": "0.0.0",
+  "version": "1.0.2",
   "description": "Model Context Protocol server for DeepSource",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "start": "node --experimental-specifier-resolution=node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "watch": "tsc -w",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
