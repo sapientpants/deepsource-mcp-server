@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Run lint-staged to check formatting and linting on staged files
 npx lint-staged || exit 1
 
@@ -8,4 +5,4 @@ npx lint-staged || exit 1
 pnpm run check-types || exit 1
 
 # Run tests
-pnpm run test || exit 1 
+pnpm run test || exit 1
