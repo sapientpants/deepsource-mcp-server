@@ -4,6 +4,7 @@ import { DeepSourceClient, DeepSourceIssue } from '../deepsource';
 import express from 'express';
 import request from 'supertest';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
+import { jest } from '@jest/globals';
 
 // Mock DeepSource client
 jest.mock('../deepsource');

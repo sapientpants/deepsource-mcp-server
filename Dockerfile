@@ -9,7 +9,7 @@ COPY package.json pnpm-lock.yaml ./
 RUN npm install -g pnpm@10.7.0
 
 # Disable Husky during Docker build
-ENV HUSKY=0
+ENV SKIP_HUSKY=1
 ENV NODE_ENV=production
 
 # Install dependencies

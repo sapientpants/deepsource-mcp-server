@@ -1,6 +1,6 @@
 {
   "name": "deepsource-mcp-server",
-  "version": "1.0.2",
+  "version": "0.0.0",
   "description": "Model Context Protocol server for DeepSource",
   "type": "module",
   "main": "dist/index.js",
@@ -16,15 +16,15 @@
     "start": "node --experimental-specifier-resolution=node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "watch": "tsc -w",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
-    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "test": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest --coverage",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "check-types": "tsc --noEmit",
-    "prepare": "[ -n \"$HUSKY\" ] || husky",
+    "prepare": "husky",
     "validate": "npm run check-types && npm run lint && npm run test"
   },
   "lint-staged": {
