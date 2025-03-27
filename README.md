@@ -1,11 +1,12 @@
 # DeepSource MCP Server
 
-A TypeScript-based server implementation for DeepSource MCP (Mission Control Panel).
+A Model Context Protocol server implementation for DeepSource integration. This server allows AI models to interact with DeepSource's API to list projects and retrieve issues.
 
 ## Prerequisites
 
 - Node.js (v16 or higher recommended)
 - pnpm (v10.7.0 or higher)
+- DeepSource API Key
 
 ## Installation
 
@@ -18,6 +19,11 @@ cd deepsource-mcp-server
 2. Install dependencies:
 ```bash
 pnpm install
+```
+
+3. Set up your environment variables:
+```bash
+export DEEPSOURCE_API_KEY=your_api_key_here
 ```
 
 ## Development
@@ -52,24 +58,59 @@ To run the compiled version:
 pnpm run start
 ```
 
+## Server Endpoints
+
+The server exposes two HTTP endpoints:
+
+- `GET /sse` - Server-Sent Events endpoint for MCP clients to connect
+- `POST /messages` - Endpoint for MCP clients to send messages
+
+## Available Tools
+
+### list-projects
+
+Lists all DeepSource projects accessible with your API key.
+
+Example usage:
+```typescript
+const result = await client.callTool({
+  name: "list-projects",
+  arguments: {}
+});
+```
+
+### get-project-issues
+
+Retrieves all issues for a specific DeepSource project.
+
+Example usage:
+```typescript
+const result = await client.callTool({
+  name: "get-project-issues",
+  arguments: {
+    projectKey: "your-project-key"
+  }
+});
+```
+
+## Available Prompts
+
+- `list-projects` - Prompt for listing all projects
+- `get-project-issues` - Prompt for getting issues from a specific project
+
 ## Project Structure
 
 ```
 deepsource-mcp-server/
-├── src/              # Source files
-├── dist/             # Compiled files (generated)
-├── node_modules/     # Dependencies
-├── package.json      # Project configuration
-├── tsconfig.json     # TypeScript configuration
-└── README.md         # This file
+├── src/
+│   ├── index.ts        # Main server implementation
+│   └── deepsource.ts   # DeepSource API client
+├── dist/               # Compiled files (generated)
+├── node_modules/       # Dependencies
+├── package.json        # Project configuration
+├── tsconfig.json       # TypeScript configuration
+└── README.md          # This file
 ```
-
-## Scripts
-
-- `pnpm run dev` - Run the TypeScript code directly using ts-node
-- `pnpm run build` - Compile TypeScript to JavaScript
-- `pnpm run start` - Run the compiled JavaScript
-- `pnpm run watch` - Watch for changes and recompile automatically
 
 ## License
 
