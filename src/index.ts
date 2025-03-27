@@ -1,8 +1,9 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { DeepSourceClient } from './deepsource.js';
+import { Server } from 'http';
 
 // Get API key from environment variable
 const DEEPSOURCE_API_KEY = process.env.DEEPSOURCE_API_KEY;
@@ -14,13 +15,13 @@ if (!DEEPSOURCE_API_KEY) {
 const deepsource = new DeepSourceClient(DEEPSOURCE_API_KEY);
 
 // Create MCP server
-const server = new McpServer({
+const mcpServer = new McpServer({
   name: 'deepsource-mcp',
   version: '1.0.0',
 });
 
 // Tool to list all projects
-server.tool('list-projects', {}, async () => {
+mcpServer.tool('list-projects', {}, async () => {
   try {
     const projects = await deepsource.listProjects();
     return {
@@ -52,7 +53,7 @@ server.tool('list-projects', {}, async () => {
 });
 
 // Tool to get issues for a project
-server.tool(
+mcpServer.tool(
   'get-project-issues',
   {
     projectKey: z.string().describe('The DeepSource project key'),
@@ -90,7 +91,7 @@ server.tool(
 );
 
 // Add some helpful prompts
-server.prompt('list-projects', {}, () => ({
+mcpServer.prompt('list-projects', {}, () => ({
   messages: [
     {
       role: 'user',
@@ -102,7 +103,7 @@ server.prompt('list-projects', {}, () => ({
   ],
 }));
 
-server.prompt('get-project-issues', { projectKey: z.string() }, ({ projectKey }) => ({
+mcpServer.prompt('get-project-issues', { projectKey: z.string() }, ({ projectKey }) => ({
   messages: [
     {
       role: 'user',
@@ -118,27 +119,92 @@ server.prompt('get-project-issues', { projectKey: z.string() }, ({ projectKey })
 const app = express();
 const transports: { [sessionId: string]: SSEServerTransport } = {};
 
-app.get('/sse', async (_: Request, res: Response) => {
-  const transport = new SSEServerTransport('/messages', res);
-  transports[transport.sessionId] = transport;
-  res.on('close', () => {
-    delete transports[transport.sessionId];
-  });
-  await server.connect(transport);
+// Add error handling middleware
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error('Express error:', err);
+  res.status(500).send('Internal Server Error');
 });
 
+// Handle SSE connection
+app.get('/sse', async (req: Request, res: Response) => {
+  console.log('New SSE connection request');
+  try {
+    const transport = new SSEServerTransport('/messages', res);
+    transports[transport.sessionId] = transport;
+    
+    console.log(`SSE transport created with sessionId: ${transport.sessionId}`);
+    
+    res.on('close', () => {
+      console.log(`SSE connection closed for sessionId: ${transport.sessionId}`);
+      delete transports[transport.sessionId];
+    });
+
+    res.on('error', (error: Error) => {
+      console.error(`SSE connection error for sessionId: ${transport.sessionId}`, error);
+      delete transports[transport.sessionId];
+    });
+
+    await mcpServer.connect(transport);
+  } catch (error) {
+    console.error('Error establishing SSE connection:', error);
+    res.status(500).send('Error establishing SSE connection');
+  }
+});
+
+// Handle message posting
 app.post('/messages', async (req: Request, res: Response) => {
   const sessionId = req.query.sessionId as string;
-  const transport = transports[sessionId];
-  if (transport) {
-    await transport.handlePostMessage(req, res);
-  } else {
-    res.status(400).send('No transport found for sessionId');
+  console.log(`Received message for sessionId: ${sessionId}`);
+  
+  try {
+    const transport = transports[sessionId];
+    if (transport) {
+      await transport.handlePostMessage(req, res);
+    } else {
+      console.warn(`No transport found for sessionId: ${sessionId}`);
+      res.status(400).send('No transport found for sessionId');
+    }
+  } catch (error) {
+    console.error(`Error handling message for sessionId: ${sessionId}:`, error);
+    res.status(500).send('Error handling message');
   }
 });
 
 // Start the server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`DeepSource MCP server listening on port ${PORT}`);
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const HOST = process.env.HOST || '0.0.0.0';
+
+const server = app.listen(PORT, HOST, () => {
+  console.log(`DeepSource MCP server listening on ${HOST}:${PORT}`);
+});
+
+// Handle server errors
+server.on('error', (error: Error) => {
+  console.error('Server error:', error);
+});
+
+// Handle process termination
+process.on('SIGTERM', () => {
+  console.log('Received SIGTERM signal. Closing server...');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('Received SIGINT signal. Closing server...');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error: Error) => {
+  console.error('Uncaught exception:', error);
+});
+
+process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
+  console.error('Unhandled rejection at:', promise, 'reason:', reason);
 });

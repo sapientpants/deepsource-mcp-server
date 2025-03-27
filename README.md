@@ -25,7 +25,7 @@ The DeepSource MCP Server enables AI assistants to interact with DeepSource's co
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/deepsource-mcp-server.git
+git clone https://github.com/sapientpants/deepsource-mcp-server.git
 cd deepsource-mcp-server
 ```
 
@@ -43,7 +43,7 @@ pnpm run build
 
 Pull and run the Docker image:
 ```bash
-docker pull ghcr.io/yourusername/deepsource-mcp-server:latest
+docker pull sapientpants/deepsource-mcp-server:latest
 ```
 
 ### Integration with Claude Desktop
@@ -64,6 +64,8 @@ docker pull ghcr.io/yourusername/deepsource-mcp-server:latest
         "--rm",
         "-e",
         "DEEPSOURCE_API_KEY",
+        "-p",
+        "3000:3000",
         "sapientpants/deepsource-mcp-server"
       ],
       "env": {
