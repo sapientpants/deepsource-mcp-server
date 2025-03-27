@@ -27,9 +27,14 @@ server.tool('list-projects', {}, async () => {
       content: [
         {
           type: 'text',
-          text: 'Here are the DeepSource projects:\n\n' + projects.map(project => 
-            `- ${project.name} (${project.key})\n  Repository: ${project.repository.url} (${project.repository.provider})`
-          ).join('\n')
+          text:
+            'Here are the DeepSource projects:\n\n' +
+            projects
+              .map(
+                (project) =>
+                  `- ${project.name} (${project.key})\n  Repository: ${project.repository.url} (${project.repository.provider})`
+              )
+              .join('\n'),
         },
       ],
     };
@@ -59,9 +64,14 @@ server.tool(
         content: [
           {
             type: 'text',
-            text: 'Here are the issues:\n\n' + issues.map(issue => 
-              `- ${issue.title} (${issue.severity})\n  ${issue.issue_text}\n  File: ${issue.file_path}:${issue.line_number}\n  Status: ${issue.status}\n  Created: ${issue.created_at}${issue.resolved_at ? `\n  Resolved: ${issue.resolved_at}` : ''}`
-            ).join('\n\n')
+            text:
+              'Here are the issues:\n\n' +
+              issues
+                .map(
+                  (issue) =>
+                    `- ${issue.title} (${issue.severity})\n  ${issue.issue_text}\n  File: ${issue.file_path}:${issue.line_number}\n  Status: ${issue.status}\n  Created: ${issue.created_at}${issue.resolved_at ? `\n  Resolved: ${issue.resolved_at}` : ''}`
+                )
+                .join('\n\n'),
           },
         ],
       };
