@@ -1,16 +1,4 @@
 import axios, { AxiosError } from 'axios';
-import { Buffer } from 'buffer';
-
-// Helper to conditionally log errors only when not in test environment
-const logIfNotTest = (message: string, data?: unknown) => {
-  if (process.env.NODE_ENV !== 'test') {
-    if (data) {
-      console.error(message, data);
-    } else {
-      console.error(message);
-    }
-  }
-};
 
 export interface DeepSourceProject {
   key: string;
@@ -37,6 +25,24 @@ export interface DeepSourceIssue {
   tags: string[];
 }
 
+export interface PaginationParams {
+  offset?: number;
+  first?: number;
+  after?: string;
+  before?: string;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  pageInfo: {
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    startCursor?: string;
+    endCursor?: string;
+  };
+  totalCount: number;
+}
+
 export class DeepSourceClient {
   private client;
 
@@ -54,10 +60,8 @@ export class DeepSourceClient {
   private handleGraphQLError(error: Error | unknown): never {
     if (error instanceof AxiosError && error.response?.data?.errors) {
       const graphqlErrors: Array<{ message: string }> = error.response.data.errors;
-      logIfNotTest('GraphQL Errors:', graphqlErrors);
       throw new Error(`GraphQL Error: ${graphqlErrors.map((e) => e.message).join(', ')}`);
     }
-    logIfNotTest('API Error:', error);
     throw error;
   }
 
@@ -90,12 +94,9 @@ export class DeepSourceClient {
         }
       `;
 
-      logIfNotTest('Fetching viewer and repositories...');
       const response = await this.client.post('', {
         query: viewerQuery.trim(),
       });
-
-      logIfNotTest('Response:', JSON.stringify(response.data, null, 2));
 
       if (response.data.errors) {
         throw new Error(
@@ -126,7 +127,6 @@ export class DeepSourceClient {
 
       return allRepos;
     } catch (error) {
-      logIfNotTest('Error in listProjects:', error);
       if (error instanceof Error && error.message.includes('NoneType')) {
         return [];
       }
@@ -134,24 +134,46 @@ export class DeepSourceClient {
     }
   }
 
-  async getIssues(projectKey: string): Promise<DeepSourceIssue[]> {
+  async getIssues(
+    projectKey: string,
+    pagination: PaginationParams = {}
+  ): Promise<PaginatedResponse<DeepSourceIssue>> {
     try {
       const projects = await this.listProjects();
       const project = projects.find((p) => p.key === projectKey);
 
       if (!project) {
-        logIfNotTest('Project not found:', projectKey);
-        return [];
+        return {
+          items: [],
+          pageInfo: {
+            hasNextPage: false,
+            hasPreviousPage: false,
+          },
+          totalCount: 0,
+        };
       }
 
+      // Set default limit to 10 issues if not specified
+      const paginationWithDefaults = {
+        ...pagination,
+        first: pagination.first ?? 10,
+      };
+
       const repoQuery = `
-        query($login: String!, $name: String!, $provider: VCSProvider!) {
+        query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String) {
           repository(login: $login, name: $name, vcsProvider: $provider) {
             name
             defaultBranch
             dsn
             isPrivate
-            issues(first: 100) {
+            issues(offset: $offset, first: $first, after: $after, before: $before) {
+              pageInfo {
+                hasNextPage
+                hasPreviousPage
+                startCursor
+                endCursor
+              }
+              totalCount
               edges {
                 node {
                   id
@@ -182,17 +204,18 @@ export class DeepSourceClient {
         }
       `;
 
-      logIfNotTest('Fetching issues for project:', project.name);
       const response = await this.client.post('', {
         query: repoQuery.trim(),
         variables: {
           login: project.repository.login,
           name: project.name,
           provider: project.repository.provider,
+          offset: paginationWithDefaults.offset,
+          first: paginationWithDefaults.first,
+          after: paginationWithDefaults.after,
+          before: paginationWithDefaults.before,
         },
       });
-
-      logIfNotTest('Issues response:', JSON.stringify(response.data, null, 2));
 
       if (response.data.errors) {
         throw new Error(
@@ -202,6 +225,11 @@ export class DeepSourceClient {
 
       const issues: DeepSourceIssue[] = [];
       const repoIssues = response.data.data?.repository?.issues?.edges || [];
+      const pageInfo = response.data.data?.repository?.issues?.pageInfo || {
+        hasNextPage: false,
+        hasPreviousPage: false,
+      };
+      const totalCount = response.data.data?.repository?.issues?.totalCount || 0;
 
       for (const { node: repoIssue } of repoIssues) {
         const occurrences = repoIssue.occurrences?.edges || [];
@@ -221,11 +249,26 @@ export class DeepSourceClient {
         }
       }
 
-      return issues;
+      return {
+        items: issues,
+        pageInfo: {
+          hasNextPage: pageInfo.hasNextPage,
+          hasPreviousPage: pageInfo.hasPreviousPage,
+          startCursor: pageInfo.startCursor,
+          endCursor: pageInfo.endCursor,
+        },
+        totalCount,
+      };
     } catch (error) {
-      logIfNotTest('Error in getIssues:', error);
       if (error instanceof Error && error.message.includes('NoneType')) {
-        return [];
+        return {
+          items: [],
+          pageInfo: {
+            hasNextPage: false,
+            hasPreviousPage: false,
+          },
+          totalCount: 0,
+        };
       }
       return this.handleGraphQLError(error);
     }
@@ -233,59 +276,10 @@ export class DeepSourceClient {
 
   async getIssue(projectKey: string, issueId: string): Promise<DeepSourceIssue | null> {
     try {
-      logIfNotTest(`Getting issue with ID ${issueId} for project ${projectKey}`);
-
-      const issues = await this.getIssues(projectKey);
-      logIfNotTest(`Found ${issues.length} issues in project ${projectKey}`);
-
-      // Try direct match first
-      let issue = issues.find((i) => i.id === issueId);
-
-      // If not found, try to base64 decode the ID
-      if (!issue && issueId.includes('=')) {
-        try {
-          // The ID might be base64 encoded
-          const potentialBase64 = Buffer.from(issueId, 'base64').toString('utf-8');
-          logIfNotTest(`Trying base64 decoded ID: ${potentialBase64}`);
-
-          // Sometimes the format might be "Occurrence:actualid"
-          if (potentialBase64.includes(':')) {
-            const actualId = potentialBase64.split(':')[1];
-            issue = issues.find(
-              (i) => i.id === actualId || i.id.endsWith(actualId) || i.id.includes(actualId)
-            );
-          }
-        } catch (e) {
-          logIfNotTest('Error decoding base64:', e);
-        }
-      }
-
-      // Last resort: try partial matching (case insensitive)
-      if (!issue) {
-        logIfNotTest('Trying partial matching...');
-        issue = issues.find(
-          (i) =>
-            i.id.toLowerCase().includes(issueId.toLowerCase()) ||
-            (issueId.toLowerCase().includes(i.id.toLowerCase()) && i.id.length > 5)
-        );
-      }
-
-      if (!issue) {
-        logIfNotTest(`Issue with ID ${issueId} not found in project ${projectKey}`);
-        logIfNotTest(
-          'Available issue IDs:',
-          issues.map((i) => i.id)
-        );
-        return null;
-      }
-
-      logIfNotTest(`Found issue: ${issue.title} (${issue.id})`);
-      return issue;
+      const result = await this.getIssues(projectKey);
+      const issue = result.items.find((issue) => issue.id === issueId);
+      return issue || null;
     } catch (error) {
-      logIfNotTest('Error in getIssue:', error);
-      if (error instanceof Error && error.message.includes('NoneType')) {
-        return null;
-      }
       return this.handleGraphQLError(error);
     }
   }

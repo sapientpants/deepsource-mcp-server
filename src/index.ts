@@ -1,37 +1,22 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
-import express from 'express';
-import type { Request, Response, Application } from 'express';
-import cors from 'cors';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { DeepSourceClient } from './deepsource.js';
 import { z } from 'zod';
 
-// Initialize Express app
-export const app: Application = express();
-app.use(cors());
-
 // Initialize MCP server
-const server = new McpServer({
+const mcpServer = new McpServer({
   name: 'deepsource-mcp-server',
   version: '0.0.0',
 });
 
-// Config endpoint
-app.get('/config', (req: Request, res: Response) => {
-  res.json({
-    name: 'deepsource-mcp-server',
-    version: '0.0.0',
-    transport: {
-      sse: {
-        endpoint: '/sse',
-      },
-    },
-  });
-});
-
-server.tool('deepsource-projects', 'List all available DeepSource projects', async () => {
+mcpServer.tool('deepsource-projects', 'List all available DeepSource projects', async () => {
+  mcpServer.server.sendLoggingMessage({ level: 'info', message: 'Fetching projects...' });
   const client = new DeepSourceClient(process.env.DEEPSOURCE_API_KEY!);
   const projects = await client.listProjects();
+  mcpServer.server.sendLoggingMessage({
+    level: 'info',
+    message: `Found ${projects.length} projects`,
+  });
 
   return {
     content: [
@@ -48,51 +33,54 @@ server.tool('deepsource-projects', 'List all available DeepSource projects', asy
   };
 });
 
-server.tool('deepsource-project-issues', { projectKey: z.string() }, async ({ projectKey }) => {
-  const client = new DeepSourceClient(process.env.DEEPSOURCE_API_KEY!);
-  const issues = await client.getIssues(projectKey);
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(
-          issues.map((issue) => ({
-            id: issue.id,
-            title: issue.title,
-            shortcode: issue.shortcode,
-            category: issue.category,
-            severity: issue.severity,
-            status: issue.status,
-            issue_text: issue.issue_text,
-            file_path: issue.file_path,
-            line_number: issue.line_number,
-            tags: issue.tags,
-          }))
-        ),
-      },
-    ],
-  };
-});
+mcpServer.tool(
+  'deepsource-project-issues',
+  'Get issues from a DeepSource project. Returns up to 10 issues by default. Use pagination parameters to navigate through results.',
+  {
+    projectKey: z.string(),
+    offset: z.number().optional(),
+    first: z.number().optional(),
+    after: z.string().optional(),
+    before: z.string().optional(),
+  },
+  async ({ projectKey, offset, first, after, before }) => {
+    mcpServer.server.sendLoggingMessage({
+      level: 'info',
+      message: `Fetching issues for project ${projectKey}...`,
+    });
+    const client = new DeepSourceClient(process.env.DEEPSOURCE_API_KEY!);
+    const pagination = { offset, first, after, before };
+    const result = await client.getIssues(projectKey, pagination);
+    mcpServer.server.sendLoggingMessage({
+      level: 'info',
+      message: `Found ${result.items.length} issues (total: ${result.totalCount})`,
+    });
 
-const transports: { [sessionId: string]: SSEServerTransport } = {};
-
-app.get('/sse', async (_: Request, res: Response) => {
-  const transport = new SSEServerTransport('/messages', res);
-  transports[transport.sessionId] = transport;
-  res.on('close', () => {
-    delete transports[transport.sessionId];
-  });
-  await server.connect(transport);
-});
-
-app.post('/messages', async (req: Request, res: Response) => {
-  const sessionId = req.query.sessionId as string;
-  const transport = transports[sessionId];
-  if (transport) {
-    await transport.handlePostMessage(req, res);
-  } else {
-    res.status(400).send('No transport found for sessionId');
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            items: result.items.map((issue) => ({
+              id: issue.id,
+              title: issue.title,
+              shortcode: issue.shortcode,
+              category: issue.category,
+              severity: issue.severity,
+              status: issue.status,
+              issue_text: issue.issue_text,
+              file_path: issue.file_path,
+              line_number: issue.line_number,
+              tags: issue.tags,
+            })),
+            pageInfo: result.pageInfo,
+            totalCount: result.totalCount,
+          }),
+        },
+      ],
+    };
   }
-});
+);
 
-app.listen(3000);
+const transport = new StdioServerTransport();
+await mcpServer.connect(transport);

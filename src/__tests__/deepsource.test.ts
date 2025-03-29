@@ -128,6 +128,13 @@ describe('DeepSourceClient', () => {
             dsn: 'test-project',
             isPrivate: false,
             issues: {
+              pageInfo: {
+                hasNextPage: true,
+                hasPreviousPage: false,
+                startCursor: 'cursor1',
+                endCursor: 'cursor2',
+              },
+              totalCount: 5,
               edges: [
                 {
                   node: {
@@ -170,9 +177,9 @@ describe('DeepSourceClient', () => {
         .matchHeader('Authorization', `Bearer ${API_KEY}`)
         .reply(200, mockIssuesResponse);
 
-      const issues = await client.getIssues(projectKey);
-      expect(issues).toHaveLength(1);
-      expect(issues[0]).toEqual({
+      const result = await client.getIssues(projectKey);
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0]).toEqual({
         id: 'occ1',
         shortcode: 'SEC001',
         title: 'Security Issue',
@@ -184,6 +191,119 @@ describe('DeepSourceClient', () => {
         line_number: 42,
         tags: [],
       });
+      expect(result.pageInfo).toEqual({
+        hasNextPage: true,
+        hasPreviousPage: false,
+        startCursor: 'cursor1',
+        endCursor: 'cursor2',
+      });
+      expect(result.totalCount).toBe(5);
+    });
+
+    it('should support pagination parameters', async () => {
+      // Mock the listProjects call first
+      const mockProjectsResponse = {
+        data: {
+          viewer: {
+            accounts: {
+              edges: [
+                {
+                  node: {
+                    login: 'testorg',
+                    repositories: {
+                      edges: [
+                        {
+                          node: {
+                            name: 'test-repo',
+                            defaultBranch: 'main',
+                            dsn: 'test-project',
+                            isPrivate: false,
+                            isActivated: true,
+                            vcsProvider: 'github',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      const mockIssuesResponse = {
+        data: {
+          repository: {
+            name: 'test-repo',
+            defaultBranch: 'main',
+            dsn: 'test-project',
+            isPrivate: false,
+            issues: {
+              pageInfo: {
+                hasNextPage: false,
+                hasPreviousPage: true,
+                startCursor: 'cursor3',
+                endCursor: 'cursor4',
+              },
+              totalCount: 10,
+              edges: [
+                {
+                  node: {
+                    id: 'issue2',
+                    issue: {
+                      shortcode: 'PERF002',
+                      title: 'Performance Issue',
+                      category: 'performance',
+                      severity: 'medium',
+                      description: 'Potential performance issue',
+                    },
+                    occurrences: {
+                      edges: [
+                        {
+                          node: {
+                            id: 'occ2',
+                            path: 'src/utils.ts',
+                            beginLine: 100,
+                            endLine: 100,
+                            beginColumn: 5,
+                            endColumn: 15,
+                            title: 'Performance Issue',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockProjectsResponse)
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockIssuesResponse);
+
+      const pagination = {
+        first: 5,
+        after: 'cursor2',
+      };
+
+      const result = await client.getIssues(projectKey, pagination);
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].id).toBe('occ2');
+      expect(result.pageInfo).toEqual({
+        hasNextPage: false,
+        hasPreviousPage: true,
+        startCursor: 'cursor3',
+        endCursor: 'cursor4',
+      });
+      expect(result.totalCount).toBe(10);
     });
 
     it('should handle API errors when fetching issues', async () => {
@@ -194,6 +314,21 @@ describe('DeepSourceClient', () => {
       await expect(client.getIssues(projectKey)).rejects.toThrow(
         'GraphQL Error: Project not found'
       );
+    });
+
+    it('should return empty result when project not found', async () => {
+      // Mock empty project response
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .reply(200, { data: { viewer: { accounts: { edges: [] } } } });
+
+      const result = await client.getIssues('non-existent-project');
+      expect(result.items).toEqual([]);
+      expect(result.pageInfo).toEqual({
+        hasNextPage: false,
+        hasPreviousPage: false,
+      });
+      expect(result.totalCount).toBe(0);
     });
   });
 

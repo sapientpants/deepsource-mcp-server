@@ -26,7 +26,7 @@
     "check-types": "tsc --noEmit",
     "prepare": "husky",
     "validate": "npm run check-types && npm run lint && npm run test",
-    "inspect": "SERVER_PORT=3001 npx @modelcontextprotocol/inspector@latest",
+    "inspect": "npx @modelcontextprotocol/inspector@latest node dist/index.js",
     "clean": "rm -rf dist"
   },
   "lint-staged": {
