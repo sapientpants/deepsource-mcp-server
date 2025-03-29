@@ -20,6 +20,20 @@ const logError = (error: Error | unknown) => {
   }
 };
 
+// Enhanced request logging to debug method calls
+const logRequest = (type: string, data: any) => {
+  try {
+    const timestamp = new Date().toISOString();
+    const logEntry = `${timestamp}: REQUEST: ${type}: ${JSON.stringify(data, null, 2)}\n`;
+    fs.appendFileSync(logFile, logEntry);
+  } catch (writeError) {
+    console.error('Failed to write request to log:', writeError);
+  }
+};
+
+// Log startup information
+logError({ type: 'startup', message: 'Starting MCP server with tools capability' });
+
 // Get API key from environment variable
 const DEEPSOURCE_API_KEY = process.env.DEEPSOURCE_API_KEY;
 if (!DEEPSOURCE_API_KEY) {
@@ -71,6 +85,7 @@ const mcpServer = new McpServer({
 
 // 1. List all projects tool
 mcpServer.tool('deepsource_list_projects', {}, async () => {
+  logRequest('tool_call', { name: 'deepsource_list_projects' });
   try {
     const projects = await deepsource.listProjects();
 
@@ -114,6 +129,7 @@ mcpServer.tool(
     project_key: z.string().describe('The encoded project key'),
   },
   async ({ project_key }) => {
+    logRequest('tool_call', { name: 'deepsource_get_project_issues', args: { project_key } });
     try {
       if (!project_key) {
         return {
@@ -187,6 +203,10 @@ mcpServer.tool(
     issue_id: z.string().describe('The issue ID'),
   },
   async ({ project_key, issue_id }) => {
+    logRequest('tool_call', {
+      name: 'deepsource_get_issue_details',
+      args: { project_key, issue_id },
+    });
     try {
       if (!project_key || !issue_id) {
         return {
@@ -285,9 +305,20 @@ if (process.stdin.isTTY) {
     })
   );
 
+  // Add body parser middleware
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+
   // Add request logging middleware
   app.use((req: Request, res: Response, next: NextFunction) => {
-    logError({ type: 'request', method: req.method, url: req.url });
+    logError({
+      type: 'request',
+      method: req.method,
+      url: req.url,
+      query: req.query,
+      headers: req.headers,
+      body: req.body,
+    });
     next();
   });
 
@@ -318,6 +349,28 @@ if (process.stdin.isTTY) {
     const sessionId = req.query.sessionId as string;
 
     try {
+      // Log the incoming message request for debugging with raw data
+      logRequest('message_post', {
+        sessionId,
+        headers: req.headers,
+        query: req.query,
+        rawBody: req.body, // Raw request body
+      });
+
+      // Parse the request body if it's a JSON string
+      let parsedBody = req.body;
+      if (typeof req.body === 'string') {
+        try {
+          parsedBody = JSON.parse(req.body);
+          logRequest('parsed_message', {
+            sessionId,
+            parsedBody,
+          });
+        } catch (parseError) {
+          logError({ type: 'message_parse_error', sessionId, error: parseError, body: req.body });
+        }
+      }
+
       const transport = transports[sessionId];
       if (transport) {
         await transport.handlePostMessage(req, res);
@@ -328,7 +381,7 @@ if (process.stdin.isTTY) {
         }
       }
     } catch (error) {
-      logError({ type: 'message_handling_error', sessionId, error });
+      logError({ type: 'message_handling_error', sessionId, error, body: req.body });
       if (!res.headersSent) {
         res.status(500).send('Error handling message');
       }
