@@ -29,8 +29,12 @@ jobs:
       - name: Run tests with coverage
         run: pnpm run test:coverage
         
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
+      - name: Report test coverage to DeepSource
+        uses: deepsourcelabs/test-coverage-action@v1.1.2
+        with:
+          key: javascript
+          coverage-file: coverage/lcov.info
+          dsn: ${{ secrets.DEEPSOURCE_DSN }}
         
   lint:
     name: Lint
