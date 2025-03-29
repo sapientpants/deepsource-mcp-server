@@ -97,12 +97,14 @@ function decodeProjectKey(key: string): string {
   }
 }
 
-// Create MCP server with tools capability
+// Create MCP server with all capabilities
 const mcpServer = new McpServer({
   name: 'deepsource-mcp',
   version: '0.0.0',
   capabilities: {
     tools: {},
+    resources: {},
+    prompts: {},
   },
 });
 
@@ -373,13 +375,24 @@ if (process.stdin.isTTY) {
     const sessionId = req.query.sessionId as string;
 
     try {
-      // Log the raw request body
-      logError({
-        type: 'message_request',
-        sessionId,
-        contentType: req.headers['content-type'],
-        bodyType: typeof req.body,
-      });
+      // Create a custom response to intercept and log the response
+      const originalSend = res.send;
+      res.send = function (body) {
+        // Log the response body
+        fs.appendFileSync(logFile, `${new Date().toISOString()} RESPONSE: ${body}\n`);
+        return originalSend.call(this, body);
+      };
+
+      // Get the raw body before any processing
+      let rawBody = '';
+      if (typeof req.body === 'string') {
+        rawBody = req.body;
+      } else {
+        rawBody = JSON.stringify(req.body);
+      }
+
+      // Log the raw incoming request immediately
+      fs.appendFileSync(logFile, `${new Date().toISOString()} REQUEST: ${rawBody}\n`);
 
       // Parse and analyze the request body for JSON-RPC calls
       let parsedBody = req.body;
@@ -394,6 +407,7 @@ if (process.stdin.isTTY) {
       // Capture JSON-RPC method information before handling
       handleJsonRpcRequest(parsedBody);
 
+      // Process with transport
       const transport = transports[sessionId];
       if (transport) {
         await transport.handlePostMessage(req, res);
