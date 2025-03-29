@@ -1,6 +1,17 @@
 import axios, { AxiosError } from 'axios';
 import { Buffer } from 'buffer';
 
+// Helper to conditionally log errors only when not in test environment
+const logIfNotTest = (message: string, data?: any) => {
+  if (process.env.NODE_ENV !== 'test') {
+    if (data) {
+      console.error(message, data);
+    } else {
+      console.error(message);
+    }
+  }
+};
+
 export interface DeepSourceProject {
   key: string;
   name: string;
@@ -43,10 +54,10 @@ export class DeepSourceClient {
   private handleGraphQLError(error: Error | unknown): never {
     if (error instanceof AxiosError && error.response?.data?.errors) {
       const graphqlErrors: Array<{ message: string }> = error.response.data.errors;
-      console.error('GraphQL Errors:', graphqlErrors);
+      logIfNotTest('GraphQL Errors:', graphqlErrors);
       throw new Error(`GraphQL Error: ${graphqlErrors.map((e) => e.message).join(', ')}`);
     }
-    console.error('API Error:', error);
+    logIfNotTest('API Error:', error);
     throw error;
   }
 
@@ -79,12 +90,12 @@ export class DeepSourceClient {
         }
       `;
 
-      console.log('Fetching viewer and repositories...');
+      logIfNotTest('Fetching viewer and repositories...');
       const response = await this.client.post('', {
         query: viewerQuery.trim(),
       });
 
-      console.log('Response:', JSON.stringify(response.data, null, 2));
+      logIfNotTest('Response:', JSON.stringify(response.data, null, 2));
 
       if (response.data.errors) {
         throw new Error(
@@ -115,7 +126,7 @@ export class DeepSourceClient {
 
       return allRepos;
     } catch (error) {
-      console.error('Error in listProjects:', error);
+      logIfNotTest('Error in listProjects:', error);
       if (error instanceof Error && error.message.includes('NoneType')) {
         return [];
       }
@@ -129,7 +140,7 @@ export class DeepSourceClient {
       const project = projects.find((p) => p.key === projectKey);
 
       if (!project) {
-        console.error('Project not found:', projectKey);
+        logIfNotTest('Project not found:', projectKey);
         return [];
       }
 
@@ -171,7 +182,7 @@ export class DeepSourceClient {
         }
       `;
 
-      console.log('Fetching issues for project:', project.name);
+      logIfNotTest('Fetching issues for project:', project.name);
       const response = await this.client.post('', {
         query: repoQuery.trim(),
         variables: {
@@ -181,7 +192,7 @@ export class DeepSourceClient {
         },
       });
 
-      console.log('Issues response:', JSON.stringify(response.data, null, 2));
+      logIfNotTest('Issues response:', JSON.stringify(response.data, null, 2));
 
       if (response.data.errors) {
         throw new Error(
@@ -212,7 +223,7 @@ export class DeepSourceClient {
 
       return issues;
     } catch (error) {
-      console.error('Error in getIssues:', error);
+      logIfNotTest('Error in getIssues:', error);
       if (error instanceof Error && error.message.includes('NoneType')) {
         return [];
       }
@@ -222,10 +233,10 @@ export class DeepSourceClient {
 
   async getIssue(projectKey: string, issueId: string): Promise<DeepSourceIssue | null> {
     try {
-      console.log(`Getting issue with ID ${issueId} for project ${projectKey}`);
+      logIfNotTest(`Getting issue with ID ${issueId} for project ${projectKey}`);
 
       const issues = await this.getIssues(projectKey);
-      console.log(`Found ${issues.length} issues in project ${projectKey}`);
+      logIfNotTest(`Found ${issues.length} issues in project ${projectKey}`);
 
       // Try direct match first
       let issue = issues.find((i) => i.id === issueId);
@@ -235,7 +246,7 @@ export class DeepSourceClient {
         try {
           // The ID might be base64 encoded
           const potentialBase64 = Buffer.from(issueId, 'base64').toString('utf-8');
-          console.log(`Trying base64 decoded ID: ${potentialBase64}`);
+          logIfNotTest(`Trying base64 decoded ID: ${potentialBase64}`);
 
           // Sometimes the format might be "Occurrence:actualid"
           if (potentialBase64.includes(':')) {
@@ -245,13 +256,13 @@ export class DeepSourceClient {
             );
           }
         } catch (e) {
-          console.log('Error decoding base64:', e);
+          logIfNotTest('Error decoding base64:', e);
         }
       }
 
       // Last resort: try partial matching (case insensitive)
       if (!issue) {
-        console.log('Trying partial matching...');
+        logIfNotTest('Trying partial matching...');
         issue = issues.find(
           (i) =>
             i.id.toLowerCase().includes(issueId.toLowerCase()) ||
@@ -260,18 +271,18 @@ export class DeepSourceClient {
       }
 
       if (!issue) {
-        console.log(`Issue with ID ${issueId} not found in project ${projectKey}`);
-        console.log(
+        logIfNotTest(`Issue with ID ${issueId} not found in project ${projectKey}`);
+        logIfNotTest(
           'Available issue IDs:',
           issues.map((i) => i.id)
         );
         return null;
       }
 
-      console.log(`Found issue: ${issue.title} (${issue.id})`);
+      logIfNotTest(`Found issue: ${issue.title} (${issue.id})`);
       return issue;
     } catch (error) {
-      console.error('Error in getIssue:', error);
+      logIfNotTest('Error in getIssue:', error);
       if (error instanceof Error && error.message.includes('NoneType')) {
         return null;
       }
