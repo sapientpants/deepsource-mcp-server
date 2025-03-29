@@ -1,8 +1,23 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
-import express, { Request, Response } from 'express';
-import { z } from 'zod';
-import { DeepSourceClient } from './deepsource.js';
+import express, { Request, Response, NextFunction } from 'express';
+import cors from 'cors';
+import { DeepSourceClient, DeepSourceProject, DeepSourceIssue } from './deepsource.js';
+import fs from 'fs';
+import { Buffer } from 'buffer';
+
+// Set up error logging
+const logFile = 'error.log';
+const logError = (error: Error | unknown) => {
+  try {
+    const timestamp = new Date().toISOString();
+    const errorLog = `${timestamp}: ${JSON.stringify(error, null, 2)}\n`;
+    fs.appendFileSync(logFile, errorLog);
+  } catch (writeError) {
+    console.error('Failed to write to error log:', writeError);
+  }
+};
 
 // Get API key from environment variable
 const DEEPSOURCE_API_KEY = process.env.DEEPSOURCE_API_KEY;
@@ -13,195 +28,189 @@ if (!DEEPSOURCE_API_KEY) {
 // Initialize DeepSource client
 const deepsource = new DeepSourceClient(DEEPSOURCE_API_KEY);
 
+// Helper functions for URI handling
+function encodeProjectKey(dsn: string): string {
+  return Buffer.from(dsn).toString('base64url');
+}
+
+function decodeProjectKey(key: string): string {
+  return Buffer.from(key, 'base64url').toString();
+}
+
 // Create MCP server
 const mcpServer = new McpServer({
   name: 'deepsource-mcp',
-  version: '1.0.0',
+  version: '0.0.0',
 });
 
-// Tool to list all projects
-mcpServer.tool('list-projects', {}, async () => {
-  try {
-    const projects = await deepsource.listProjects();
-    return {
-      content: [
-        {
-          type: 'text',
-          text:
-            'Here are the DeepSource projects:\n\n' +
-            projects
-              .map(
-                (project) =>
-                  `- ${project.name} (${project.key})\n  Repository: ${project.repository.url} (${project.repository.provider})`
-              )
-              .join('\n'),
-        },
-      ],
-    };
-  } catch (error) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error fetching projects: ${error instanceof Error ? error.message : String(error)}`,
-        },
-      ],
-      isError: true,
-    };
-  }
-});
-
-// Tool to get issues for a project
-mcpServer.tool(
-  'get-project-issues',
-  {
-    projectKey: z.string().describe('The DeepSource project key'),
-  },
-  async ({ projectKey }) => {
+// Register resources with their templates
+mcpServer.resource(
+  'deepsource-projects',
+  new ResourceTemplate('deepsource://projects', {
+    list: async () => {
+      try {
+        const projects = await deepsource.listProjects();
+        return {
+          resources: projects.map((project: DeepSourceProject) => ({
+            name: project.name,
+            uri: `deepsource://projects/${encodeProjectKey(project.key)}`,
+            description: `Repository: ${project.repository.url} (${project.repository.provider})`,
+          })),
+        };
+      } catch (error) {
+        logError({ type: 'list_projects_error', error });
+        return { resources: [] };
+      }
+    },
+  }),
+  async () => {
     try {
-      const issues = await deepsource.getIssues(projectKey);
+      const projects = await deepsource.listProjects();
       return {
-        content: [
-          {
-            type: 'text',
-            text:
-              'Here are the issues:\n\n' +
-              issues
-                .map(
-                  (issue) =>
-                    `- ${issue.title} (${issue.severity})\n  ${issue.issue_text}\n  File: ${issue.file_path}:${issue.line_number}\n  Status: ${issue.status}\n  Created: ${issue.created_at}${issue.resolved_at ? `\n  Resolved: ${issue.resolved_at}` : ''}`
-                )
-                .join('\n\n'),
-          },
-        ],
+        contents: projects.map((project: DeepSourceProject) => ({
+          uri: `deepsource://projects/${encodeProjectKey(project.key)}`,
+          text: `${project.name}\nRepository: ${project.repository.url} (${project.repository.provider})`,
+        })),
       };
     } catch (error) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error fetching issues: ${error instanceof Error ? error.message : String(error)}`,
-          },
-        ],
-        isError: true,
-      };
+      logError({ type: 'read_projects_error', error });
+      return { contents: [] };
     }
   }
 );
 
-// Add some helpful prompts
-mcpServer.prompt('list-projects', {}, () => ({
-  messages: [
-    {
-      role: 'user',
-      content: {
-        type: 'text',
-        text: 'Please list all DeepSource projects.',
-      },
+mcpServer.resource(
+  'deepsource-project-issues',
+  new ResourceTemplate('deepsource://projects/{projectKey}/issues', {
+    list: async () => {
+      try {
+        const projects = await deepsource.listProjects();
+        if (projects.length === 0) {
+          return { resources: [] };
+        }
+
+        const allIssues = await Promise.all(
+          projects.map(async (project: DeepSourceProject) => {
+            try {
+              const issues = await deepsource.getIssues(project.key);
+              return issues.map((issue: DeepSourceIssue) => ({
+                name: issue.title,
+                uri: `deepsource://projects/${encodeProjectKey(project.key)}/issues/${issue.id}`,
+                description: `${issue.severity} severity issue in ${issue.file_path}:${issue.line_number}\n${issue.issue_text}`,
+              }));
+            } catch (error) {
+              logError({ type: 'project_issues_error', projectKey: project.key, error });
+              return [];
+            }
+          })
+        );
+        return {
+          resources: allIssues.flat(),
+        };
+      } catch (error) {
+        logError({ type: 'list_issues_error', error });
+        return { resources: [] };
+      }
     },
-  ],
-}));
-
-mcpServer.prompt('get-project-issues', { projectKey: z.string() }, ({ projectKey }) => ({
-  messages: [
-    {
-      role: 'user',
-      content: {
-        type: 'text',
-        text: `Please show me all issues for the DeepSource project with key: ${projectKey}`,
-      },
-    },
-  ],
-}));
-
-// Set up Express server with SSE support
-const app = express();
-const transports: { [sessionId: string]: SSEServerTransport } = {};
-
-// Add error handling middleware
-app.use((err: Error, _req: Request, res: Response) => {
-  console.error('Express error:', err);
-  res.status(500).send('Internal Server Error');
-});
-
-// Handle SSE connection
-app.get('/sse', async (req: Request, res: Response) => {
-  console.log('New SSE connection request');
-  try {
-    const transport = new SSEServerTransport('/messages', res);
-    transports[transport.sessionId] = transport;
-    console.log(`SSE transport created with sessionId: ${transport.sessionId}`);
-    res.on('close', () => {
-      console.log(`SSE connection closed for sessionId: ${transport.sessionId}`);
-      delete transports[transport.sessionId];
-    });
-
-    res.on('error', (error: Error) => {
-      console.error(`SSE connection error for sessionId: ${transport.sessionId}`, error);
-      delete transports[transport.sessionId];
-    });
-
-    await mcpServer.connect(transport);
-  } catch (error) {
-    console.error('Error establishing SSE connection:', error);
-    res.status(500).send('Error establishing SSE connection');
-  }
-});
-
-// Handle message posting
-app.post('/messages', async (req: Request, res: Response) => {
-  const sessionId = req.query.sessionId as string;
-  console.log(`Received message for sessionId: ${sessionId}`);
-
-  try {
-    const transport = transports[sessionId];
-    if (transport) {
-      await transport.handlePostMessage(req, res);
-    } else {
-      console.warn(`No transport found for sessionId: ${sessionId}`);
-      res.status(400).send('No transport found for sessionId');
+  }),
+  async (uri) => {
+    try {
+      const projectKey = decodeProjectKey(uri.pathname.split('/')[2]);
+      if (!projectKey) {
+        return { contents: [] };
+      }
+      const issues = await deepsource.getIssues(projectKey);
+      return {
+        contents: issues.map((issue: DeepSourceIssue) => ({
+          uri: `deepsource://projects/${encodeProjectKey(projectKey)}/issues/${issue.id}`,
+          text: `${issue.title} (${issue.severity})\n${issue.issue_text}\nFile: ${issue.file_path}:${issue.line_number}\nStatus: ${issue.status}`,
+        })),
+      };
+    } catch (error) {
+      logError({ type: 'read_issues_error', error });
+      return { contents: [] };
     }
-  } catch (error) {
-    console.error(`Error handling message for sessionId: ${sessionId}:`, error);
-    res.status(500).send('Error handling message');
   }
-});
+);
 
-// Start the server
-const PORT = parseInt(process.env.PORT || '3000', 10);
-const HOST = process.env.HOST || '0.0.0.0';
+// Check if we're running in a TTY (terminal) - this indicates stdio mode
+if (process.stdin.isTTY) {
+  // Running in SSE mode (from terminal)
+  const app = express();
 
-const server = app.listen(PORT, HOST, () => {
-  console.log(`DeepSource MCP server listening on ${HOST}:${PORT}`);
-});
+  // Enable CORS for the inspector UI
+  app.use(
+    cors({
+      origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+      methods: ['GET', 'POST', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true,
+    })
+  );
 
-// Handle server errors
-server.on('error', (error: Error) => {
-  console.error('Server error:', error);
-});
-
-// Handle process termination
-process.on('SIGTERM', () => {
-  console.log('Received SIGTERM signal. Closing server...');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
+  // Add request logging middleware
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    logError({ type: 'request', method: req.method, url: req.url });
+    next();
   });
-});
 
-process.on('SIGINT', () => {
-  console.log('Received SIGINT signal. Closing server...');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
+  const transports: { [sessionId: string]: SSEServerTransport } = {};
+
+  // Handle SSE connection
+  app.get('/sse', async (req: Request, res: Response) => {
+    try {
+      logError({ type: 'sse_connection_attempt' });
+      const transport = new SSEServerTransport('/messages', res);
+      transports[transport.sessionId] = transport;
+      res.on('close', () => {
+        logError({ type: 'sse_connection_closed', sessionId: transport.sessionId });
+        delete transports[transport.sessionId];
+      });
+
+      await mcpServer.connect(transport);
+    } catch (error) {
+      logError({ type: 'sse_connection_error', error });
+      if (!res.headersSent) {
+        res.status(500).send('Error establishing SSE connection');
+      }
+    }
   });
-});
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (error: Error) => {
-  console.error('Uncaught exception:', error);
-});
+  // Handle message posting
+  app.post('/messages', async (req: Request, res: Response) => {
+    const sessionId = req.query.sessionId as string;
 
-process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
-  console.error('Unhandled rejection at:', promise, 'reason:', reason);
-});
+    try {
+      const transport = transports[sessionId];
+      if (transport) {
+        await transport.handlePostMessage(req, res);
+      } else {
+        logError({ type: 'transport_not_found', sessionId });
+        if (!res.headersSent) {
+          res.status(400).send('No transport found for sessionId');
+        }
+      }
+    } catch (error) {
+      logError({ type: 'message_handling_error', sessionId, error });
+      if (!res.headersSent) {
+        res.status(500).send('Error handling message');
+      }
+    }
+  });
+
+  // Start the Express server
+  const PORT = parseInt(process.env.PORT || '3000', 10);
+  const HOST = process.env.HOST || '0.0.0.0';
+
+  app.listen(PORT, HOST, () => {
+    logError({ type: 'server_start', message: `Server started on ${HOST}:${PORT}` });
+  });
+} else {
+  // Running in stdio mode (from MCP Inspector)
+  logError({ type: 'starting_stdio_mode' });
+  const stdioTransport = new StdioServerTransport();
+  mcpServer.connect(stdioTransport).catch((error) => {
+    logError({ type: 'stdio_connection_error', error });
+    process.exit(1);
+  });
+}
