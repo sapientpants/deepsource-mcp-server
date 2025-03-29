@@ -9,14 +9,9 @@ const mcpServer = new McpServer({
   version: '0.0.0',
 });
 
-mcpServer.tool('deepsource-projects', 'List all available DeepSource projects', async () => {
-  mcpServer.server.sendLoggingMessage({ level: 'info', message: 'Fetching projects...' });
+mcpServer.tool('deepsource_projects', 'List all available DeepSource projects', async () => {
   const client = new DeepSourceClient(process.env.DEEPSOURCE_API_KEY!);
   const projects = await client.listProjects();
-  mcpServer.server.sendLoggingMessage({
-    level: 'info',
-    message: `Found ${projects.length} projects`,
-  });
 
   return {
     content: [
@@ -34,7 +29,7 @@ mcpServer.tool('deepsource-projects', 'List all available DeepSource projects', 
 });
 
 mcpServer.tool(
-  'deepsource-project-issues',
+  'deepsource_project_issues',
   'Get issues from a DeepSource project. Returns up to 10 issues by default. Use pagination parameters to navigate through results.',
   {
     projectKey: z.string(),
@@ -44,17 +39,9 @@ mcpServer.tool(
     before: z.string().optional(),
   },
   async ({ projectKey, offset, first, after, before }) => {
-    mcpServer.server.sendLoggingMessage({
-      level: 'info',
-      message: `Fetching issues for project ${projectKey}...`,
-    });
     const client = new DeepSourceClient(process.env.DEEPSOURCE_API_KEY!);
     const pagination = { offset, first, after, before };
     const result = await client.getIssues(projectKey, pagination);
-    mcpServer.server.sendLoggingMessage({
-      level: 'info',
-      message: `Found ${result.items.length} issues (total: ${result.totalCount})`,
-    });
 
     return {
       content: [
