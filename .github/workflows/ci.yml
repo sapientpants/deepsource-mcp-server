@@ -30,7 +30,7 @@ jobs:
         run: pnpm run test:coverage
         
       - name: Report test coverage to DeepSource
-        uses: deepsourcelabs/test-coverage-action@master
+        uses: deepsourcelabs/test-coverage-action@v1.2.3
         with:
           key: javascript
           coverage-file: coverage/lcov.info
