@@ -10,7 +10,12 @@ const mcpServer = new McpServer({
 });
 
 mcpServer.tool('deepsource_projects', 'List all available DeepSource projects', async () => {
-  const client = new DeepSourceClient(process.env.DEEPSOURCE_API_KEY!);
+  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  if (!apiKey) {
+    throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
+  }
+
+  const client = new DeepSourceClient(apiKey);
   const projects = await client.listProjects();
 
   return {
@@ -39,7 +44,12 @@ mcpServer.tool(
     before: z.string().optional(),
   },
   async ({ projectKey, offset, first, after, before }) => {
-    const client = new DeepSourceClient(process.env.DEEPSOURCE_API_KEY!);
+    const apiKey = process.env.DEEPSOURCE_API_KEY;
+    if (!apiKey) {
+      throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
+    }
+
+    const client = new DeepSourceClient(apiKey);
     const pagination = { offset, first, after, before };
     const result = await client.getIssues(projectKey, pagination);
 

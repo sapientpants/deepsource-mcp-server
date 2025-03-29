@@ -65,8 +65,8 @@ describe('DeepSource MCP Server API', () => {
     it('should expose the expected API endpoints', () => {
       // Verify that the router has the expected routes
       const routes = app._router.stack
-        .filter((layer: any) => layer.route)
-        .map((layer: any) => ({
+        .filter((layer: { route?: unknown }) => layer.route)
+        .map((layer: { route: { path: string; methods: Record<string, boolean> } }) => ({
           path: layer.route.path,
           methods: Object.keys(layer.route.methods),
         }));

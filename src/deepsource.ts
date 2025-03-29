@@ -44,6 +44,10 @@ export interface PaginatedResponse<T> {
 }
 
 export class DeepSourceClient {
+  /**
+   * HTTP client for making API requests to DeepSource
+   * @private
+   */
   private client;
 
   /**
@@ -66,7 +70,7 @@ export class DeepSourceClient {
    * @param error - The error object from the GraphQL request
    * @throws Error with formatted GraphQL error messages
    */
-  private handleGraphQLError(error: Error | unknown): never {
+  private static handleGraphQLError(error: Error | unknown): never {
     if (error instanceof AxiosError && error.response?.data?.errors) {
       const graphqlErrors: Array<{ message: string }> = error.response.data.errors;
       throw new Error(`GraphQL Error: ${graphqlErrors.map((e) => e.message).join(', ')}`);
@@ -143,7 +147,7 @@ export class DeepSourceClient {
       if (error instanceof Error && error.message.includes('NoneType')) {
         return [];
       }
-      return this.handleGraphQLError(error);
+      return DeepSourceClient.handleGraphQLError(error);
     }
   }
 
@@ -289,17 +293,23 @@ export class DeepSourceClient {
           totalCount: 0,
         };
       }
-      return this.handleGraphQLError(error);
+      return DeepSourceClient.handleGraphQLError(error);
     }
   }
 
+  /**
+   * Fetches a specific issue from a DeepSource project by its ID
+   * @param projectKey - The unique identifier for the DeepSource project
+   * @param issueId - The unique identifier of the issue to retrieve
+   * @returns Promise that resolves to the issue if found, or null if not found
+   */
   async getIssue(projectKey: string, issueId: string): Promise<DeepSourceIssue | null> {
     try {
       const result = await this.getIssues(projectKey);
       const issue = result.items.find((issue) => issue.id === issueId);
       return issue || null;
     } catch (error) {
-      return this.handleGraphQLError(error);
+      return DeepSourceClient.handleGraphQLError(error);
     }
   }
 }
