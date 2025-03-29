@@ -30,11 +30,31 @@ const deepsource = new DeepSourceClient(DEEPSOURCE_API_KEY);
 
 // Helper functions for URI handling
 function encodeProjectKey(dsn: string): string {
-  return Buffer.from(dsn).toString('base64url');
+  try {
+    // Use standard base64 encoding, then make it URL-safe
+    const base64 = Buffer.from(dsn).toString('base64');
+    const urlSafe = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return urlSafe;
+  } catch (error) {
+    logError({ type: 'encode_project_key_error', dsn, error });
+    return '';
+  }
 }
 
 function decodeProjectKey(key: string): string {
-  return Buffer.from(key, 'base64url').toString();
+  try {
+    // First, ensure it's a valid base64url by replacing any URL-unsafe characters
+    const safeKey = key.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = Buffer.from(safeKey, 'base64').toString();
+
+    // Log the result for debugging
+    logError({ type: 'decode_project_key', original: key, decoded });
+
+    return decoded;
+  } catch (error) {
+    logError({ type: 'decode_project_key_error', key, error });
+    return '';
+  }
 }
 
 // Create MCP server
@@ -128,6 +148,138 @@ mcpServer.resource(
       };
     } catch (error) {
       logError({ type: 'read_issues_error', error });
+      return { contents: [] };
+    }
+  }
+);
+
+// Add a new resource template for individual issues
+mcpServer.resource(
+  'deepsource-project-issue',
+  new ResourceTemplate('deepsource://projects/{projectKey}/issues/{issueId}', {
+    list: async () => {
+      // This handler is just a placeholder as individual issues are handled in the read handler
+      return { resources: [] };
+    },
+  }),
+  async (uri) => {
+    try {
+      // The URI format is deepsource://projects/base64project/issues/issueId
+      // But the base64project might contain slashes, so we need to be careful
+      const uriString = uri.toString();
+
+      // Extract project key and issue ID more reliably
+      const projectsPrefix = 'deepsource://projects/';
+      const issuesInfix = '/issues/';
+
+      if (!uriString.includes(projectsPrefix) || !uriString.includes(issuesInfix)) {
+        logError({ type: 'issue_invalid_uri', uri: uriString });
+        return { contents: [] };
+      }
+
+      const afterProjectsPrefix = uriString.substring(projectsPrefix.length);
+      const issuesIndex = afterProjectsPrefix.indexOf(issuesInfix);
+
+      if (issuesIndex === -1) {
+        logError({ type: 'issue_invalid_uri_format', uri: uriString });
+        return { contents: [] };
+      }
+
+      const encodedProjectKey = afterProjectsPrefix.substring(0, issuesIndex);
+      const afterIssues = afterProjectsPrefix.substring(issuesIndex + issuesInfix.length);
+
+      // The issueId might contain additional path components, so take everything up to the next slash or the end
+      const issueId = afterIssues.includes('/')
+        ? afterIssues.substring(0, afterIssues.indexOf('/'))
+        : afterIssues;
+
+      logError({
+        type: 'issue_debug_parsing',
+        uri: uriString,
+        encodedProjectKey,
+        issueId,
+      });
+
+      // Now decode the project key
+      const projectKey = decodeProjectKey(encodedProjectKey);
+
+      logError({
+        type: 'issue_debug_decoded',
+        projectKey,
+        issueId,
+      });
+
+      if (!projectKey || !issueId) {
+        logError({ type: 'issue_missing_params', projectKey, issueId });
+        return { contents: [] };
+      }
+
+      // Try to decode the issue ID if it looks like base64
+      let decodedIssueId = issueId;
+      if (issueId.includes('=')) {
+        try {
+          // The issue ID might be base64 encoded
+          decodedIssueId = Buffer.from(issueId, 'base64').toString('utf-8');
+          logError({ type: 'issue_decoded_id', original: issueId, decoded: decodedIssueId });
+        } catch (e) {
+          logError({ type: 'issue_decode_error', issueId, error: e });
+        }
+      }
+
+      // First try to get all issues to see what we're working with
+      const allIssues = await deepsource.getIssues(projectKey);
+      logError({
+        type: 'issue_debug_all',
+        count: allIssues.length,
+        issueIds: allIssues.map((i) => i.id),
+      });
+
+      // Try different approaches to find the issue
+      let issue = null;
+
+      // 1. Try direct match with original ID
+      issue = allIssues.find((i) => i.id === issueId);
+
+      // 2. If not found and decoded is different, try with decoded ID
+      if (!issue && decodedIssueId !== issueId) {
+        // If decoded ID contains a colon (like "Occurrence:actualId"), try the part after the colon
+        if (decodedIssueId.includes(':')) {
+          const actualId = decodedIssueId.split(':')[1];
+          logError({ type: 'issue_trying_actual_id', actualId });
+          issue = allIssues.find((i) => i.id === actualId || i.id.endsWith(actualId));
+        } else {
+          issue = allIssues.find((i) => i.id === decodedIssueId);
+        }
+      }
+
+      // 3. Last resort: try partial matching
+      if (!issue) {
+        for (const i of allIssues) {
+          if (i.id.includes(issueId) || issueId.includes(i.id)) {
+            logError({ type: 'issue_found_by_partial', issueId, matchedWith: i.id });
+            issue = i;
+            break;
+          }
+        }
+      }
+
+      if (!issue) {
+        logError({ type: 'issue_not_found', projectKey, issueId, decodedIssueId });
+        return { contents: [] };
+      }
+
+      logError({ type: 'issue_found', issue });
+
+      return {
+        contents: [
+          {
+            uri: `deepsource://projects/${encodeProjectKey(projectKey)}/issues/${issue.id}`,
+            text: `# ${issue.title} [${issue.shortcode}]\n\n**Severity:** ${issue.severity}\n**Status:** ${issue.status}\n**File:** ${issue.file_path}:${issue.line_number}\n\n## Description\n${issue.issue_text}`,
+          },
+        ],
+      };
+    } catch (error) {
+      logError({ type: 'read_issue_error', uri: uri.pathname, error });
       return { contents: [] };
     }
   }

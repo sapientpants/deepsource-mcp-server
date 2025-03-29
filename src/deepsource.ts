@@ -221,14 +221,53 @@ export class DeepSourceClient {
 
   async getIssue(projectKey: string, issueId: string): Promise<DeepSourceIssue | null> {
     try {
+      console.log(`Getting issue with ID ${issueId} for project ${projectKey}`);
+
       const issues = await this.getIssues(projectKey);
-      const issue = issues.find((i) => i.id === issueId);
+      console.log(`Found ${issues.length} issues in project ${projectKey}`);
+
+      // Try direct match first
+      let issue = issues.find((i) => i.id === issueId);
+
+      // If not found, try to base64 decode the ID
+      if (!issue && issueId.includes('=')) {
+        try {
+          // The ID might be base64 encoded
+          const potentialBase64 = Buffer.from(issueId, 'base64').toString('utf-8');
+          console.log(`Trying base64 decoded ID: ${potentialBase64}`);
+
+          // Sometimes the format might be "Occurrence:actualid"
+          if (potentialBase64.includes(':')) {
+            const actualId = potentialBase64.split(':')[1];
+            issue = issues.find(
+              (i) => i.id === actualId || i.id.endsWith(actualId) || i.id.includes(actualId)
+            );
+          }
+        } catch (e) {
+          console.log('Error decoding base64:', e);
+        }
+      }
+
+      // Last resort: try partial matching (case insensitive)
+      if (!issue) {
+        console.log('Trying partial matching...');
+        issue = issues.find(
+          (i) =>
+            i.id.toLowerCase().includes(issueId.toLowerCase()) ||
+            (issueId.toLowerCase().includes(i.id.toLowerCase()) && i.id.length > 5)
+        );
+      }
 
       if (!issue) {
         console.log(`Issue with ID ${issueId} not found in project ${projectKey}`);
+        console.log(
+          'Available issue IDs:',
+          issues.map((i) => i.id)
+        );
         return null;
       }
 
+      console.log(`Found issue: ${issue.title} (${issue.id})`);
       return issue;
     } catch (error) {
       console.error('Error in getIssue:', error);
