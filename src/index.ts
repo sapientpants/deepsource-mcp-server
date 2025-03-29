@@ -1,11 +1,12 @@
-import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import { DeepSourceClient, DeepSourceProject, DeepSourceIssue } from './deepsource.js';
+import { DeepSourceClient } from './deepsource.js';
 import fs from 'fs';
 import { Buffer } from 'buffer';
+import { z } from 'zod';
 
 // Set up error logging
 const logFile = 'error.log';
@@ -57,237 +58,214 @@ function decodeProjectKey(key: string): string {
   }
 }
 
-// Create MCP server
+// Create MCP server with tools capability
 const mcpServer = new McpServer({
   name: 'deepsource-mcp',
   version: '0.0.0',
   capabilities: {
-    resources: {
-      'deepsource-projects': true,
-      'deepsource-project-issues': true,
-      'deepsource-project-issue': true,
-    },
+    tools: {},
   },
 });
 
-// Register resources with their templates
-mcpServer.resource(
-  'deepsource-projects',
-  new ResourceTemplate('deepsource://projects', {
-    list: async () => {
-      try {
-        const projects = await deepsource.listProjects();
-        return {
-          resources: projects.map((project: DeepSourceProject) => ({
-            name: project.name,
-            uri: `deepsource://projects/${encodeProjectKey(project.key)}`,
-            description: `Repository: ${project.repository.url} (${project.repository.provider})`,
-          })),
-        };
-      } catch (error) {
-        logError({ type: 'list_projects_error', error });
-        return { resources: [] };
-      }
-    },
-  }),
-  async () => {
-    try {
-      const projects = await deepsource.listProjects();
-      return {
-        contents: projects.map((project: DeepSourceProject) => ({
-          uri: `deepsource://projects/${encodeProjectKey(project.key)}`,
-          text: `${project.name}\nRepository: ${project.repository.url} (${project.repository.provider})`,
-        })),
-      };
-    } catch (error) {
-      logError({ type: 'read_projects_error', error });
-      return { contents: [] };
-    }
+// Define tools for DeepSource API
+
+// 1. List all projects tool
+mcpServer.tool('deepsource_list_projects', {}, async () => {
+  try {
+    const projects = await deepsource.listProjects();
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(
+            projects.map((project) => ({
+              name: project.name,
+              key: encodeProjectKey(project.key),
+              repository: {
+                url: project.repository.url,
+                provider: project.repository.provider,
+              },
+            })),
+            null,
+            2
+          ),
+        },
+      ],
+    };
+  } catch (error) {
+    logError({ type: 'list_projects_error', error });
+    return {
+      isError: true,
+      content: [
+        {
+          type: 'text',
+          text: `Error listing projects: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        },
+      ],
+    };
   }
-);
+});
 
-mcpServer.resource(
-  'deepsource-project-issues',
-  new ResourceTemplate('deepsource://projects/{projectKey}/issues', {
-    list: async () => {
-      try {
-        const projects = await deepsource.listProjects();
-        if (projects.length === 0) {
-          return { resources: [] };
-        }
-
-        const allIssues = await Promise.all(
-          projects.map(async (project: DeepSourceProject) => {
-            try {
-              const issues = await deepsource.getIssues(project.key);
-              return issues.map((issue: DeepSourceIssue) => ({
-                name: issue.title,
-                uri: `deepsource://projects/${encodeProjectKey(project.key)}/issues/${issue.id}`,
-                description: `${issue.severity} severity issue in ${issue.file_path}:${issue.line_number}\n${issue.issue_text}`,
-              }));
-            } catch (error) {
-              logError({ type: 'project_issues_error', projectKey: project.key, error });
-              return [];
-            }
-          })
-        );
+// 2. Get issues for a specific project
+mcpServer.tool(
+  'deepsource_get_project_issues',
+  {
+    project_key: z.string().describe('The encoded project key'),
+  },
+  async ({ project_key }) => {
+    try {
+      if (!project_key) {
         return {
-          resources: allIssues.flat(),
+          isError: true,
+          content: [
+            {
+              type: 'text',
+              text: 'Missing required parameter: project_key',
+            },
+          ],
         };
-      } catch (error) {
-        logError({ type: 'list_issues_error', error });
-        return { resources: [] };
-      }
-    },
-  }),
-  async (uri) => {
-    try {
-      const projectKey = decodeProjectKey(uri.pathname.split('/')[2]);
-      if (!projectKey) {
-        return { contents: [] };
-      }
-      const issues = await deepsource.getIssues(projectKey);
-      return {
-        contents: issues.map((issue: DeepSourceIssue) => ({
-          uri: `deepsource://projects/${encodeProjectKey(projectKey)}/issues/${issue.id}`,
-          text: `${issue.title} (${issue.severity})\n${issue.issue_text}\nFile: ${issue.file_path}:${issue.line_number}\nStatus: ${issue.status}`,
-        })),
-      };
-    } catch (error) {
-      logError({ type: 'read_issues_error', error });
-      return { contents: [] };
-    }
-  }
-);
-
-// Add a new resource template for individual issues
-mcpServer.resource(
-  'deepsource-project-issue',
-  new ResourceTemplate('deepsource://projects/{projectKey}/issues/{issueId}', {
-    list: async () => {
-      // This handler is just a placeholder as individual issues are handled in the read handler
-      return { resources: [] };
-    },
-  }),
-  async (uri) => {
-    try {
-      // The URI format is deepsource://projects/base64project/issues/issueId
-      // But the base64project might contain slashes, so we need to be careful
-      const uriString = uri.toString();
-
-      // Extract project key and issue ID more reliably
-      const projectsPrefix = 'deepsource://projects/';
-      const issuesInfix = '/issues/';
-
-      if (!uriString.includes(projectsPrefix) || !uriString.includes(issuesInfix)) {
-        logError({ type: 'issue_invalid_uri', uri: uriString });
-        return { contents: [] };
       }
 
-      const afterProjectsPrefix = uriString.substring(projectsPrefix.length);
-      const issuesIndex = afterProjectsPrefix.indexOf(issuesInfix);
+      const decodedKey = decodeProjectKey(project_key);
 
-      if (issuesIndex === -1) {
-        logError({ type: 'issue_invalid_uri_format', uri: uriString });
-        return { contents: [] };
+      if (!decodedKey) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: 'text',
+              text: 'Invalid project key format',
+            },
+          ],
+        };
       }
 
-      const encodedProjectKey = afterProjectsPrefix.substring(0, issuesIndex);
-      const afterIssues = afterProjectsPrefix.substring(issuesIndex + issuesInfix.length);
-
-      // The issueId might contain additional path components, so take everything up to the next slash or the end
-      const issueId = afterIssues.includes('/')
-        ? afterIssues.substring(0, afterIssues.indexOf('/'))
-        : afterIssues;
-
-      logError({
-        type: 'issue_debug_parsing',
-        uri: uriString,
-        encodedProjectKey,
-        issueId,
-      });
-
-      // Now decode the project key
-      const projectKey = decodeProjectKey(encodedProjectKey);
-
-      logError({
-        type: 'issue_debug_decoded',
-        projectKey,
-        issueId,
-      });
-
-      if (!projectKey || !issueId) {
-        logError({ type: 'issue_missing_params', projectKey, issueId });
-        return { contents: [] };
-      }
-
-      // Try to decode the issue ID if it looks like base64
-      let decodedIssueId = issueId;
-      if (issueId.includes('=')) {
-        try {
-          // The issue ID might be base64 encoded
-          decodedIssueId = Buffer.from(issueId, 'base64').toString('utf-8');
-          logError({ type: 'issue_decoded_id', original: issueId, decoded: decodedIssueId });
-        } catch (e) {
-          logError({ type: 'issue_decode_error', issueId, error: e });
-        }
-      }
-
-      // First try to get all issues to see what we're working with
-      const allIssues = await deepsource.getIssues(projectKey);
-      logError({
-        type: 'issue_debug_all',
-        count: allIssues.length,
-        issueIds: allIssues.map((i) => i.id),
-      });
-
-      // Try different approaches to find the issue
-      let issue = null;
-
-      // 1. Try direct match with original ID
-      issue = allIssues.find((i) => i.id === issueId);
-
-      // 2. If not found and decoded is different, try with decoded ID
-      if (!issue && decodedIssueId !== issueId) {
-        // If decoded ID contains a colon (like "Occurrence:actualId"), try the part after the colon
-        if (decodedIssueId.includes(':')) {
-          const actualId = decodedIssueId.split(':')[1];
-          logError({ type: 'issue_trying_actual_id', actualId });
-          issue = allIssues.find((i) => i.id === actualId || i.id.endsWith(actualId));
-        } else {
-          issue = allIssues.find((i) => i.id === decodedIssueId);
-        }
-      }
-
-      // 3. Last resort: try partial matching
-      if (!issue) {
-        for (const i of allIssues) {
-          if (i.id.includes(issueId) || issueId.includes(i.id)) {
-            logError({ type: 'issue_found_by_partial', issueId, matchedWith: i.id });
-            issue = i;
-            break;
-          }
-        }
-      }
-
-      if (!issue) {
-        logError({ type: 'issue_not_found', projectKey, issueId, decodedIssueId });
-        return { contents: [] };
-      }
-
-      logError({ type: 'issue_found', issue });
+      const issues = await deepsource.getIssues(decodedKey);
 
       return {
-        contents: [
+        content: [
           {
-            uri: `deepsource://projects/${encodeProjectKey(projectKey)}/issues/${issue.id}`,
-            text: `# ${issue.title} [${issue.shortcode}]\n\n**Severity:** ${issue.severity}\n**Status:** ${issue.status}\n**File:** ${issue.file_path}:${issue.line_number}\n\n## Description\n${issue.issue_text}`,
+            type: 'text',
+            text: JSON.stringify(
+              issues.map((issue) => ({
+                id: issue.id,
+                title: issue.title,
+                severity: issue.severity,
+                status: issue.status,
+                file_path: issue.file_path,
+                line_number: issue.line_number,
+                summary:
+                  issue.issue_text.substring(0, 100) + (issue.issue_text.length > 100 ? '...' : ''),
+              })),
+              null,
+              2
+            ),
           },
         ],
       };
     } catch (error) {
-      logError({ type: 'read_issue_error', uri: uri.pathname, error });
-      return { contents: [] };
+      logError({ type: 'get_project_issues_error', project_key, error });
+      return {
+        isError: true,
+        content: [
+          {
+            type: 'text',
+            text: `Error fetching issues: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          },
+        ],
+      };
+    }
+  }
+);
+
+// 3. Get detailed information about a specific issue
+mcpServer.tool(
+  'deepsource_get_issue_details',
+  {
+    project_key: z.string().describe('The encoded project key'),
+    issue_id: z.string().describe('The issue ID'),
+  },
+  async ({ project_key, issue_id }) => {
+    try {
+      if (!project_key || !issue_id) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: 'text',
+              text: 'Missing required parameters: project_key and issue_id are required',
+            },
+          ],
+        };
+      }
+
+      const decodedKey = decodeProjectKey(project_key);
+
+      if (!decodedKey) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: 'text',
+              text: 'Invalid project key format',
+            },
+          ],
+        };
+      }
+
+      // First get all issues
+      const allIssues = await deepsource.getIssues(decodedKey);
+
+      // Find the specific issue
+      const issue = allIssues.find((i) => i.id === issue_id);
+
+      if (!issue) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: 'text',
+              text: `Issue with ID ${issue_id} not found in project ${project_key}`,
+            },
+          ],
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                id: issue.id,
+                title: issue.title,
+                shortcode: issue.shortcode,
+                category: issue.category,
+                severity: issue.severity,
+                status: issue.status,
+                issue_text: issue.issue_text,
+                file_path: issue.file_path,
+                line_number: issue.line_number,
+                tags: issue.tags,
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    } catch (error) {
+      logError({ type: 'get_issue_details_error', project_key, issue_id, error });
+      return {
+        isError: true,
+        content: [
+          {
+            type: 'text',
+            text: `Error fetching issue details: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          },
+        ],
+      };
     }
   }
 );
@@ -357,6 +335,11 @@ if (process.stdin.isTTY) {
     }
   });
 
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+  });
+
   // Start the Express server
   const PORT = parseInt(process.env.PORT || '3000', 10);
   const HOST = process.env.HOST || '0.0.0.0';
@@ -373,3 +356,5 @@ if (process.stdin.isTTY) {
     process.exit(1);
   });
 }
+
+export default mcpServer;
