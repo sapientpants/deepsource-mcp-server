@@ -1,13 +1,13 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import express from 'express';
-import type { Request, Response } from 'express';
+import type { Request, Response, Application } from 'express';
 import cors from 'cors';
 import { DeepSourceClient } from './deepsource.js';
 import { z } from 'zod';
 
 // Initialize Express app
-const app = express();
+export const app: Application = express();
 app.use(cors());
 
 // Initialize MCP server
