@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import { Buffer } from 'buffer';
 
 export interface DeepSourceProject {
   key: string;
@@ -87,7 +88,7 @@ export class DeepSourceClient {
 
       if (response.data.errors) {
         throw new Error(
-          `GraphQL Errors: ${response.data.errors.map((e: any) => e.message).join(', ')}`
+          `GraphQL Errors: ${response.data.errors.map((e: { message: string }) => e.message).join(', ')}`
         );
       }
 
@@ -184,7 +185,7 @@ export class DeepSourceClient {
 
       if (response.data.errors) {
         throw new Error(
-          `GraphQL Errors: ${response.data.errors.map((e: any) => e.message).join(', ')}`
+          `GraphQL Errors: ${response.data.errors.map((e: { message: string }) => e.message).join(', ')}`
         );
       }
 
