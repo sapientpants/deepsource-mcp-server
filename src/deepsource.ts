@@ -46,6 +46,10 @@ export interface PaginatedResponse<T> {
 export class DeepSourceClient {
   private client;
 
+  /**
+   * Creates a new DeepSourceClient instance
+   * @param apiKey - DeepSource API key for authentication
+   */
   constructor(apiKey: string) {
     this.client = axios.create({
       baseURL: 'https://api.deepsource.io/graphql/',
@@ -57,6 +61,11 @@ export class DeepSourceClient {
     });
   }
 
+  /**
+   * Handles GraphQL errors by formatting and throwing appropriate error messages
+   * @param error - The error object from the GraphQL request
+   * @throws Error with formatted GraphQL error messages
+   */
   private handleGraphQLError(error: Error | unknown): never {
     if (error instanceof AxiosError && error.response?.data?.errors) {
       const graphqlErrors: Array<{ message: string }> = error.response.data.errors;
@@ -65,6 +74,10 @@ export class DeepSourceClient {
     throw error;
   }
 
+  /**
+   * Fetches a list of all accessible DeepSource projects
+   * @returns Promise that resolves to an array of DeepSourceProject objects
+   */
   async listProjects(): Promise<DeepSourceProject[]> {
     try {
       const viewerQuery = `
@@ -134,6 +147,12 @@ export class DeepSourceClient {
     }
   }
 
+  /**
+   * Fetches issues from a specified DeepSource project
+   * @param projectKey - The unique identifier for the DeepSource project
+   * @param pagination - Optional pagination parameters for the query
+   * @returns Promise that resolves to a paginated response containing DeepSource issues
+   */
   async getIssues(
     projectKey: string,
     pagination: PaginationParams = {}
