@@ -2,7 +2,7 @@ import axios, { AxiosError } from 'axios';
 import { Buffer } from 'buffer';
 
 // Helper to conditionally log errors only when not in test environment
-const logIfNotTest = (message: string, data?: any) => {
+const logIfNotTest = (message: string, data?: unknown) => {
   if (process.env.NODE_ENV !== 'test') {
     if (data) {
       console.error(message, data);
