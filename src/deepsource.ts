@@ -218,4 +218,24 @@ export class DeepSourceClient {
       return this.handleGraphQLError(error);
     }
   }
+
+  async getIssue(projectKey: string, issueId: string): Promise<DeepSourceIssue | null> {
+    try {
+      const issues = await this.getIssues(projectKey);
+      const issue = issues.find((i) => i.id === issueId);
+
+      if (!issue) {
+        console.log(`Issue with ID ${issueId} not found in project ${projectKey}`);
+        return null;
+      }
+
+      return issue;
+    } catch (error) {
+      console.error('Error in getIssue:', error);
+      if (error instanceof Error && error.message.includes('NoneType')) {
+        return null;
+      }
+      return this.handleGraphQLError(error);
+    }
+  }
 }
