@@ -21,13 +21,38 @@ const logError = (error: Error | unknown) => {
 };
 
 // Enhanced request logging to debug method calls
-const logRequest = (type: string, data: any) => {
+const logRequest = (type: string, data: Record<string, unknown>) => {
   try {
     const timestamp = new Date().toISOString();
     const logEntry = `${timestamp}: REQUEST: ${type}: ${JSON.stringify(data, null, 2)}\n`;
     fs.appendFileSync(logFile, logEntry);
   } catch (writeError) {
     console.error('Failed to write request to log:', writeError);
+  }
+};
+
+// Add custom JSON-RPC message handler to capture method not found errors
+const handleJsonRpcRequest = (message: Record<string, unknown>) => {
+  try {
+    // Log all JSON-RPC messages
+    if (message && message.jsonrpc === '2.0') {
+      // Log the full message to help debug the "method not found" errors
+      fs.appendFileSync(logFile, `${new Date().toISOString()} ${JSON.stringify(message)}\n`);
+
+      // Additional structured logging
+      logError({
+        type: 'jsonrpc_message',
+        id: message.id,
+        method: message.method,
+        hasParams: !!message.params,
+        isRequest: !!message.method,
+        isResponse:
+          Object.prototype.hasOwnProperty.call(message, 'result') ||
+          Object.prototype.hasOwnProperty.call(message, 'error'),
+      });
+    }
+  } catch (error) {
+    logError({ type: 'jsonrpc_parse_error', error, message });
   }
 };
 
@@ -309,15 +334,14 @@ if (process.stdin.isTTY) {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  // Add request logging middleware
+  // Add request logging middleware - log all requests
   app.use((req: Request, res: Response, next: NextFunction) => {
+    // Log all requests
     logError({
-      type: 'request',
+      type: 'http_request',
       method: req.method,
       url: req.url,
       query: req.query,
-      headers: req.headers,
-      body: req.body,
     });
     next();
   });
@@ -349,27 +373,26 @@ if (process.stdin.isTTY) {
     const sessionId = req.query.sessionId as string;
 
     try {
-      // Log the incoming message request for debugging with raw data
-      logRequest('message_post', {
+      // Log the raw request body
+      logError({
+        type: 'message_request',
         sessionId,
-        headers: req.headers,
-        query: req.query,
-        rawBody: req.body, // Raw request body
+        contentType: req.headers['content-type'],
+        bodyType: typeof req.body,
       });
 
-      // Parse the request body if it's a JSON string
+      // Parse and analyze the request body for JSON-RPC calls
       let parsedBody = req.body;
       if (typeof req.body === 'string') {
         try {
           parsedBody = JSON.parse(req.body);
-          logRequest('parsed_message', {
-            sessionId,
-            parsedBody,
-          });
         } catch (parseError) {
-          logError({ type: 'message_parse_error', sessionId, error: parseError, body: req.body });
+          logError({ type: 'message_parse_error', sessionId, error: parseError });
         }
       }
+
+      // Capture JSON-RPC method information before handling
+      handleJsonRpcRequest(parsedBody);
 
       const transport = transports[sessionId];
       if (transport) {
@@ -381,7 +404,7 @@ if (process.stdin.isTTY) {
         }
       }
     } catch (error) {
-      logError({ type: 'message_handling_error', sessionId, error, body: req.body });
+      logError({ type: 'message_handling_error', sessionId, error });
       if (!res.headersSent) {
         res.status(500).send('Error handling message');
       }
