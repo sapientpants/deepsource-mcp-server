@@ -61,6 +61,13 @@ function decodeProjectKey(key: string): string {
 const mcpServer = new McpServer({
   name: 'deepsource-mcp',
   version: '0.0.0',
+  capabilities: {
+    resources: {
+      'deepsource-projects': true,
+      'deepsource-project-issues': true,
+      'deepsource-project-issue': true,
+    },
+  },
 });
 
 // Register resources with their templates
