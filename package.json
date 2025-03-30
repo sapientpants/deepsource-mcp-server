@@ -11,6 +11,13 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sapientpants/deepsource-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sapientpants/deepsource-mcp-server/issues"
+  },
   "scripts": {
     "build": "tsc",
     "ci": "pnpm run format:check && pnpm run lint && pnpm run check-types && pnpm run build && pnpm run test:coverage",
