@@ -24,39 +24,16 @@ The DeepSource MCP Server enables AI assistants to interact with DeepSource's co
 * **Cross-Platform**: Works on Linux, macOS, and Windows
 * **Robust Error Handling**: Comprehensive error handling for network, authentication, and parsing issues
 
-## Installation
-
-### From Source
-
-1. Clone the repository:
-```bash
-git clone https://github.com/sapientpants/deepsource-mcp-server.git
-cd deepsource-mcp-server
-```
-
-2. Install dependencies:
-```bash
-pnpm install
-```
-
-3. Build the project:
-```bash
-pnpm run build
-```
-
-### From Docker
-
-Pull and run the Docker image:
-```bash
-docker pull sapientpants/deepsource-mcp-server:latest
-```
-
-### Integration with Claude Desktop
+## Usage with Claude Desktop
 
 1. Edit `claude_desktop_config.json`:
    - Open Claude Desktop
    - Go to `Settings` -> `Developer` -> `Edit Config`
-   - Add the following configuration to the `mcpServers` section:
+   - Add the one of the configurations below to the `mcpServers` section
+
+2. Restart Claude Desktop to apply the changes
+
+### Docker
 
 ```json
 {
@@ -79,14 +56,26 @@ docker pull sapientpants/deepsource-mcp-server:latest
 }
 ```
 
-2. Restart Claude Desktop to apply the changes
+### NPX
 
-To check MCP logs, use:
-```bash
-tail -n 20 -f ~/Library/Logs/Claude/mcp*.log
+```json
+{
+  "mcpServers": {
+    "deepsource": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "deepsource-mcp-server"
+      ],
+      "env": {
+        "DEEPSOURCE_API_KEY": "your-deepsource-api-key"
+      }
+    }
+  }
+}
 ```
 
-### Available Tools
+## Available Tools
 
 The DeepSource MCP Server provides the following tools:
 
@@ -104,15 +93,44 @@ The DeepSource MCP Server provides the following tools:
 
 ## Development
 
+1. Clone the repository:
+```bash
+git clone https://github.com/sapientpants/deepsource-mcp-server.git
+cd deepsource-mcp-server
+```
+
+2. Install dependencies:
+```bash
+pnpm install
+```
+
+3. Build the project:
+```bash
+pnpm run build
+```
+
+4. Configure Claude Desktop
+```json
+{
+  "mcpServers": {
+    "deepsource": {
+      "command": "node",
+      "args": [
+        "/path/to/deepsource-mcp-server/dist/index.js"
+      ],
+      "env": {
+        "DEEPSOURCE_API_KEY": "your-deepsource-api-key"
+      }
+    }
+  }
+}
+```
+
 ### Prerequisites
 
 * Node.js 20 or higher
 * pnpm 10.7.0 or higher
 * Docker (for container builds)
-
-### Environment Variables
-
-* `DEEPSOURCE_API_KEY`: Your DeepSource API key (required)
 
 ### Scripts
 
