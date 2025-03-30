@@ -30,3 +30,10 @@ jobs:
         
       - name: CI
         run: pnpm run ci
+
+      - name: Report test coverage to DeepSource
+        uses: deepsourcelabs/test-coverage-action@v1.1.2
+        with:
+          key: javascript
+          coverage-file: coverage/lcov.info
+          dsn: ${{ secrets.DEEPSOURCE_DSN }}
