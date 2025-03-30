@@ -4,7 +4,7 @@ import { DeepSourceClient } from './deepsource.js';
 import { z } from 'zod';
 
 // Initialize MCP server
-const mcpServer = new McpServer({
+export const mcpServer = new McpServer({
   name: 'deepsource-mcp-server',
   version: '0.0.0',
 });
@@ -79,5 +79,8 @@ mcpServer.tool(
   }
 );
 
-const transport = new StdioServerTransport();
-await mcpServer.connect(transport);
+// Only start the server if this is the main module (not during tests)
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const transport = new StdioServerTransport();
+  await mcpServer.connect(transport);
+}
