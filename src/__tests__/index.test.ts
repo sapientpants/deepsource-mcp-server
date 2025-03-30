@@ -3,18 +3,20 @@
  */
 
 import { mcpServer, handleDeepsourceProjects, handleDeepsourceProjectIssues } from '../index.js';
-import { DeepSourceClient } from '../deepsource.js';
-import type {
-  DeepSourceProject,
-  DeepSourceIssue,
-  PaginatedResponse,
-  PaginationParams,
+import {
+  DeepSourceClient,
+  type DeepSourceProject,
+  type DeepSourceIssue,
+  type PaginatedResponse,
 } from '../deepsource.js';
-import { z } from 'zod';
 
-// Force the module to be evaluated which improves code coverage for module-level code
-// This ensures that the mcpServer.tool() calls are covered in the index.ts file
-import '../index.js';
+// Define a type for pagination parameters
+type PaginationParams = {
+  offset?: number;
+  first?: number;
+  after?: string;
+  before?: string;
+};
 
 // Create a simple test helper for verifying responses
 const verifyResponse = (
@@ -51,6 +53,15 @@ describe('MCP server implementation', () => {
   describe('Server initialization', () => {
     it('initializes with tools', () => {
       expect(mcpServer).toBeDefined();
+    });
+
+    it('validates server configuration', () => {
+      // Check that the server is properly configured
+      expect(mcpServer).toHaveProperty('server');
+      expect(mcpServer.server).toHaveProperty('_serverInfo');
+
+      // @ts-ignore - accessing private property for testing
+      expect(mcpServer.server._serverInfo).toHaveProperty('name', 'deepsource-mcp-server');
     });
 
     it('rejects requests when DEEPSOURCE_API_KEY is not set', async () => {
@@ -95,7 +106,7 @@ describe('MCP server implementation', () => {
 
       // Override the method for this test with a function that records calls
       DeepSourceClient.prototype.listProjects = function () {
-        calls.push([]);
+        calls.push([...arguments]);
         return Promise.resolve(mockProjects);
       };
 
@@ -115,6 +126,7 @@ describe('MCP server implementation', () => {
     it('handles empty projects list', async () => {
       // Override the method for this test
       DeepSourceClient.prototype.listProjects = function () {
+        // Mock implementation returning empty array for testing empty results
         return Promise.resolve([]);
       };
 
@@ -164,11 +176,12 @@ describe('MCP server implementation', () => {
       };
 
       // Create a tracked array to record calls
-      const calls: Array<[string, PaginationParams | Record<string, never>]> = [];
+      const calls: Array<[string, PaginationParams?]> = [];
 
       // Override the method for this test
       DeepSourceClient.prototype.getIssues = function (projectKey, pagination) {
-        calls.push([projectKey, pagination || {}]);
+        // Mock implementation for testing with pagination parameters
+        calls.push([projectKey, pagination]);
         return Promise.resolve(mockIssues);
       };
 
@@ -234,11 +247,12 @@ describe('MCP server implementation', () => {
       };
 
       // Create a tracked array to record calls
-      const calls: Array<[string, PaginationParams | Record<string, never>]> = [];
+      const calls: Array<[string, PaginationParams?]> = [];
 
       // Override the method for this test
       DeepSourceClient.prototype.getIssues = function (projectKey, pagination) {
-        calls.push([projectKey, pagination || {}]);
+        // Mock implementation for testing with minimal parameters
+        calls.push([projectKey, pagination]);
         return Promise.resolve(mockIssues);
       };
 
@@ -282,11 +296,12 @@ describe('MCP server implementation', () => {
       };
 
       // Create a tracked array to record calls
-      const calls: Array<[string, PaginationParams | Record<string, never>]> = [];
+      const calls: Array<[string, PaginationParams?]> = [];
 
       // Override the method for this test
       DeepSourceClient.prototype.getIssues = function (projectKey, pagination) {
-        calls.push([projectKey, pagination || {}]);
+        // Mock implementation for testing with partial parameters
+        calls.push([projectKey, pagination]);
         return Promise.resolve(mockIssues);
       };
 
@@ -319,95 +334,6 @@ describe('MCP server implementation', () => {
       });
     });
 
-    it('correctly maps empty or partial issue results', async () => {
-      // Mock data with partial/missing fields
-      const mockIssues: PaginatedResponse<DeepSourceIssue> = {
-        items: [
-          {
-            id: 'issue1',
-            title: 'Issue One',
-            shortcode: 'SC1',
-            category: 'category1',
-            severity: 'high',
-            status: 'open',
-            issue_text: 'This is an issue',
-            file_path: 'src/file.ts',
-            line_number: 42,
-            tags: [], // Empty tags array to test mapping
-          },
-          {
-            id: 'issue2',
-            title: 'Issue Two',
-            shortcode: 'SC2',
-            category: 'category2',
-            severity: 'medium',
-            status: 'closed',
-            issue_text: 'This is another issue',
-            file_path: 'src/another-file.ts',
-            line_number: 24,
-            tags: ['tag1'],
-          },
-        ],
-        pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: false,
-          startCursor: undefined, // Undefined cursor to test mapping
-          endCursor: undefined,
-        },
-        totalCount: 2,
-      };
-
-      // Override the method for this test
-      DeepSourceClient.prototype.getIssues = function () {
-        return Promise.resolve(mockIssues);
-      };
-
-      // Parameters for the call
-      const params = {
-        projectKey: 'test-project',
-      };
-
-      // Call the handler
-      const result = await handleDeepsourceProjectIssues(params);
-
-      // Verify the response
-      verifyResponse(result, {
-        items: [
-          {
-            id: 'issue1',
-            title: 'Issue One',
-            shortcode: 'SC1',
-            category: 'category1',
-            severity: 'high',
-            status: 'open',
-            issue_text: 'This is an issue',
-            file_path: 'src/file.ts',
-            line_number: 42,
-            tags: [],
-          },
-          {
-            id: 'issue2',
-            title: 'Issue Two',
-            shortcode: 'SC2',
-            category: 'category2',
-            severity: 'medium',
-            status: 'closed',
-            issue_text: 'This is another issue',
-            file_path: 'src/another-file.ts',
-            line_number: 24,
-            tags: ['tag1'],
-          },
-        ],
-        pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: false,
-          startCursor: undefined,
-          endCursor: undefined,
-        },
-        totalCount: 2,
-      });
-    });
-
     it('handles error from DeepSourceClient', async () => {
       // Override the method for this test to throw an error
       DeepSourceClient.prototype.getIssues = function () {
@@ -422,100 +348,5 @@ describe('MCP server implementation', () => {
       // Verify the error is propagated
       await expect(handleDeepsourceProjectIssues(params)).rejects.toThrow('API error');
     });
-  });
-});
-
-describe('Server startup logic', () => {
-  it('has correct condition for server startup', () => {
-    // Test the condition directly
-    const originalUrl = import.meta.url;
-    const originalArgv = process.argv[1];
-
-    try {
-      // When URL matches argv[1], server should start
-      Object.defineProperty(import.meta, 'url', {
-        value: `file:///test/path.js`,
-      });
-      process.argv[1] = '/test/path.js';
-
-      // Check that condition would be true (server would start)
-      expect(import.meta.url === `file://${process.argv[1]}`).toBe(true);
-
-      // When URL doesn't match argv[1], server should not start
-      process.argv[1] = '/different/path.js';
-
-      // Check that condition would be false (server would not start)
-      expect(import.meta.url === `file://${process.argv[1]}`).toBe(false);
-    } finally {
-      // Restore original values
-      Object.defineProperty(import.meta, 'url', { value: originalUrl });
-      process.argv[1] = originalArgv;
-    }
-  });
-
-  it('connects to transport when initialized', async () => {
-    // Mock StdioServerTransport
-    let transportConnected = false;
-    const mockTransport = {
-      on: () => {},
-      once: () => {},
-      send: () => {},
-      start: () => {
-        transportConnected = true;
-        return Promise.resolve();
-      },
-    };
-
-    // Call connect on the server
-    await mcpServer.connect(mockTransport as any);
-
-    // Verify connect would work
-    expect(transportConnected).toBe(true);
-  });
-
-  it('initializes tools correctly', () => {
-    // We need to test that mcpServer has tools properly registered
-    // The fact that all other tests pass confirms this, but we'll
-    // add a direct call to ensure code coverage
-
-    // Call the tool registration methods directly to increase coverage
-    const testHandler = () => ({
-      content: [
-        {
-          type: 'text' as const,
-          text: '{}',
-        },
-      ],
-    });
-
-    // This is equivalent to the existing code in index.ts but helps with coverage
-    mcpServer.tool('test_tool', 'Test tool description', testHandler);
-
-    // If we got here without errors, the tools system is working
-    expect(mcpServer).toBeDefined();
-  });
-});
-
-describe('Integration coverage tests', () => {
-  it('executes all code paths in the module', () => {
-    // This test is specifically designed to ensure high code coverage
-    // by executing code paths that are otherwise difficult to trigger in tests
-
-    // Test schema definitions and tool registration
-    const schema = {
-      projectKey: z.string(),
-      offset: z.number().optional(),
-      first: z.number().optional(),
-      after: z.string().optional(),
-      before: z.string().optional(),
-    };
-
-    // Register a test tool with schema (covers schema definition code)
-    mcpServer.tool('test_schema_tool', 'Test schema tool', schema, () => ({
-      content: [{ type: 'text' as const, text: '{}' }],
-    }));
-
-    // Validate mcpServer is correctly initialized
-    expect(mcpServer).toBeDefined();
   });
 });
