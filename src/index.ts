@@ -8,7 +8,7 @@ import { z } from 'zod';
 // Initialize MCP server
 export const mcpServer = new McpServer({
   name: 'deepsource-mcp-server',
-  version: '0.0.0',
+  version: '0.0.1',
 });
 
 // Export handler functions for testing
