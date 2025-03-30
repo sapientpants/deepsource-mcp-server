@@ -90,29 +90,17 @@ tail -n 20 -f ~/Library/Logs/Claude/mcp*.log
 
 The DeepSource MCP Server provides the following tools:
 
-1. `mcp_sonarqube_sonarqube_get_metrics`: Retrieve code metrics for a project
+1. `deepsource_projects`: List all available DeepSource projects
    * Parameters:
-     * `project_key` (required)
-     * `metrics` (optional array of metric keys)
+     * No required parameters
 
-2. `mcp_sonarqube_sonarqube_get_issues`: Retrieve issues for a project
+2. `deepsource_project_issues`: Get issues from a DeepSource project
    * Parameters:
-     * `project_key` (required)
-     * `severities` (optional array)
-     * `types` (optional array)
-     * `statuses` (optional array)
-     * `impact_severities` (optional array)
-     * `impact_software_qualities` (optional array)
-     * And many more filtering options...
-
-3. `mcp_sonarqube_sonarqube_get_quality_gate`: Retrieve quality gate status for a project
-   * Parameters:
-     * `project_key` (required)
-
-4. `mcp_sonarqube_sonarqube_list_projects`: List all projects
-   * Parameters:
-     * `page` (optional)
-     * `page_size` (optional)
+     * `projectKey` (required) - The unique identifier for the DeepSource project
+     * `offset` (optional) - Number of items to skip for pagination
+     * `first` (optional) - Number of items to return (defaults to 10)
+     * `after` (optional) - Cursor for forward pagination
+     * `before` (optional) - Cursor for backward pagination
 
 ## Development
 
@@ -124,7 +112,7 @@ The DeepSource MCP Server provides the following tools:
 
 ### Environment Variables
 
-* `DEEPSOURCE_API_KEY`: Your DeepSource API key
+* `DEEPSOURCE_API_KEY`: Your DeepSource API key (required)
 
 ### Scripts
 
