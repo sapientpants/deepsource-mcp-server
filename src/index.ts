@@ -8,7 +8,7 @@ import { z } from 'zod';
 // Initialize MCP server
 export const mcpServer = new McpServer({
   name: 'deepsource-mcp-server',
-  version: '0.0.1',
+  version: '0.0.2',
 });
 
 // Export handler functions for testing
@@ -125,9 +125,9 @@ mcpServer.tool(
   handleDeepsourceProjectIssues
 );
 
-// Only start the server if this is the main module (not during tests)
+// Only start the server if not in test mode
 /* istanbul ignore if */
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.env.NODE_ENV !== 'test') {
   const transport = new StdioServerTransport();
   await mcpServer.connect(transport);
 }
