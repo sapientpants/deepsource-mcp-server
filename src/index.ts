@@ -125,9 +125,9 @@ mcpServer.tool(
   handleDeepsourceProjectIssues
 );
 
-// Only start the server if this is the main module (not during tests)
+// Only start the server if not in test mode
 /* istanbul ignore if */
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.env.NODE_ENV !== 'test') {
   const transport = new StdioServerTransport();
   await mcpServer.connect(transport);
 }
