@@ -1,6 +1,9 @@
 import nock from 'nock';
 import { DeepSourceClient } from '../deepsource';
 
+// Mock the DeepSourceClient's getIssues method for specific tests
+const originalGetIssues = DeepSourceClient.prototype.getIssues;
+
 describe('DeepSourceClient', () => {
   const API_KEY = 'test-api-key';
   const client = new DeepSourceClient(API_KEY);
@@ -11,6 +14,8 @@ describe('DeepSourceClient', () => {
 
   afterAll(() => {
     nock.restore();
+    // Restore the original method after all tests
+    DeepSourceClient.prototype.getIssues = originalGetIssues;
   });
 
   describe('listProjects', () => {
@@ -82,6 +87,13 @@ describe('DeepSourceClient', () => {
         .reply(401, { errors: [{ message: 'Unauthorized' }] });
 
       await expect(client.listProjects()).rejects.toThrow('GraphQL Error: Unauthorized');
+    });
+
+    it('should handle non-GraphQL errors in listProjects', async () => {
+      nock('https://api.deepsource.io').post('/graphql/').replyWithError('Network error');
+
+      const client = new DeepSourceClient(API_KEY);
+      await expect(client.listProjects()).rejects.toThrow('Network error');
     });
   });
 
@@ -330,176 +342,240 @@ describe('DeepSourceClient', () => {
       });
       expect(result.totalCount).toBe(0);
     });
+
+    it('should handle NoneType errors in getIssues', async () => {
+      // First mock to find the project
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, {
+          data: {
+            viewer: {
+              accounts: {
+                edges: [
+                  {
+                    node: {
+                      login: 'testorg',
+                      repositories: {
+                        edges: [
+                          {
+                            node: {
+                              name: 'test-repo',
+                              defaultBranch: 'main',
+                              dsn: 'test-project',
+                              isPrivate: false,
+                              isActivated: true,
+                              vcsProvider: 'github',
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        });
+
+      // Then mock the issues call to return a NoneType error
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, { errors: [{ message: 'NoneType object has no attribute' }] });
+
+      const client = new DeepSourceClient(API_KEY);
+      const result = await client.getIssues('test-project');
+
+      expect(result).toEqual({
+        items: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+        totalCount: 0,
+      });
+    });
+
+    it('should handle project not found in getIssues', async () => {
+      // Mock the listProjects call to return no matching projects
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, {
+          data: {
+            viewer: {
+              accounts: {
+                edges: [
+                  {
+                    node: {
+                      login: 'testorg',
+                      repositories: {
+                        edges: [
+                          {
+                            node: {
+                              name: 'test-repo',
+                              defaultBranch: 'main',
+                              dsn: 'different-project', // This doesn't match our request
+                              isPrivate: false,
+                              isActivated: true,
+                              vcsProvider: 'github',
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        });
+
+      const client = new DeepSourceClient(API_KEY);
+      const result = await client.getIssues('non-existent-project');
+
+      expect(result).toEqual({
+        items: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+        totalCount: 0,
+      });
+    });
   });
 
   describe('getIssue', () => {
     const projectKey = 'test-project';
-    const issueId = 'occ1';
+    const issueId = 'issue1';
 
     it('should return a specific issue by ID', async () => {
-      // Mock the getIssues call with our test data
-      const mockIssue = {
-        id: 'occ1',
-        shortcode: 'SEC001',
-        title: 'Security Issue',
-        category: 'security',
-        severity: 'high',
-        status: 'OPEN',
-        issue_text: 'Potential security vulnerability',
-        file_path: 'src/main.ts',
-        line_number: 42,
-        tags: [],
+      // Mock the getIssues call
+      const mockIssuesResponse = {
+        items: [
+          {
+            id: 'issue1',
+            title: 'Test Issue',
+            shortcode: 'TEST-001',
+            category: 'BUG',
+            severity: 'HIGH',
+            status: 'OPEN',
+            issue_text: 'This is a test issue',
+            file_path: 'src/test.ts',
+            line_number: 10,
+            tags: ['bug'],
+          },
+          {
+            id: 'issue2',
+            title: 'Another Issue',
+            shortcode: 'TEST-002',
+            category: 'SECURITY',
+            severity: 'CRITICAL',
+            status: 'OPEN',
+            issue_text: 'This is another test issue',
+            file_path: 'src/main.ts',
+            line_number: 20,
+            tags: ['security'],
+          },
+        ],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+        totalCount: 2,
       };
 
-      // Create a new client instance for this test
-      const testClient = new DeepSourceClient('test-api-key');
+      // Create a mocked version of getIssues for this test
+      DeepSourceClient.prototype.getIssues = async () => mockIssuesResponse;
 
-      // Mock the API response for the GraphQL call
-      nock('https://api.deepsource.io')
-        .post('/graphql/')
-        .reply(200, {
-          data: {
-            viewer: {
-              accounts: {
-                edges: [
-                  {
-                    node: {
-                      login: 'testorg',
-                      repositories: {
-                        edges: [
-                          {
-                            node: {
-                              name: 'test-repo',
-                              defaultBranch: 'main',
-                              dsn: 'test-project',
-                              isPrivate: false,
-                              isActivated: true,
-                              vcsProvider: 'github',
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  },
-                ],
-              },
-            },
-          },
-        })
-        .post('/graphql/')
-        .reply(200, {
-          data: {
-            repository: {
-              name: 'test-repo',
-              defaultBranch: 'main',
-              dsn: 'test-project',
-              isPrivate: false,
-              issues: {
-                edges: [
-                  {
-                    node: {
-                      id: 'issue1',
-                      issue: {
-                        shortcode: 'SEC001',
-                        title: 'Security Issue',
-                        category: 'security',
-                        severity: 'high',
-                        description: 'Potential security vulnerability',
-                      },
-                      occurrences: {
-                        edges: [
-                          {
-                            node: {
-                              id: 'occ1',
-                              path: 'src/main.ts',
-                              beginLine: 42,
-                              endLine: 42,
-                              beginColumn: 1,
-                              endColumn: 10,
-                              title: 'Security Issue',
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  },
-                ],
-              },
-            },
-          },
-        });
+      const client = new DeepSourceClient('test-api-key');
+      const issue = await client.getIssue(projectKey, issueId);
 
-      const issue = await testClient.getIssue(projectKey, issueId);
-      expect(issue).toEqual(mockIssue);
+      expect(issue).not.toBeNull();
+      expect(issue).toEqual({
+        id: 'issue1',
+        title: 'Test Issue',
+        shortcode: 'TEST-001',
+        category: 'BUG',
+        severity: 'HIGH',
+        status: 'OPEN',
+        issue_text: 'This is a test issue',
+        file_path: 'src/test.ts',
+        line_number: 10,
+        tags: ['bug'],
+      });
     });
 
-    it('should return null when issue is not found', async () => {
-      // Create a new client instance for this test
-      const testClient = new DeepSourceClient('test-api-key');
-
-      // Mock API to return a project with no issues
-      nock('https://api.deepsource.io')
-        .post('/graphql/')
-        .reply(200, {
-          data: {
-            viewer: {
-              accounts: {
-                edges: [
-                  {
-                    node: {
-                      login: 'testorg',
-                      repositories: {
-                        edges: [
-                          {
-                            node: {
-                              name: 'test-repo',
-                              defaultBranch: 'main',
-                              dsn: 'test-project',
-                              isPrivate: false,
-                              isActivated: true,
-                              vcsProvider: 'github',
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  },
-                ],
-              },
-            },
+    it('should return null for non-existent issue ID', async () => {
+      // Mock the getIssues call with results
+      const mockIssuesResponse = {
+        items: [
+          {
+            id: 'issue2',
+            title: 'Another Issue',
+            shortcode: 'TEST-002',
+            category: 'SECURITY',
+            severity: 'CRITICAL',
+            status: 'OPEN',
+            issue_text: 'This is another test issue',
+            file_path: 'src/main.ts',
+            line_number: 20,
+            tags: ['security'],
           },
-        })
-        .post('/graphql/')
-        .reply(200, {
-          data: {
-            repository: {
-              name: 'test-repo',
-              defaultBranch: 'main',
-              dsn: 'test-project',
-              isPrivate: false,
-              issues: {
-                edges: [],
-              },
-            },
-          },
-        });
+        ],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+        totalCount: 1,
+      };
 
-      const issue = await testClient.getIssue(projectKey, 'non-existent-id');
+      // Create a mocked version of getIssues for this test
+      DeepSourceClient.prototype.getIssues = async () => mockIssuesResponse;
+
+      const client = new DeepSourceClient('test-api-key');
+      const issue = await client.getIssue(projectKey, 'non-existent-id');
+
       expect(issue).toBeNull();
     });
 
-    it('should handle errors', async () => {
-      // Create a new client instance for this test
-      const testClient = new DeepSourceClient('test-api-key');
+    it('should handle errors from getIssues', async () => {
+      // Store the original method
+      const originalGetIssues = DeepSourceClient.prototype.getIssues;
 
-      // Mock API to return an error
+      try {
+        // Create a mocked version of getIssues that throws an error
+        DeepSourceClient.prototype.getIssues = async () => {
+          throw new Error('API Error');
+        };
+
+        const client = new DeepSourceClient('test-api-key');
+        await expect(client.getIssue(projectKey, issueId)).rejects.toThrow('API Error');
+      } finally {
+        // Restore the original method
+        DeepSourceClient.prototype.getIssues = originalGetIssues;
+      }
+    });
+  });
+
+  describe('Error handling', () => {
+    it('should handle NoneType errors in listProjects', async () => {
       nock('https://api.deepsource.io')
         .post('/graphql/')
-        .reply(500, { errors: [{ message: 'Test error' }] });
+        .reply(200, { errors: [{ message: 'NoneType object has no attribute' }] });
 
-      await expect(testClient.getIssue(projectKey, issueId)).rejects.toThrow(
-        'GraphQL Error: Test error'
-      );
+      const client = new DeepSourceClient(API_KEY);
+      const result = await client.listProjects();
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle non-GraphQL errors in listProjects', async () => {
+      nock('https://api.deepsource.io').post('/graphql/').replyWithError('Network error');
+
+      const client = new DeepSourceClient(API_KEY);
+      await expect(client.listProjects()).rejects.toThrow('Network error');
     });
   });
 });

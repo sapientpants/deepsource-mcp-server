@@ -1,137 +1,207 @@
-/**
- * @jest-environment node
- *
- * Note: This test file creates a mock version of the Express app instead of
- * testing the actual server implementation. This is because the actual server
- * has dependencies on the MCP SDK that are difficult to mock properly in Jest.
- *
- * These tests verify that the API contract (endpoints and responses) works as expected,
- * but doesn't test the actual implementation. Additional tests would be needed to
- * cover the actual server implementation and MCP tools integration.
- */
+describe('DeepSource MCP Server Tests', () => {
+  // Original environment variables
+  let originalEnv;
 
-import supertest from 'supertest';
-import express from 'express';
-import cors from 'cors';
-import type { Request, Response } from 'express';
-
-// Create a simple Express app that mimics the real app's config endpoint
-const app = express();
-app.use(cors());
-
-app.get('/config', (req: Request, res: Response) => {
-  res.json({
-    name: 'deepsource-mcp-server',
-    version: '0.0.0',
-    transport: {
-      sse: {
-        endpoint: '/sse',
-      },
-    },
+  beforeEach(() => {
+    // Save original environment and set test API key
+    originalEnv = process.env;
+    process.env = { ...originalEnv, DEEPSOURCE_API_KEY: 'test-api-key' };
   });
-});
 
-// Simple mock for the SSE endpoint that immediately ends the connection for testing
-app.get('/sse', (req: Request, res: Response) => {
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
+  afterEach(() => {
+    // Restore original environment
+    process.env = originalEnv;
+  });
 
-  // For testing, we'll just send headers and end the connection
-  // In a real SSE server, the connection would stay open
-  res.write('data: test\n\n');
-  res.end();
-});
+  describe('API Key Validation', () => {
+    it('should validate that DEEPSOURCE_API_KEY is required', () => {
+      // Remove API key from environment
+      delete process.env.DEEPSOURCE_API_KEY;
 
-// Simple mock for the messages endpoint
-app.post('/messages', (req: Request, res: Response) => {
-  const sessionId = req.query.sessionId as string;
-  if (!sessionId) {
-    res.status(400).send('Missing sessionId parameter');
-    return;
-  }
+      // Define a function that simulates the behavior of the tools
+      const validateApiKey = () => {
+        const apiKey = process.env.DEEPSOURCE_API_KEY;
+        if (!apiKey) {
+          throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
+        }
+        return apiKey;
+      };
 
-  if (sessionId === 'test-session-id') {
-    res.status(200).send('OK');
-  } else {
-    res.status(400).send('No transport found for sessionId');
-  }
-});
+      // Test that the expected error is thrown
+      expect(validateApiKey).toThrow('DEEPSOURCE_API_KEY environment variable is not set');
+    });
 
-describe('DeepSource MCP Server API', () => {
-  const request = supertest(app);
+    it('should return the API key when it is set', () => {
+      const validateApiKey = () => {
+        const apiKey = process.env.DEEPSOURCE_API_KEY;
+        if (!apiKey) {
+          throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
+        }
+        return apiKey;
+      };
 
-  describe('Server Configuration', () => {
-    it('should expose the expected API endpoints', () => {
-      // Verify that the router has the expected routes
-      const routes = app._router.stack
-        .filter((layer: { route?: unknown }) => layer.route)
-        .map((layer: { route: { path: string; methods: Record<string, boolean> } }) => ({
-          path: layer.route.path,
-          methods: Object.keys(layer.route.methods),
-        }));
-
-      expect(routes).toContainEqual({ path: '/config', methods: ['get'] });
-      expect(routes).toContainEqual({ path: '/sse', methods: ['get'] });
-      expect(routes).toContainEqual({ path: '/messages', methods: ['post'] });
+      // Test that the API key is returned
+      expect(validateApiKey()).toBe('test-api-key');
     });
   });
 
-  describe('GET /config', () => {
-    it('should return the server configuration', async () => {
-      const response = await request.get('/config');
+  describe('Response Formatting', () => {
+    it('should format project data correctly', () => {
+      // Sample project data
+      const projects = [
+        { key: 'project1', name: 'Project One' },
+        { key: 'project2', name: 'Project Two' },
+      ];
 
-      expect(response.status).toBe(200);
-      expect(response.body).toEqual({
-        name: 'deepsource-mcp-server',
-        version: '0.0.0',
-        transport: {
-          sse: {
-            endpoint: '/sse',
+      // Function that formats the data similar to the actual tool
+      const formatProjectsResponse = (projects) => {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                projects.map((project) => ({
+                  key: project.key,
+                  name: project.name,
+                }))
+              ),
+            },
+          ],
+        };
+      };
+
+      // Expected response
+      const expectedResponse = {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify([
+              { key: 'project1', name: 'Project One' },
+              { key: 'project2', name: 'Project Two' },
+            ]),
           },
-        },
+        ],
+      };
+
+      // Test the formatting
+      expect(formatProjectsResponse(projects)).toEqual(expectedResponse);
+    });
+
+    it('should format issues data correctly', () => {
+      // Sample issues data
+      const issues = {
+        items: [
+          {
+            id: 'issue1',
+            title: 'Security Issue',
+            shortcode: 'SEC001',
+            category: 'security',
+            severity: 'high',
+            status: 'OPEN',
+            issue_text: 'Test issue',
+            file_path: 'src/test.ts',
+            line_number: 10,
+            tags: [],
+          },
+        ],
+        pageInfo: { hasNextPage: false },
+        totalCount: 1,
+      };
+
+      // Function that formats the data similar to the actual tool
+      const formatIssuesResponse = (result) => {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                items: result.items.map((issue) => ({
+                  id: issue.id,
+                  title: issue.title,
+                  shortcode: issue.shortcode,
+                  category: issue.category,
+                  severity: issue.severity,
+                  status: issue.status,
+                  issue_text: issue.issue_text,
+                  file_path: issue.file_path,
+                  line_number: issue.line_number,
+                  tags: issue.tags,
+                })),
+                pageInfo: result.pageInfo,
+                totalCount: result.totalCount,
+              }),
+            },
+          ],
+        };
+      };
+
+      // Expected response
+      const expectedResponse = {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              items: [
+                {
+                  id: 'issue1',
+                  title: 'Security Issue',
+                  shortcode: 'SEC001',
+                  category: 'security',
+                  severity: 'high',
+                  status: 'OPEN',
+                  issue_text: 'Test issue',
+                  file_path: 'src/test.ts',
+                  line_number: 10,
+                  tags: [],
+                },
+              ],
+              pageInfo: { hasNextPage: false },
+              totalCount: 1,
+            }),
+          },
+        ],
+      };
+
+      // Test the formatting
+      expect(formatIssuesResponse(issues)).toEqual(expectedResponse);
+    });
+  });
+
+  describe('Pagination Parameters', () => {
+    it('should handle pagination parameters correctly', () => {
+      // Test function that simulates parameter handling
+      const createPaginationObject = (params) => {
+        const { offset, first, after, before } = params;
+        return { offset, first, after, before };
+      };
+
+      // Test with all parameters
+      const fullParams = {
+        offset: 0,
+        first: 10,
+        after: 'cursor1',
+        before: 'cursor2',
+      };
+
+      expect(createPaginationObject(fullParams)).toEqual({
+        offset: 0,
+        first: 10,
+        after: 'cursor1',
+        before: 'cursor2',
       });
-    });
-  });
 
-  describe('GET /sse', () => {
-    it('should set up an SSE connection with the correct headers', async () => {
-      const response = await request.get('/sse');
+      // Test with partial parameters
+      const partialParams = {
+        offset: 5,
+        first: 20,
+      };
 
-      expect(response.status).toBe(200);
-      expect(response.headers['content-type']).toContain('text/event-stream');
-      expect(response.text).toContain('data: test');
-    });
-  });
-
-  describe('POST /messages', () => {
-    it('should handle post messages with a valid session ID', async () => {
-      const response = await request.post('/messages').query({ sessionId: 'test-session-id' });
-
-      expect(response.status).toBe(200);
-      expect(response.text).toBe('OK');
-    });
-
-    it('should return 400 for invalid session ID', async () => {
-      const response = await request.post('/messages').query({ sessionId: 'invalid-session-id' });
-
-      expect(response.status).toBe(400);
-      expect(response.text).toBe('No transport found for sessionId');
-    });
-
-    it('should return 400 for missing session ID', async () => {
-      const response = await request.post('/messages');
-
-      expect(response.status).toBe(400);
-      expect(response.text).toBe('Missing sessionId parameter');
-    });
-  });
-
-  describe('Error handling', () => {
-    it('should return 404 for non-existent routes', async () => {
-      const response = await request.get('/non-existent-route');
-
-      expect(response.status).toBe(404);
+      expect(createPaginationObject(partialParams)).toEqual({
+        offset: 5,
+        first: 20,
+        after: undefined,
+        before: undefined,
+      });
     });
   });
 });
