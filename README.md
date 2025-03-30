@@ -65,7 +65,7 @@ The DeepSource MCP Server enables AI assistants to interact with DeepSource's co
       "command": "npx",
       "args": [
         "-y",
-        "deepsource-mcp-server"
+        "deepsource-mcp-server@0.0.0"
       ],
       "env": {
         "DEEPSOURCE_API_KEY": "your-deepsource-api-key"
