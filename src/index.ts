@@ -9,7 +9,8 @@ export const mcpServer = new McpServer({
   version: '0.0.0',
 });
 
-mcpServer.tool('deepsource_projects', 'List all available DeepSource projects', async () => {
+// Export handler functions for testing
+export async function handleDeepsourceProjects() {
   const apiKey = process.env.DEEPSOURCE_API_KEY;
   if (!apiKey) {
     throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
@@ -21,7 +22,7 @@ mcpServer.tool('deepsource_projects', 'List all available DeepSource projects', 
   return {
     content: [
       {
-        type: 'text',
+        type: 'text' as const,
         text: JSON.stringify(
           projects.map((project) => ({
             key: project.key,
@@ -31,7 +32,63 @@ mcpServer.tool('deepsource_projects', 'List all available DeepSource projects', 
       },
     ],
   };
-});
+}
+
+export interface DeepsourceProjectIssuesParams {
+  projectKey: string;
+  offset?: number;
+  first?: number;
+  after?: string;
+  before?: string;
+}
+
+export async function handleDeepsourceProjectIssues({
+  projectKey,
+  offset,
+  first,
+  after,
+  before,
+}: DeepsourceProjectIssuesParams) {
+  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  if (!apiKey) {
+    throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
+  }
+
+  const client = new DeepSourceClient(apiKey);
+  const pagination = { offset, first, after, before };
+  const result = await client.getIssues(projectKey, pagination);
+
+  return {
+    content: [
+      {
+        type: 'text' as const,
+        text: JSON.stringify({
+          items: result.items.map((issue) => ({
+            id: issue.id,
+            title: issue.title,
+            shortcode: issue.shortcode,
+            category: issue.category,
+            severity: issue.severity,
+            status: issue.status,
+            issue_text: issue.issue_text,
+            file_path: issue.file_path,
+            line_number: issue.line_number,
+            tags: issue.tags,
+          })),
+          pageInfo: result.pageInfo,
+          totalCount: result.totalCount,
+        }),
+      },
+    ],
+  };
+}
+
+// Register the tools with the handlers
+mcpServer.tool(
+  'deepsource_projects',
+  'List all available DeepSource projects',
+  handleDeepsourceProjects
+);
 
 mcpServer.tool(
   'deepsource_project_issues',
@@ -43,40 +100,7 @@ mcpServer.tool(
     after: z.string().optional(),
     before: z.string().optional(),
   },
-  async ({ projectKey, offset, first, after, before }) => {
-    const apiKey = process.env.DEEPSOURCE_API_KEY;
-    if (!apiKey) {
-      throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
-    }
-
-    const client = new DeepSourceClient(apiKey);
-    const pagination = { offset, first, after, before };
-    const result = await client.getIssues(projectKey, pagination);
-
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify({
-            items: result.items.map((issue) => ({
-              id: issue.id,
-              title: issue.title,
-              shortcode: issue.shortcode,
-              category: issue.category,
-              severity: issue.severity,
-              status: issue.status,
-              issue_text: issue.issue_text,
-              file_path: issue.file_path,
-              line_number: issue.line_number,
-              tags: issue.tags,
-            })),
-            pageInfo: result.pageInfo,
-            totalCount: result.totalCount,
-          }),
-        },
-      ],
-    };
-  }
+  handleDeepsourceProjectIssues
 );
 
 // Only start the server if this is the main module (not during tests)

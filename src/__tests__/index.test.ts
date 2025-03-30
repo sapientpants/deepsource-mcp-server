@@ -1,67 +1,324 @@
-import { mcpServer } from '../index.js';
+/**
+ * @jest-environment node
+ */
 
-// Test suite for the MCP server implementation
-describe('DeepSource MCP Server Tests', () => {
-  // Original environment variables
-  let originalEnv;
+import { mcpServer, handleDeepsourceProjects, handleDeepsourceProjectIssues } from '../index.js';
+import { DeepSourceClient } from '../deepsource.js';
+import type { DeepSourceProject, DeepSourceIssue, PaginatedResponse } from '../deepsource.js';
+
+// Create a simple test helper for verifying responses
+const verifyResponse = (response: any, expectedContent: any) => {
+  expect(response).toHaveProperty('content');
+  expect(response.content).toHaveLength(1);
+  expect(response.content[0]).toHaveProperty('type', 'text');
+  expect(JSON.parse(response.content[0].text)).toEqual(expectedContent);
+};
+
+describe('MCP server implementation', () => {
+  // Save original DeepSourceClient methods
+  const originalListProjects = DeepSourceClient.prototype.listProjects;
+  const originalGetIssues = DeepSourceClient.prototype.getIssues;
+
+  // Environment backup
+  let originalEnv: Record<string, string | undefined>;
 
   beforeEach(() => {
-    // Save original environment and set test API key
-    originalEnv = process.env;
-    process.env = { ...originalEnv, DEEPSOURCE_API_KEY: 'test-api-key' };
+    originalEnv = { ...process.env };
+    process.env.DEEPSOURCE_API_KEY = 'test-api-key';
   });
 
   afterEach(() => {
-    // Restore original environment
     process.env = originalEnv;
+
+    // Restore original methods
+    DeepSourceClient.prototype.listProjects = originalListProjects;
+    DeepSourceClient.prototype.getIssues = originalGetIssues;
   });
 
-  describe('MCP Server', () => {
-    it('should be properly initialized', () => {
-      // Check that the server is defined
+  describe('Server initialization', () => {
+    it('initializes with tools', () => {
       expect(mcpServer).toBeDefined();
     });
 
-    it('should reject requests when DEEPSOURCE_API_KEY is not set', async () => {
-      // Remove API key from environment
+    it('rejects requests when DEEPSOURCE_API_KEY is not set', async () => {
       delete process.env.DEEPSOURCE_API_KEY;
 
-      // Create a test response function that simulates MCP server responses
-      const createErrorFunction = (toolName: string) => {
-        return async () => {
-          const apiKey = process.env.DEEPSOURCE_API_KEY;
-          if (!apiKey) {
-            throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
-          }
-          return `Successfully called ${toolName}`;
-        };
-      };
-
-      // Test the deepsource_projects tool behavior
-      const projectsToolFunction = createErrorFunction('deepsource_projects');
-      await expect(projectsToolFunction()).rejects.toThrow(
-        'DEEPSOURCE_API_KEY environment variable is not set'
-      );
-
-      // Test the deepsource_project_issues tool behavior
-      const issuesToolFunction = createErrorFunction('deepsource_project_issues');
-      await expect(issuesToolFunction()).rejects.toThrow(
+      await expect(handleDeepsourceProjects()).rejects.toThrow(
         'DEEPSOURCE_API_KEY environment variable is not set'
       );
     });
   });
 
-  describe('Environment Integration', () => {
-    it('should use environment variables for API key', () => {
-      // Test that the server reads from environment variables
-      expect(process.env.DEEPSOURCE_API_KEY).toBe('test-api-key');
+  describe('deepsource_projects tool', () => {
+    it('returns formatted projects', async () => {
+      // Define mock data with proper DeepSourceProject structure
+      const mockProjects: DeepSourceProject[] = [
+        {
+          key: 'proj1',
+          name: 'Project One',
+          repository: {
+            url: 'repo1-url',
+            provider: 'github',
+            login: 'testorg',
+            isPrivate: false,
+            isActivated: true,
+          },
+        },
+        {
+          key: 'proj2',
+          name: 'Project Two',
+          repository: {
+            url: 'repo2-url',
+            provider: 'gitlab',
+            login: 'testorg',
+            isPrivate: true,
+            isActivated: true,
+          },
+        },
+      ];
 
-      // Validate that the API key can be changed
-      process.env.DEEPSOURCE_API_KEY = 'different-key';
-      expect(process.env.DEEPSOURCE_API_KEY).toBe('different-key');
+      // Create a tracked array to record calls
+      const calls: any[] = [];
 
-      // Restore test key
-      process.env.DEEPSOURCE_API_KEY = 'test-api-key';
+      // Override the method for this test with a function that records calls
+      DeepSourceClient.prototype.listProjects = function () {
+        calls.push([...arguments]);
+        return Promise.resolve(mockProjects);
+      };
+
+      // Call the handler
+      const result = await handleDeepsourceProjects();
+
+      // Verify the mock was called
+      expect(calls.length).toBe(1);
+
+      // Verify the response - only key and name should be in the output
+      verifyResponse(result, [
+        { key: 'proj1', name: 'Project One' },
+        { key: 'proj2', name: 'Project Two' },
+      ]);
+    });
+
+    it('handles empty projects list', async () => {
+      // Override the method for this test
+      DeepSourceClient.prototype.listProjects = function () {
+        return Promise.resolve([]);
+      };
+
+      // Call the handler
+      const result = await handleDeepsourceProjects();
+
+      // Verify the response
+      verifyResponse(result, []);
+    });
+
+    it('handles error from DeepSourceClient', async () => {
+      // Override the method for this test to throw an error
+      DeepSourceClient.prototype.listProjects = function () {
+        return Promise.reject(new Error('API error'));
+      };
+
+      // Verify the error is propagated
+      await expect(handleDeepsourceProjects()).rejects.toThrow('API error');
+    });
+  });
+
+  describe('deepsource_project_issues tool', () => {
+    it('returns formatted issues with all parameters', async () => {
+      // Define mock data with proper DeepSourceIssue structure
+      const mockIssues: PaginatedResponse<DeepSourceIssue> = {
+        items: [
+          {
+            id: 'issue1',
+            title: 'Issue One',
+            shortcode: 'SC1',
+            category: 'category1',
+            severity: 'high',
+            status: 'open',
+            issue_text: 'This is an issue',
+            file_path: 'src/file.ts',
+            line_number: 42,
+            tags: ['tag1', 'tag2'],
+          },
+        ],
+        pageInfo: {
+          hasNextPage: true,
+          hasPreviousPage: false,
+          startCursor: 'start1',
+          endCursor: 'cursor1',
+        },
+        totalCount: 100,
+      };
+
+      // Create a tracked array to record calls
+      const calls: any[] = [];
+
+      // Override the method for this test
+      DeepSourceClient.prototype.getIssues = function (projectKey, pagination) {
+        calls.push([projectKey, pagination]);
+        return Promise.resolve(mockIssues);
+      };
+
+      // Parameters for the call
+      const params = {
+        projectKey: 'test-project',
+        offset: 10,
+        first: 20,
+        after: 'after-cursor',
+        before: 'before-cursor',
+      };
+
+      // Call the handler
+      const result = await handleDeepsourceProjectIssues(params);
+
+      // Verify the method was called with correct parameters
+      expect(calls.length).toBe(1);
+      expect(calls[0][0]).toBe('test-project');
+      expect(calls[0][1]).toEqual({
+        offset: 10,
+        first: 20,
+        after: 'after-cursor',
+        before: 'before-cursor',
+      });
+
+      // Verify the response
+      verifyResponse(result, {
+        items: [
+          {
+            id: 'issue1',
+            title: 'Issue One',
+            shortcode: 'SC1',
+            category: 'category1',
+            severity: 'high',
+            status: 'open',
+            issue_text: 'This is an issue',
+            file_path: 'src/file.ts',
+            line_number: 42,
+            tags: ['tag1', 'tag2'],
+          },
+        ],
+        pageInfo: {
+          hasNextPage: true,
+          hasPreviousPage: false,
+          startCursor: 'start1',
+          endCursor: 'cursor1',
+        },
+        totalCount: 100,
+      });
+    });
+
+    it('handles minimal parameters', async () => {
+      // Define mock data with proper structure
+      const mockIssues: PaginatedResponse<DeepSourceIssue> = {
+        items: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: undefined,
+          endCursor: undefined,
+        },
+        totalCount: 0,
+      };
+
+      // Create a tracked array to record calls
+      const calls: any[] = [];
+
+      // Override the method for this test
+      DeepSourceClient.prototype.getIssues = function (projectKey, pagination) {
+        calls.push([projectKey, pagination]);
+        return Promise.resolve(mockIssues);
+      };
+
+      // Parameters for the call
+      const params = {
+        projectKey: 'test-project',
+      };
+
+      // Call the handler
+      const result = await handleDeepsourceProjectIssues(params);
+
+      // Verify the method was called with correct parameters
+      expect(calls.length).toBe(1);
+      expect(calls[0][0]).toBe('test-project');
+      expect(calls[0][1]).toEqual({});
+
+      // Verify the response
+      verifyResponse(result, {
+        items: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: undefined,
+          endCursor: undefined,
+        },
+        totalCount: 0,
+      });
+    });
+
+    it('handles partial parameters', async () => {
+      // Define mock data with proper structure
+      const mockIssues: PaginatedResponse<DeepSourceIssue> = {
+        items: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: undefined,
+          endCursor: undefined,
+        },
+        totalCount: 0,
+      };
+
+      // Create a tracked array to record calls
+      const calls: any[] = [];
+
+      // Override the method for this test
+      DeepSourceClient.prototype.getIssues = function (projectKey, pagination) {
+        calls.push([projectKey, pagination]);
+        return Promise.resolve(mockIssues);
+      };
+
+      // Parameters for the call
+      const params = {
+        projectKey: 'test-project',
+        offset: 5,
+      };
+
+      // Call the handler
+      const result = await handleDeepsourceProjectIssues(params);
+
+      // Verify the method was called with correct parameters
+      expect(calls.length).toBe(1);
+      expect(calls[0][0]).toBe('test-project');
+      expect(calls[0][1]).toEqual({
+        offset: 5,
+      });
+
+      // Verify the response
+      verifyResponse(result, {
+        items: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: undefined,
+          endCursor: undefined,
+        },
+        totalCount: 0,
+      });
+    });
+
+    it('handles error from DeepSourceClient', async () => {
+      // Override the method for this test to throw an error
+      DeepSourceClient.prototype.getIssues = function () {
+        return Promise.reject(new Error('API error'));
+      };
+
+      // Parameters for the call
+      const params = {
+        projectKey: 'test-project',
+      };
+
+      // Verify the error is propagated
+      await expect(handleDeepsourceProjectIssues(params)).rejects.toThrow('API error');
     });
   });
 });
