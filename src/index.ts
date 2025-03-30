@@ -10,6 +10,11 @@ export const mcpServer = new McpServer({
 });
 
 // Export handler functions for testing
+/**
+ * Fetches and returns a list of all available DeepSource projects
+ * @returns A response containing the list of projects with their keys and names
+ * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
+ */
 export async function handleDeepsourceProjects() {
   const apiKey = process.env.DEEPSOURCE_API_KEY;
   if (!apiKey) {
@@ -34,14 +39,28 @@ export async function handleDeepsourceProjects() {
   };
 }
 
+/**
+ * Interface for pagination parameters for DeepSource project issues
+ */
 export interface DeepsourceProjectIssuesParams {
+  /** DeepSource project key to fetch issues for */
   projectKey: string;
+  /** Number of items to skip */
   offset?: number;
+  /** Maximum number of items to return */
   first?: number;
+  /** Cursor to start fetching from */
   after?: string;
+  /** Cursor to fetch until */
   before?: string;
 }
 
+/**
+ * Fetches and returns issues from a specified DeepSource project
+ * @param params Parameters for fetching issues, including project key and pagination options
+ * @returns A response containing the list of issues with their details and pagination info
+ * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
+ */
 export async function handleDeepsourceProjectIssues({
   projectKey,
   offset,
@@ -104,7 +123,7 @@ mcpServer.tool(
 );
 
 // Only start the server if this is the main module (not during tests)
-if (import.meta.url === 'file://' + process.argv[1]) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const transport = new StdioServerTransport();
   await mcpServer.connect(transport);
 }
