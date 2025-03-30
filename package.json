@@ -13,6 +13,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "ci": "pnpm run format:check && pnpm run lint && pnpm run check-types && pnpm run build && pnpm run test",
     "start": "node --experimental-specifier-resolution=node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "watch": "tsc -w",
@@ -25,7 +26,7 @@
     "format:check": "prettier --check \"src/**/*.ts\"",
     "check-types": "tsc --noEmit",
     "prepare": "husky",
-    "validate": "npm run check-types && npm run lint && npm run test",
+    "validate": "pnpm run check-types && pnpm run lint && pnpm run test",
     "inspect": "npx @modelcontextprotocol/inspector@latest node dist/index.js",
     "clean": "rm -rf dist"
   },
@@ -40,8 +41,9 @@
     "mcp",
     "model-context-protocol"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Marc Tremblay <marc.tremblay@gmail.com>",
+  "homepage": "https://github.com/sapientpants/deepsource-mcp-server",
+  "license": "MIT",
   "packageManager": "pnpm@10.7.0",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.8.0",
