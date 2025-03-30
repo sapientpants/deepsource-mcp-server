@@ -40,8 +40,9 @@
     "mcp",
     "model-context-protocol"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Marc Tremblay <marc.tremblay@gmail.com>",
+  "homepage": "https://github.com/sapientpants/deepsource-mcp-server",
+  "license": "MIT",
   "packageManager": "pnpm@10.7.0",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.8.0",
