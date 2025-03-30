@@ -42,15 +42,6 @@ export interface DeepsourceProjectIssuesParams {
   before?: string;
 }
 
-/**
- * Retrieves issues from a DeepSource project with optional pagination
- * @param projectKey - The unique identifier for the DeepSource project
- * @param offset - Optional pagination offset
- * @param first - Optional number of items to return
- * @param after - Optional cursor to fetch items after
- * @param before - Optional cursor to fetch items before
- * @returns Response object containing issues data
- */
 export async function handleDeepsourceProjectIssues({
   projectKey,
   offset,
@@ -113,7 +104,7 @@ mcpServer.tool(
 );
 
 // Only start the server if this is the main module (not during tests)
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === 'file://' + process.argv[1]) {
   const transport = new StdioServerTransport();
   await mcpServer.connect(transport);
 }
