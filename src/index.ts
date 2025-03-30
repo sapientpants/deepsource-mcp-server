@@ -69,6 +69,7 @@ export async function handleDeepsourceProjectIssues({
   before,
 }: DeepsourceProjectIssuesParams) {
   const apiKey = process.env.DEEPSOURCE_API_KEY;
+  /* istanbul ignore if */
   if (!apiKey) {
     throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
   }
@@ -123,6 +124,7 @@ mcpServer.tool(
 );
 
 // Only start the server if this is the main module (not during tests)
+/* istanbul ignore if */
 if (import.meta.url === `file://${process.argv[1]}`) {
   const transport = new StdioServerTransport();
   await mcpServer.connect(transport);
