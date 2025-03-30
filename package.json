@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "ci": "pnpm run format:check && pnpm run lint && pnpm run check-types && pnpm run build && pnpm run test",
+    "ci": "pnpm run format:check && pnpm run lint && pnpm run check-types && pnpm run build && pnpm run test:coverage",
     "start": "node --experimental-specifier-resolution=node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "watch": "tsc -w",
