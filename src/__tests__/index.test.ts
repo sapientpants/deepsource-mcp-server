@@ -60,7 +60,7 @@ describe('MCP server implementation', () => {
       expect(mcpServer).toHaveProperty('server');
       expect(mcpServer.server).toHaveProperty('_serverInfo');
 
-      // @ts-ignore - accessing private property for testing
+      // @ts-expect-error - accessing private property for testing
       expect(mcpServer.server._serverInfo).toHaveProperty('name', 'deepsource-mcp-server');
     });
 
@@ -105,8 +105,8 @@ describe('MCP server implementation', () => {
       const calls: Array<unknown[]> = [];
 
       // Override the method for this test with a function that records calls
-      DeepSourceClient.prototype.listProjects = function () {
-        calls.push([...arguments]);
+      DeepSourceClient.prototype.listProjects = function (...args) {
+        calls.push(args);
         return Promise.resolve(mockProjects);
       };
 
