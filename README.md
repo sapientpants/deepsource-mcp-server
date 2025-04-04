@@ -4,6 +4,9 @@
 [![DeepSource](https://app.deepsource.com/gh/sapientpants/deepsource-mcp-server.svg/?label=code+coverage&show_trend=true&token=9XrIHVVGs9oZ-6fFSOPah2Ws)](https://app.deepsource.com/gh/sapientpants/deepsource-mcp-server/)
 [![DeepSource](https://app.deepsource.com/gh/sapientpants/deepsource-mcp-server.svg/?label=active+issues&show_trend=true&token=9XrIHVVGs9oZ-6fFSOPah2Ws)](https://app.deepsource.com/gh/sapientpants/deepsource-mcp-server/)
 [![DeepSource](https://app.deepsource.com/gh/sapientpants/deepsource-mcp-server.svg/?label=resolved+issues&show_trend=true&token=9XrIHVVGs9oZ-6fFSOPah2Ws)](https://app.deepsource.com/gh/sapientpants/deepsource-mcp-server/)
+[![npm version](https://img.shields.io/npm/v/deepsource-mcp-server.svg)](https://www.npmjs.com/package/deepsource-mcp-server)
+[![npm downloads](https://img.shields.io/npm/dm/deepsource-mcp-server.svg)](https://www.npmjs.com/package/deepsource-mcp-server)
+[![License](https://img.shields.io/npm/l/deepsource-mcp-server.svg)](https://github.com/sapientpants/deepsource-mcp-server/blob/main/LICENSE)
 
 A Model Context Protocol (MCP) server that integrates with DeepSource to provide AI assistants with access to code quality metrics, issues, and analysis results.
 
