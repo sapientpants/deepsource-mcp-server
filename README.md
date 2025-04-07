@@ -21,7 +21,7 @@ The DeepSource MCP Server enables AI assistants to interact with DeepSource's co
 
 ## Features
 
-* **DeepSource API Integration**: Connects to DeepSource via REST API
+* **DeepSource API Integration**: Connects to DeepSource via GraphQL API
 * **MCP Protocol Support**: Implements the Model Context Protocol for AI assistant integration
 * **TypeScript/Node.js**: Built with TypeScript for type safety and modern JavaScript features
 * **Cross-Platform**: Works on Linux, macOS, and Windows
@@ -68,7 +68,7 @@ The DeepSource MCP Server enables AI assistants to interact with DeepSource's co
       "command": "npx",
       "args": [
         "-y",
-        "deepsource-mcp-server@1.0.0"
+        "deepsource-mcp-server@1.0.2"
       ],
       "env": {
         "DEEPSOURCE_API_KEY": "your-deepsource-api-key"
