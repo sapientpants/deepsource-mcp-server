@@ -68,7 +68,7 @@ importers:
         version: 15.5.0
       nock:
         specifier: ^14.0.2
-        version: 14.0.2
+        version: 14.0.3
       prettier:
         specifier: ^3.5.3
         version: 3.5.3
@@ -447,8 +447,8 @@ packages:
     resolution: {integrity: sha512-e06W7SwrontJDHwCawNO5SGxG+nU9AAx+jpHHZqGl/WrDBdWOpvirC+s58VpJTB5QemI4jTRcjWT4Pt3Q1NPQQ==}
     engines: {node: '>=18'}
 
-  '@mswjs/interceptors@0.38.0':
-    resolution: {integrity: sha512-nPHVM+LUl4V1kXPXuTcNN5OMD//ltCQ0lccuEagvidJdpbig3hP3W6/ctWHx6mee7vZIWE0L+Mqj3vx0ASlm/w==}
+  '@mswjs/interceptors@0.38.2':
+    resolution: {integrity: sha512-jS/XP42rw1K+WmJPC39i/aAKvNGQrjn7V85RALvozYqBy+KjFkq6pL+ZXSBCM0sNJalFoaCCWqZE0TuK2Mn99g==}
     engines: {node: '>=18'}
 
   '@nodelib/fs.scandir@2.1.5':
@@ -1673,8 +1673,8 @@ packages:
     resolution: {integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==}
     hasBin: true
 
-  jsdom@26.0.0:
-    resolution: {integrity: sha512-BZYDGVAIriBWTpIxYzrXjv3E/4u8+/pSG5bQdIYCbNCGOvsPkDQfTVLAIXAf9ETdCpduCVTkDe2NNZ8NIwUVzw==}
+  jsdom@26.1.0:
+    resolution: {integrity: sha512-Cvc9WUhxSMEo4McES3P7oK3QaXldCfNWp7pl2NNeiIFlCoLr3kfq9kb1fxftiwk1FLV7CvpvDfonxtzUDeSOPg==}
     engines: {node: '>=18'}
     peerDependencies:
       canvas: ^3.0.0
@@ -1883,8 +1883,8 @@ packages:
     resolution: {integrity: sha512-8Ofs/AUQh8MaEcrlq5xOX0CQ9ypTF5dl78mjlMNfOK08fzpgTHQRQPBxcPlEtIw0yRpws+Zo/3r+5WRby7u3Gg==}
     engines: {node: '>= 0.6'}
 
-  nock@14.0.2:
-    resolution: {integrity: sha512-jDUBpCNY7KLyOF2FTiT4mLRxV2kpjo4YrcGtv3IMCIwqFKxOQFrmeXefvuEiWvS3ApPWQHAkakkkVpoOrDNCVg==}
+  nock@14.0.3:
+    resolution: {integrity: sha512-sJ9RNmCuYBqXDmGZZHgZ1D1441MqFOU4T5aeLGVGEB4OWI/2LM0mZlkfBQzQKdOfJypL+2nPPBugXKjixBn4kQ==}
     engines: {node: '>=18.20.0 <20 || >=20.12.1'}
 
   node-int64@0.4.0:
@@ -2334,11 +2334,11 @@ packages:
     resolution: {integrity: sha512-cAGWPIyOHU6zlmg88jwm7VRyXnMN7iV68OGAbYDk/Mh/xC/pzVPlQtY6ngoIH/5/tciuhGfvESU8GrHrcxD56w==}
     engines: {node: '>=8'}
 
-  tldts-core@6.1.85:
-    resolution: {integrity: sha512-DTjUVvxckL1fIoPSb3KE7ISNtkWSawZdpfxGxwiIrZoO6EbHVDXXUIlIuWympPaeS+BLGyggozX/HTMsRAdsoA==}
+  tldts-core@6.1.86:
+    resolution: {integrity: sha512-Je6p7pkk+KMzMv2XXKmAE3McmolOQFdxkKw0R8EYNr7sELW46JqnNeTX8ybPiQgvg1ymCoF8LXs5fzFaZvJPTA==}
 
-  tldts@6.1.85:
-    resolution: {integrity: sha512-gBdZ1RjCSevRPFix/hpaUWeak2/RNUZB4/8frF1r5uYMHjFptkiT0JXIebWvgI/0ZHXvxaUDDJshiA0j6GdL3w==}
+  tldts@6.1.86:
+    resolution: {integrity: sha512-WMi/OQ2axVTf/ykqCQgXiIct+mSQDFdH2fkwhPwgEwvJ1kSzZRiinb0zF2Xb8u4+OqPChmyI6MEu4EezNJz+FQ==}
     hasBin: true
 
   tmpl@1.0.5:
@@ -3083,13 +3083,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@mswjs/interceptors@0.38.0':
+  '@mswjs/interceptors@0.38.2':
     dependencies:
       '@open-draft/deferred-promise': 2.2.0
       '@open-draft/logger': 0.3.0
       '@open-draft/until': 2.1.0
       is-node-process: 1.2.0
-      jsdom: 26.0.0
+      jsdom: 26.1.0
       outvariant: 1.4.3
       strict-event-emitter: 0.5.1
     transitivePeerDependencies:
@@ -4624,12 +4624,11 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
-  jsdom@26.0.0:
+  jsdom@26.1.0:
     dependencies:
       cssstyle: 4.3.0
       data-urls: 5.0.0
       decimal.js: 10.5.0
-      form-data: 4.0.2
       html-encoding-sniffer: 4.0.0
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6
@@ -4814,9 +4813,9 @@ snapshots:
 
   negotiator@1.0.0: {}
 
-  nock@14.0.2:
+  nock@14.0.3:
     dependencies:
-      '@mswjs/interceptors': 0.38.0
+      '@mswjs/interceptors': 0.38.2
       json-stringify-safe: 5.0.1
       propagate: 2.0.1
     transitivePeerDependencies:
@@ -5273,11 +5272,11 @@ snapshots:
       glob: 7.2.3
       minimatch: 3.1.2
 
-  tldts-core@6.1.85: {}
+  tldts-core@6.1.86: {}
 
-  tldts@6.1.85:
+  tldts@6.1.86:
     dependencies:
-      tldts-core: 6.1.85
+      tldts-core: 6.1.86
 
   tmpl@1.0.5: {}
 
@@ -5289,7 +5288,7 @@ snapshots:
 
   tough-cookie@5.1.2:
     dependencies:
-      tldts: 6.1.85
+      tldts: 6.1.86
 
   tr46@5.1.0:
     dependencies:
