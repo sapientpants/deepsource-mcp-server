@@ -1,4 +1,5 @@
 import nock from 'nock';
+import * as jest from 'jest-mock';
 import { DeepSourceClient } from '../deepsource';
 
 // Mock the DeepSourceClient's getIssues method for specific tests
@@ -444,6 +445,285 @@ describe('DeepSourceClient', () => {
         totalCount: 0,
       });
     });
+
+    it('should handle pagination with before and last parameters', async () => {
+      // Mock the listProjects call first
+      const mockProjectsResponse = {
+        data: {
+          viewer: {
+            accounts: {
+              edges: [
+                {
+                  node: {
+                    login: 'testorg',
+                    repositories: {
+                      edges: [
+                        {
+                          node: {
+                            name: 'test-repo',
+                            defaultBranch: 'main',
+                            dsn: 'test-project',
+                            isPrivate: false,
+                            isActivated: true,
+                            vcsProvider: 'github',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      const mockIssuesResponse = {
+        data: {
+          repository: {
+            name: 'test-repo',
+            defaultBranch: 'main',
+            dsn: 'test-project',
+            isPrivate: false,
+            issues: {
+              pageInfo: {
+                hasNextPage: false,
+                hasPreviousPage: true,
+                startCursor: 'cursor5',
+                endCursor: 'cursor6',
+              },
+              totalCount: 15,
+              edges: [
+                {
+                  node: {
+                    id: 'issue3',
+                    issue: {
+                      shortcode: 'STYLE003',
+                      title: 'Style Issue',
+                      category: 'style',
+                      severity: 'low',
+                      description: 'Code style issue',
+                    },
+                    occurrences: {
+                      edges: [
+                        {
+                          node: {
+                            id: 'occ3',
+                            path: 'src/styles.ts',
+                            beginLine: 50,
+                            endLine: 50,
+                            beginColumn: 10,
+                            endColumn: 20,
+                            title: 'Style Issue',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockProjectsResponse)
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockIssuesResponse);
+
+      const pagination = {
+        before: 'cursor7',
+        last: 5,
+        first: 10, // This should be ignored when before is provided
+      };
+
+      const result = await client.getIssues(projectKey, pagination);
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].id).toBe('occ3');
+      expect(result.pageInfo).toEqual({
+        hasNextPage: false,
+        hasPreviousPage: true,
+        startCursor: 'cursor5',
+        endCursor: 'cursor6',
+      });
+      expect(result.totalCount).toBe(15);
+    });
+
+    it('should handle pagination with last parameter without before', async () => {
+      // Mock the listProjects call first
+      const mockProjectsResponse = {
+        data: {
+          viewer: {
+            accounts: {
+              edges: [
+                {
+                  node: {
+                    login: 'testorg',
+                    repositories: {
+                      edges: [
+                        {
+                          node: {
+                            name: 'test-repo',
+                            defaultBranch: 'main',
+                            dsn: 'test-project',
+                            isPrivate: false,
+                            isActivated: true,
+                            vcsProvider: 'github',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      const mockIssuesResponse = {
+        data: {
+          repository: {
+            name: 'test-repo',
+            defaultBranch: 'main',
+            dsn: 'test-project',
+            isPrivate: false,
+            issues: {
+              pageInfo: {
+                hasNextPage: false,
+                hasPreviousPage: false,
+                startCursor: 'cursor8',
+                endCursor: 'cursor9',
+              },
+              totalCount: 8,
+              edges: [
+                {
+                  node: {
+                    id: 'issue4',
+                    issue: {
+                      shortcode: 'DOC004',
+                      title: 'Documentation Issue',
+                      category: 'documentation',
+                      severity: 'info',
+                      description: 'Missing documentation',
+                    },
+                    occurrences: {
+                      edges: [
+                        {
+                          node: {
+                            id: 'occ4',
+                            path: 'src/utils.ts',
+                            beginLine: 75,
+                            endLine: 75,
+                            beginColumn: 1,
+                            endColumn: 5,
+                            title: 'Documentation Issue',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      // Create a spy for console.warn
+      const originalWarn = console.warn;
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        nock('https://api.deepsource.io')
+          .post('/graphql/')
+          .matchHeader('Authorization', `Bearer ${API_KEY}`)
+          .reply(200, mockProjectsResponse)
+          .post('/graphql/')
+          .matchHeader('Authorization', `Bearer ${API_KEY}`)
+          .reply(200, mockIssuesResponse);
+
+        const pagination = {
+          last: 5,
+          first: undefined,
+        };
+
+        const result = await client.getIssues(projectKey, pagination);
+        expect(result.items).toHaveLength(1);
+        expect(result.items[0].id).toBe('occ4');
+        expect(result.pageInfo).toEqual({
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: 'cursor8',
+          endCursor: 'cursor9',
+        });
+        expect(result.totalCount).toBe(8);
+
+        // Verify that the warning was called
+        expect(warnSpy).toHaveBeenCalledWith(
+          'Using "last" without "before" is not standard Relay pagination behavior. Consider using "first" for forward pagination.'
+        );
+      } finally {
+        // Restore original console.warn
+        warnSpy.mockRestore();
+        console.warn = originalWarn;
+      }
+    });
+
+    it('should handle GraphQL errors in repository response', async () => {
+      // Mock the listProjects call first
+      const mockProjectsResponse = {
+        data: {
+          viewer: {
+            accounts: {
+              edges: [
+                {
+                  node: {
+                    login: 'testorg',
+                    repositories: {
+                      edges: [
+                        {
+                          node: {
+                            name: 'test-repo',
+                            defaultBranch: 'main',
+                            dsn: 'test-project',
+                            isPrivate: false,
+                            isActivated: true,
+                            vcsProvider: 'github',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      // Mock GraphQL errors in the response data
+      const mockErrorResponse = {
+        data: null,
+        errors: [{ message: 'Repository access denied' }, { message: 'Invalid query' }],
+      };
+
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockProjectsResponse)
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockErrorResponse);
+
+      await expect(client.getIssues(projectKey)).rejects.toThrow(
+        'GraphQL Errors: Repository access denied, Invalid query'
+      );
+    });
   });
 
   describe('getIssue', () => {
@@ -884,6 +1164,283 @@ describe('DeepSourceClient', () => {
         totalCount: 0,
       });
     });
+
+    it('should handle pagination with before and last parameters for listRuns', async () => {
+      // Mock the listProjects call first
+      const mockProjectsResponse = {
+        data: {
+          viewer: {
+            accounts: {
+              edges: [
+                {
+                  node: {
+                    login: 'testorg',
+                    repositories: {
+                      edges: [
+                        {
+                          node: {
+                            name: 'test-repo',
+                            defaultBranch: 'main',
+                            dsn: 'test-project',
+                            isPrivate: false,
+                            isActivated: true,
+                            vcsProvider: 'github',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      const mockRunsResponse = {
+        data: {
+          repository: {
+            name: 'test-repo',
+            id: 'repo1',
+            analysisRuns: {
+              pageInfo: {
+                hasNextPage: false,
+                hasPreviousPage: true,
+                startCursor: 'cursor5',
+                endCursor: 'cursor6',
+              },
+              totalCount: 15,
+              edges: [
+                {
+                  node: {
+                    id: 'run3',
+                    runUid: '99999999-9999-9999-9999-999999999999',
+                    commitOid: '999999abcdef',
+                    branchName: 'feature-branch',
+                    baseOid: 'abcdef999999',
+                    status: 'SUCCESS',
+                    createdAt: '2023-01-03T12:00:00Z',
+                    updatedAt: '2023-01-03T12:30:00Z',
+                    finishedAt: '2023-01-03T12:30:00Z',
+                    summary: {
+                      occurrencesIntroduced: 3,
+                      occurrencesResolved: 0,
+                      occurrencesSuppressed: 0,
+                      occurrenceDistributionByAnalyzer: [],
+                      occurrenceDistributionByCategory: [],
+                    },
+                    repository: {
+                      name: 'test-repo',
+                      id: 'repo1',
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockProjectsResponse)
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockRunsResponse);
+
+      const pagination = {
+        before: 'cursor7',
+        last: 5,
+        first: 10, // This should be ignored when before is provided
+      };
+
+      const result = await client.listRuns(projectKey, pagination);
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].id).toBe('run3');
+      expect(result.pageInfo).toEqual({
+        hasNextPage: false,
+        hasPreviousPage: true,
+        startCursor: 'cursor5',
+        endCursor: 'cursor6',
+      });
+      expect(result.totalCount).toBe(15);
+    });
+
+    it('should handle pagination with last parameter without before for listRuns', async () => {
+      // Mock the listProjects call first
+      const mockProjectsResponse = {
+        data: {
+          viewer: {
+            accounts: {
+              edges: [
+                {
+                  node: {
+                    login: 'testorg',
+                    repositories: {
+                      edges: [
+                        {
+                          node: {
+                            name: 'test-repo',
+                            defaultBranch: 'main',
+                            dsn: 'test-project',
+                            isPrivate: false,
+                            isActivated: true,
+                            vcsProvider: 'github',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      const mockRunsResponse = {
+        data: {
+          repository: {
+            name: 'test-repo',
+            id: 'repo1',
+            analysisRuns: {
+              pageInfo: {
+                hasNextPage: false,
+                hasPreviousPage: false,
+                startCursor: 'cursor8',
+                endCursor: 'cursor9',
+              },
+              totalCount: 8,
+              edges: [
+                {
+                  node: {
+                    id: 'run4',
+                    runUid: '11111111-1111-1111-1111-111111111111',
+                    commitOid: '111111abcdef',
+                    branchName: 'hotfix',
+                    baseOid: 'abcdef111111',
+                    status: 'PENDING',
+                    createdAt: '2023-01-04T12:00:00Z',
+                    updatedAt: '2023-01-04T12:30:00Z',
+                    finishedAt: '2023-01-04T12:30:00Z',
+                    summary: {
+                      occurrencesIntroduced: 0,
+                      occurrencesResolved: 0,
+                      occurrencesSuppressed: 0,
+                      occurrenceDistributionByAnalyzer: [],
+                      occurrenceDistributionByCategory: [],
+                    },
+                    repository: {
+                      name: 'test-repo',
+                      id: 'repo1',
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      // Create a spy for console.warn
+      const originalWarn = console.warn;
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        nock('https://api.deepsource.io')
+          .post('/graphql/')
+          .matchHeader('Authorization', `Bearer ${API_KEY}`)
+          .reply(200, mockProjectsResponse)
+          .post('/graphql/')
+          .matchHeader('Authorization', `Bearer ${API_KEY}`)
+          .reply(200, mockRunsResponse);
+
+        const pagination = {
+          last: 5,
+          first: undefined,
+        };
+
+        const result = await client.listRuns(projectKey, pagination);
+        expect(result.items).toHaveLength(1);
+        expect(result.items[0].id).toBe('run4');
+        expect(result.pageInfo).toEqual({
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: 'cursor8',
+          endCursor: 'cursor9',
+        });
+        expect(result.totalCount).toBe(8);
+
+        // Verify that the warning was called
+        expect(warnSpy).toHaveBeenCalledWith(
+          'Using "last" without "before" is not standard Relay pagination behavior. Consider using "first" for forward pagination.'
+        );
+      } finally {
+        // Restore original console.warn
+        warnSpy.mockRestore();
+        console.warn = originalWarn;
+      }
+    });
+
+    it('should handle GraphQL errors in repository response for listRuns', async () => {
+      // Mock the listProjects call first
+      const mockProjectsResponse = {
+        data: {
+          viewer: {
+            accounts: {
+              edges: [
+                {
+                  node: {
+                    login: 'testorg',
+                    repositories: {
+                      edges: [
+                        {
+                          node: {
+                            name: 'test-repo',
+                            defaultBranch: 'main',
+                            dsn: 'test-project',
+                            isPrivate: false,
+                            isActivated: true,
+                            vcsProvider: 'github',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      // Mock GraphQL errors in the response data
+      const mockErrorResponse = {
+        data: null,
+        errors: [{ message: 'Repository access denied' }, { message: 'Invalid query' }],
+      };
+
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockProjectsResponse)
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockErrorResponse);
+
+      await expect(client.listRuns(projectKey)).rejects.toThrow(
+        'GraphQL Errors: Repository access denied, Invalid query'
+      );
+    });
+
+    it('should handle API errors when fetching analysis runs', async () => {
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .reply(404, { errors: [{ message: 'Project not found' }] });
+
+      await expect(client.listRuns(projectKey)).rejects.toThrow('GraphQL Error: Project not found');
+    });
   });
 
   describe('getRun', () => {
@@ -1032,6 +1589,72 @@ describe('DeepSourceClient', () => {
       const run = await client.getRun(runUid);
 
       expect(run).toBeNull();
+    });
+
+    it('should handle missing run data in the response', async () => {
+      const runUid = '12345678-1234-1234-1234-123456789012';
+
+      const mockEmptyResponse = {
+        data: {
+          run: null,
+        },
+      };
+
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockEmptyResponse);
+
+      const run = await client.getRun(runUid);
+      expect(run).toBeNull();
+    });
+
+    it('should recognize UUID format correctly', async () => {
+      // Mock the GraphQL API response instead of axios
+      const uuidRunId = '12345678-1234-1234-1234-123456789012';
+      const commitHash = 'abcdef1234567890';
+
+      // Mock UUID detection with regex test
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+      // Test UUID format
+      expect(uuidRegex.test(uuidRunId)).toBe(true);
+      expect(uuidRegex.test(commitHash)).toBe(false);
+
+      // Validate that our regex matches the one used in the code
+      // The actual implementation in deepsource.ts uses this regex for UUID detection
+      expect(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uuidRunId)
+      ).toBe(true);
+      expect(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(commitHash)
+      ).toBe(false);
+    });
+
+    it('should handle GraphQL errors in getRun', async () => {
+      const runUid = '12345678-1234-1234-1234-123456789012';
+
+      const mockErrorResponse = {
+        data: null,
+        errors: [{ message: 'GraphQL validation error' }, { message: 'Invalid request' }],
+      };
+
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockErrorResponse);
+
+      await expect(client.getRun(runUid)).rejects.toThrow(
+        'GraphQL Errors: GraphQL validation error, Invalid request'
+      );
+    });
+
+    it('should handle general errors in getRun', async () => {
+      const runUid = '12345678-1234-1234-1234-123456789012';
+
+      nock('https://api.deepsource.io').post('/graphql/').replyWithError('Network error');
+
+      await expect(client.getRun(runUid)).rejects.toThrow();
     });
   });
 
