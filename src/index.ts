@@ -127,11 +127,11 @@ mcpServer.tool(
 
 mcpServer.tool(
   'deepsource_project_issues',
-  'Get issues from a DeepSource project with support for Relay-style cursor-based pagination. ' +
-    'For forward pagination, use `first` (defaults to 10) with optional `after` cursor. ' +
-    'For backward pagination, use `last` (defaults to 10) with optional `before` cursor. ' +
-    'The response includes `pageInfo` with `hasNextPage`, `hasPreviousPage`, `startCursor`, and `endCursor` ' +
-    'to help navigate through pages.',
+  `Get issues from a DeepSource project with support for Relay-style cursor-based pagination. 
+For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor. 
+For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor. 
+The response includes \`pageInfo\` with \`hasNextPage\`, \`hasPreviousPage\`, \`startCursor\`, and \`endCursor\` 
+to help navigate through pages.`,
   {
     projectKey: z.string().describe('The unique identifier for the DeepSource project'),
     offset: z.number().optional().describe('Legacy pagination: Number of items to skip'),

@@ -166,6 +166,10 @@ export class DeepSourceClient {
    *                    For backward pagination use 'last' with optional 'before' cursor.
    *                    Note: Using both 'first' and 'last' together is not recommended and will prioritize
    *                    'last' if 'before' is provided, otherwise will prioritize 'first'.
+   *
+   *                    When 'last' is provided without 'before', a warning will be logged, but the
+   *                    request will still be processed using 'last'. For standard Relay behavior,
+   *                    'last' should always be accompanied by 'before'.
    * @returns Promise that resolves to a paginated response containing DeepSource issues
    */
   async getIssues(
@@ -196,6 +200,14 @@ export class DeepSourceClient {
       if (paginationWithDefaults.before) {
         // When fetching backwards with 'before', prioritize 'last'
         paginationWithDefaults.last = pagination.last ?? pagination.first ?? 10;
+        paginationWithDefaults.first = undefined;
+      } else if (paginationWithDefaults.last) {
+        // If 'last' is provided without 'before', add a warning but still use 'last'
+        // This is not standard Relay behavior but we'll support it for flexibility
+        console.warn(
+          'Using "last" without "before" is not standard Relay pagination behavior. Consider using "first" for forward pagination.'
+        );
+        paginationWithDefaults.last = pagination.last;
         paginationWithDefaults.first = undefined;
       } else {
         // Default or forward pagination with 'after', prioritize 'first'
