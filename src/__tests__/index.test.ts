@@ -2,7 +2,13 @@
  * @jest-environment node
  */
 
-import { mcpServer, handleDeepsourceProjects, handleDeepsourceProjectIssues } from '../index.js';
+import {
+  mcpServer,
+  handleDeepsourceProjects,
+  handleDeepsourceProjectIssues,
+  handleDeepsourceProjectRuns,
+  handleDeepsourceRun,
+} from '../index.js';
 import {
   DeepSourceClient,
   type DeepSourceProject,
@@ -374,6 +380,300 @@ describe('MCP server implementation', () => {
 
       // Verify the error is propagated
       await expect(handleDeepsourceProjectIssues(params)).rejects.toThrow('API error');
+    });
+  });
+
+  describe('deepsource_project_runs tool', () => {
+    it('returns formatted runs with all parameters', async () => {
+      // Define mock data for runs response
+      const mockRuns = {
+        items: [
+          {
+            id: 'run1',
+            runUid: '12345678-1234-1234-1234-123456789012',
+            commitOid: 'abcdef123456',
+            branchName: 'main',
+            baseOid: '654321fedcba',
+            status: 'SUCCESS',
+            createdAt: '2023-01-01T12:00:00Z',
+            updatedAt: '2023-01-01T12:30:00Z',
+            finishedAt: '2023-01-01T12:30:00Z',
+            summary: {
+              occurrencesIntroduced: 5,
+              occurrencesResolved: 2,
+              occurrencesSuppressed: 1,
+              occurrenceDistributionByAnalyzer: [{ analyzerShortcode: 'python', introduced: 3 }],
+              occurrenceDistributionByCategory: [{ category: 'SECURITY', introduced: 2 }],
+            },
+            repository: {
+              name: 'test-repo',
+              id: 'repo1',
+            },
+          },
+        ],
+        pageInfo: {
+          hasNextPage: true,
+          hasPreviousPage: false,
+          startCursor: 'start-cursor',
+          endCursor: 'end-cursor',
+        },
+        totalCount: 100,
+      };
+
+      // Create a tracked array to record calls
+      const calls: Array<[string, any?]> = [];
+
+      // Override the method for this test
+      DeepSourceClient.prototype.listRuns = function (projectKey, pagination) {
+        // Mock implementation for testing with pagination parameters
+        calls.push([projectKey, pagination]);
+        return Promise.resolve(mockRuns);
+      };
+
+      // Parameters for the call
+      const params = {
+        projectKey: 'test-project',
+        offset: 10,
+        first: 20,
+        after: 'after-cursor',
+        before: 'before-cursor',
+      };
+
+      // Call the handler
+      const result = await handleDeepsourceProjectRuns(params);
+
+      // Verify the method was called with correct parameters
+      expect(calls.length).toBe(1);
+      expect(calls[0][0]).toBe('test-project');
+      expect(calls[0][1]).toEqual({
+        offset: 10,
+        first: 20,
+        after: 'after-cursor',
+        before: 'before-cursor',
+      });
+
+      // Verify the response
+      verifyResponse(result, {
+        items: [
+          {
+            id: 'run1',
+            runUid: '12345678-1234-1234-1234-123456789012',
+            commitOid: 'abcdef123456',
+            branchName: 'main',
+            baseOid: '654321fedcba',
+            status: 'SUCCESS',
+            createdAt: '2023-01-01T12:00:00Z',
+            updatedAt: '2023-01-01T12:30:00Z',
+            finishedAt: '2023-01-01T12:30:00Z',
+            summary: {
+              occurrencesIntroduced: 5,
+              occurrencesResolved: 2,
+              occurrencesSuppressed: 1,
+              occurrenceDistributionByAnalyzer: [{ analyzerShortcode: 'python', introduced: 3 }],
+              occurrenceDistributionByCategory: [{ category: 'SECURITY', introduced: 2 }],
+            },
+            repository: {
+              name: 'test-repo',
+              id: 'repo1',
+            },
+          },
+        ],
+        pageInfo: {
+          hasNextPage: true,
+          hasPreviousPage: false,
+          startCursor: 'start-cursor',
+          endCursor: 'end-cursor',
+        },
+        totalCount: 100,
+        pagination_help: {
+          description: 'This API uses Relay-style cursor-based pagination',
+          forward_pagination: `To get the next page, use 'first: 10, after: "end-cursor"'`,
+          backward_pagination: `To get the previous page, use 'last: 10, before: "start-cursor"'`,
+          page_status: {
+            has_next_page: true,
+            has_previous_page: false,
+          },
+        },
+      });
+    });
+
+    it('handles minimal parameters for project runs', async () => {
+      // Define mock data
+      const mockRuns = {
+        items: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: undefined,
+          endCursor: undefined,
+        },
+        totalCount: 0,
+      };
+
+      // Create a tracked array to record calls
+      const calls: Array<[string, any?]> = [];
+
+      // Override the method for this test
+      DeepSourceClient.prototype.listRuns = function (projectKey, pagination) {
+        // Mock implementation for testing with minimal parameters
+        calls.push([projectKey, pagination]);
+        return Promise.resolve(mockRuns);
+      };
+
+      // Parameters for the call
+      const params = {
+        projectKey: 'test-project',
+      };
+
+      // Call the handler
+      const result = await handleDeepsourceProjectRuns(params);
+
+      // Verify the method was called with correct parameters
+      expect(calls.length).toBe(1);
+      expect(calls[0][0]).toBe('test-project');
+      expect(calls[0][1]).toEqual({});
+
+      // Verify the response
+      verifyResponse(result, {
+        items: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: undefined,
+          endCursor: undefined,
+        },
+        totalCount: 0,
+        pagination_help: {
+          description: 'This API uses Relay-style cursor-based pagination',
+          forward_pagination: `To get the next page, use 'first: 10, after: "cursor_value"'`,
+          backward_pagination: `To get the previous page, use 'last: 10, before: "cursor_value"'`,
+          page_status: {
+            has_next_page: false,
+            has_previous_page: false,
+          },
+        },
+      });
+    });
+
+    it('handles error from DeepSourceClient for project runs', async () => {
+      // Override the method for this test to throw an error
+      DeepSourceClient.prototype.listRuns = function () {
+        return Promise.reject(new Error('API error'));
+      };
+
+      // Parameters for the call
+      const params = {
+        projectKey: 'test-project',
+      };
+
+      // Verify the error is propagated
+      await expect(handleDeepsourceProjectRuns(params)).rejects.toThrow('API error');
+    });
+  });
+
+  describe('deepsource_run tool', () => {
+    it('returns formatted run details', async () => {
+      // Define mock data
+      const mockRun = {
+        id: 'run1',
+        runUid: '12345678-1234-1234-1234-123456789012',
+        commitOid: 'abcdef123456',
+        branchName: 'main',
+        baseOid: '654321fedcba',
+        status: 'SUCCESS',
+        createdAt: '2023-01-01T12:00:00Z',
+        updatedAt: '2023-01-01T12:30:00Z',
+        finishedAt: '2023-01-01T12:30:00Z',
+        summary: {
+          occurrencesIntroduced: 5,
+          occurrencesResolved: 2,
+          occurrencesSuppressed: 1,
+          occurrenceDistributionByAnalyzer: [{ analyzerShortcode: 'python', introduced: 3 }],
+          occurrenceDistributionByCategory: [{ category: 'SECURITY', introduced: 2 }],
+        },
+        repository: {
+          name: 'test-repo',
+          id: 'repo1',
+        },
+      };
+
+      // Create a tracked array to record calls
+      const calls: Array<[string]> = [];
+
+      // Override the method for this test
+      DeepSourceClient.prototype.getRun = function (runIdentifier) {
+        // Mock implementation for testing
+        calls.push([runIdentifier]);
+        return Promise.resolve(mockRun);
+      };
+
+      // Parameters for the call
+      const params = {
+        runIdentifier: '12345678-1234-1234-1234-123456789012',
+      };
+
+      // Call the handler
+      const result = await handleDeepsourceRun(params);
+
+      // Verify the method was called with correct parameters
+      expect(calls.length).toBe(1);
+      expect(calls[0][0]).toBe('12345678-1234-1234-1234-123456789012');
+
+      // Verify the response
+      verifyResponse(result, {
+        id: 'run1',
+        runUid: '12345678-1234-1234-1234-123456789012',
+        commitOid: 'abcdef123456',
+        branchName: 'main',
+        baseOid: '654321fedcba',
+        status: 'SUCCESS',
+        createdAt: '2023-01-01T12:00:00Z',
+        updatedAt: '2023-01-01T12:30:00Z',
+        finishedAt: '2023-01-01T12:30:00Z',
+        summary: {
+          occurrencesIntroduced: 5,
+          occurrencesResolved: 2,
+          occurrencesSuppressed: 1,
+          occurrenceDistributionByAnalyzer: [{ analyzerShortcode: 'python', introduced: 3 }],
+          occurrenceDistributionByCategory: [{ category: 'SECURITY', introduced: 2 }],
+        },
+        repository: {
+          name: 'test-repo',
+          id: 'repo1',
+        },
+      });
+    });
+
+    it('handles run not found error', async () => {
+      // Override the method for this test to return null
+      DeepSourceClient.prototype.getRun = function () {
+        return Promise.resolve(null);
+      };
+
+      // Parameters for the call
+      const params = {
+        runIdentifier: 'non-existent-run',
+      };
+
+      // Verify the error is propagated
+      await expect(handleDeepsourceRun(params)).rejects.toThrow(
+        "Run with identifier 'non-existent-run' not found"
+      );
+    });
+
+    it('handles API error from DeepSourceClient for run', async () => {
+      // Override the method for this test to throw an error
+      DeepSourceClient.prototype.getRun = function () {
+        return Promise.reject(new Error('API error'));
+      };
+
+      // Parameters for the call
+      const params = {
+        runIdentifier: '12345678-1234-1234-1234-123456789012',
+      };
+
+      // Verify the error is propagated
+      await expect(handleDeepsourceRun(params)).rejects.toThrow('API error');
     });
   });
 });

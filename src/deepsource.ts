@@ -25,6 +25,51 @@ export interface DeepSourceIssue {
   tags: string[];
 }
 
+export interface OccurrenceDistributionByAnalyzer {
+  analyzerShortcode: string;
+  introduced: number;
+}
+
+export interface OccurrenceDistributionByCategory {
+  category: string;
+  introduced: number;
+}
+
+export interface RunSummary {
+  occurrencesIntroduced: number;
+  occurrencesResolved: number;
+  occurrencesSuppressed: number;
+  occurrenceDistributionByAnalyzer?: OccurrenceDistributionByAnalyzer[];
+  occurrenceDistributionByCategory?: OccurrenceDistributionByCategory[];
+}
+
+// Using a type instead of enum to avoid unused enum values linting errors
+export type AnalysisRunStatus =
+  | 'PENDING'
+  | 'SUCCESS'
+  | 'FAILURE'
+  | 'TIMEOUT'
+  | 'CANCEL'
+  | 'READY'
+  | 'SKIPPED';
+
+export interface DeepSourceRun {
+  id: string;
+  runUid: string;
+  commitOid: string;
+  branchName: string;
+  baseOid: string;
+  status: AnalysisRunStatus;
+  createdAt: string;
+  updatedAt: string;
+  finishedAt?: string;
+  summary: RunSummary;
+  repository: {
+    name: string;
+    id: string;
+  };
+}
+
 export interface PaginationParams {
   /** Legacy pagination: Number of items to skip */
   offset?: number;
@@ -343,6 +388,284 @@ export class DeepSourceClient {
       const issue = result.items.find((issue) => issue.id === issueId);
       return issue || null;
     } catch (error) {
+      return DeepSourceClient.handleGraphQLError(error);
+    }
+  }
+
+  /**
+   * Fetches analysis runs for a specified DeepSource project
+   * @param projectKey - The unique identifier for the DeepSource project
+   * @param pagination - Optional pagination parameters for the query
+   * @returns Promise that resolves to a paginated response containing DeepSource runs
+   */
+  async listRuns(
+    projectKey: string,
+    pagination: PaginationParams = {}
+  ): Promise<PaginatedResponse<DeepSourceRun>> {
+    try {
+      const projects = await this.listProjects();
+      const project = projects.find((p) => p.key === projectKey);
+
+      if (!project) {
+        return {
+          items: [],
+          pageInfo: {
+            hasNextPage: false,
+            hasPreviousPage: false,
+          },
+          totalCount: 0,
+        };
+      }
+
+      // Set default pagination parameters
+      const paginationWithDefaults = { ...pagination };
+
+      // Ensure we're not using both first and last at the same time (not recommended in Relay)
+      if (paginationWithDefaults.before) {
+        // When fetching backwards with 'before', prioritize 'last'
+        paginationWithDefaults.last = pagination.last ?? pagination.first ?? 10;
+        paginationWithDefaults.first = undefined;
+      } else if (paginationWithDefaults.last) {
+        // If 'last' is provided without 'before', add a warning but still use 'last'
+        console.warn(
+          'Using "last" without "before" is not standard Relay pagination behavior. Consider using "first" for forward pagination.'
+        );
+        paginationWithDefaults.last = pagination.last;
+        paginationWithDefaults.first = undefined;
+      } else {
+        // Default or forward pagination with 'after', prioritize 'first'
+        paginationWithDefaults.first = pagination.first ?? 10;
+        paginationWithDefaults.last = undefined;
+      }
+
+      const repoQuery = `
+        query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int) {
+          repository(login: $login, name: $name, vcsProvider: $provider) {
+            name
+            id
+            analysisRuns(offset: $offset, first: $first, after: $after, before: $before, last: $last) {
+              pageInfo {
+                hasNextPage
+                hasPreviousPage
+                startCursor
+                endCursor
+              }
+              totalCount
+              edges {
+                node {
+                  id
+                  runUid
+                  commitOid
+                  branchName
+                  baseOid
+                  status
+                  createdAt
+                  updatedAt
+                  finishedAt
+                  summary {
+                    occurrencesIntroduced
+                    occurrencesResolved
+                    occurrencesSuppressed
+                    occurrenceDistributionByAnalyzer {
+                      analyzerShortcode
+                      introduced
+                    }
+                    occurrenceDistributionByCategory {
+                      category
+                      introduced
+                    }
+                  }
+                  repository {
+                    name
+                    id
+                  }
+                }
+              }
+            }
+          }
+        }
+      `;
+
+      const response = await this.client.post('', {
+        query: repoQuery.trim(),
+        variables: {
+          login: project.repository.login,
+          name: project.name,
+          provider: project.repository.provider,
+          offset: paginationWithDefaults.offset,
+          first: paginationWithDefaults.first,
+          after: paginationWithDefaults.after,
+          before: paginationWithDefaults.before,
+          last: paginationWithDefaults.last,
+        },
+      });
+
+      if (response.data.errors) {
+        throw new Error(
+          `GraphQL Errors: ${response.data.errors.map((e: { message: string }) => e.message).join(', ')}`
+        );
+      }
+
+      const runs: DeepSourceRun[] = [];
+      const repoRuns = response.data.data?.repository?.analysisRuns?.edges || [];
+      const pageInfo = response.data.data?.repository?.analysisRuns?.pageInfo || {
+        hasNextPage: false,
+        hasPreviousPage: false,
+      };
+      const totalCount = response.data.data?.repository?.analysisRuns?.totalCount || 0;
+
+      for (const { node: run } of repoRuns) {
+        runs.push({
+          id: run.id,
+          runUid: run.runUid,
+          commitOid: run.commitOid,
+          branchName: run.branchName,
+          baseOid: run.baseOid,
+          status: run.status,
+          createdAt: run.createdAt,
+          updatedAt: run.updatedAt,
+          finishedAt: run.finishedAt,
+          summary: {
+            occurrencesIntroduced: run.summary?.occurrencesIntroduced || 0,
+            occurrencesResolved: run.summary?.occurrencesResolved || 0,
+            occurrencesSuppressed: run.summary?.occurrencesSuppressed || 0,
+            occurrenceDistributionByAnalyzer: run.summary?.occurrenceDistributionByAnalyzer || [],
+            occurrenceDistributionByCategory: run.summary?.occurrenceDistributionByCategory || [],
+          },
+          repository: {
+            name: run.repository?.name || '',
+            id: run.repository?.id || '',
+          },
+        });
+      }
+
+      return {
+        items: runs,
+        pageInfo: {
+          hasNextPage: pageInfo.hasNextPage,
+          hasPreviousPage: pageInfo.hasPreviousPage,
+          startCursor: pageInfo.startCursor,
+          endCursor: pageInfo.endCursor,
+        },
+        totalCount,
+      };
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('NoneType')) {
+        return {
+          items: [],
+          pageInfo: {
+            hasNextPage: false,
+            hasPreviousPage: false,
+          },
+          totalCount: 0,
+        };
+      }
+      return DeepSourceClient.handleGraphQLError(error);
+    }
+  }
+
+  /**
+   * Fetches a specific analysis run by ID or commit hash
+   * @param runIdentifier - The runUid or commitOid to identify the run
+   * @returns Promise that resolves to the run if found, or null if not found
+   */
+  async getRun(runIdentifier: string): Promise<DeepSourceRun | null> {
+    try {
+      // Determine if the identifier is a UUID or a commit hash
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        runIdentifier
+      );
+
+      const runQuery = `
+        query($runUid: UUID, $commitOid: String) {
+          run(runUid: $runUid, commitOid: $commitOid) {
+            id
+            runUid
+            commitOid
+            branchName
+            baseOid
+            status
+            createdAt
+            updatedAt
+            finishedAt
+            summary {
+              occurrencesIntroduced
+              occurrencesResolved
+              occurrencesSuppressed
+              occurrenceDistributionByAnalyzer {
+                analyzerShortcode
+                introduced
+              }
+              occurrenceDistributionByCategory {
+                category
+                introduced
+              }
+            }
+            repository {
+              name
+              id
+            }
+          }
+        }
+      `;
+
+      const response = await this.client.post('', {
+        query: runQuery.trim(),
+        variables: {
+          runUid: isUuid ? runIdentifier : null,
+          commitOid: !isUuid ? runIdentifier : null,
+        },
+      });
+
+      if (response.data.errors) {
+        // If the error is about not finding the run, return null
+        if (
+          response.data.errors.some(
+            (e: { message: string }) =>
+              e.message.includes('not found') || e.message.includes('NoneType')
+          )
+        ) {
+          return null;
+        }
+        throw new Error(
+          `GraphQL Errors: ${response.data.errors.map((e: { message: string }) => e.message).join(', ')}`
+        );
+      }
+
+      const run = response.data.data?.run;
+      if (!run) {
+        return null;
+      }
+
+      return {
+        id: run.id,
+        runUid: run.runUid,
+        commitOid: run.commitOid,
+        branchName: run.branchName,
+        baseOid: run.baseOid,
+        status: run.status,
+        createdAt: run.createdAt,
+        updatedAt: run.updatedAt,
+        finishedAt: run.finishedAt,
+        summary: {
+          occurrencesIntroduced: run.summary?.occurrencesIntroduced || 0,
+          occurrencesResolved: run.summary?.occurrencesResolved || 0,
+          occurrencesSuppressed: run.summary?.occurrencesSuppressed || 0,
+          occurrenceDistributionByAnalyzer: run.summary?.occurrenceDistributionByAnalyzer || [],
+          occurrenceDistributionByCategory: run.summary?.occurrenceDistributionByCategory || [],
+        },
+        repository: {
+          name: run.repository?.name || '',
+          id: run.repository?.id || '',
+        },
+      };
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('NoneType') || error.message.includes('not found'))
+      ) {
+        return null;
+      }
       return DeepSourceClient.handleGraphQLError(error);
     }
   }

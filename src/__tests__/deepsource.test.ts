@@ -559,6 +559,482 @@ describe('DeepSourceClient', () => {
     });
   });
 
+  describe('listRuns', () => {
+    const projectKey = 'test-project';
+
+    it('should return a list of runs for a project', async () => {
+      // Mock the listProjects call first
+      const mockProjectsResponse = {
+        data: {
+          viewer: {
+            accounts: {
+              edges: [
+                {
+                  node: {
+                    login: 'testorg',
+                    repositories: {
+                      edges: [
+                        {
+                          node: {
+                            name: 'test-repo',
+                            defaultBranch: 'main',
+                            dsn: 'test-project',
+                            isPrivate: false,
+                            isActivated: true,
+                            vcsProvider: 'github',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      const mockRunsResponse = {
+        data: {
+          repository: {
+            name: 'test-repo',
+            id: 'repo1',
+            analysisRuns: {
+              pageInfo: {
+                hasNextPage: true,
+                hasPreviousPage: false,
+                startCursor: 'cursor1',
+                endCursor: 'cursor2',
+              },
+              totalCount: 5,
+              edges: [
+                {
+                  node: {
+                    id: 'run1',
+                    runUid: '12345678-1234-1234-1234-123456789012',
+                    commitOid: 'abcdef123456',
+                    branchName: 'main',
+                    baseOid: '654321fedcba',
+                    status: 'SUCCESS',
+                    createdAt: '2023-01-01T12:00:00Z',
+                    updatedAt: '2023-01-01T12:30:00Z',
+                    finishedAt: '2023-01-01T12:30:00Z',
+                    summary: {
+                      occurrencesIntroduced: 5,
+                      occurrencesResolved: 2,
+                      occurrencesSuppressed: 1,
+                      occurrenceDistributionByAnalyzer: [
+                        {
+                          analyzerShortcode: 'python',
+                          introduced: 3,
+                        },
+                        {
+                          analyzerShortcode: 'javascript',
+                          introduced: 2,
+                        },
+                      ],
+                      occurrenceDistributionByCategory: [
+                        {
+                          category: 'SECURITY',
+                          introduced: 2,
+                        },
+                        {
+                          category: 'PERFORMANCE',
+                          introduced: 3,
+                        },
+                      ],
+                    },
+                    repository: {
+                      name: 'test-repo',
+                      id: 'repo1',
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockProjectsResponse)
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockRunsResponse);
+
+      const result = await client.listRuns(projectKey);
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0]).toEqual({
+        id: 'run1',
+        runUid: '12345678-1234-1234-1234-123456789012',
+        commitOid: 'abcdef123456',
+        branchName: 'main',
+        baseOid: '654321fedcba',
+        status: 'SUCCESS',
+        createdAt: '2023-01-01T12:00:00Z',
+        updatedAt: '2023-01-01T12:30:00Z',
+        finishedAt: '2023-01-01T12:30:00Z',
+        summary: {
+          occurrencesIntroduced: 5,
+          occurrencesResolved: 2,
+          occurrencesSuppressed: 1,
+          occurrenceDistributionByAnalyzer: [
+            {
+              analyzerShortcode: 'python',
+              introduced: 3,
+            },
+            {
+              analyzerShortcode: 'javascript',
+              introduced: 2,
+            },
+          ],
+          occurrenceDistributionByCategory: [
+            {
+              category: 'SECURITY',
+              introduced: 2,
+            },
+            {
+              category: 'PERFORMANCE',
+              introduced: 3,
+            },
+          ],
+        },
+        repository: {
+          name: 'test-repo',
+          id: 'repo1',
+        },
+      });
+      expect(result.pageInfo).toEqual({
+        hasNextPage: true,
+        hasPreviousPage: false,
+        startCursor: 'cursor1',
+        endCursor: 'cursor2',
+      });
+      expect(result.totalCount).toBe(5);
+    });
+
+    it('should support pagination parameters for listRuns', async () => {
+      // Mock the listProjects call first
+      const mockProjectsResponse = {
+        data: {
+          viewer: {
+            accounts: {
+              edges: [
+                {
+                  node: {
+                    login: 'testorg',
+                    repositories: {
+                      edges: [
+                        {
+                          node: {
+                            name: 'test-repo',
+                            defaultBranch: 'main',
+                            dsn: 'test-project',
+                            isPrivate: false,
+                            isActivated: true,
+                            vcsProvider: 'github',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      const mockRunsResponse = {
+        data: {
+          repository: {
+            name: 'test-repo',
+            id: 'repo1',
+            analysisRuns: {
+              pageInfo: {
+                hasNextPage: false,
+                hasPreviousPage: true,
+                startCursor: 'cursor3',
+                endCursor: 'cursor4',
+              },
+              totalCount: 10,
+              edges: [
+                {
+                  node: {
+                    id: 'run2',
+                    runUid: '87654321-4321-4321-4321-210987654321',
+                    commitOid: '654321abcdef',
+                    branchName: 'feature',
+                    baseOid: 'abcdef654321',
+                    status: 'FAILURE',
+                    createdAt: '2023-01-02T12:00:00Z',
+                    updatedAt: '2023-01-02T12:30:00Z',
+                    finishedAt: '2023-01-02T12:30:00Z',
+                    summary: {
+                      occurrencesIntroduced: 10,
+                      occurrencesResolved: 0,
+                      occurrencesSuppressed: 0,
+                      occurrenceDistributionByAnalyzer: [],
+                      occurrenceDistributionByCategory: [],
+                    },
+                    repository: {
+                      name: 'test-repo',
+                      id: 'repo1',
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockProjectsResponse)
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockRunsResponse);
+
+      const pagination = {
+        first: 5,
+        after: 'cursor2',
+      };
+
+      const result = await client.listRuns(projectKey, pagination);
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].id).toBe('run2');
+      expect(result.pageInfo).toEqual({
+        hasNextPage: false,
+        hasPreviousPage: true,
+        startCursor: 'cursor3',
+        endCursor: 'cursor4',
+      });
+      expect(result.totalCount).toBe(10);
+    });
+
+    it('should return empty result when project not found for listRuns', async () => {
+      // Mock empty project response
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .reply(200, { data: { viewer: { accounts: { edges: [] } } } });
+
+      const result = await client.listRuns('non-existent-project');
+      expect(result.items).toEqual([]);
+      expect(result.pageInfo).toEqual({
+        hasNextPage: false,
+        hasPreviousPage: false,
+      });
+      expect(result.totalCount).toBe(0);
+    });
+
+    it('should handle NoneType errors in listRuns', async () => {
+      // First mock to find the project
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, {
+          data: {
+            viewer: {
+              accounts: {
+                edges: [
+                  {
+                    node: {
+                      login: 'testorg',
+                      repositories: {
+                        edges: [
+                          {
+                            node: {
+                              name: 'test-repo',
+                              defaultBranch: 'main',
+                              dsn: 'test-project',
+                              isPrivate: false,
+                              isActivated: true,
+                              vcsProvider: 'github',
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        });
+
+      // Then mock the runs call to return a NoneType error
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, { errors: [{ message: 'NoneType object has no attribute' }] });
+
+      const client = new DeepSourceClient(API_KEY);
+      const result = await client.listRuns('test-project');
+
+      expect(result).toEqual({
+        items: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+        totalCount: 0,
+      });
+    });
+  });
+
+  describe('getRun', () => {
+    it('should return a specific run by runUid', async () => {
+      const runUid = '12345678-1234-1234-1234-123456789012';
+
+      const mockRunResponse = {
+        data: {
+          run: {
+            id: 'run1',
+            runUid: '12345678-1234-1234-1234-123456789012',
+            commitOid: 'abcdef123456',
+            branchName: 'main',
+            baseOid: '654321fedcba',
+            status: 'SUCCESS',
+            createdAt: '2023-01-01T12:00:00Z',
+            updatedAt: '2023-01-01T12:30:00Z',
+            finishedAt: '2023-01-01T12:30:00Z',
+            summary: {
+              occurrencesIntroduced: 5,
+              occurrencesResolved: 2,
+              occurrencesSuppressed: 1,
+              occurrenceDistributionByAnalyzer: [
+                {
+                  analyzerShortcode: 'python',
+                  introduced: 3,
+                },
+              ],
+              occurrenceDistributionByCategory: [
+                {
+                  category: 'SECURITY',
+                  introduced: 2,
+                },
+              ],
+            },
+            repository: {
+              name: 'test-repo',
+              id: 'repo1',
+            },
+          },
+        },
+      };
+
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockRunResponse);
+
+      const run = await client.getRun(runUid);
+
+      expect(run).not.toBeNull();
+      expect(run).toEqual({
+        id: 'run1',
+        runUid: '12345678-1234-1234-1234-123456789012',
+        commitOid: 'abcdef123456',
+        branchName: 'main',
+        baseOid: '654321fedcba',
+        status: 'SUCCESS',
+        createdAt: '2023-01-01T12:00:00Z',
+        updatedAt: '2023-01-01T12:30:00Z',
+        finishedAt: '2023-01-01T12:30:00Z',
+        summary: {
+          occurrencesIntroduced: 5,
+          occurrencesResolved: 2,
+          occurrencesSuppressed: 1,
+          occurrenceDistributionByAnalyzer: [
+            {
+              analyzerShortcode: 'python',
+              introduced: 3,
+            },
+          ],
+          occurrenceDistributionByCategory: [
+            {
+              category: 'SECURITY',
+              introduced: 2,
+            },
+          ],
+        },
+        repository: {
+          name: 'test-repo',
+          id: 'repo1',
+        },
+      });
+    });
+
+    it('should return a specific run by commitOid', async () => {
+      const commitOid = 'abcdef123456';
+
+      const mockRunResponse = {
+        data: {
+          run: {
+            id: 'run1',
+            runUid: '12345678-1234-1234-1234-123456789012',
+            commitOid: 'abcdef123456',
+            branchName: 'main',
+            baseOid: '654321fedcba',
+            status: 'SUCCESS',
+            createdAt: '2023-01-01T12:00:00Z',
+            updatedAt: '2023-01-01T12:30:00Z',
+            finishedAt: '2023-01-01T12:30:00Z',
+            summary: {
+              occurrencesIntroduced: 5,
+              occurrencesResolved: 2,
+              occurrencesSuppressed: 1,
+            },
+            repository: {
+              name: 'test-repo',
+              id: 'repo1',
+            },
+          },
+        },
+      };
+
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockRunResponse);
+
+      const run = await client.getRun(commitOid);
+
+      expect(run).not.toBeNull();
+      expect(run?.commitOid).toBe('abcdef123456');
+    });
+
+    it('should return null for non-existent run', async () => {
+      const runUid = 'non-existent-run';
+
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, { errors: [{ message: 'Run not found' }] });
+
+      const run = await client.getRun(runUid);
+
+      expect(run).toBeNull();
+    });
+
+    it('should handle NoneType errors in getRun', async () => {
+      const runUid = '12345678-1234-1234-1234-123456789012';
+
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, { errors: [{ message: 'NoneType object has no attribute' }] });
+
+      const run = await client.getRun(runUid);
+
+      expect(run).toBeNull();
+    });
+  });
+
   describe('Error handling', () => {
     it('should handle NoneType errors in listProjects', async () => {
       nock('https://api.deepsource.io')
