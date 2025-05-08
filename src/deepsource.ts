@@ -1,5 +1,15 @@
 import axios, { AxiosError } from 'axios';
 
+/**
+ * @fileoverview DeepSource API client for interacting with the DeepSource service.
+ * This module exports interfaces and classes for working with the DeepSource API.
+ * @packageDocumentation
+ */
+
+/**
+ * Represents a DeepSource project in the API
+ * @public
+ */
 export interface DeepSourceProject {
   key: string;
   name: string;
@@ -12,6 +22,10 @@ export interface DeepSourceProject {
   };
 }
 
+/**
+ * Represents an issue found by DeepSource analysis
+ * @public
+ */
 export interface DeepSourceIssue {
   id: string;
   title: string;
@@ -25,16 +39,28 @@ export interface DeepSourceIssue {
   tags: string[];
 }
 
+/**
+ * Distribution of occurrences by analyzer type
+ * @public
+ */
 export interface OccurrenceDistributionByAnalyzer {
   analyzerShortcode: string;
   introduced: number;
 }
 
+/**
+ * Distribution of occurrences by category
+ * @public
+ */
 export interface OccurrenceDistributionByCategory {
   category: string;
   introduced: number;
 }
 
+/**
+ * Summary of an analysis run, including counts of issues
+ * @public
+ */
 export interface RunSummary {
   occurrencesIntroduced: number;
   occurrencesResolved: number;
@@ -43,7 +69,11 @@ export interface RunSummary {
   occurrenceDistributionByCategory?: OccurrenceDistributionByCategory[];
 }
 
-// Using a type instead of enum to avoid unused enum values linting errors
+/**
+ * Possible status values for an analysis run
+ * Using a type instead of enum to avoid unused enum values linting errors
+ * @public
+ */
 export type AnalysisRunStatus =
   | 'PENDING'
   | 'SUCCESS'
@@ -53,6 +83,10 @@ export type AnalysisRunStatus =
   | 'READY'
   | 'SKIPPED';
 
+/**
+ * Represents a DeepSource analysis run
+ * @public
+ */
 export interface DeepSourceRun {
   id: string;
   runUid: string;
@@ -70,6 +104,10 @@ export interface DeepSourceRun {
   };
 }
 
+/**
+ * Parameters for paginating through API results
+ * @public
+ */
 export interface PaginationParams {
   /** Legacy pagination: Number of items to skip */
   offset?: number;
@@ -83,6 +121,11 @@ export interface PaginationParams {
   last?: number;
 }
 
+/**
+ * Generic response structure containing paginated results
+ * @public
+ * @template T - The type of items in the response
+ */
 export interface PaginatedResponse<T> {
   items: T[];
   pageInfo: {

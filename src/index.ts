@@ -1,11 +1,21 @@
 #!/usr/bin/env node
 
+/**
+ * @fileoverview DeepSource MCP Server for integrating DeepSource with Model Context Protocol.
+ * This module exports MCP server functions for DeepSource API integration.
+ * @packageDocumentation
+ */
+
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { DeepSourceClient } from './deepsource.js';
 import { z } from 'zod';
 
 // Initialize MCP server
+/**
+ * The main MCP server instance
+ * @public
+ */
 export const mcpServer = new McpServer({
   name: 'deepsource-mcp-server',
   version: '1.0.3',
@@ -16,6 +26,7 @@ export const mcpServer = new McpServer({
  * Fetches and returns a list of all available DeepSource projects
  * @returns A response containing the list of projects with their keys and names
  * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
+ * @public
  */
 export async function handleDeepsourceProjects() {
   const apiKey = process.env.DEEPSOURCE_API_KEY;
@@ -43,6 +54,7 @@ export async function handleDeepsourceProjects() {
 
 /**
  * Interface for pagination parameters for DeepSource project issues
+ * @public
  */
 export interface DeepsourceProjectIssuesParams {
   /** DeepSource project key to fetch issues for */
@@ -64,6 +76,7 @@ export interface DeepsourceProjectIssuesParams {
  * @param params Parameters for fetching issues, including project key and pagination options
  * @returns A response containing the list of issues with their details and pagination info
  * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
+ * @public
  */
 export async function handleDeepsourceProjectIssues({
   projectKey,
@@ -120,6 +133,7 @@ export async function handleDeepsourceProjectIssues({
 
 /**
  * Interface for pagination parameters for DeepSource project runs
+ * @public
  */
 export interface DeepsourceProjectRunsParams {
   /** DeepSource project key to fetch runs for */
@@ -141,6 +155,7 @@ export interface DeepsourceProjectRunsParams {
  * @param params Parameters for fetching runs, including project key and pagination options
  * @returns A response containing the list of runs with their details and pagination info
  * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
+ * @public
  */
 export async function handleDeepsourceProjectRuns({
   projectKey,
@@ -198,6 +213,7 @@ export async function handleDeepsourceProjectRuns({
 
 /**
  * Interface for parameters for fetching a specific DeepSource run
+ * @public
  */
 export interface DeepsourceRunParams {
   /** The runUid or commitOid to identify the run */
@@ -209,6 +225,7 @@ export interface DeepsourceRunParams {
  * @param params Parameters for fetching a run, including the runIdentifier
  * @returns A response containing the run details if found
  * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set or if the run is not found
+ * @public
  */
 export async function handleDeepsourceRun({ runIdentifier }: DeepsourceRunParams) {
   const apiKey = process.env.DEEPSOURCE_API_KEY;

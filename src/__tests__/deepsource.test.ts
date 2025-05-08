@@ -1656,6 +1656,24 @@ describe('DeepSourceClient', () => {
 
       await expect(client.getRun(runUid)).rejects.toThrow();
     });
+
+    it('should handle NoneType or not found errors in getRun', async () => {
+      const runUid = '12345678-1234-1234-1234-123456789012';
+
+      // Mock a Network error that includes 'NoneType' in the message
+      const error = new Error('Error: Cannot read properties of None (NoneType)');
+      nock('https://api.deepsource.io').post('/graphql/').replyWithError(error);
+
+      const result = await client.getRun(runUid);
+      expect(result).toBeNull();
+
+      // Also test the 'not found' case
+      const notFoundError = new Error('Error: Repository not found');
+      nock('https://api.deepsource.io').post('/graphql/').replyWithError(notFoundError);
+
+      const result2 = await client.getRun(runUid);
+      expect(result2).toBeNull();
+    });
   });
 
   describe('Error handling', () => {
