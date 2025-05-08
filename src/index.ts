@@ -8,7 +8,7 @@ import { z } from 'zod';
 // Initialize MCP server
 export const mcpServer = new McpServer({
   name: 'deepsource-mcp-server',
-  version: '1.0.2',
+  version: '1.0.3',
 });
 
 // Export handler functions for testing
@@ -47,13 +47,15 @@ export async function handleDeepsourceProjects() {
 export interface DeepsourceProjectIssuesParams {
   /** DeepSource project key to fetch issues for */
   projectKey: string;
-  /** Number of items to skip */
+  /** Legacy pagination: Number of items to skip */
   offset?: number;
-  /** Maximum number of items to return */
+  /** Relay-style pagination: Number of items to return after the 'after' cursor */
   first?: number;
-  /** Cursor to start fetching from */
+  /** Relay-style pagination: Cursor to fetch records after this cursor */
   after?: string;
-  /** Cursor to fetch until */
+  /** Relay-style pagination: Number of items to return before the 'before' cursor */
+  last?: number;
+  /** Relay-style pagination: Cursor to fetch records before this cursor */
   before?: string;
 }
 
@@ -69,6 +71,7 @@ export async function handleDeepsourceProjectIssues({
   first,
   after,
   before,
+  last,
 }: DeepsourceProjectIssuesParams) {
   const apiKey = process.env.DEEPSOURCE_API_KEY;
   /* istanbul ignore if */
@@ -77,7 +80,7 @@ export async function handleDeepsourceProjectIssues({
   }
 
   const client = new DeepSourceClient(apiKey);
-  const pagination = { offset, first, after, before };
+  const pagination = { offset, first, after, before, last };
   const result = await client.getIssues(projectKey, pagination);
 
   return {
@@ -99,6 +102,16 @@ export async function handleDeepsourceProjectIssues({
           })),
           pageInfo: result.pageInfo,
           totalCount: result.totalCount,
+          // Add pagination help information
+          pagination_help: {
+            description: 'This API uses Relay-style cursor-based pagination',
+            forward_pagination: `To get the next page, use 'first: 10, after: "${result.pageInfo.endCursor || 'cursor_value'}"'`,
+            backward_pagination: `To get the previous page, use 'last: 10, before: "${result.pageInfo.startCursor || 'cursor_value'}"'`,
+            page_status: {
+              has_next_page: result.pageInfo.hasNextPage,
+              has_previous_page: result.pageInfo.hasPreviousPage,
+            },
+          },
         }),
       },
     ],
@@ -108,19 +121,30 @@ export async function handleDeepsourceProjectIssues({
 // Register the tools with the handlers
 mcpServer.tool(
   'deepsource_projects',
-  'List all available DeepSource projects',
+  'List all available DeepSource projects. Returns a list of project objects with "key" and "name" properties.',
   handleDeepsourceProjects
 );
 
 mcpServer.tool(
   'deepsource_project_issues',
-  'Get issues from a DeepSource project. Returns up to 10 issues by default. Use pagination parameters to navigate through results.',
+  `Get issues from a DeepSource project with support for Relay-style cursor-based pagination. 
+For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor. 
+For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor. 
+The response includes \`pageInfo\` with \`hasNextPage\`, \`hasPreviousPage\`, \`startCursor\`, and \`endCursor\` 
+to help navigate through pages.`,
   {
-    projectKey: z.string(),
-    offset: z.number().optional(),
-    first: z.number().optional(),
-    after: z.string().optional(),
-    before: z.string().optional(),
+    projectKey: z.string().describe('The unique identifier for the DeepSource project'),
+    offset: z.number().optional().describe('Legacy pagination: Number of items to skip'),
+    first: z
+      .number()
+      .optional()
+      .describe('Number of items to return after the "after" cursor (default: 10)'),
+    after: z.string().optional().describe('Cursor to fetch records after this position'),
+    before: z.string().optional().describe('Cursor to fetch records before this position'),
+    last: z
+      .number()
+      .optional()
+      .describe('Number of items to return before the "before" cursor (default: 10)'),
   },
   handleDeepsourceProjectIssues
 );

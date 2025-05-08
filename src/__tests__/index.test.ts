@@ -230,6 +230,15 @@ describe('MCP server implementation', () => {
           endCursor: 'cursor1',
         },
         totalCount: 100,
+        pagination_help: {
+          description: 'This API uses Relay-style cursor-based pagination',
+          forward_pagination: `To get the next page, use 'first: 10, after: "cursor1"'`,
+          backward_pagination: `To get the previous page, use 'last: 10, before: "start1"'`,
+          page_status: {
+            has_next_page: true,
+            has_previous_page: false,
+          },
+        },
       });
     });
 
@@ -279,6 +288,15 @@ describe('MCP server implementation', () => {
           endCursor: undefined,
         },
         totalCount: 0,
+        pagination_help: {
+          description: 'This API uses Relay-style cursor-based pagination',
+          forward_pagination: `To get the next page, use 'first: 10, after: "cursor_value"'`,
+          backward_pagination: `To get the previous page, use 'last: 10, before: "cursor_value"'`,
+          page_status: {
+            has_next_page: false,
+            has_previous_page: false,
+          },
+        },
       });
     });
 
@@ -331,6 +349,15 @@ describe('MCP server implementation', () => {
           endCursor: undefined,
         },
         totalCount: 0,
+        pagination_help: {
+          description: 'This API uses Relay-style cursor-based pagination',
+          forward_pagination: `To get the next page, use 'first: 10, after: "cursor_value"'`,
+          backward_pagination: `To get the previous page, use 'last: 10, before: "cursor_value"'`,
+          page_status: {
+            has_next_page: false,
+            has_previous_page: false,
+          },
+        },
       });
     });
 

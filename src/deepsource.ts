@@ -26,10 +26,16 @@ export interface DeepSourceIssue {
 }
 
 export interface PaginationParams {
+  /** Legacy pagination: Number of items to skip */
   offset?: number;
+  /** Relay-style pagination: Number of items to return after the 'after' cursor */
   first?: number;
+  /** Relay-style pagination: Cursor to fetch records after this cursor */
   after?: string;
+  /** Relay-style pagination: Cursor to fetch records before this cursor */
   before?: string;
+  /** Relay-style pagination: Number of items to return before the 'before' cursor */
+  last?: number;
 }
 
 export interface PaginatedResponse<T> {
@@ -154,7 +160,16 @@ export class DeepSourceClient {
   /**
    * Fetches issues from a specified DeepSource project
    * @param projectKey - The unique identifier for the DeepSource project
-   * @param pagination - Optional pagination parameters for the query
+   * @param pagination - Optional pagination parameters for the query.
+   *                    Supports both legacy pagination (offset) and Relay-style cursor-based pagination.
+   *                    For forward pagination use 'first' with optional 'after' cursor.
+   *                    For backward pagination use 'last' with optional 'before' cursor.
+   *                    Note: Using both 'first' and 'last' together is not recommended and will prioritize
+   *                    'last' if 'before' is provided, otherwise will prioritize 'first'.
+   *
+   *                    When 'last' is provided without 'before', a warning will be logged, but the
+   *                    request will still be processed using 'last'. For standard Relay behavior,
+   *                    'last' should always be accompanied by 'before'.
    * @returns Promise that resolves to a paginated response containing DeepSource issues
    */
   async getIssues(
@@ -176,20 +191,38 @@ export class DeepSourceClient {
         };
       }
 
-      // Set default limit to 10 issues if not specified
+      // Set default pagination parameters
       const paginationWithDefaults = {
         ...pagination,
-        first: pagination.first ?? 10,
       };
 
+      // Ensure we're not using both first and last at the same time (not recommended in Relay)
+      if (paginationWithDefaults.before) {
+        // When fetching backwards with 'before', prioritize 'last'
+        paginationWithDefaults.last = pagination.last ?? pagination.first ?? 10;
+        paginationWithDefaults.first = undefined;
+      } else if (paginationWithDefaults.last) {
+        // If 'last' is provided without 'before', add a warning but still use 'last'
+        // This is not standard Relay behavior but we'll support it for flexibility
+        console.warn(
+          'Using "last" without "before" is not standard Relay pagination behavior. Consider using "first" for forward pagination.'
+        );
+        paginationWithDefaults.last = pagination.last;
+        paginationWithDefaults.first = undefined;
+      } else {
+        // Default or forward pagination with 'after', prioritize 'first'
+        paginationWithDefaults.first = pagination.first ?? 10;
+        paginationWithDefaults.last = undefined;
+      }
+
       const repoQuery = `
-        query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String) {
+        query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int) {
           repository(login: $login, name: $name, vcsProvider: $provider) {
             name
             defaultBranch
             dsn
             isPrivate
-            issues(offset: $offset, first: $first, after: $after, before: $before) {
+            issues(offset: $offset, first: $first, after: $after, before: $before, last: $last) {
               pageInfo {
                 hasNextPage
                 hasPreviousPage
@@ -237,6 +270,7 @@ export class DeepSourceClient {
           first: paginationWithDefaults.first,
           after: paginationWithDefaults.after,
           before: paginationWithDefaults.before,
+          last: paginationWithDefaults.last,
         },
       });
 
