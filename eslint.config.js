@@ -28,14 +28,6 @@ export default [
       prettier: prettier,
     },
     rules: {
-      '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['error', { 
-        'vars': 'all',
-        'args': 'after-used',
-        'ignoreRestSiblings': false,
-        'varsIgnorePattern': '^DeepSource|^Pagination|^Occurrence|^RunSummary|^Analysis|^Deepsource',
-      }],
       'prettier/prettier': 'error',
     },
   },
@@ -52,9 +44,6 @@ export default [
         afterAll: 'readonly',
         jest: 'readonly',
       },
-    },
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
 ]; 
