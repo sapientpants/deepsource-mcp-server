@@ -68,7 +68,7 @@ The DeepSource MCP Server enables AI assistants to interact with DeepSource's co
       "command": "npx",
       "args": [
         "-y",
-        "deepsource-mcp-server@1.0.2"
+        "deepsource-mcp-server@1.0.3"
       ],
       "env": {
         "DEEPSOURCE_API_KEY": "your-deepsource-api-key"
@@ -93,6 +93,20 @@ The DeepSource MCP Server provides the following tools:
      * `first` (optional) - Number of items to return (defaults to 10)
      * `after` (optional) - Cursor for forward pagination
      * `before` (optional) - Cursor for backward pagination
+     * `last` (optional) - Number of items to return before the 'before' cursor (default: 10)
+
+3. `deepsource_project_runs`: List analysis runs for a DeepSource project
+   * Parameters:
+     * `projectKey` (required) - The unique identifier for the DeepSource project  
+     * `offset` (optional) - Number of items to skip for pagination
+     * `first` (optional) - Number of items to return (defaults to 10)
+     * `after` (optional) - Cursor for forward pagination
+     * `before` (optional) - Cursor for backward pagination
+     * `last` (optional) - Number of items to return before the 'before' cursor (default: 10)
+
+4. `deepsource_run`: Get a specific analysis run by its runUid or commitOid
+   * Parameters:
+     * `runIdentifier` (required) - The runUid (UUID) or commitOid (commit hash) to identify the run
 
 ## Development
 
