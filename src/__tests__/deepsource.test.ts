@@ -2,8 +2,10 @@ import nock from 'nock';
 import * as jest from 'jest-mock';
 import { DeepSourceClient } from '../deepsource';
 
-// Mock the DeepSourceClient's getIssues method for specific tests
+// Mock the DeepSourceClient's methods for specific tests
 const originalGetIssues = DeepSourceClient.prototype.getIssues;
+const originalListRuns = DeepSourceClient.prototype.listRuns;
+const originalGetRun = DeepSourceClient.prototype.getRun;
 
 describe('DeepSourceClient', () => {
   const API_KEY = 'test-api-key';
@@ -15,8 +17,10 @@ describe('DeepSourceClient', () => {
 
   afterAll(() => {
     nock.restore();
-    // Restore the original method after all tests
+    // Restore the original methods after all tests
     DeepSourceClient.prototype.getIssues = originalGetIssues;
+    DeepSourceClient.prototype.listRuns = originalListRuns;
+    DeepSourceClient.prototype.getRun = originalGetRun;
   });
 
   describe('listProjects', () => {
@@ -1693,6 +1697,146 @@ describe('DeepSourceClient', () => {
 
       const client = new DeepSourceClient(API_KEY);
       await expect(client.listProjects()).rejects.toThrow('Network error');
+    });
+
+    it('tests specific error handling in listProjects GraphQL response', async () => {
+      // This test specifically targets line coverage issues in the listProjects method
+      // Testing with a specific GraphQL response structure that exercises all error handling paths
+
+      const mockErrorResponse = {
+        data: {
+          viewer: {
+            // Minimal valid response structure to test repository processing
+            email: 'test@example.com',
+            accounts: {
+              edges: [
+                {
+                  node: {
+                    login: 'testorg',
+                    repositories: {
+                      edges: [],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockErrorResponse);
+
+      const client = new DeepSourceClient(API_KEY);
+      const result = await client.listProjects();
+      expect(result).toEqual([]);
+
+      // Now test error handling with explicit GraphQL errors
+      const mockWithErrors = {
+        errors: [{ message: 'Some GraphQL error' }],
+      };
+
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockWithErrors);
+
+      await expect(client.listProjects()).rejects.toThrow('GraphQL Errors: Some GraphQL error');
+    });
+
+    it('tests edge cases in repository data processing', async () => {
+      // This test exercises the code paths that process repository data
+      // with various edge cases like missing optional fields
+
+      const mockRepoResponse = {
+        data: {
+          viewer: {
+            email: 'test@example.com',
+            accounts: {
+              edges: [
+                {
+                  node: {
+                    login: 'testorg',
+                    repositories: {
+                      edges: [
+                        {
+                          node: {
+                            name: null, // Missing name
+                            defaultBranch: 'main',
+                            dsn: 'repo1',
+                            isPrivate: null, // Missing isPrivate
+                            isActivated: null, // Missing isActivated
+                            vcsProvider: null, // Missing vcsProvider
+                          },
+                        },
+                        {
+                          node: {
+                            name: 'With DSN but valid fields',
+                            defaultBranch: 'main',
+                            dsn: 'repo2',
+                            isPrivate: true,
+                            isActivated: true,
+                            vcsProvider: 'github',
+                          },
+                        },
+                        {
+                          node: {
+                            name: 'No DSN - should be skipped',
+                            defaultBranch: 'main',
+                            dsn: null,
+                            isPrivate: true,
+                            isActivated: true,
+                            vcsProvider: 'github',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockRepoResponse);
+
+      const client = new DeepSourceClient(API_KEY);
+      const result = await client.listProjects();
+
+      // Should have 2 repos (the one without DSN should be skipped)
+      expect(result).toHaveLength(2);
+
+      // First repo should have default values for missing fields
+      expect(result[0]).toEqual({
+        key: 'repo1',
+        name: 'Unnamed Repository',
+        repository: {
+          url: 'repo1',
+          provider: 'N/A',
+          login: 'testorg',
+          isPrivate: false,
+          isActivated: false,
+        },
+      });
+
+      // Second repo should have all provided values
+      expect(result[1]).toEqual({
+        key: 'repo2',
+        name: 'With DSN but valid fields',
+        repository: {
+          url: 'repo2',
+          provider: 'github',
+          login: 'testorg',
+          isPrivate: true,
+          isActivated: true,
+        },
+      });
     });
   });
 });
