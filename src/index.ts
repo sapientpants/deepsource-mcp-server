@@ -320,7 +320,7 @@ to help navigate through pages.`,
 
 mcpServer.tool(
   'deepsource_run',
-  `Get a specific analysis run by its runUid (UUID) or commitOid (commit hash).`,
+  'Get a specific analysis run by its runUid (UUID) or commitOid (commit hash).',
   {
     runIdentifier: z
       .string()

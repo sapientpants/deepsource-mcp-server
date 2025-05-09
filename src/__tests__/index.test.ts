@@ -421,7 +421,7 @@ describe('MCP server implementation', () => {
       };
 
       // Create a tracked array to record calls
-      const calls: Array<[string, any?]> = [];
+      const calls: Array<[string, Record<string, unknown>?]> = [];
 
       // Override the method for this test
       DeepSourceClient.prototype.listRuns = function (projectKey, pagination) {
@@ -511,7 +511,7 @@ describe('MCP server implementation', () => {
       };
 
       // Create a tracked array to record calls
-      const calls: Array<[string, any?]> = [];
+      const calls: Array<[string, Record<string, unknown>?]> = [];
 
       // Override the method for this test
       DeepSourceClient.prototype.listRuns = function (projectKey, pagination) {
