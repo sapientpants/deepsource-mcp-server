@@ -6,6 +6,8 @@ import axios, { AxiosError } from 'axios';
  * @packageDocumentation
  */
 
+// Interfaces and types below are exported as part of the public API
+
 /**
  * Represents a DeepSource project in the API
  * @public
