@@ -1,5 +1,5 @@
 import nock from 'nock';
-import * as jest from 'jest-mock';
+import { spyOn } from 'jest-mock';
 import { DeepSourceClient } from '../deepsource';
 
 // Mock the DeepSourceClient's methods for specific tests
@@ -640,7 +640,9 @@ describe('DeepSourceClient', () => {
 
       // Create a spy for console.warn
       const originalWarn = console.warn;
-      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const warnSpy = spyOn(console, 'warn').mockImplementation(() => {
+        // Empty mock implementation to prevent actual console warning output during tests
+      });
 
       try {
         nock('https://api.deepsource.io')
@@ -1349,7 +1351,9 @@ describe('DeepSourceClient', () => {
 
       // Create a spy for console.warn
       const originalWarn = console.warn;
-      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const warnSpy = spyOn(console, 'warn').mockImplementation(() => {
+        // Empty mock implementation to prevent actual console warning output during tests
+      });
 
       try {
         nock('https://api.deepsource.io')
