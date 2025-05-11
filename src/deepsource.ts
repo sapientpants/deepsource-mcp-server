@@ -768,6 +768,44 @@ export class DeepSourceClient {
   }
 
   /**
+   * Logs a warning message about non-standard pagination usage
+   * @private
+   */
+  private static logPaginationWarning(): void {
+    // Using a separate method for logging instead of console.warn
+    // This can be replaced with a proper logger implementation later
+    // For now, we'll just make it a no-op to avoid console warnings
+  }
+
+  /**
+   * Normalizes pagination parameters for GraphQL queries
+   * @param params - Original pagination parameters
+   * @returns Normalized pagination parameters
+   * @private
+   */
+  private static normalizePaginationParams<T extends PaginationParams>(params: T): T {
+    const normalizedParams = { ...params };
+
+    // Ensure we're not using both first and last at the same time (not recommended in Relay)
+    if (normalizedParams.before) {
+      // When fetching backwards with 'before', prioritize 'last'
+      normalizedParams.last = normalizedParams.last ?? normalizedParams.first ?? 10;
+      normalizedParams.first = undefined;
+    } else if (normalizedParams.last) {
+      // If 'last' is provided without 'before', log a warning but still use 'last'
+      DeepSourceClient.logPaginationWarning();
+      // Keep normalizedParams.last as is
+      normalizedParams.first = undefined;
+    } else {
+      // Default or forward pagination with 'after', prioritize 'first'
+      normalizedParams.first = normalizedParams.first ?? 10;
+      normalizedParams.last = undefined;
+    }
+
+    return normalizedParams;
+  }
+
+  /**
    * Fetches a list of all accessible DeepSource projects
    * @returns Promise that resolves to an array of DeepSourceProject objects
    * @throws {Error} When DeepSource API returns errors
