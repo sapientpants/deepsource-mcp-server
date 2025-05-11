@@ -1,5 +1,5 @@
 import nock from 'nock';
-import { jest, spyOn } from '@jest/globals';
+import { jest } from '@jest/globals';
 import { AxiosError } from 'axios';
 import { DeepSourceClient } from '../deepsource';
 
@@ -768,10 +768,7 @@ describe('DeepSourceClient', () => {
 
 
       // Spy on DeepSourceClient.logPaginationWarning
-      const logPaginationWarningSpy = jest.spyOn(
-        DeepSourceClient as any,
-        'logPaginationWarning'
-      );
+      const logPaginationWarningSpy = jest.spyOn(DeepSourceClient as any, 'logPaginationWarning');
 
       try {
         nock('https://api.deepsource.io')
@@ -1477,10 +1474,7 @@ describe('DeepSourceClient', () => {
 
 
       // Spy on DeepSourceClient.logPaginationWarning
-      const logPaginationWarningSpy = jest.spyOn(
-        DeepSourceClient as any,
-        'logPaginationWarning'
-      );
+      const logPaginationWarningSpy = jest.spyOn(DeepSourceClient as any, 'logPaginationWarning');
 
       try {
         nock('https://api.deepsource.io')
