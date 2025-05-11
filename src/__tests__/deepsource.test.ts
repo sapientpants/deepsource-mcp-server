@@ -1,5 +1,6 @@
 import nock from 'nock';
 import { jest } from '@jest/globals';
+import { AxiosError } from 'axios';
 import { DeepSourceClient } from '../deepsource';
 
 // Mock the DeepSourceClient's methods for specific tests
@@ -1927,6 +1928,58 @@ describe('DeepSourceClient', () => {
 
       const result2 = await client.getRun(runUid);
       expect(result2).toBeNull();
+    });
+  });
+
+  describe('Helper functions', () => {
+    it('should extract error messages correctly', () => {
+      // Test the extractErrorMessages helper via the handleGraphQLError method
+      const errors = [
+        { message: 'First error' },
+        { message: 'Second error' },
+        { message: 'Third error' }
+      ];
+
+      // We'll use a mock axios error to test the full path
+      const axiosError = new AxiosError();
+      axiosError.response = {
+        data: { errors },
+        status: 400,
+        statusText: 'Bad Request',
+        headers: {},
+        config: {}
+      };
+
+      // The method will throw, so we need to catch it
+      try {
+        // @ts-ignore - Accessing private static method for testing
+        DeepSourceClient['handleGraphQLError'](axiosError);
+        // Should not reach this point
+        expect(true).toBe(false);
+      } catch (error) {
+        if (error instanceof Error) {
+          expect(error.message).toBe('GraphQL Error: First error, Second error, Third error');
+        } else {
+          // Should not reach this point
+          expect(true).toBe(false);
+        }
+      }
+    });
+
+    it('should create empty paginated responses with consistent structure', () => {
+      // @ts-ignore - Accessing private static method for testing
+      const emptyResponse = DeepSourceClient['createEmptyPaginatedResponse']();
+
+      expect(emptyResponse).toEqual({
+        items: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: undefined,
+          endCursor: undefined,
+        },
+        totalCount: 0,
+      });
     });
   });
 

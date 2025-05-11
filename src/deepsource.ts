@@ -184,6 +184,17 @@ export class DeepSourceClient {
   }
 
   /**
+   * Extracts error messages from GraphQL error response
+   * @param errors - Array of GraphQL error objects
+   * @returns Formatted error message string
+   * @private
+   */
+  private static extractErrorMessages(errors: Array<{ message: string }>): string {
+    const errorMessages = errors.map((e) => e.message);
+    return errorMessages.join(', ');
+  }
+
+  /**
    * Handles GraphQL errors by formatting and throwing appropriate error messages
    * @param error - The error object from the GraphQL request
    * @throws Error with formatted GraphQL error messages
@@ -191,7 +202,8 @@ export class DeepSourceClient {
   private static handleGraphQLError(error: Error | unknown): never {
     if (error instanceof AxiosError && error.response?.data?.errors) {
       const graphqlErrors: Array<{ message: string }> = error.response.data.errors;
-      throw new Error(`GraphQL Error: ${graphqlErrors.map((e) => e.message).join(', ')}`);
+      const errorMessage = DeepSourceClient.extractErrorMessages(graphqlErrors);
+      throw new Error(`GraphQL Error: ${errorMessage}`);
     }
     throw error;
   }
@@ -204,6 +216,24 @@ export class DeepSourceClient {
     // Using a separate method for logging instead of console.warn
     // This can be replaced with a proper logger implementation later
     // For now, we'll just make it a no-op to avoid console warnings
+  }
+
+  /**
+   * Creates an empty paginated response
+   * @returns Empty paginated response with consistent structure
+   * @private
+   */
+  private static createEmptyPaginatedResponse<T>(): PaginatedResponse<T> {
+    return {
+      items: [],
+      pageInfo: {
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: undefined,
+        endCursor: undefined,
+      },
+      totalCount: 0,
+    };
   }
 
   /**
@@ -272,27 +302,26 @@ export class DeepSourceClient {
       });
 
       if (response.data.errors) {
-        throw new Error(
-          `GraphQL Errors: ${response.data.errors.map((e: { message: string }) => e.message).join(', ')}`
-        );
+        const errorMessage = DeepSourceClient.extractErrorMessages(response.data.errors);
+        throw new Error(`GraphQL Errors: ${errorMessage}`);
       }
 
-      const accounts = response.data.data?.viewer?.accounts?.edges || [];
+      const accounts = response.data.data?.viewer?.accounts?.edges ?? [];
       const allRepos: DeepSourceProject[] = [];
 
       for (const { node: account } of accounts) {
-        const repos = account.repositories?.edges || [];
+        const repos = account.repositories?.edges ?? [];
         for (const { node: repo } of repos) {
           if (!repo.dsn) continue;
           allRepos.push({
             key: repo.dsn,
-            name: repo.name || 'Unnamed Repository',
+            name: repo.name ?? 'Unnamed Repository',
             repository: {
               url: repo.dsn,
-              provider: repo.vcsProvider || 'N/A',
+              provider: repo.vcsProvider ?? 'N/A',
               login: account.login,
-              isPrivate: repo.isPrivate || false,
-              isActivated: repo.isActivated || false,
+              isPrivate: repo.isPrivate ?? false,
+              isActivated: repo.isActivated ?? false,
             },
           });
         }
@@ -336,14 +365,7 @@ export class DeepSourceClient {
       const project = projects.find((p) => p.key === projectKey);
 
       if (!project) {
-        return {
-          items: [],
-          pageInfo: {
-            hasNextPage: false,
-            hasPreviousPage: false,
-          },
-          totalCount: 0,
-        };
+        return DeepSourceClient.createEmptyPaginatedResponse<DeepSourceIssue>();
       }
 
       // Normalize pagination parameters using the helper method
@@ -413,33 +435,32 @@ export class DeepSourceClient {
       });
 
       if (response.data.errors) {
-        throw new Error(
-          `GraphQL Errors: ${response.data.errors.map((e: { message: string }) => e.message).join(', ')}`
-        );
+        const errorMessage = DeepSourceClient.extractErrorMessages(response.data.errors);
+        throw new Error(`GraphQL Errors: ${errorMessage}`);
       }
 
       const issues: DeepSourceIssue[] = [];
-      const repoIssues = response.data.data?.repository?.issues?.edges || [];
-      const pageInfo = response.data.data?.repository?.issues?.pageInfo || {
+      const repoIssues = response.data.data?.repository?.issues?.edges ?? [];
+      const pageInfo = response.data.data?.repository?.issues?.pageInfo ?? {
         hasNextPage: false,
         hasPreviousPage: false,
       };
-      const totalCount = response.data.data?.repository?.issues?.totalCount || 0;
+      const totalCount = response.data.data?.repository?.issues?.totalCount ?? 0;
 
       for (const { node: repoIssue } of repoIssues) {
-        const occurrences = repoIssue.occurrences?.edges || [];
+        const occurrences = repoIssue.occurrences?.edges ?? [];
         for (const { node: occurrence } of occurrences) {
           issues.push({
-            id: occurrence.id || 'unknown',
-            shortcode: repoIssue.issue?.shortcode || '',
-            title: repoIssue.issue?.title || 'Untitled Issue',
-            category: repoIssue.issue?.category || 'UNKNOWN',
-            severity: repoIssue.issue?.severity || 'UNKNOWN',
+            id: occurrence.id ?? 'unknown',
+            shortcode: repoIssue.issue?.shortcode ?? '',
+            title: repoIssue.issue?.title ?? 'Untitled Issue',
+            category: repoIssue.issue?.category ?? 'UNKNOWN',
+            severity: repoIssue.issue?.severity ?? 'UNKNOWN',
             status: 'OPEN',
-            issue_text: repoIssue.issue?.description || '',
-            file_path: occurrence.path || 'N/A',
-            line_number: occurrence.beginLine || 0,
-            tags: repoIssue.issue?.tags || [],
+            issue_text: repoIssue.issue?.description ?? '',
+            file_path: occurrence.path ?? 'N/A',
+            line_number: occurrence.beginLine ?? 0,
+            tags: repoIssue.issue?.tags ?? [],
           });
         }
       }
@@ -503,14 +524,7 @@ export class DeepSourceClient {
       const project = projects.find((p) => p.key === projectKey);
 
       if (!project) {
-        return {
-          items: [],
-          pageInfo: {
-            hasNextPage: false,
-            hasPreviousPage: false,
-          },
-          totalCount: 0,
-        };
+        return DeepSourceClient.createEmptyPaginatedResponse<DeepSourceRun>();
       }
 
       // Normalize pagination parameters using the helper method
@@ -589,18 +603,17 @@ export class DeepSourceClient {
       });
 
       if (response.data.errors) {
-        throw new Error(
-          `GraphQL Errors: ${response.data.errors.map((e: { message: string }) => e.message).join(', ')}`
-        );
+        const errorMessage = DeepSourceClient.extractErrorMessages(response.data.errors);
+        throw new Error(`GraphQL Errors: ${errorMessage}`);
       }
 
       const runs: DeepSourceRun[] = [];
-      const repoRuns = response.data.data?.repository?.analysisRuns?.edges || [];
-      const pageInfo = response.data.data?.repository?.analysisRuns?.pageInfo || {
+      const repoRuns = response.data.data?.repository?.analysisRuns?.edges ?? [];
+      const pageInfo = response.data.data?.repository?.analysisRuns?.pageInfo ?? {
         hasNextPage: false,
         hasPreviousPage: false,
       };
-      const totalCount = response.data.data?.repository?.analysisRuns?.totalCount || 0;
+      const totalCount = response.data.data?.repository?.analysisRuns?.totalCount ?? 0;
 
       for (const { node: run } of repoRuns) {
         runs.push({
@@ -614,15 +627,15 @@ export class DeepSourceClient {
           updatedAt: run.updatedAt,
           finishedAt: run.finishedAt,
           summary: {
-            occurrencesIntroduced: run.summary?.occurrencesIntroduced || 0,
-            occurrencesResolved: run.summary?.occurrencesResolved || 0,
-            occurrencesSuppressed: run.summary?.occurrencesSuppressed || 0,
-            occurrenceDistributionByAnalyzer: run.summary?.occurrenceDistributionByAnalyzer || [],
-            occurrenceDistributionByCategory: run.summary?.occurrenceDistributionByCategory || [],
+            occurrencesIntroduced: run.summary?.occurrencesIntroduced ?? 0,
+            occurrencesResolved: run.summary?.occurrencesResolved ?? 0,
+            occurrencesSuppressed: run.summary?.occurrencesSuppressed ?? 0,
+            occurrenceDistributionByAnalyzer: run.summary?.occurrenceDistributionByAnalyzer ?? [],
+            occurrenceDistributionByCategory: run.summary?.occurrenceDistributionByCategory ?? [],
           },
           repository: {
-            name: run.repository?.name || '',
-            id: run.repository?.id || '',
+            name: run.repository?.name ?? '',
+            id: run.repository?.id ?? '',
           },
         });
       }
@@ -736,15 +749,15 @@ export class DeepSourceClient {
         updatedAt: run.updatedAt,
         finishedAt: run.finishedAt,
         summary: {
-          occurrencesIntroduced: run.summary?.occurrencesIntroduced || 0,
-          occurrencesResolved: run.summary?.occurrencesResolved || 0,
-          occurrencesSuppressed: run.summary?.occurrencesSuppressed || 0,
-          occurrenceDistributionByAnalyzer: run.summary?.occurrenceDistributionByAnalyzer || [],
-          occurrenceDistributionByCategory: run.summary?.occurrenceDistributionByCategory || [],
+          occurrencesIntroduced: run.summary?.occurrencesIntroduced ?? 0,
+          occurrencesResolved: run.summary?.occurrencesResolved ?? 0,
+          occurrencesSuppressed: run.summary?.occurrencesSuppressed ?? 0,
+          occurrenceDistributionByAnalyzer: run.summary?.occurrenceDistributionByAnalyzer ?? [],
+          occurrenceDistributionByCategory: run.summary?.occurrenceDistributionByCategory ?? [],
         },
         repository: {
-          name: run.repository?.name || '',
-          id: run.repository?.id || '',
+          name: run.repository?.name ?? '',
+          id: run.repository?.id ?? '',
         },
       };
     } catch (error) {
