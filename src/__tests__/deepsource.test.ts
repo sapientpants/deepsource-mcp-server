@@ -1939,7 +1939,7 @@ describe('DeepSourceClient', () => {
       const errors = [
         { message: 'First error' },
         { message: 'Second error' },
-        { message: 'Third error' },
+        { message: 'Third error' }
       ];
 
       // We'll use a mock axios error to test the full path
@@ -1949,12 +1949,20 @@ describe('DeepSourceClient', () => {
         status: 400,
         statusText: 'Bad Request',
         headers: {},
+<<<<<<< HEAD
         config: {},
+=======
+        config: {}
+>>>>>>> 95efe04 (Refactor code to fix DeepSource anti-pattern issues)
       };
 
       // The method will throw, so we need to catch it
       try {
+<<<<<<< HEAD
         // @ts-expect-error - Accessing private static method for testing
+=======
+        // @ts-ignore - Accessing private static method for testing
+>>>>>>> 95efe04 (Refactor code to fix DeepSource anti-pattern issues)
         DeepSourceClient['handleGraphQLError'](axiosError);
         // Should not reach this point
         expect(true).toBe(false);
@@ -1969,8 +1977,13 @@ describe('DeepSourceClient', () => {
     });
 
     it('should create empty paginated responses with consistent structure', () => {
+<<<<<<< HEAD
       // @ts-expect-error - Accessing private instance method for testing
       const emptyResponse = client['createEmptyPaginatedResponse']();
+=======
+      // @ts-ignore - Accessing private static method for testing
+      const emptyResponse = DeepSourceClient['createEmptyPaginatedResponse']();
+>>>>>>> 95efe04 (Refactor code to fix DeepSource anti-pattern issues)
 
       expect(emptyResponse).toEqual({
         items: [],

@@ -627,6 +627,17 @@ export class DeepSourceClient {
     // If it's already a classified error, just throw it
     if (error && typeof error === 'object' && 'category' in error) {
       throw error;
+=======
+   * Handles GraphQL errors by formatting and throwing appropriate error messages
+   * @param error - The error object from the GraphQL request
+   * @throws Error with formatted GraphQL error messages
+   */
+  private static handleGraphQLError(error: Error | unknown): never {
+    if (error instanceof AxiosError && error.response?.data?.errors) {
+      const graphqlErrors: Array<{ message: string }> = error.response.data.errors;
+      const errorMessage = DeepSourceClient.extractErrorMessages(graphqlErrors);
+      throw new Error(`GraphQL Error: ${errorMessage}`);
+>>>>>>> 95efe04 (Refactor code to fix DeepSource anti-pattern issues)
     }
 
     // Try handling specific error types in order of specificity
@@ -775,6 +786,24 @@ export class DeepSourceClient {
     // Using a separate method for logging instead of console.warn
     // This can be replaced with a proper logger implementation later
     // For now, we'll just make it a no-op to avoid console warnings
+  }
+
+  /**
+   * Creates an empty paginated response
+   * @returns Empty paginated response with consistent structure
+   * @private
+   */
+  private static createEmptyPaginatedResponse<T>(): PaginatedResponse<T> {
+    return {
+      items: [],
+      pageInfo: {
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: undefined,
+        endCursor: undefined,
+      },
+      totalCount: 0,
+    };
   }
 
   /**
