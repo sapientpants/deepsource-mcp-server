@@ -1,5 +1,5 @@
 import nock from 'nock';
-import { spyOn } from 'jest-mock';
+import { jest, spyOn } from '@jest/globals';
 import { DeepSourceClient } from '../deepsource';
 
 // Mock the DeepSourceClient's methods for specific tests
@@ -765,11 +765,11 @@ describe('DeepSourceClient', () => {
         },
       };
 
-      // Create a spy for console.warn
-      const originalWarn = console.warn;
-      const warnSpy = spyOn(console, 'warn').mockImplementation(() => {
-        // Empty mock implementation to prevent actual console warning output during tests
-      });
+      // Spy on DeepSourceClient.logPaginationWarning
+      const logPaginationWarningSpy = jest.spyOn(
+        DeepSourceClient as any,
+        'logPaginationWarning'
+      );
 
       try {
         nock('https://api.deepsource.io')
@@ -796,14 +796,11 @@ describe('DeepSourceClient', () => {
         });
         expect(result.totalCount).toBe(8);
 
-        // Verify that the warning was called
-        expect(warnSpy).toHaveBeenCalledWith(
-          'Using "last" without "before" is not standard Relay pagination behavior. Consider using "first" for forward pagination.'
-        );
+        // Verify that the warning logger was called
+        expect(logPaginationWarningSpy).toHaveBeenCalled();
       } finally {
-        // Restore original console.warn
-        warnSpy.mockRestore();
-        console.warn = originalWarn;
+        // Restore original method
+        logPaginationWarningSpy.mockRestore();
       }
     });
 
@@ -1476,11 +1473,11 @@ describe('DeepSourceClient', () => {
         },
       };
 
-      // Create a spy for console.warn
-      const originalWarn = console.warn;
-      const warnSpy = spyOn(console, 'warn').mockImplementation(() => {
-        // Empty mock implementation to prevent actual console warning output during tests
-      });
+      // Spy on DeepSourceClient.logPaginationWarning
+      const logPaginationWarningSpy = jest.spyOn(
+        DeepSourceClient as any,
+        'logPaginationWarning'
+      );
 
       try {
         nock('https://api.deepsource.io')
@@ -1507,14 +1504,11 @@ describe('DeepSourceClient', () => {
         });
         expect(result.totalCount).toBe(8);
 
-        // Verify that the warning was called
-        expect(warnSpy).toHaveBeenCalledWith(
-          'Using "last" without "before" is not standard Relay pagination behavior. Consider using "first" for forward pagination.'
-        );
+        // Verify that the warning logger was called
+        expect(logPaginationWarningSpy).toHaveBeenCalled();
       } finally {
-        // Restore original console.warn
-        warnSpy.mockRestore();
-        console.warn = originalWarn;
+        // Restore original method
+        logPaginationWarningSpy.mockRestore();
       }
     });
 

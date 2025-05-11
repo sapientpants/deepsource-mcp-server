@@ -197,6 +197,44 @@ export class DeepSourceClient {
   }
 
   /**
+   * Logs a warning message about non-standard pagination usage
+   * @private
+   */
+  private static logPaginationWarning(): void {
+    // Using a separate method for logging instead of console.warn
+    // This can be replaced with a proper logger implementation later
+    // For now, we'll just make it a no-op to avoid console warnings
+  }
+
+  /**
+   * Normalizes pagination parameters for GraphQL queries
+   * @param params - Original pagination parameters
+   * @returns Normalized pagination parameters
+   * @private
+   */
+  private static normalizePaginationParams<T extends PaginationParams>(params: T): T {
+    const normalizedParams = { ...params };
+
+    // Ensure we're not using both first and last at the same time (not recommended in Relay)
+    if (normalizedParams.before) {
+      // When fetching backwards with 'before', prioritize 'last'
+      normalizedParams.last = normalizedParams.last ?? normalizedParams.first ?? 10;
+      normalizedParams.first = undefined;
+    } else if (normalizedParams.last) {
+      // If 'last' is provided without 'before', log a warning but still use 'last'
+      DeepSourceClient.logPaginationWarning();
+      // Keep normalizedParams.last as is
+      normalizedParams.first = undefined;
+    } else {
+      // Default or forward pagination with 'after', prioritize 'first'
+      normalizedParams.first = normalizedParams.first ?? 10;
+      normalizedParams.last = undefined;
+    }
+
+    return normalizedParams;
+  }
+
+  /**
    * Fetches a list of all accessible DeepSource projects
    * @returns Promise that resolves to an array of DeepSourceProject objects
    */
@@ -308,29 +346,8 @@ export class DeepSourceClient {
         };
       }
 
-      // Set default pagination parameters
-      const paramsWithDefaults = {
-        ...params,
-      };
-
-      // Ensure we're not using both first and last at the same time (not recommended in Relay)
-      if (paramsWithDefaults.before) {
-        // When fetching backwards with 'before', prioritize 'last'
-        paramsWithDefaults.last = params.last ?? params.first ?? 10;
-        paramsWithDefaults.first = undefined;
-      } else if (paramsWithDefaults.last) {
-        // If 'last' is provided without 'before', add a warning but still use 'last'
-        // This is not standard Relay behavior but we'll support it for flexibility
-        console.warn(
-          'Using "last" without "before" is not standard Relay pagination behavior. Consider using "first" for forward pagination.'
-        );
-        paramsWithDefaults.last = params.last;
-        paramsWithDefaults.first = undefined;
-      } else {
-        // Default or forward pagination with 'after', prioritize 'first'
-        paramsWithDefaults.first = params.first ?? 10;
-        paramsWithDefaults.last = undefined;
-      }
+      // Normalize pagination parameters using the helper method
+      const normalizedParams = DeepSourceClient.normalizePaginationParams(params);
 
       const repoQuery = `
         query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int, $path: String, $analyzerIn: [String], $tags: [String]) {
@@ -384,14 +401,14 @@ export class DeepSourceClient {
           login: project.repository.login,
           name: project.name,
           provider: project.repository.provider,
-          offset: paramsWithDefaults.offset,
-          first: paramsWithDefaults.first,
-          after: paramsWithDefaults.after,
-          before: paramsWithDefaults.before,
-          last: paramsWithDefaults.last,
-          path: paramsWithDefaults.path,
-          analyzerIn: paramsWithDefaults.analyzerIn,
-          tags: paramsWithDefaults.tags,
+          offset: normalizedParams.offset,
+          first: normalizedParams.first,
+          after: normalizedParams.after,
+          before: normalizedParams.before,
+          last: normalizedParams.last,
+          path: normalizedParams.path,
+          analyzerIn: normalizedParams.analyzerIn,
+          tags: normalizedParams.tags,
         },
       });
 
@@ -496,26 +513,8 @@ export class DeepSourceClient {
         };
       }
 
-      // Set default pagination parameters
-      const paramsWithDefaults = { ...params };
-
-      // Ensure we're not using both first and last at the same time (not recommended in Relay)
-      if (paramsWithDefaults.before) {
-        // When fetching backwards with 'before', prioritize 'last'
-        paramsWithDefaults.last = params.last ?? params.first ?? 10;
-        paramsWithDefaults.first = undefined;
-      } else if (paramsWithDefaults.last) {
-        // If 'last' is provided without 'before', add a warning but still use 'last'
-        console.warn(
-          'Using "last" without "before" is not standard Relay pagination behavior. Consider using "first" for forward pagination.'
-        );
-        paramsWithDefaults.last = params.last;
-        paramsWithDefaults.first = undefined;
-      } else {
-        // Default or forward pagination with 'after', prioritize 'first'
-        paramsWithDefaults.first = params.first ?? 10;
-        paramsWithDefaults.last = undefined;
-      }
+      // Normalize pagination parameters using the helper method
+      const normalizedParams = DeepSourceClient.normalizePaginationParams(params);
 
       const repoQuery = `
         query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int, $analyzerIn: [String]) {
@@ -580,12 +579,12 @@ export class DeepSourceClient {
           login: project.repository.login,
           name: project.name,
           provider: project.repository.provider,
-          offset: paramsWithDefaults.offset,
-          first: paramsWithDefaults.first,
-          after: paramsWithDefaults.after,
-          before: paramsWithDefaults.before,
-          last: paramsWithDefaults.last,
-          analyzerIn: paramsWithDefaults.analyzerIn,
+          offset: normalizedParams.offset,
+          first: normalizedParams.first,
+          after: normalizedParams.after,
+          before: normalizedParams.before,
+          last: normalizedParams.last,
+          analyzerIn: normalizedParams.analyzerIn,
         },
       });
 

@@ -324,7 +324,10 @@ Filtering options:
       .optional()
       .describe('Number of items to return before the "before" cursor (default: 10)'),
     path: z.string().optional().describe('Filter issues by specific file path'),
-    analyzerIn: z.array(z.string()).optional().describe('Filter issues by specific analyzers (e.g. ["python", "javascript"])'),
+    analyzerIn: z
+      .array(z.string())
+      .optional()
+      .describe('Filter issues by specific analyzers (e.g. ["python", "javascript"])'),
     tags: z.array(z.string()).optional().describe('Filter issues by tags'),
   },
   handleDeepsourceProjectIssues
@@ -353,7 +356,10 @@ Filtering options:
       .number()
       .optional()
       .describe('Number of items to return before the "before" cursor (default: 10)'),
-    analyzerIn: z.array(z.string()).optional().describe('Filter runs by specific analyzers (e.g. ["python", "javascript"])'),
+    analyzerIn: z
+      .array(z.string())
+      .optional()
+      .describe('Filter runs by specific analyzers (e.g. ["python", "javascript"])'),
   },
   handleDeepsourceProjectRuns
 );
