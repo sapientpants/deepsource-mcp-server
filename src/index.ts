@@ -69,6 +69,12 @@ export interface DeepsourceProjectIssuesParams {
   last?: number;
   /** Relay-style pagination: Cursor to fetch records before this cursor */
   before?: string;
+  /** Filter issues by file path */
+  path?: string;
+  /** Filter issues by analyzer shortcodes */
+  analyzerIn?: string[];
+  /** Filter issues by tags */
+  tags?: string[];
 }
 
 /**
@@ -85,6 +91,9 @@ export async function handleDeepsourceProjectIssues({
   after,
   before,
   last,
+  path,
+  analyzerIn,
+  tags,
 }: DeepsourceProjectIssuesParams) {
   const apiKey = process.env.DEEPSOURCE_API_KEY;
   /* istanbul ignore if */
@@ -93,8 +102,17 @@ export async function handleDeepsourceProjectIssues({
   }
 
   const client = new DeepSourceClient(apiKey);
-  const pagination = { offset, first, after, before, last };
-  const result = await client.getIssues(projectKey, pagination);
+  const params = {
+    offset,
+    first,
+    after,
+    before,
+    last,
+    path,
+    analyzerIn,
+    tags,
+  };
+  const result = await client.getIssues(projectKey, params);
 
   return {
     content: [
@@ -148,6 +166,8 @@ export interface DeepsourceProjectRunsParams {
   last?: number;
   /** Relay-style pagination: Cursor to fetch records before this cursor */
   before?: string;
+  /** Filter runs by analyzer shortcodes */
+  analyzerIn?: string[];
 }
 
 /**
@@ -164,6 +184,7 @@ export async function handleDeepsourceProjectRuns({
   after,
   before,
   last,
+  analyzerIn,
 }: DeepsourceProjectRunsParams) {
   const apiKey = process.env.DEEPSOURCE_API_KEY;
   /* istanbul ignore if */
@@ -172,8 +193,15 @@ export async function handleDeepsourceProjectRuns({
   }
 
   const client = new DeepSourceClient(apiKey);
-  const pagination = { offset, first, after, before, last };
-  const result = await client.listRuns(projectKey, pagination);
+  const params = {
+    offset,
+    first,
+    after,
+    before,
+    last,
+    analyzerIn,
+  };
+  const result = await client.listRuns(projectKey, params);
 
   return {
     content: [
@@ -272,11 +300,16 @@ mcpServer.tool(
 
 mcpServer.tool(
   'deepsource_project_issues',
-  `Get issues from a DeepSource project with support for Relay-style cursor-based pagination. 
-For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor. 
-For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor. 
-The response includes \`pageInfo\` with \`hasNextPage\`, \`hasPreviousPage\`, \`startCursor\`, and \`endCursor\` 
-to help navigate through pages.`,
+  `Get issues from a DeepSource project with support for Relay-style cursor-based pagination and filtering.
+For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor.
+For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor.
+The response includes \`pageInfo\` with \`hasNextPage\`, \`hasPreviousPage\`, \`startCursor\`, and \`endCursor\`
+to help navigate through pages.
+
+Filtering options:
+- \`path\`: Filter issues by specific file path
+- \`analyzerIn\`: Filter issues by specific analyzers
+- \`tags\`: Filter issues by tags`,
   {
     projectKey: z.string().describe('The unique identifier for the DeepSource project'),
     offset: z.number().optional().describe('Legacy pagination: Number of items to skip'),
@@ -290,17 +323,23 @@ to help navigate through pages.`,
       .number()
       .optional()
       .describe('Number of items to return before the "before" cursor (default: 10)'),
+    path: z.string().optional().describe('Filter issues by specific file path'),
+    analyzerIn: z.array(z.string()).optional().describe('Filter issues by specific analyzers (e.g. ["python", "javascript"])'),
+    tags: z.array(z.string()).optional().describe('Filter issues by tags'),
   },
   handleDeepsourceProjectIssues
 );
 
 mcpServer.tool(
   'deepsource_project_runs',
-  `List analysis runs for a DeepSource project with support for Relay-style cursor-based pagination. 
-For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor. 
-For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor. 
-The response includes \`pageInfo\` with \`hasNextPage\`, \`hasPreviousPage\`, \`startCursor\`, and \`endCursor\` 
-to help navigate through pages.`,
+  `List analysis runs for a DeepSource project with support for Relay-style cursor-based pagination and filtering.
+For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor.
+For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor.
+The response includes \`pageInfo\` with \`hasNextPage\`, \`hasPreviousPage\`, \`startCursor\`, and \`endCursor\`
+to help navigate through pages.
+
+Filtering options:
+- \`analyzerIn\`: Filter runs by specific analyzers`,
   {
     projectKey: z.string().describe('The unique identifier for the DeepSource project'),
     offset: z.number().optional().describe('Legacy pagination: Number of items to skip'),
@@ -314,6 +353,7 @@ to help navigate through pages.`,
       .number()
       .optional()
       .describe('Number of items to return before the "before" cursor (default: 10)'),
+    analyzerIn: z.array(z.string()).optional().describe('Filter runs by specific analyzers (e.g. ["python", "javascript"])'),
   },
   handleDeepsourceProjectRuns
 );

@@ -105,6 +105,8 @@ describe('DeepSourceClient', () => {
   describe('getIssues', () => {
     const projectKey = 'test-project';
 
+    // No original post method mocking needed for these tests
+
     it('should return a list of issues for a project', async () => {
       // Mock the listProjects call first
       const mockProjectsResponse = {
@@ -331,6 +333,131 @@ describe('DeepSourceClient', () => {
       await expect(client.getIssues(projectKey)).rejects.toThrow(
         'GraphQL Error: Project not found'
       );
+    });
+
+    it('should support filtering parameters for issues', async () => {
+      // Mock the listProjects call first
+      const mockProjectsResponse = {
+        data: {
+          viewer: {
+            accounts: {
+              edges: [
+                {
+                  node: {
+                    login: 'testorg',
+                    repositories: {
+                      edges: [
+                        {
+                          node: {
+                            name: 'test-repo',
+                            defaultBranch: 'main',
+                            dsn: 'test-project',
+                            isPrivate: false,
+                            isActivated: true,
+                            vcsProvider: 'github',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      const mockIssuesResponse = {
+        data: {
+          repository: {
+            name: 'test-repo',
+            defaultBranch: 'main',
+            dsn: 'test-project',
+            isPrivate: false,
+            issues: {
+              pageInfo: {
+                hasNextPage: false,
+                hasPreviousPage: false,
+                startCursor: 'cursor1',
+                endCursor: 'cursor2',
+              },
+              totalCount: 1,
+              edges: [
+                {
+                  node: {
+                    id: 'issue1',
+                    issue: {
+                      shortcode: 'SEC001',
+                      title: 'Security Issue',
+                      category: 'security',
+                      severity: 'high',
+                      description: 'Potential security vulnerability',
+                      tags: ['security', 'vulnerability'],
+                    },
+                    occurrences: {
+                      edges: [
+                        {
+                          node: {
+                            id: 'occ1',
+                            path: 'src/auth.ts',
+                            beginLine: 42,
+                            endLine: 42,
+                            beginColumn: 1,
+                            endColumn: 10,
+                            title: 'Security Issue',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      // Create a tracked array to record the GraphQL variables
+      const graphqlVariables: Record<string, unknown>[] = [];
+
+      // Intercept the GraphQL requests and capture the variables
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(function () {
+          // First call - return projects
+          return [200, mockProjectsResponse];
+        })
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(function (uri, requestBody: any) {
+          // Second call - capture variables and return issues
+          graphqlVariables.push(requestBody.variables);
+          return [200, mockIssuesResponse];
+        });
+
+      const filterParams = {
+        path: 'src/auth.ts',
+        analyzerIn: ['python', 'javascript'],
+        tags: ['security'],
+        first: 10,
+      };
+
+      const result = await client.getIssues(projectKey, filterParams);
+
+      // Verify that the filter parameters were passed to the GraphQL call
+      expect(graphqlVariables.length).toBe(1);
+      expect(graphqlVariables[0]).toMatchObject({
+        path: 'src/auth.ts',
+        analyzerIn: ['python', 'javascript'],
+        tags: ['security'],
+        first: 10,
+      });
+
+      // Verify the result includes tags from the response
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].id).toBe('occ1');
+      expect(result.items[0].tags).toEqual(['security', 'vulnerability']);
     });
 
     it('should return empty result when project not found', async () => {
@@ -1439,6 +1566,137 @@ describe('DeepSourceClient', () => {
 
       await expect(client.listRuns(projectKey)).rejects.toThrow(
         'GraphQL Errors: Repository access denied, Invalid query'
+      );
+    });
+
+    it('should support filtering parameters for runs', async () => {
+      // Mock the listProjects call first
+      const mockProjectsResponse = {
+        data: {
+          viewer: {
+            accounts: {
+              edges: [
+                {
+                  node: {
+                    login: 'testorg',
+                    repositories: {
+                      edges: [
+                        {
+                          node: {
+                            name: 'test-repo',
+                            defaultBranch: 'main',
+                            dsn: 'test-project',
+                            isPrivate: false,
+                            isActivated: true,
+                            vcsProvider: 'github',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      const mockRunsResponse = {
+        data: {
+          repository: {
+            name: 'test-repo',
+            id: 'repo1',
+            analysisRuns: {
+              pageInfo: {
+                hasNextPage: false,
+                hasPreviousPage: false,
+                startCursor: 'cursor1',
+                endCursor: 'cursor2',
+              },
+              totalCount: 1,
+              edges: [
+                {
+                  node: {
+                    id: 'run1',
+                    runUid: '12345678-1234-1234-1234-123456789012',
+                    commitOid: 'abcdef123456',
+                    branchName: 'main',
+                    baseOid: '654321fedcba',
+                    status: 'SUCCESS',
+                    createdAt: '2023-01-01T12:00:00Z',
+                    updatedAt: '2023-01-01T12:30:00Z',
+                    finishedAt: '2023-01-01T12:30:00Z',
+                    summary: {
+                      occurrencesIntroduced: 5,
+                      occurrencesResolved: 2,
+                      occurrencesSuppressed: 1,
+                      occurrenceDistributionByAnalyzer: [
+                        { analyzerShortcode: 'python', introduced: 3 },
+                      ],
+                      occurrenceDistributionByCategory: [{ category: 'SECURITY', introduced: 2 }],
+                    },
+                    repository: {
+                      name: 'test-repo',
+                      id: 'repo1',
+                    },
+                    checks: {
+                      edges: [
+                        {
+                          node: {
+                            analyzer: {
+                              shortcode: 'python',
+                            },
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      // Create a tracked array to record the GraphQL variables
+      const graphqlVariables: Record<string, unknown>[] = [];
+
+      // Intercept the GraphQL requests and capture the variables
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(function () {
+          // First call - return projects
+          return [200, mockProjectsResponse];
+        })
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(function (uri, requestBody: any) {
+          // Second call - capture variables and return runs
+          graphqlVariables.push(requestBody.variables);
+          return [200, mockRunsResponse];
+        });
+
+      const filterParams = {
+        analyzerIn: ['python', 'javascript'],
+        first: 10,
+      };
+
+      const result = await client.listRuns(projectKey, filterParams);
+
+      // Verify that the filter parameters were passed to the GraphQL call
+      expect(graphqlVariables.length).toBe(1);
+      expect(graphqlVariables[0]).toMatchObject({
+        analyzerIn: ['python', 'javascript'],
+        first: 10,
+      });
+
+      // Verify the result
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].runUid).toBe('12345678-1234-1234-1234-123456789012');
+      expect(result.items[0].summary.occurrenceDistributionByAnalyzer).toHaveLength(1);
+      expect(result.items[0].summary.occurrenceDistributionByAnalyzer[0].analyzerShortcode).toBe(
+        'python'
       );
     });
 

@@ -36,6 +36,38 @@ The DeepSource MCP Server enables AI assistants to interact with DeepSource's co
 
 2. Restart Claude Desktop to apply the changes
 
+### Example Queries
+
+Once connected, your AI assistant can use DeepSource data with queries like:
+
+```
+What issues are in the JavaScript files of my project?
+```
+
+This would use the `deepsource_project_issues` tool with filters:
+```
+{
+  "projectKey": "your-project-key",
+  "path": "src/",
+  "analyzerIn": ["javascript"],
+  "first": 10
+}
+```
+
+Or to filter analysis runs:
+```
+Show me the most recent Python analysis runs
+```
+
+This would use the `deepsource_project_runs` tool with filters:
+```
+{
+  "projectKey": "your-project-key",
+  "analyzerIn": ["python"],
+  "first": 5
+}
+```
+
 ### Docker
 
 ```json
@@ -86,23 +118,31 @@ The DeepSource MCP Server provides the following tools:
    * Parameters:
      * No required parameters
 
-2. `deepsource_project_issues`: Get issues from a DeepSource project
+2. `deepsource_project_issues`: Get issues from a DeepSource project with filtering
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
-     * `offset` (optional) - Number of items to skip for pagination
-     * `first` (optional) - Number of items to return (defaults to 10)
-     * `after` (optional) - Cursor for forward pagination
-     * `before` (optional) - Cursor for backward pagination
-     * `last` (optional) - Number of items to return before the 'before' cursor (default: 10)
+     * Pagination parameters:
+       * `offset` (optional) - Number of items to skip for pagination
+       * `first` (optional) - Number of items to return (defaults to 10)
+       * `after` (optional) - Cursor for forward pagination
+       * `before` (optional) - Cursor for backward pagination
+       * `last` (optional) - Number of items to return before the 'before' cursor (default: 10)
+     * Filtering parameters:
+       * `path` (optional) - Filter issues by specific file path
+       * `analyzerIn` (optional) - Filter issues by specific analyzers (e.g., ["python", "javascript"])
+       * `tags` (optional) - Filter issues by tags
 
-3. `deepsource_project_runs`: List analysis runs for a DeepSource project
+3. `deepsource_project_runs`: List analysis runs for a DeepSource project with filtering
    * Parameters:
-     * `projectKey` (required) - The unique identifier for the DeepSource project  
-     * `offset` (optional) - Number of items to skip for pagination
-     * `first` (optional) - Number of items to return (defaults to 10)
-     * `after` (optional) - Cursor for forward pagination
-     * `before` (optional) - Cursor for backward pagination
-     * `last` (optional) - Number of items to return before the 'before' cursor (default: 10)
+     * `projectKey` (required) - The unique identifier for the DeepSource project
+     * Pagination parameters:
+       * `offset` (optional) - Number of items to skip for pagination
+       * `first` (optional) - Number of items to return (defaults to 10)
+       * `after` (optional) - Cursor for forward pagination
+       * `before` (optional) - Cursor for backward pagination
+       * `last` (optional) - Number of items to return before the 'before' cursor (default: 10)
+     * Filtering parameters:
+       * `analyzerIn` (optional) - Filter runs by specific analyzers (e.g., ["python", "javascript"])
 
 4. `deepsource_run`: Get a specific analysis run by its runUid or commitOid
    * Parameters:

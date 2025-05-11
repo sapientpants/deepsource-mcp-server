@@ -124,6 +124,28 @@ export interface PaginationParams {
 }
 
 /**
+ * Parameters for filtering issues
+ * @public
+ */
+export interface IssueFilterParams extends PaginationParams {
+  /** Filter issues by path (file path) */
+  path?: string;
+  /** Filter issues by analyzer shortcodes (e.g. ["python", "javascript"]) */
+  analyzerIn?: string[];
+  /** Filter issues by tags */
+  tags?: string[];
+}
+
+/**
+ * Parameters for filtering runs
+ * @public
+ */
+export interface RunFilterParams extends PaginationParams {
+  /** Filter runs by analyzer shortcodes (e.g. ["python", "javascript"]) */
+  analyzerIn?: string[];
+}
+
+/**
  * Generic response structure containing paginated results
  * @public
  * @template T - The type of items in the response
@@ -250,21 +272,26 @@ export class DeepSourceClient {
   /**
    * Fetches issues from a specified DeepSource project
    * @param projectKey - The unique identifier for the DeepSource project
-   * @param pagination - Optional pagination parameters for the query.
-   *                    Supports both legacy pagination (offset) and Relay-style cursor-based pagination.
-   *                    For forward pagination use 'first' with optional 'after' cursor.
-   *                    For backward pagination use 'last' with optional 'before' cursor.
-   *                    Note: Using both 'first' and 'last' together is not recommended and will prioritize
-   *                    'last' if 'before' is provided, otherwise will prioritize 'first'.
+   * @param params - Optional pagination and filtering parameters for the query.
+   *                Supports both legacy pagination (offset) and Relay-style cursor-based pagination.
+   *                For forward pagination use 'first' with optional 'after' cursor.
+   *                For backward pagination use 'last' with optional 'before' cursor.
+   *                Note: Using both 'first' and 'last' together is not recommended and will prioritize
+   *                'last' if 'before' is provided, otherwise will prioritize 'first'.
    *
-   *                    When 'last' is provided without 'before', a warning will be logged, but the
-   *                    request will still be processed using 'last'. For standard Relay behavior,
-   *                    'last' should always be accompanied by 'before'.
+   *                When 'last' is provided without 'before', a warning will be logged, but the
+   *                request will still be processed using 'last'. For standard Relay behavior,
+   *                'last' should always be accompanied by 'before'.
+   *
+   *                Filtering parameters:
+   *                - path: Filter issues by specific file path
+   *                - analyzerIn: Filter issues by specific analyzers
+   *                - tags: Filter issues by tags
    * @returns Promise that resolves to a paginated response containing DeepSource issues
    */
   async getIssues(
     projectKey: string,
-    pagination: PaginationParams = {}
+    params: IssueFilterParams = {}
   ): Promise<PaginatedResponse<DeepSourceIssue>> {
     try {
       const projects = await this.listProjects();
@@ -282,37 +309,37 @@ export class DeepSourceClient {
       }
 
       // Set default pagination parameters
-      const paginationWithDefaults = {
-        ...pagination,
+      const paramsWithDefaults = {
+        ...params,
       };
 
       // Ensure we're not using both first and last at the same time (not recommended in Relay)
-      if (paginationWithDefaults.before) {
+      if (paramsWithDefaults.before) {
         // When fetching backwards with 'before', prioritize 'last'
-        paginationWithDefaults.last = pagination.last ?? pagination.first ?? 10;
-        paginationWithDefaults.first = undefined;
-      } else if (paginationWithDefaults.last) {
+        paramsWithDefaults.last = params.last ?? params.first ?? 10;
+        paramsWithDefaults.first = undefined;
+      } else if (paramsWithDefaults.last) {
         // If 'last' is provided without 'before', add a warning but still use 'last'
         // This is not standard Relay behavior but we'll support it for flexibility
         console.warn(
           'Using "last" without "before" is not standard Relay pagination behavior. Consider using "first" for forward pagination.'
         );
-        paginationWithDefaults.last = pagination.last;
-        paginationWithDefaults.first = undefined;
+        paramsWithDefaults.last = params.last;
+        paramsWithDefaults.first = undefined;
       } else {
         // Default or forward pagination with 'after', prioritize 'first'
-        paginationWithDefaults.first = pagination.first ?? 10;
-        paginationWithDefaults.last = undefined;
+        paramsWithDefaults.first = params.first ?? 10;
+        paramsWithDefaults.last = undefined;
       }
 
       const repoQuery = `
-        query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int) {
+        query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int, $path: String, $analyzerIn: [String], $tags: [String]) {
           repository(login: $login, name: $name, vcsProvider: $provider) {
             name
             defaultBranch
             dsn
             isPrivate
-            issues(offset: $offset, first: $first, after: $after, before: $before, last: $last) {
+            issues(offset: $offset, first: $first, after: $after, before: $before, last: $last, path: $path, analyzerIn: $analyzerIn, tags: $tags) {
               pageInfo {
                 hasNextPage
                 hasPreviousPage
@@ -329,6 +356,7 @@ export class DeepSourceClient {
                     category
                     severity
                     description
+                    tags
                   }
                   occurrences(first: 100) {
                     edges {
@@ -356,11 +384,14 @@ export class DeepSourceClient {
           login: project.repository.login,
           name: project.name,
           provider: project.repository.provider,
-          offset: paginationWithDefaults.offset,
-          first: paginationWithDefaults.first,
-          after: paginationWithDefaults.after,
-          before: paginationWithDefaults.before,
-          last: paginationWithDefaults.last,
+          offset: paramsWithDefaults.offset,
+          first: paramsWithDefaults.first,
+          after: paramsWithDefaults.after,
+          before: paramsWithDefaults.before,
+          last: paramsWithDefaults.last,
+          path: paramsWithDefaults.path,
+          analyzerIn: paramsWithDefaults.analyzerIn,
+          tags: paramsWithDefaults.tags,
         },
       });
 
@@ -391,7 +422,7 @@ export class DeepSourceClient {
             issue_text: repoIssue.issue?.description || '',
             file_path: occurrence.path || 'N/A',
             line_number: occurrence.beginLine || 0,
-            tags: [],
+            tags: repoIssue.issue?.tags || [],
           });
         }
       }
@@ -440,12 +471,15 @@ export class DeepSourceClient {
   /**
    * Fetches analysis runs for a specified DeepSource project
    * @param projectKey - The unique identifier for the DeepSource project
-   * @param pagination - Optional pagination parameters for the query
+   * @param params - Optional pagination and filtering parameters for the query
+   *                Pagination supports both legacy pagination (offset) and Relay-style cursor-based pagination.
+   *                Filtering parameters:
+   *                - analyzerIn: Filter runs by specific analyzers
    * @returns Promise that resolves to a paginated response containing DeepSource runs
    */
   async listRuns(
     projectKey: string,
-    pagination: PaginationParams = {}
+    params: RunFilterParams = {}
   ): Promise<PaginatedResponse<DeepSourceRun>> {
     try {
       const projects = await this.listProjects();
@@ -463,28 +497,28 @@ export class DeepSourceClient {
       }
 
       // Set default pagination parameters
-      const paginationWithDefaults = { ...pagination };
+      const paramsWithDefaults = { ...params };
 
       // Ensure we're not using both first and last at the same time (not recommended in Relay)
-      if (paginationWithDefaults.before) {
+      if (paramsWithDefaults.before) {
         // When fetching backwards with 'before', prioritize 'last'
-        paginationWithDefaults.last = pagination.last ?? pagination.first ?? 10;
-        paginationWithDefaults.first = undefined;
-      } else if (paginationWithDefaults.last) {
+        paramsWithDefaults.last = params.last ?? params.first ?? 10;
+        paramsWithDefaults.first = undefined;
+      } else if (paramsWithDefaults.last) {
         // If 'last' is provided without 'before', add a warning but still use 'last'
         console.warn(
           'Using "last" without "before" is not standard Relay pagination behavior. Consider using "first" for forward pagination.'
         );
-        paginationWithDefaults.last = pagination.last;
-        paginationWithDefaults.first = undefined;
+        paramsWithDefaults.last = params.last;
+        paramsWithDefaults.first = undefined;
       } else {
         // Default or forward pagination with 'after', prioritize 'first'
-        paginationWithDefaults.first = pagination.first ?? 10;
-        paginationWithDefaults.last = undefined;
+        paramsWithDefaults.first = params.first ?? 10;
+        paramsWithDefaults.last = undefined;
       }
 
       const repoQuery = `
-        query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int) {
+        query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int, $analyzerIn: [String]) {
           repository(login: $login, name: $name, vcsProvider: $provider) {
             name
             id
@@ -524,6 +558,15 @@ export class DeepSourceClient {
                     name
                     id
                   }
+                  checks(analyzerIn: $analyzerIn) {
+                    edges {
+                      node {
+                        analyzer {
+                          shortcode
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -537,11 +580,12 @@ export class DeepSourceClient {
           login: project.repository.login,
           name: project.name,
           provider: project.repository.provider,
-          offset: paginationWithDefaults.offset,
-          first: paginationWithDefaults.first,
-          after: paginationWithDefaults.after,
-          before: paginationWithDefaults.before,
-          last: paginationWithDefaults.last,
+          offset: paramsWithDefaults.offset,
+          first: paramsWithDefaults.first,
+          after: paramsWithDefaults.after,
+          before: paramsWithDefaults.before,
+          last: paramsWithDefaults.last,
+          analyzerIn: paramsWithDefaults.analyzerIn,
         },
       });
 
