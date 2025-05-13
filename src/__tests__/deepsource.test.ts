@@ -431,7 +431,7 @@ describe('DeepSourceClient', () => {
         })
         .post('/graphql/')
         .matchHeader('Authorization', `Bearer ${API_KEY}`)
-        .reply(function (uri, requestBody: any) {
+        .reply(function (uri, requestBody: Record<string, unknown>) {
           // Second call - capture variables and return issues
           graphqlVariables.push(requestBody.variables);
           return [200, mockIssuesResponse];
@@ -767,7 +767,10 @@ describe('DeepSourceClient', () => {
       };
 
       // Spy on instance method logPaginationWarning instead of static method
-      const logPaginationWarningSpy = jest.spyOn(client as any, 'logPaginationWarning');
+      const logPaginationWarningSpy = jest.spyOn(
+        client as unknown as { logPaginationWarning: () => void },
+        'logPaginationWarning'
+      );
 
       try {
         nock('https://api.deepsource.io')
@@ -1472,7 +1475,10 @@ describe('DeepSourceClient', () => {
       };
 
       // Spy on instance method logPaginationWarning instead of static method
-      const logPaginationWarningSpy = jest.spyOn(client as any, 'logPaginationWarning');
+      const logPaginationWarningSpy = jest.spyOn(
+        client as unknown as { logPaginationWarning: () => void },
+        'logPaginationWarning'
+      );
 
       try {
         nock('https://api.deepsource.io')
@@ -1660,7 +1666,7 @@ describe('DeepSourceClient', () => {
         })
         .post('/graphql/')
         .matchHeader('Authorization', `Bearer ${API_KEY}`)
-        .reply(function (uri, requestBody: any) {
+        .reply(function (uri, requestBody: Record<string, unknown>) {
           // Second call - capture variables and return runs
           graphqlVariables.push(requestBody.variables);
           return [200, mockRunsResponse];
@@ -1967,8 +1973,8 @@ describe('DeepSourceClient', () => {
     });
 
     it('should create empty paginated responses with consistent structure', () => {
-      // @ts-expect-error - Accessing private instance method for testing
-      const emptyResponse = client['createEmptyPaginatedResponse']();
+      // @ts-expect-error - Accessing private static method for testing
+      const emptyResponse = DeepSourceClient['createEmptyPaginatedResponse']();
 
       expect(emptyResponse).toEqual({
         items: [],

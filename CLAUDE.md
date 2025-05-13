@@ -273,6 +273,257 @@ DeepSource is used to maintain code quality. Here are the key patterns to follow
 
 1. **NEVER use --no-verify flag** - Do not bypass pre-commit hooks when committing code. Pre-commit hooks are essential for maintaining code quality and catching issues before they're committed.
 
+## DeepSource Issue Prevention Guidelines
+
+The following guidelines are based on frequent DeepSource issues detected in this codebase. Following these practices will help prevent common code quality issues.
+
+### Avoiding Type Safety Issues
+
+1. **Never use the `any` type (JS-0323)** - This is the most common issue found in the codebase. Replace all `any` types with more specific types:
+   ```typescript
+   // Bad
+   function process(data: any): any { ... }
+   typeof (error as any).message === 'string'
+   
+   // Good
+   function process<T>(data: unknown): Result<T> { ... }
+   typeof (error as Record<string, unknown>).message === 'string'
+   ```
+   
+   - When accessing properties on an object of unknown type, use `Record<string, unknown>` instead of `any`:
+   ```typescript
+   // Bad
+   const value = (someObject as any).property;
+   
+   // Good
+   const value = (someObject as Record<string, unknown>).property;
+   ```
+
+2. **Avoid unnecessary type declarations (JS-0331)** - Omit explicit type declarations when they can be easily inferred by TypeScript:
+   ```typescript
+   // Bad - unnecessary type declaration
+   const count: number = 5;
+   const items: string[] = ['a', 'b', 'c'];
+   
+   // Good - let TypeScript infer the types
+   const count = 5;
+   const items = ['a', 'b', 'c'];
+   ```
+
+### Avoiding String Handling Issues
+
+1. **Avoid useless template literals (JS-R1004)** - Use regular strings instead of template literals when no interpolation is needed:
+   ```typescript
+   // Bad
+   const greeting = `Hello World`;
+   const name = `John`;
+   
+   // Good
+   const greeting = 'Hello World';
+   const name = 'John';
+   
+   // Only use template literals when needed for interpolation
+   const message = `Hello, ${name}!`;
+   ```
+
+2. **Use template literals for string concatenation (JS-0246)** - Prefer template literals over string concatenation:
+   ```typescript
+   // Bad
+   const message = 'Hello, ' + name + '!';
+   
+   // Good
+   const message = `Hello, ${name}!`;
+   ```
+
+### Improving Method Organization
+
+1. **Make instance methods static when they don't use `this` (JS-0105)** - Methods that don't reference instance properties or methods should be static:
+   ```typescript
+   // Bad
+   class Utilities {
+     formatDate(date: Date): string {
+       // Doesn't use 'this'
+       return date.toISOString();
+     }
+   }
+   
+   // Good
+   class Utilities {
+     static formatDate(date: Date): string {
+       return date.toISOString();
+     }
+   }
+   ```
+
+2. **Implement all empty methods** - Add proper implementation to all methods, even if they are placeholders:
+   ```typescript
+   // Bad
+   private static logPaginationWarning(): void {
+     // Empty method without implementation
+   }
+   
+   // Good
+   private static logPaginationWarning(message?: string): void {
+     // Proper implementation with meaningful behavior
+     const warningMessage = message || 'Non-standard pagination used';
+     this.logger.warn(warningMessage);
+   }
+   ```
+
+### Type Validation and Conversion
+
+1. **Use consistent type validation patterns** - Create reusable validation functions for common type checks:
+   ```typescript
+   // Helper function for validating object types
+   private static isValidObject(value: unknown): value is Record<string, unknown> {
+     return value !== null && typeof value === 'object';
+   }
+   
+   // Helper for extracting string values safely
+   private static validateString(value: unknown, defaultValue = ''): string {
+     return typeof value === 'string' ? value : defaultValue;
+   }
+   ```
+
+2. **Create type predicates for complex type validation** - For complex objects, create type predicates that verify the required structure:
+   ```typescript
+   // Type predicate for validating a specific structure
+   private static isValidConfiguration(config: unknown): config is Configuration {
+     return (
+       typeof config === 'object' &&
+       config !== null &&
+       'apiKey' in config &&
+       typeof (config as Record<string, unknown>).apiKey === 'string'
+     );
+   }
+   ```
+
+### Test Coverage Best Practices
+
+1. **Maintain high test coverage** - Ensure all code paths, especially edge cases, are well-tested:
+   ```typescript
+   // For edge cases in error handling
+   test('should handle null input gracefully', () => {
+     expect(processData(null)).toEqual({ error: 'Invalid input' });
+   });
+   
+   // For conditional branches
+   test('should use default value when config is missing', () => {
+     expect(getConfig(undefined).retryCount).toBe(3);
+   });
+   ```
+
+2. **Mock external dependencies** - When testing functions that depend on external services:
+   ```typescript
+   test('handles API errors correctly', () => {
+     // Setup a mock
+     jest.spyOn(apiService, 'fetchData').mockRejectedValue(new Error('Network error'));
+     
+     // Test error handling
+     return expect(client.getData()).rejects.toThrow('Failed to fetch data');
+   });
+   ```
+
+3. **Test both success and failure paths** - Especially for async operations:
+   ```typescript
+   describe('API client', () => {
+     it('handles successful response', async () => {
+       // Test happy path
+     });
+     
+     it('handles timeouts', async () => {
+       // Test timeout path
+     });
+     
+     it('handles service unavailable errors', async () => {
+       // Test server error path
+     });
+   });
+   ```
+
+### Advanced TypeScript Best Practices
+
+1. **Use branded types for type safety** - Create distinct types for values of the same primitive type:
+   ```typescript
+   // Branded type for user IDs
+   type UserID = string & { readonly __brand: unique symbol };
+   
+   // Branded type for project keys
+   type ProjectKey = string & { readonly __brand: unique symbol };
+   
+   // Functions can now be specific about which type they accept
+   function getUserDetails(id: UserID) { /* ... */ }
+   function getProjectDetails(key: ProjectKey) { /* ... */ }
+   
+   // Prevents passing a project key where a user ID is expected
+   getUserDetails(projectKey); // Type error
+   ```
+
+2. **Prefer interfaces for public APIs** - Use interfaces for external contracts and types for internal structures:
+   ```typescript
+   // Public API interface
+   export interface ClientOptions {
+     apiKey: string;
+     timeout?: number;
+     retries?: number;
+   }
+   
+   // Internal type
+   type RateLimitConfig = {
+     maxRequests: number;
+     timeWindow: number;
+     strategy: 'queue' | 'error' | 'exponential';
+   };
+   ```
+
+3. **Use discriminated unions for complex state management** - Makes type narrowing more precise:
+   ```typescript
+   type RequestState = 
+     | { status: 'idle' }
+     | { status: 'loading' }
+     | { status: 'success', data: Response }
+     | { status: 'error', error: Error };
+   
+   function handleRequest(state: RequestState) {
+     switch (state.status) {
+       case 'loading':
+         // TypeScript knows no data or error exists here
+         showLoadingIndicator();
+         break;
+       case 'success':
+         // TypeScript knows data exists here
+         displayData(state.data);
+         break;
+     }
+   }
+   ```
+
+4. **Use const assertions for literal types** - Preserve literal types in object literals:
+   ```typescript
+   // Without const assertion
+   const config = {
+     environment: 'production',
+     features: ['metrics', 'logging']
+   };
+   // config.environment has type 'string'
+   
+   // With const assertion
+   const config = {
+     environment: 'production',
+     features: ['metrics', 'logging']
+   } as const;
+   // config.environment has type 'production'
+   // config.features has type readonly ['metrics', 'logging']
+   ```
+
 ### Memories
-- Do not use the any type. Use the never or unknown type instead.
-- Require template literals instead of string concatenation
+- Do not use the any type. Use the never, unknown, or Record<string, unknown> instead.
+- Prefer Record<string, unknown> over any when working with objects of unknown structure.
+- Use template literals only when needed for interpolation or multiline strings.
+- Convert instance methods that don't use 'this' to static methods.
+- Implement proper functionality in all methods, never leave empty method bodies.
+- Create reusable type validation helpers for commonly validated types.
+- Use branded types to prevent mixing similar primitive values (like different string IDs).
+- Use discriminated unions for complex state management.
+- Add comprehensive tests for edge cases, not just the happy paths.
+- Use const assertions to preserve literal types in object literals.
