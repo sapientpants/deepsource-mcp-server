@@ -1,6 +1,19 @@
 import axios, { AxiosError } from 'axios';
 import { createLogger } from './utils/logger.js';
 import { ErrorCategory, createClassifiedError, classifyGraphQLError } from './utils/errors.js';
+import {
+  MetricShortcode,
+  MetricKey,
+  MetricThresholdStatus,
+  MetricDirection,
+  RepositoryMetric,
+  RepositoryMetricItem,
+  MetricSetting,
+  UpdateMetricThresholdParams,
+  UpdateMetricSettingParams,
+  MetricThresholdUpdateResponse,
+  MetricSettingUpdateResponse,
+} from './types/metrics.js';
 
 /**
  * @fileoverview DeepSource API client for interacting with the DeepSource service.
@@ -9,6 +22,19 @@ import { ErrorCategory, createClassifiedError, classifyGraphQLError } from './ut
  */
 
 // Interfaces and types below are exported as part of the public API
+// Re-export quality metrics types
+export { MetricShortcode, MetricDirection };
+export type {
+  MetricKey,
+  MetricThresholdStatus,
+  RepositoryMetric,
+  RepositoryMetricItem,
+  MetricSetting,
+  UpdateMetricThresholdParams,
+  UpdateMetricSettingParams,
+  MetricThresholdUpdateResponse,
+  MetricSettingUpdateResponse,
+};
 
 /**
  * Represents a DeepSource project in the API
@@ -2053,6 +2079,217 @@ export class DeepSourceClient {
       }
 
       // Fall back to the generic GraphQL error handler
+      return DeepSourceClient.handleGraphQLError(error);
+    }
+  }
+
+  /**
+   * Fetches quality metrics from a specified DeepSource project
+   * Retrieves metrics like code coverage, documentation coverage, etc. with their thresholds and current values
+   *
+   * @param projectKey - The unique identifier for the DeepSource project
+   * @param options - Optional filter for specific metric shortcodes
+   * @returns Promise that resolves to an array of repository metrics
+   * @throws {Error} When project key is invalid or project doesn't exist
+   * @throws {Error} When DeepSource API returns errors
+   * @throws {Error} When network, authentication or permission issues occur
+   */
+  async getQualityMetrics(
+    projectKey: string,
+    options: { shortcodeIn?: MetricShortcode[] } = {}
+  ): Promise<RepositoryMetric[]> {
+    try {
+      // Validate project key
+      this.validateProjectKey(projectKey);
+
+      // Fetch project information
+      const projects = await this.listProjects();
+      const project = projects.find((p) => p.key === projectKey);
+
+      if (!project) {
+        return [];
+      }
+
+      // Validate repository information
+      this.validateProjectRepository(project, projectKey);
+
+      // Build the metrics query
+      const metricsQuery = `
+        query($login: String!, $name: String!, $provider: VCSProvider!, $shortcodeIn: [MetricShortcode]) {
+          repository(login: $login, name: $name, vcsProvider: $provider) {
+            name
+            id
+            metrics(shortcodeIn: $shortcodeIn) {
+              name
+              shortcode
+              description
+              positiveDirection
+              unit
+              minValueAllowed
+              maxValueAllowed
+              isReported
+              isThresholdEnforced
+              items {
+                id
+                key
+                threshold
+                latestValue
+                latestValueDisplay
+                thresholdStatus
+              }
+            }
+          }
+        }
+      `;
+
+      // Execute the query
+      const response = await this.client.post('', {
+        query: metricsQuery.trim(),
+        variables: {
+          login: project.repository.login,
+          name: project.name,
+          provider: project.repository.provider,
+          shortcodeIn: options.shortcodeIn || null,
+        },
+      });
+
+      if (response.data.errors) {
+        const errorMessage = DeepSourceClient.extractErrorMessages(response.data.errors);
+        throw new Error(`GraphQL Errors: ${errorMessage}`);
+      }
+
+      // Extract and format metrics data
+      const metrics = response.data.data?.repository?.metrics || [];
+
+      return metrics.map((metric: any) => ({
+        name: metric.name || '',
+        shortcode: metric.shortcode || '',
+        description: metric.description || '',
+        positiveDirection: metric.positiveDirection || 'UPWARD',
+        unit: metric.unit,
+        minValueAllowed: metric.minValueAllowed,
+        maxValueAllowed: metric.maxValueAllowed,
+        isReported: Boolean(metric.isReported),
+        isThresholdEnforced: Boolean(metric.isThresholdEnforced),
+        items: (metric.items || []).map((item: any) => ({
+          id: item.id || '',
+          key: item.key || 'AGGREGATE',
+          threshold: item.threshold,
+          latestValue: item.latestValue,
+          latestValueDisplay: item.latestValueDisplay,
+          thresholdStatus: item.thresholdStatus,
+        })),
+      }));
+    } catch (error) {
+      // Handle errors
+      if (DeepSourceClient.isError(error)) {
+        if (DeepSourceClient.isErrorWithMessage(error, 'NoneType')) {
+          return [];
+        }
+      }
+      return DeepSourceClient.handleGraphQLError(error);
+    }
+  }
+
+  /**
+   * Sets a threshold for a specific metric in a repository
+   *
+   * @param params - The parameters for updating the threshold
+   * @returns Promise that resolves to a response indicating the success of the operation
+   * @throws {Error} When parameters are invalid
+   * @throws {Error} When DeepSource API returns errors
+   * @throws {Error} When network, authentication or permission issues occur
+   */
+  async setMetricThreshold(
+    params: UpdateMetricThresholdParams
+  ): Promise<MetricThresholdUpdateResponse> {
+    try {
+      // Build the mutation query
+      const thresholdMutation = `
+        mutation($repositoryId: ID!, $metricShortcode: MetricShortcode!, $metricKey: MetricKey!, $thresholdValue: Int) {
+          setRepositoryMetricThreshold(input: {
+            repositoryId: $repositoryId,
+            metricShortcode: $metricShortcode, 
+            metricKey: $metricKey, 
+            thresholdValue: $thresholdValue
+          }) {
+            ok
+          }
+        }
+      `;
+
+      // Execute the mutation
+      const response = await this.client.post('', {
+        query: thresholdMutation.trim(),
+        variables: {
+          repositoryId: params.repositoryId,
+          metricShortcode: params.metricShortcode,
+          metricKey: params.metricKey,
+          thresholdValue: params.thresholdValue,
+        },
+      });
+
+      if (response.data.errors) {
+        const errorMessage = DeepSourceClient.extractErrorMessages(response.data.errors);
+        throw new Error(`GraphQL Errors: ${errorMessage}`);
+      }
+
+      return {
+        ok: Boolean(response.data.data?.setRepositoryMetricThreshold?.ok),
+      };
+    } catch (error) {
+      return DeepSourceClient.handleGraphQLError(error);
+    }
+  }
+
+  /**
+   * Updates the setting for a metric in a repository
+   * This can enable/disable reporting and threshold enforcement
+   *
+   * @param params - The parameters for updating the metric settings
+   * @returns Promise that resolves to a response indicating the success of the operation
+   * @throws {Error} When parameters are invalid
+   * @throws {Error} When DeepSource API returns errors
+   * @throws {Error} When network, authentication or permission issues occur
+   */
+  async updateMetricSetting(
+    params: UpdateMetricSettingParams
+  ): Promise<MetricSettingUpdateResponse> {
+    try {
+      // Build the mutation query
+      const settingMutation = `
+        mutation($repositoryId: ID!, $metricShortcode: MetricShortcode!, $isReported: Boolean!, $isThresholdEnforced: Boolean!) {
+          updateRepositoryMetricSetting(input: {
+            repositoryId: $repositoryId,
+            metricShortcode: $metricShortcode, 
+            isReported: $isReported, 
+            isThresholdEnforced: $isThresholdEnforced
+          }) {
+            ok
+          }
+        }
+      `;
+
+      // Execute the mutation
+      const response = await this.client.post('', {
+        query: settingMutation.trim(),
+        variables: {
+          repositoryId: params.repositoryId,
+          metricShortcode: params.metricShortcode,
+          isReported: params.isReported,
+          isThresholdEnforced: params.isThresholdEnforced,
+        },
+      });
+
+      if (response.data.errors) {
+        const errorMessage = DeepSourceClient.extractErrorMessages(response.data.errors);
+        throw new Error(`GraphQL Errors: ${errorMessage}`);
+      }
+
+      return {
+        ok: Boolean(response.data.data?.updateRepositoryMetricSetting?.ok),
+      };
+    } catch (error) {
       return DeepSourceClient.handleGraphQLError(error);
     }
   }
