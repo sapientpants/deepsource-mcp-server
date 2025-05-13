@@ -87,7 +87,7 @@ export function isClassifiedError(error: unknown): error is ClassifiedError {
       typeof error === 'object' &&
       'message' in error &&
       'category' in error &&
-      typeof (error as any).category === 'string'
+      typeof (error as Record<string, unknown>).category === 'string'
   );
 }
 

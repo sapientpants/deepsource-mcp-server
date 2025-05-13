@@ -436,7 +436,7 @@ export class DeepSourceClient {
       error !== null &&
       typeof error === 'object' &&
       'message' in error &&
-      typeof (error as any).message === 'string'
+      typeof (error as Record<string, unknown>).message === 'string'
     );
   }
 
@@ -769,12 +769,15 @@ export class DeepSourceClient {
 
   /**
    * Logs a warning message about non-standard pagination usage
+   * @param message Optional custom warning message
    * @private
    */
-  private static logPaginationWarning(): void {
-    // Using a separate method for logging instead of console.warn
-    // This can be replaced with a proper logger implementation later
-    // For now, we'll just make it a no-op to avoid console warnings
+  private static logPaginationWarning(message?: string): void {
+    // Using the static logger instead of console.warn for better log management
+    const warningMessage =
+      message ||
+      'Non-standard pagination: Using "last" without "before" is not recommended in Relay pagination';
+    DeepSourceClient.logger.warn(warningMessage);
   }
 
   /**
@@ -811,7 +814,9 @@ export class DeepSourceClient {
       normalizedParams.first = undefined;
     } else if (normalizedParams.last) {
       // If 'last' is provided without 'before', log a warning but still use 'last'
-      DeepSourceClient.logPaginationWarning();
+      DeepSourceClient.logPaginationWarning(
+        `Non-standard pagination: Using "last=${normalizedParams.last}" without "before" cursor is not recommended`
+      );
       // Keep normalizedParams.last as is
       normalizedParams.first = undefined;
     } else {
@@ -1371,13 +1376,15 @@ export class DeepSourceClient {
       return false;
     }
 
-    if (!('id' in node) || typeof (node as any).id !== 'string') {
+    const record = node as Record<string, unknown>;
+
+    if (!('id' in record) || typeof record.id !== 'string') {
       DeepSourceClient.logger.warn('Skipping vulnerability node with missing or invalid ID', node);
       return false;
     }
 
     // Validate nested objects
-    if (!('package' in node) || typeof (node as any).package !== 'object') {
+    if (!('package' in record) || typeof record.package !== 'object' || record.package === null) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability node with missing or invalid package',
         node
@@ -1385,7 +1392,11 @@ export class DeepSourceClient {
       return false;
     }
 
-    if (!('packageVersion' in node) || typeof (node as any).packageVersion !== 'object') {
+    if (
+      !('packageVersion' in record) ||
+      typeof record.packageVersion !== 'object' ||
+      record.packageVersion === null
+    ) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability node with missing or invalid packageVersion',
         node
@@ -1393,7 +1404,11 @@ export class DeepSourceClient {
       return false;
     }
 
-    if (!('vulnerability' in node) || typeof (node as any).vulnerability !== 'object') {
+    if (
+      !('vulnerability' in record) ||
+      typeof record.vulnerability !== 'object' ||
+      record.vulnerability === null
+    ) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability node with missing or invalid vulnerability',
         node
@@ -1401,33 +1416,33 @@ export class DeepSourceClient {
       return false;
     }
 
+    const packageRecord = record.package as Record<string, unknown>;
+    const packageVersionRecord = record.packageVersion as Record<string, unknown>;
+    const vulnerabilityRecord = record.vulnerability as Record<string, unknown>;
+
     // Validate required package fields
-    if (
-      !('id' in (node as any).package) ||
-      !('ecosystem' in (node as any).package) ||
-      !('name' in (node as any).package)
-    ) {
+    if (!('id' in packageRecord) || !('ecosystem' in packageRecord) || !('name' in packageRecord)) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability with incomplete package information',
-        (node as any).package
+        packageRecord
       );
       return false;
     }
 
     // Validate required packageVersion fields
-    if (!('id' in (node as any).packageVersion) || !('version' in (node as any).packageVersion)) {
+    if (!('id' in packageVersionRecord) || !('version' in packageVersionRecord)) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability with incomplete package version information',
-        (node as any).packageVersion
+        packageVersionRecord
       );
       return false;
     }
 
     // Validate required vulnerability fields
-    if (!('id' in (node as any).vulnerability) || !('identifier' in (node as any).vulnerability)) {
+    if (!('id' in vulnerabilityRecord) || !('identifier' in vulnerabilityRecord)) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability with incomplete vulnerability information',
-        (node as any).vulnerability
+        vulnerabilityRecord
       );
       return false;
     }
@@ -1661,19 +1676,21 @@ export class DeepSourceClient {
     node: Record<string, unknown>
   ): VulnerabilityOccurrence {
     return {
-      id: (node as any).id as string,
-      package: DeepSourceClient.mapPackageData((node as any).package),
-      packageVersion: DeepSourceClient.mapPackageVersionData((node as any).packageVersion),
-      vulnerability: DeepSourceClient.mapVulnerabilityData((node as any).vulnerability),
+      id: String(node.id),
+      package: DeepSourceClient.mapPackageData(node.package as Record<string, unknown>),
+      packageVersion: DeepSourceClient.mapPackageVersionData(
+        node.packageVersion as Record<string, unknown>
+      ),
+      vulnerability: DeepSourceClient.mapVulnerabilityData(
+        node.vulnerability as Record<string, unknown>
+      ),
 
       // Enum values with validation
-      reachability: DeepSourceClient.isValidReachability((node as any).reachability)
-        ? ((node as any).reachability as VulnerabilityReachability)
+      reachability: DeepSourceClient.isValidReachability(node.reachability)
+        ? node.reachability
         : 'UNKNOWN',
 
-      fixability: DeepSourceClient.isValidFixability((node as any).fixability)
-        ? ((node as any).fixability as VulnerabilityFixability)
-        : 'ERROR',
+      fixability: DeepSourceClient.isValidFixability(node.fixability) ? node.fixability : 'ERROR',
     };
   }
 
@@ -1707,7 +1724,7 @@ export class DeepSourceClient {
 
     // Validate node before processing
     if (DeepSourceClient.isValidVulnerabilityNode(typedEdge.node)) {
-      // Safe to cast here because we've validated the structure
+      // Now that validation passed, we can safely cast and map the node
       return DeepSourceClient.mapVulnerabilityOccurrence(typedEdge.node as Record<string, unknown>);
     }
 
