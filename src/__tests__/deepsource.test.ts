@@ -1973,8 +1973,8 @@ describe('DeepSourceClient', () => {
     });
 
     it('should create empty paginated responses with consistent structure', () => {
-      // @ts-expect-error - Accessing private instance method for testing
-      const emptyResponse = client['createEmptyPaginatedResponse']();
+      // @ts-expect-error - Accessing private static method for testing
+      const emptyResponse = DeepSourceClient['createEmptyPaginatedResponse']();
 
       expect(emptyResponse).toEqual({
         items: [],
