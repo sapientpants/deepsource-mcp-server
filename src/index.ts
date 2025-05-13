@@ -372,8 +372,8 @@ function formatCvssInfo(
 
   return {
     baseScore,
-    vector: vector || undefined,
-    severity: severity || undefined,
+    vector: vector ?? undefined,
+    severity: severity ?? undefined,
   };
 }
 
@@ -474,10 +474,10 @@ export async function handleDeepsourceDependencyVulnerabilities({
                 }),
 
                 // Include EPSS scores if available
-                ...(vuln.vulnerability.epssScore !== null && {
+                ...(vuln.vulnerability.epssScore != null && {
                   epssScore: vuln.vulnerability.epssScore,
                 }),
-                ...(vuln.vulnerability.epssPercentile !== null && {
+                ...(vuln.vulnerability.epssPercentile != null && {
                   epssPercentile: vuln.vulnerability.epssPercentile,
                 }),
 

@@ -100,6 +100,24 @@ The codebase is structured around two main components:
 
 DeepSource is used to maintain code quality. Here are the key patterns to follow:
 
+### ESLint Guidelines
+
+1. **Never disable ESLint rules unless absolutely necessary** - Fix the underlying issues instead of disabling rules.
+
+2. **For exported enums** - If an enum is part of the public API and may not be directly referenced in the current file:
+   - Add export usage examples in the documentation
+   - Create a proper ESLint rule exception if needed with clear justification
+   - Consider using TypeScript's `const enum` if the values are only needed at compile time
+
+3. **For unused variables** - Use prefixed underscores to indicate intentionally unused variables:
+   ```typescript
+   try {
+     // code
+   } catch (_error) {
+     // We don't use the error object
+   }
+   ```
+
 ### TypeScript Best Practices
 
 1. **Avoid using `any` type** - Use specific types or `unknown` when the type is truly unknown. Consider using generics or type unions instead.
