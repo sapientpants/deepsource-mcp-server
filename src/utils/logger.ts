@@ -21,7 +21,6 @@ export enum LogLevel {
 /**
  * Environment-aware logging configuration
  */
-const LOG_LEVEL = process.env.LOG_LEVEL || 'INFO';
 const LOG_LEVELS_PRIORITY: Record<LogLevel, number> = {
   [LogLevel.DEBUG]: 0,
   [LogLevel.INFO]: 1,
@@ -36,7 +35,7 @@ const LOG_LEVELS_PRIORITY: Record<LogLevel, number> = {
  * @private
  */
 function shouldLog(level: LogLevel): boolean {
-  const configuredLevel = LOG_LEVEL as LogLevel;
+  const configuredLevel = (process.env.LOG_LEVEL || 'INFO') as LogLevel;
   return LOG_LEVELS_PRIORITY[level] >= LOG_LEVELS_PRIORITY[configuredLevel];
 }
 

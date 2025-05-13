@@ -207,3 +207,7 @@ DeepSource is used to maintain code quality. Here are the key patterns to follow
      // lots of code
    }
    ```
+
+### Git Commit Guidelines
+
+1. **NEVER use --no-verify flag** - Do not bypass pre-commit hooks when committing code. Pre-commit hooks are essential for maintaining code quality and catching issues before they're committed.
