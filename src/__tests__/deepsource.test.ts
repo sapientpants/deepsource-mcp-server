@@ -685,7 +685,7 @@ describe('DeepSourceClient', () => {
       expect(result.totalCount).toBe(15);
     });
 
-    it.skip('should handle pagination with last parameter without before', async () => {
+    it('should handle pagination with last parameter without before', async () => {
       // Mock the listProjects call first
       const mockProjectsResponse = {
         data: {
@@ -766,8 +766,11 @@ describe('DeepSourceClient', () => {
         },
       };
 
-      // Spy on DeepSourceClient.logPaginationWarning
-      const logPaginationWarningSpy = jest.spyOn(DeepSourceClient as any, 'logPaginationWarning');
+      // Spy on DeepSourceClient.prototype.logPaginationWarning
+      const logPaginationWarningSpy = jest.spyOn(
+        DeepSourceClient.prototype,
+        'logPaginationWarning'
+      );
 
       try {
         nock('https://api.deepsource.io')
@@ -1395,7 +1398,7 @@ describe('DeepSourceClient', () => {
       expect(result.totalCount).toBe(15);
     });
 
-    it.skip('should handle pagination with last parameter without before for listRuns', async () => {
+    it('should handle pagination with last parameter without before for listRuns', async () => {
       // Mock the listProjects call first
       const mockProjectsResponse = {
         data: {
@@ -1471,8 +1474,11 @@ describe('DeepSourceClient', () => {
         },
       };
 
-      // Spy on DeepSourceClient.logPaginationWarning
-      const logPaginationWarningSpy = jest.spyOn(DeepSourceClient as any, 'logPaginationWarning');
+      // Spy on DeepSourceClient.prototype.logPaginationWarning
+      const logPaginationWarningSpy = jest.spyOn(
+        DeepSourceClient.prototype,
+        'logPaginationWarning'
+      );
 
       try {
         nock('https://api.deepsource.io')
@@ -1966,9 +1972,9 @@ describe('DeepSourceClient', () => {
       }
     });
 
-    it.skip('should create empty paginated responses with consistent structure', () => {
-      // @ts-ignore - Accessing private static method for testing
-      const emptyResponse = DeepSourceClient['createEmptyPaginatedResponse']();
+    it('should create empty paginated responses with consistent structure', () => {
+      // @ts-ignore - Accessing private instance method for testing
+      const emptyResponse = client['createEmptyPaginatedResponse']();
 
       expect(emptyResponse).toEqual({
         items: [],

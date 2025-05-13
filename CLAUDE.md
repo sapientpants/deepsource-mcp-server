@@ -95,7 +95,6 @@ The codebase is structured around two main components:
 - Error handling is robust throughout the codebase, with specific handling for various GraphQL and network errors.
 - When making changes, ensure to maintain backward compatibility with MCP consumers.
 - All DeepSource API interactions are encapsulated in the `DeepSourceClient` class.
-- Some tests are currently skipped due to refactoring from static to instance methods. These tests need to be updated to work with the new instance methods instead of static methods.
 
 ## Code Quality Guidelines
 
