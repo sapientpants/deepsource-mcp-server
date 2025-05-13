@@ -627,17 +627,6 @@ export class DeepSourceClient {
     // If it's already a classified error, just throw it
     if (error && typeof error === 'object' && 'category' in error) {
       throw error;
-=======
-   * Handles GraphQL errors by formatting and throwing appropriate error messages
-   * @param error - The error object from the GraphQL request
-   * @throws Error with formatted GraphQL error messages
-   */
-  private static handleGraphQLError(error: Error | unknown): never {
-    if (error instanceof AxiosError && error.response?.data?.errors) {
-      const graphqlErrors: Array<{ message: string }> = error.response.data.errors;
-      const errorMessage = DeepSourceClient.extractErrorMessages(graphqlErrors);
-      throw new Error(`GraphQL Error: ${errorMessage}`);
->>>>>>> 95efe04 (Refactor code to fix DeepSource anti-pattern issues)
     }
 
     // Try handling specific error types in order of specificity
