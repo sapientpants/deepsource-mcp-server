@@ -95,3 +95,97 @@ The codebase is structured around two main components:
 - Error handling is robust throughout the codebase, with specific handling for various GraphQL and network errors.
 - When making changes, ensure to maintain backward compatibility with MCP consumers.
 - All DeepSource API interactions are encapsulated in the `DeepSourceClient` class.
+
+## Code Quality Guidelines
+
+DeepSource is used to maintain code quality. Here are the key patterns to follow:
+
+### TypeScript Best Practices
+
+1. **Avoid using `any` type** - Use specific types or `unknown` when the type is truly unknown. Consider using generics or type unions instead.
+   ```typescript
+   // Bad
+   function process(data: any): any { ... }
+   
+   // Good
+   function process<T>(data: T): Result<T> { ... }
+   ```
+
+2. **Prefer type guards over `instanceof` checks** - Use type predicates when possible.
+   ```typescript
+   // Instead of
+   if (error instanceof CustomError) { ... }
+   
+   // Consider
+   function isCustomError(error: unknown): error is CustomError {
+     return error !== null && 
+            typeof error === 'object' && 
+            'customProp' in error;
+   }
+   ```
+
+### Error Handling Patterns
+
+1. **Avoid deeply nested try/catch blocks** - Refactor to use separate functions or middleware.
+   ```typescript
+   // Instead of nested try/catch
+   try {
+     try {
+       // more code
+     } catch (innerError) { ... }
+   } catch (outerError) { ... }
+   
+   // Use separate functions
+   function innerOperation() {
+     try {
+       // code
+     } catch (error) {
+       // handle specific errors
+     }
+   }
+   
+   function outerOperation() {
+     try {
+       innerOperation();
+     } catch (error) {
+       // handle other errors
+     }
+   }
+   ```
+
+2. **Centralize error logging** - Use a dedicated logger service instead of console calls.
+   ```typescript
+   // Instead of
+   console.warn('Something went wrong');
+   
+   // Use
+   logger.warn('Something went wrong');
+   ```
+
+### Code Structure
+
+1. **Keep methods small and focused** - Methods should do one thing and do it well.
+
+2. **Avoid static methods when instance methods make sense** - Static methods make testing harder.
+
+3. **Use proper null/undefined handling** - Use optional chaining and nullish coalescing operators.
+   ```typescript
+   // Good
+   const value = data?.property ?? defaultValue;
+   ```
+
+4. **Prefer early returns to reduce nesting** - This improves readability.
+   ```typescript
+   // Instead of
+   function process(data) {
+     if (isValid(data)) {
+       // lots of code
+     }
+   }
+   
+   // Use
+   function process(data) {
+     if (!isValid(data)) return;
+     // lots of code
+   }
+   ```
