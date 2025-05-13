@@ -273,6 +273,135 @@ DeepSource is used to maintain code quality. Here are the key patterns to follow
 
 1. **NEVER use --no-verify flag** - Do not bypass pre-commit hooks when committing code. Pre-commit hooks are essential for maintaining code quality and catching issues before they're committed.
 
+## DeepSource Issue Prevention Guidelines
+
+The following guidelines are based on frequent DeepSource issues detected in this codebase. Following these practices will help prevent common code quality issues.
+
+### Avoiding Type Safety Issues
+
+1. **Never use the `any` type (JS-0323)** - This is the most common issue found in the codebase. Replace all `any` types with more specific types:
+   ```typescript
+   // Bad
+   function process(data: any): any { ... }
+   typeof (error as any).message === 'string'
+   
+   // Good
+   function process<T>(data: unknown): Result<T> { ... }
+   typeof (error as Record<string, unknown>).message === 'string'
+   ```
+   
+   - When accessing properties on an object of unknown type, use `Record<string, unknown>` instead of `any`:
+   ```typescript
+   // Bad
+   const value = (someObject as any).property;
+   
+   // Good
+   const value = (someObject as Record<string, unknown>).property;
+   ```
+
+2. **Avoid unnecessary type declarations (JS-0331)** - Omit explicit type declarations when they can be easily inferred by TypeScript:
+   ```typescript
+   // Bad - unnecessary type declaration
+   const count: number = 5;
+   const items: string[] = ['a', 'b', 'c'];
+   
+   // Good - let TypeScript infer the types
+   const count = 5;
+   const items = ['a', 'b', 'c'];
+   ```
+
+### Avoiding String Handling Issues
+
+1. **Avoid useless template literals (JS-R1004)** - Use regular strings instead of template literals when no interpolation is needed:
+   ```typescript
+   // Bad
+   const greeting = `Hello World`;
+   const name = `John`;
+   
+   // Good
+   const greeting = 'Hello World';
+   const name = 'John';
+   
+   // Only use template literals when needed for interpolation
+   const message = `Hello, ${name}!`;
+   ```
+
+2. **Use template literals for string concatenation (JS-0246)** - Prefer template literals over string concatenation:
+   ```typescript
+   // Bad
+   const message = 'Hello, ' + name + '!';
+   
+   // Good
+   const message = `Hello, ${name}!`;
+   ```
+
+### Improving Method Organization
+
+1. **Make instance methods static when they don't use `this` (JS-0105)** - Methods that don't reference instance properties or methods should be static:
+   ```typescript
+   // Bad
+   class Utilities {
+     formatDate(date: Date): string {
+       // Doesn't use 'this'
+       return date.toISOString();
+     }
+   }
+   
+   // Good
+   class Utilities {
+     static formatDate(date: Date): string {
+       return date.toISOString();
+     }
+   }
+   ```
+
+2. **Implement all empty methods** - Add proper implementation to all methods, even if they are placeholders:
+   ```typescript
+   // Bad
+   private static logPaginationWarning(): void {
+     // Empty method without implementation
+   }
+   
+   // Good
+   private static logPaginationWarning(message?: string): void {
+     // Proper implementation with meaningful behavior
+     const warningMessage = message || 'Non-standard pagination used';
+     this.logger.warn(warningMessage);
+   }
+   ```
+
+### Type Validation and Conversion
+
+1. **Use consistent type validation patterns** - Create reusable validation functions for common type checks:
+   ```typescript
+   // Helper function for validating object types
+   private static isValidObject(value: unknown): value is Record<string, unknown> {
+     return value !== null && typeof value === 'object';
+   }
+   
+   // Helper for extracting string values safely
+   private static validateString(value: unknown, defaultValue = ''): string {
+     return typeof value === 'string' ? value : defaultValue;
+   }
+   ```
+
+2. **Create type predicates for complex type validation** - For complex objects, create type predicates that verify the required structure:
+   ```typescript
+   // Type predicate for validating a specific structure
+   private static isValidConfiguration(config: unknown): config is Configuration {
+     return (
+       typeof config === 'object' &&
+       config !== null &&
+       'apiKey' in config &&
+       typeof (config as Record<string, unknown>).apiKey === 'string'
+     );
+   }
+   ```
+
 ### Memories
 - Do not use the any type. Use the never or unknown type instead.
-- Require template literals instead of string concatenation
+- Prefer Record<string, unknown> over any when working with objects of unknown structure.
+- Use template literals only when needed for interpolation or multiline strings.
+- Convert instance methods that don't use 'this' to static methods.
+- Implement proper functionality in all methods, never leave empty method bodies.
+- Create reusable type validation helpers for commonly validated types.
