@@ -148,7 +148,7 @@ export interface RepositoryMetricItem {
   /** Formatted display string for the latest value */
   latestValueDisplay: string;
   /** Status of the metric compared to its threshold */
-  thresholdStatus: string;
+  thresholdStatus: MetricThresholdStatus;
 }
 
 /**
