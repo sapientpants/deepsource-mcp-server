@@ -1368,7 +1368,7 @@ export class DeepSourceClient {
    * @private
    */
   private static isValidVersionType(value: unknown): value is PackageVersionType {
-    const validVersionTypes = ['SEMVER', 'ECOSYSTEM', 'GIT'] as PackageVersionType[];
+    const validVersionTypes: PackageVersionType[] = ['SEMVER', 'ECOSYSTEM', 'GIT'];
     return DeepSourceClient.isValidEnum(value, validVersionTypes);
   }
 
@@ -1441,7 +1441,7 @@ export class DeepSourceClient {
    * @returns The original string if valid, or the default value if invalid
    * @private
    */
-  private static validateString(value: unknown, defaultValue = ''): string {
+  private static validateString(value: unknown, defaultValue = '') {
     return typeof value === 'string' ? value : defaultValue;
   }
 
@@ -1478,13 +1478,13 @@ export class DeepSourceClient {
   private static mapVulnerabilityData(vulnData: Record<string, unknown>): Vulnerability {
     // Check if severity is valid
     const isValidSeverity = (value: unknown): value is VulnerabilitySeverity => {
-      const validSeverities = [
+      const validSeverities: VulnerabilitySeverity[] = [
         'NONE',
         'LOW',
         'MEDIUM',
         'HIGH',
         'CRITICAL',
-      ] as VulnerabilitySeverity[];
+      ];
       return typeof value === 'string' && validSeverities.includes(value as VulnerabilitySeverity);
     };
 
@@ -1551,11 +1551,11 @@ export class DeepSourceClient {
    * @private
    */
   private static isValidReachability(value: unknown): value is VulnerabilityReachability {
-    const validReachabilityValues = [
+    const validReachabilityValues: VulnerabilityReachability[] = [
       'REACHABLE',
       'UNREACHABLE',
       'UNKNOWN',
-    ] as VulnerabilityReachability[];
+    ];
     return DeepSourceClient.isValidEnum(value, validReachabilityValues);
   }
 
@@ -1566,14 +1566,14 @@ export class DeepSourceClient {
    * @private
    */
   private static isValidFixability(value: unknown): value is VulnerabilityFixability {
-    const validFixabilityValues = [
+    const validFixabilityValues: VulnerabilityFixability[] = [
       'ERROR',
       'UNFIXABLE',
       'GENERATING_FIX',
       'POSSIBLY_FIXABLE',
       'MANUALLY_FIXABLE',
       'AUTO_FIXABLE',
-    ] as VulnerabilityFixability[];
+    ];
     return DeepSourceClient.isValidEnum(value, validFixabilityValues);
   }
 
@@ -2072,26 +2072,26 @@ export class DeepSourceClient {
       const metrics = response.data.data?.repository?.metrics || [];
 
       return metrics.map((metric: unknown) => {
-        const m = metric as Record<string, unknown>;
+        const metricRecord = metric as Record<string, unknown>;
         return {
-          name: (m.name as string) || '',
-          shortcode: (m.shortcode as string) || '',
-          description: (m.description as string) || '',
-          positiveDirection: (m.positiveDirection as string) || 'UPWARD',
-          unit: m.unit as string,
-          minValueAllowed: m.minValueAllowed as number,
-          maxValueAllowed: m.maxValueAllowed as number,
-          isReported: Boolean(m.isReported),
-          isThresholdEnforced: Boolean(m.isThresholdEnforced),
-          items: ((m.items as unknown[]) || []).map((item: unknown) => {
-            const i = item as Record<string, unknown>;
+          name: (metricRecord.name as string) || '',
+          shortcode: (metricRecord.shortcode as string) || '',
+          description: (metricRecord.description as string) || '',
+          positiveDirection: (metricRecord.positiveDirection as string) || 'UPWARD',
+          unit: metricRecord.unit as string,
+          minValueAllowed: metricRecord.minValueAllowed as number,
+          maxValueAllowed: metricRecord.maxValueAllowed as number,
+          isReported: Boolean(metricRecord.isReported),
+          isThresholdEnforced: Boolean(metricRecord.isThresholdEnforced),
+          items: ((metricRecord.items as unknown[]) || []).map((item: unknown) => {
+            const itemRecord = item as Record<string, unknown>;
             return {
-              id: (i.id as string) || '',
-              key: (i.key as string) || 'AGGREGATE',
-              threshold: i.threshold as number | null,
-              latestValue: i.latestValue as number | null,
-              latestValueDisplay: i.latestValueDisplay as string,
-              thresholdStatus: i.thresholdStatus as string,
+              id: (itemRecord.id as string) || '',
+              key: (itemRecord.key as string) || 'AGGREGATE',
+              threshold: itemRecord.threshold as number | null,
+              latestValue: itemRecord.latestValue as number | null,
+              latestValueDisplay: itemRecord.latestValueDisplay as string,
+              thresholdStatus: itemRecord.thresholdStatus as string,
             };
           }),
         };

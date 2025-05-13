@@ -425,10 +425,11 @@ describe('DeepSourceClient', () => {
       nock('https://api.deepsource.io')
         .post('/graphql/')
         .matchHeader('Authorization', `Bearer ${API_KEY}`)
-        .reply(() => {
+        .reply(() => [
           // First call - return projects
-          return [200, mockProjectsResponse];
-        })
+          200,
+          mockProjectsResponse,
+        ])
         .post('/graphql/')
         .matchHeader('Authorization', `Bearer ${API_KEY}`)
         .reply((uri, requestBody: Record<string, unknown>) => {
@@ -1660,10 +1661,11 @@ describe('DeepSourceClient', () => {
       nock('https://api.deepsource.io')
         .post('/graphql/')
         .matchHeader('Authorization', `Bearer ${API_KEY}`)
-        .reply(() => {
+        .reply(() => [
           // First call - return projects
-          return [200, mockProjectsResponse];
-        })
+          200,
+          mockProjectsResponse,
+        ])
         .post('/graphql/')
         .matchHeader('Authorization', `Bearer ${API_KEY}`)
         .reply((uri, requestBody: Record<string, unknown>) => {

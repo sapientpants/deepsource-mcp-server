@@ -378,6 +378,17 @@ function formatCvssInfo(
   };
 }
 
+/**
+ * Fetches and returns dependency vulnerabilities from a specified DeepSource project
+ *
+ * This handler provides access to DeepSource's dependency vulnerability data,
+ * allowing AI assistants to retrieve information about security vulnerabilities
+ * in a project's dependencies.
+ *
+ * @param params Parameters containing the project key and pagination options
+ * @returns A response containing the list of dependency vulnerabilities with detailed information
+ * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set or if the API request fails
+ */
 export async function handleDeepsourceDependencyVulnerabilities({
   projectKey,
   offset,

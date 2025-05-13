@@ -122,6 +122,7 @@ export function classifyGraphQLError(error: Error): ErrorCategory {
     [ErrorCategory.NOT_FOUND]: ['not found', 'nonetype', 'does not exist'],
     [ErrorCategory.SERVER]: ['server error', 'internal error', '500'],
     [ErrorCategory.CLIENT]: [],
+    [ErrorCategory.FORMAT]: [],
     [ErrorCategory.OTHER]: [],
   };
 
