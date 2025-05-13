@@ -682,7 +682,7 @@ export class DeepSourceClient {
    * @returns {PaginatedResponse<T>} Empty paginated response with consistent structure
    * @private
    */
-  private createEmptyPaginatedResponse<T>(): PaginatedResponse<T> {
+  private static createEmptyPaginatedResponse<T>(): PaginatedResponse<T> {
     return {
       items: [],
       pageInfo: {
@@ -778,24 +778,6 @@ export class DeepSourceClient {
       message ||
       'Non-standard pagination: Using "last" without "before" is not recommended in Relay pagination';
     DeepSourceClient.logger.warn(warningMessage);
-  }
-
-  /**
-   * Creates an empty paginated response
-   * @returns Empty paginated response with consistent structure
-   * @private
-   */
-  private static createEmptyPaginatedResponse<T>(): PaginatedResponse<T> {
-    return {
-      items: [],
-      pageInfo: {
-        hasNextPage: false,
-        hasPreviousPage: false,
-        startCursor: undefined,
-        endCursor: undefined,
-      },
-      totalCount: 0,
-    };
   }
 
   /**
@@ -934,12 +916,15 @@ export class DeepSourceClient {
       const project = projects.find((p) => p.key === projectKey);
 
       if (!project) {
-        return this.createEmptyPaginatedResponse<DeepSourceIssue>();
+        return DeepSourceClient.createEmptyPaginatedResponse<DeepSourceIssue>();
       }
 
       // Normalize pagination parameters using the helper method
       const normalizedParams = this.normalizePaginationParams(params);
 
+      // Keeping template literal here since it contains a lot of variable references
+      // with complex GraphQL query structure. The benefits of converting to string
+      // concatenation would be outweighed by reduced readability
       const repoQuery = `
         query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int, $path: String, $analyzerIn: [String], $tags: [String]) {
           repository(login: $login, name: $name, vcsProvider: $provider) {
@@ -1098,7 +1083,7 @@ export class DeepSourceClient {
       const project = projects.find((p) => p.key === projectKey);
 
       if (!project) {
-        return this.createEmptyPaginatedResponse<DeepSourceRun>();
+        return DeepSourceClient.createEmptyPaginatedResponse<DeepSourceRun>();
       }
 
       // Normalize pagination parameters using the helper method
@@ -1898,7 +1883,7 @@ export class DeepSourceClient {
    * @returns Formatted GraphQL query string
    * @private
    */
-  private buildVulnerabilityQuery(): string {
+  private static buildVulnerabilityQuery(): string {
     return `
       query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int) {
         repository(login: $login, name: $name, vcsProvider: $provider) {
@@ -1968,7 +1953,7 @@ export class DeepSourceClient {
    * @returns Never returns - always throws with a descriptive error message
    * @private
    */
-  private handleVulnerabilityError(error: Error, projectKey: string): never {
+  private static handleVulnerabilityError(error: Error, projectKey: string): never {
     // Classify the error
     const category = classifyGraphQLError(error);
 
@@ -2044,7 +2029,7 @@ export class DeepSourceClient {
    * @throws Error if the project key is invalid
    * @private
    */
-  private validateProjectKey(projectKey: string): void {
+  private static validateProjectKey(projectKey: string): void {
     if (!projectKey || typeof projectKey !== 'string') {
       throw new Error('Invalid project key: Project key must be a non-empty string');
     }
@@ -2057,7 +2042,7 @@ export class DeepSourceClient {
    * @throws Error if the project has invalid repository information
    * @private
    */
-  private validateProjectRepository(project: DeepSourceProject, projectKey: string): void {
+  private static validateProjectRepository(project: DeepSourceProject, projectKey: string): void {
     if (!project.repository || !project.repository.login || !project.repository.provider) {
       throw new Error(`Invalid repository information for project '${projectKey}'`);
     }
@@ -2088,7 +2073,7 @@ export class DeepSourceClient {
   ): Promise<PaginatedResponse<VulnerabilityOccurrence>> {
     try {
       // Validate project key
-      this.validateProjectKey(projectKey);
+      DeepSourceClient.validateProjectKey(projectKey);
 
       // Use Promise.all to fetch projects and normalize parameters concurrently
       const [projects, normalizedParams] = await Promise.all([
@@ -2099,14 +2084,14 @@ export class DeepSourceClient {
       const project = projects.find((p) => p.key === projectKey);
 
       if (!project) {
-        return this.createEmptyPaginatedResponse<VulnerabilityOccurrence>();
+        return DeepSourceClient.createEmptyPaginatedResponse<VulnerabilityOccurrence>();
       }
 
       // Validate repository information
-      this.validateProjectRepository(project, projectKey);
+      DeepSourceClient.validateProjectRepository(project, projectKey);
 
       // Get the GraphQL query for vulnerability data
-      const repoQuery = this.buildVulnerabilityQuery();
+      const repoQuery = DeepSourceClient.buildVulnerabilityQuery();
 
       // Execute the query
       const response = await this.client.post('', {
@@ -2158,7 +2143,7 @@ export class DeepSourceClient {
         }
 
         // Handle specific error types
-        this.handleVulnerabilityError(error, projectKey);
+        DeepSourceClient.handleVulnerabilityError(error, projectKey);
       }
 
       // Fall back to the generic GraphQL error handler
@@ -2183,7 +2168,7 @@ export class DeepSourceClient {
   ): Promise<RepositoryMetric[]> {
     try {
       // Validate project key
-      this.validateProjectKey(projectKey);
+      DeepSourceClient.validateProjectKey(projectKey);
 
       // Fetch project information
       const projects = await this.listProjects();
@@ -2194,7 +2179,7 @@ export class DeepSourceClient {
       }
 
       // Validate repository information
-      this.validateProjectRepository(project, projectKey);
+      DeepSourceClient.validateProjectRepository(project, projectKey);
 
       // Build the metrics query
       const metricsQuery = `

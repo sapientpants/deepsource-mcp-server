@@ -768,10 +768,10 @@ export async function handleDeepsourceQualityMetrics({
                         difference: item.latestValue - item.threshold,
                         percentDifference:
                           item.threshold !== 0
-                            ? (
+                            ? `${(
                                 ((item.latestValue - item.threshold) / item.threshold) *
                                 100
-                              ).toFixed(2) + '%'
+                              ).toFixed(2)}%`
                             : 'N/A',
                         isPassing: item.thresholdStatus === MetricThresholdStatus.PASSING,
                       }
