@@ -24,6 +24,7 @@ The DeepSource MCP Server enables AI assistants to interact with DeepSource's co
 * **DeepSource API Integration**: Connects to DeepSource via GraphQL API
 * **MCP Protocol Support**: Implements the Model Context Protocol for AI assistant integration
 * **Quality Metrics & Thresholds**: Retrieve and manage code quality metrics with thresholds
+* **Security Compliance Reports**: Access OWASP Top 10, SANS Top 25, and MISRA-C compliance reports
 * **Dependency Vulnerabilities**: Access security vulnerability information about dependencies
 * **TypeScript/Node.js**: Built with TypeScript for type safety and modern JavaScript features
 * **Cross-Platform**: Works on Linux, macOS, and Windows
@@ -80,6 +81,19 @@ This would use the `deepsource_quality_metrics` tool:
 {
   "projectKey": "your-project-key",
   "shortcodeIn": ["LCV", "BCV", "CCV"]
+}
+```
+
+For security compliance reports:
+```
+Are we compliant with OWASP Top 10 security standards?
+```
+
+This would use the `deepsource_compliance_report` tool:
+```
+{
+  "projectKey": "your-project-key",
+  "reportType": "OWASP_TOP_10"
 }
 ```
 
@@ -215,6 +229,16 @@ The DeepSource MCP Server provides the following tools:
      * `metricShortcode` (required) - The shortcode of the metric to update
      * `isReported` (required) - Whether the metric should be reported
      * `isThresholdEnforced` (required) - Whether the threshold should be enforced (can fail checks)
+
+9. `deepsource_compliance_report`: Get security compliance reports from a DeepSource project
+   * Parameters:
+     * `projectKey` (required) - The unique identifier for the DeepSource project
+     * `reportType` (required) - The type of compliance report to fetch (OWASP_TOP_10, SANS_TOP_25, or MISRA_C)
+   * Returns comprehensive security compliance data including:
+     * Security issue statistics by category and severity
+     * Compliance status (passing/failing)
+     * Trend data showing changes over time
+     * Analysis and recommendations for improving security posture
 
 ## Development
 

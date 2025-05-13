@@ -8,7 +8,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { DeepSourceClient } from './deepsource.js';
+import { DeepSourceClient, ReportType, ReportStatus } from './deepsource.js';
 import { MetricShortcode, MetricKey, MetricThresholdStatus } from './types/metrics.js';
 import { z } from 'zod';
 
@@ -716,6 +716,17 @@ export interface DeepsourceUpdateMetricSettingParams {
 }
 
 /**
+ * Interface for parameters for getting a compliance report
+ * @public
+ */
+export interface DeepsourceComplianceReportParams {
+  /** DeepSource project key to identify the project */
+  projectKey: string;
+  /** Type of compliance report to fetch */
+  reportType: ReportType;
+}
+
+/**
  * Fetches and returns quality metrics from a specified DeepSource project
  * @param params - Parameters for fetching metrics, including project key and optional filters
  * @returns A response containing the metrics data with their values and thresholds
@@ -906,6 +917,106 @@ export async function handleDeepsourceUpdateMetricSetting({
   };
 }
 
+/**
+ * Fetches and returns compliance reports from a DeepSource project
+ * @param params - Parameters for fetching the compliance report, including project key and report type
+ * @returns Response containing the compliance report with security issues statistics
+ * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set or if the report type is unsupported
+ * @public
+ */
+export async function handleDeepsourceComplianceReport({
+  projectKey,
+  reportType,
+}: DeepsourceComplianceReportParams) {
+  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  /* istanbul ignore if */
+  if (!apiKey) {
+    throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
+  }
+
+  const client = new DeepSourceClient(apiKey);
+  const report = await client.getComplianceReport(projectKey, reportType);
+
+  if (!report) {
+    throw new Error(`Report of type '${reportType}' not found for project '${projectKey}'`);
+  }
+
+  return {
+    content: [
+      {
+        type: 'text' as const,
+        text: JSON.stringify(
+          {
+            key: report.key,
+            title: report.title,
+            currentValue: report.currentValue,
+            status: report.status,
+            securityIssueStats: report.securityIssueStats.map((stat) => ({
+              key: stat.key,
+              title: stat.title,
+              occurrence: {
+                critical: stat.occurrence.critical,
+                major: stat.occurrence.major,
+                minor: stat.occurrence.minor,
+                total: stat.occurrence.total,
+              },
+            })),
+            trends: report.trends,
+            // Include helpful analysis of the report
+            analysis: {
+              summary: `This report shows compliance with ${report.title} security standards.`,
+              status_explanation:
+                report.status === ReportStatus.PASSING
+                  ? 'Your project is currently meeting all required security standards.'
+                  : report.status === ReportStatus.FAILING
+                    ? 'Your project has security issues that need to be addressed to meet compliance standards.'
+                    : 'This report is not applicable to your project.',
+              critical_issues: report.securityIssueStats.reduce(
+                (total, stat) => total + (stat.occurrence.critical || 0),
+                0
+              ),
+              major_issues: report.securityIssueStats.reduce(
+                (total, stat) => total + (stat.occurrence.major || 0),
+                0
+              ),
+              minor_issues: report.securityIssueStats.reduce(
+                (total, stat) => total + (stat.occurrence.minor || 0),
+                0
+              ),
+              total_issues: report.securityIssueStats.reduce(
+                (total, stat) => total + (stat.occurrence.total || 0),
+                0
+              ),
+            },
+            // Include recommendations based on the report
+            recommendations: {
+              actions:
+                report.status === ReportStatus.FAILING
+                  ? [
+                      'Fix critical security issues first',
+                      'Use deepsource_project_issues to view specific issues',
+                      'Implement security best practices for your codebase',
+                    ]
+                  : ['Continue monitoring security compliance', 'Run regular security scans'],
+              resources: [
+                reportType === ReportType.OWASP_TOP_10
+                  ? 'OWASP Top 10: https://owasp.org/www-project-top-ten/'
+                  : reportType === ReportType.SANS_TOP_25
+                    ? 'SANS Top 25: https://www.sans.org/top25-software-errors/'
+                    : reportType === ReportType.MISRA_C
+                      ? 'MISRA-C: https://www.misra.org.uk/'
+                      : 'Security best practices for your project',
+              ],
+            },
+          },
+          null,
+          2
+        ),
+      },
+    ],
+  };
+}
+
 // Register quality metrics tools
 mcpServer.tool(
   'deepsource_quality_metrics',
@@ -983,6 +1094,30 @@ mcpServer.tool(
       .describe('Whether the threshold should be enforced (can fail checks)'),
   },
   handleDeepsourceUpdateMetricSetting
+);
+
+// Register compliance report tool
+mcpServer.tool(
+  'deepsource_compliance_report',
+  `Get security compliance reports from a DeepSource project.
+
+  This tool provides access to industry-standard security compliance reports including:
+  - OWASP Top 10: Common web application security vulnerabilities
+  - SANS Top 25: Most dangerous software errors
+  - MISRA-C: Guidelines for safety-critical software in C
+
+  The response includes:
+  - Comprehensive statistics about security issues by category and severity
+  - Compliance status (passing/failing)
+  - Recommendations for improving security posture
+  - Trend data showing changes over time`,
+  {
+    projectKey: z.string().describe('The unique identifier for the DeepSource project'),
+    reportType: z
+      .nativeEnum(ReportType)
+      .describe('The type of compliance report to fetch (OWASP_TOP_10, SANS_TOP_25, or MISRA_C)'),
+  },
+  handleDeepsourceComplianceReport
 );
 
 // Only start the server if not in test mode

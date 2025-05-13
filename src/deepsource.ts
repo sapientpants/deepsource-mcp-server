@@ -37,6 +37,83 @@ export type {
 };
 
 /**
+ * Available report types in DeepSource
+ * This enum is exported as part of the public API for use in MCP tools
+ * and is referenced in getComplianceReport() and handleDeepsourceComplianceReport().
+ * @public
+ */
+/* eslint-disable no-unused-vars */
+export enum ReportType {
+  OWASP_TOP_10 = 'OWASP_TOP_10',
+  SANS_TOP_25 = 'SANS_TOP_25',
+  MISRA_C = 'MISRA_C',
+  CODE_COVERAGE = 'CODE_COVERAGE',
+  CODE_HEALTH_TREND = 'CODE_HEALTH_TREND',
+  ISSUE_DISTRIBUTION = 'ISSUE_DISTRIBUTION',
+  ISSUES_PREVENTED = 'ISSUES_PREVENTED',
+  ISSUES_AUTOFIXED = 'ISSUES_AUTOFIXED',
+}
+/* eslint-enable no-unused-vars */
+
+/**
+ * Report status indicating whether the report is passing, failing, or not applicable
+ * This enum is exported as part of the public API for use in MCP tools
+ * and is referenced in handleDeepsourceComplianceReport().
+ * @public
+ */
+/* eslint-disable no-unused-vars */
+export enum ReportStatus {
+  PASSING = 'PASSING',
+  FAILING = 'FAILING',
+  NOOP = 'NOOP',
+}
+/* eslint-enable no-unused-vars */
+
+/**
+ * Trend information for reports
+ * @public
+ */
+export interface ReportTrend {
+  label?: string;
+  value?: number;
+  changePercentage?: number;
+}
+
+/**
+ * Severity distribution of issues
+ * @public
+ */
+export interface SeverityDistribution {
+  critical: number;
+  major: number;
+  minor: number;
+  total: number;
+}
+
+/**
+ * Security issue statistic
+ * @public
+ */
+export interface SecurityIssueStat {
+  key: string;
+  title: string;
+  occurrence: SeverityDistribution;
+}
+
+/**
+ * Compliance report interface
+ * @public
+ */
+export interface ComplianceReport {
+  key: ReportType;
+  title: string;
+  currentValue?: number;
+  status?: ReportStatus;
+  securityIssueStats: SecurityIssueStat[];
+  trends?: ReportTrend[];
+}
+
+/**
  * Represents a DeepSource project in the API
  * @public
  */
@@ -2366,5 +2443,237 @@ export class DeepSourceClient {
     } catch (error) {
       return DeepSourceClient.handleGraphQLError(error);
     }
+  }
+
+  /**
+   * Fetches security compliance reports from a DeepSource project
+   * @param projectKey - The unique identifier for the DeepSource project
+   * @param reportType - The type of report to fetch (OWASP_TOP_10, SANS_TOP_25, or MISRA_C)
+   * @returns Promise that resolves to a compliance report with security stats
+   * @throws Error if the project key is invalid, report type is unsupported, or API request fails
+   * @public
+   */
+  async getComplianceReport(
+    projectKey: string,
+    reportType: ReportType
+  ): Promise<ComplianceReport | null> {
+    try {
+      // Validate project key
+      DeepSourceClient.validateProjectKey(projectKey);
+
+      // Validate report type is a compliance report
+      if (
+        reportType !== ReportType.OWASP_TOP_10 &&
+        reportType !== ReportType.SANS_TOP_25 &&
+        reportType !== ReportType.MISRA_C
+      ) {
+        throw new Error(
+          `Invalid report type: ${reportType}. Must be one of OWASP_TOP_10, SANS_TOP_25, or MISRA_C`
+        );
+      }
+
+      // Fetch project information
+      const projects = await this.listProjects();
+      const project = projects.find((p) => p.key === projectKey);
+
+      if (!project) {
+        return null;
+      }
+
+      // Validate repository information
+      DeepSourceClient.validateProjectRepository(project, projectKey);
+
+      // Build the compliance report query
+      const reportQuery = `
+        query($login: String!, $name: String!, $provider: VCSProvider!, $reportKey: ReportKey!) {
+          repository(login: $login, name: $name, vcsProvider: $provider) {
+            name
+            id
+            reports {
+              ${this.getReportField(reportType)} {
+                key
+                title
+                currentValue
+                status
+                securityIssueStats {
+                  key
+                  title
+                  occurrence {
+                    critical
+                    major
+                    minor
+                    total
+                  }
+                }
+                trends {
+                  label
+                  value
+                  changePercentage
+                }
+              }
+            }
+          }
+        }
+      `;
+
+      // Execute the query
+      const response = await this.client.post('', {
+        query: reportQuery.trim(),
+        variables: {
+          login: project.repository.login,
+          name: project.name,
+          provider: project.repository.provider,
+          reportKey: reportType,
+        },
+      });
+
+      if (response.data.errors) {
+        const errorMessage = DeepSourceClient.extractErrorMessages(response.data.errors);
+        throw new Error(`GraphQL Errors: ${errorMessage}`);
+      }
+
+      // Extract the report data from the response
+      const reportData = this.extractReportData(response, reportType);
+      if (!reportData) {
+        return null;
+      }
+
+      return {
+        key: reportType,
+        title:
+          typeof reportData.title === 'string'
+            ? reportData.title
+            : this.getTitleForReportType(reportType),
+        currentValue:
+          typeof reportData.currentValue === 'number' ? reportData.currentValue : undefined,
+        status:
+          typeof reportData.status === 'string' ? (reportData.status as ReportStatus) : undefined,
+        securityIssueStats: Array.isArray(reportData.securityIssueStats)
+          ? (reportData.securityIssueStats as SecurityIssueStat[])
+          : [],
+        trends: Array.isArray(reportData.trends) ? (reportData.trends as ReportTrend[]) : undefined,
+      };
+    } catch (error) {
+      if (
+        DeepSourceClient.isError(error) &&
+        (error.message.includes('NoneType') || error.message.includes('not found'))
+      ) {
+        return null;
+      }
+      return DeepSourceClient.handleGraphQLError(error);
+    }
+  }
+
+  /**
+   * Gets the GraphQL field name for a given report type
+   * @param reportType - The type of report
+   * @returns The GraphQL field name for the report
+   * @private
+   */
+  private getReportField(reportType: ReportType): string {
+    switch (reportType) {
+      case ReportType.OWASP_TOP_10:
+        return 'owaspTop10';
+      case ReportType.SANS_TOP_25:
+        return 'sansTop25';
+      case ReportType.MISRA_C:
+        return 'misraC';
+      case ReportType.CODE_COVERAGE:
+        return 'codeCoverage';
+      case ReportType.CODE_HEALTH_TREND:
+        return 'codeHealthTrend';
+      case ReportType.ISSUE_DISTRIBUTION:
+        return 'issueDistribution';
+      case ReportType.ISSUES_PREVENTED:
+        return 'issuesPrevented';
+      case ReportType.ISSUES_AUTOFIXED:
+        return 'issuesAutofixed';
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Gets a default title for a report type when the API doesn't return one
+   * @param reportType - The type of report
+   * @returns A user-friendly title for the report
+   * @private
+   */
+  private getTitleForReportType(reportType: ReportType): string {
+    switch (reportType) {
+      case ReportType.OWASP_TOP_10:
+        return 'OWASP Top 10';
+      case ReportType.SANS_TOP_25:
+        return 'SANS Top 25';
+      case ReportType.MISRA_C:
+        return 'MISRA-C';
+      case ReportType.CODE_COVERAGE:
+        return 'Code Coverage';
+      case ReportType.CODE_HEALTH_TREND:
+        return 'Code Health Trend';
+      case ReportType.ISSUE_DISTRIBUTION:
+        return 'Issue Distribution';
+      case ReportType.ISSUES_PREVENTED:
+        return 'Issues Prevented';
+      case ReportType.ISSUES_AUTOFIXED:
+        return 'Issues Autofixed';
+      default:
+        return 'Unknown Report';
+    }
+  }
+
+  /**
+   * Extracts the report data from the GraphQL response
+   * @param response - The GraphQL response
+   * @param reportType - The type of report being extracted
+   * @returns The extracted report data or null if not found
+   * @private
+   */
+  private extractReportData(
+    response: unknown,
+    reportType: ReportType
+  ): Record<string, unknown> | null {
+    if (!response || typeof response !== 'object') {
+      return null;
+    }
+
+    const typedResponse = response as Record<string, unknown>;
+    const data = typedResponse.data as Record<string, unknown> | undefined;
+
+    if (!data || typeof data !== 'object') {
+      return null;
+    }
+
+    const gqlData = data.data as Record<string, unknown> | undefined;
+
+    if (!gqlData || typeof gqlData !== 'object') {
+      return null;
+    }
+
+    const repository = gqlData.repository as Record<string, unknown> | undefined;
+
+    if (!repository || typeof repository !== 'object') {
+      return null;
+    }
+
+    const reports = repository.reports as Record<string, unknown> | undefined;
+
+    if (!reports || typeof reports !== 'object') {
+      return null;
+    }
+
+    // Get the field name for the report type
+    const fieldName = this.getReportField(reportType);
+    if (!fieldName) {
+      return null;
+    }
+
+    const reportData = reports[fieldName] as Record<string, unknown> | undefined;
+
+    if (!reportData || typeof reportData !== 'object') {
+      return null;
+    }
+
+    return reportData;
   }
 }
