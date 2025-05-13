@@ -107,6 +107,106 @@ export interface DeepSourceRun {
 }
 
 /**
+ * Possible severity levels for a vulnerability
+ * @public
+ */
+export type VulnerabilitySeverity = 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+/**
+ * Possible package version types
+ * @public
+ */
+export type PackageVersionType = 'SEMVER' | 'ECOSYSTEM' | 'GIT';
+
+/**
+ * Possible reachability types for a vulnerability occurrence
+ * @public
+ */
+export type VulnerabilityReachability = 'REACHABLE' | 'UNREACHABLE' | 'UNKNOWN';
+
+/**
+ * Possible fixability types for a vulnerability occurrence
+ * @public
+ */
+export type VulnerabilityFixability =
+  | 'ERROR'
+  | 'UNFIXABLE'
+  | 'GENERATING_FIX'
+  | 'POSSIBLY_FIXABLE'
+  | 'MANUALLY_FIXABLE'
+  | 'AUTO_FIXABLE';
+
+/**
+ * Represents a package in the DeepSource API
+ * @public
+ */
+export interface Package {
+  id: string;
+  ecosystem: string;
+  name: string;
+  purl?: string;
+}
+
+/**
+ * Represents a package version in the DeepSource API
+ * @public
+ */
+export interface PackageVersion {
+  id: string;
+  version: string;
+  versionType?: PackageVersionType;
+}
+
+/**
+ * Represents a vulnerability in the DeepSource API
+ * @public
+ */
+export interface Vulnerability {
+  id: string;
+  identifier: string;
+  aliases: string[];
+  summary?: string;
+  details?: string;
+  publishedAt: string;
+  updatedAt: string;
+  withdrawnAt?: string;
+  severity: VulnerabilitySeverity;
+  // CVSS v2 information
+  cvssV2Vector?: string;
+  cvssV2BaseScore?: number;
+  cvssV2Severity?: VulnerabilitySeverity;
+  // CVSS v3 information
+  cvssV3Vector?: string;
+  cvssV3BaseScore?: number;
+  cvssV3Severity?: VulnerabilitySeverity;
+  // CVSS v4 information
+  cvssV4Vector?: string;
+  cvssV4BaseScore?: number;
+  cvssV4Severity?: VulnerabilitySeverity;
+  // EPSS information
+  epssScore?: number;
+  epssPercentile?: number;
+  // Version information
+  introducedVersions: string[];
+  fixedVersions: string[];
+  // References
+  referenceUrls: string[];
+}
+
+/**
+ * Represents a vulnerability occurrence in the DeepSource API
+ * @public
+ */
+export interface VulnerabilityOccurrence {
+  id: string;
+  package: Package;
+  packageVersion: PackageVersion;
+  vulnerability: Vulnerability;
+  reachability: VulnerabilityReachability;
+  fixability: VulnerabilityFixability;
+}
+
+/**
  * Parameters for paginating through API results
  * @public
  */
@@ -766,6 +866,187 @@ export class DeepSourceClient {
         (error.message.includes('NoneType') || error.message.includes('not found'))
       ) {
         return null;
+      }
+      return DeepSourceClient.handleGraphQLError(error);
+    }
+  }
+
+  /**
+   * Fetches dependency vulnerabilities from a specified DeepSource project
+   * @param projectKey - The unique identifier for the DeepSource project
+   * @param params - Optional pagination parameters for the query
+   * @returns Promise that resolves to a paginated response containing vulnerability occurrences
+   */
+  async getDependencyVulnerabilities(
+    projectKey: string,
+    params: PaginationParams = {}
+  ): Promise<PaginatedResponse<VulnerabilityOccurrence>> {
+    try {
+      const projects = await this.listProjects();
+      const project = projects.find((p) => p.key === projectKey);
+
+      if (!project) {
+        return DeepSourceClient.createEmptyPaginatedResponse<VulnerabilityOccurrence>();
+      }
+
+      // Normalize pagination parameters
+      const normalizedParams = DeepSourceClient.normalizePaginationParams(params);
+
+      const repoQuery = `
+        query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int) {
+          repository(login: $login, name: $name, vcsProvider: $provider) {
+            name
+            id
+            dependencyVulnerabilityOccurrences(offset: $offset, first: $first, after: $after, before: $before, last: $last) {
+              pageInfo {
+                hasNextPage
+                hasPreviousPage
+                startCursor
+                endCursor
+              }
+              totalCount
+              edges {
+                node {
+                  id
+                  reachability
+                  fixability
+                  package {
+                    id
+                    ecosystem
+                    name
+                    purl
+                  }
+                  packageVersion {
+                    id
+                    version
+                    versionType
+                  }
+                  vulnerability {
+                    id
+                    identifier
+                    aliases
+                    summary
+                    details
+                    publishedAt
+                    updatedAt
+                    withdrawnAt
+                    severity
+                    cvssV2Vector
+                    cvssV2BaseScore
+                    cvssV2Severity
+                    cvssV3Vector
+                    cvssV3BaseScore
+                    cvssV3Severity
+                    cvssV4Vector
+                    cvssV4BaseScore
+                    cvssV4Severity
+                    epssScore
+                    epssPercentile
+                    introducedVersions
+                    fixedVersions
+                    referenceUrls
+                  }
+                }
+              }
+            }
+          }
+        }
+      `;
+
+      const response = await this.client.post('', {
+        query: repoQuery.trim(),
+        variables: {
+          login: project.repository.login,
+          name: project.name,
+          provider: project.repository.provider,
+          offset: normalizedParams.offset,
+          first: normalizedParams.first,
+          after: normalizedParams.after,
+          before: normalizedParams.before,
+          last: normalizedParams.last,
+        },
+      });
+
+      if (response.data.errors) {
+        const errorMessage = DeepSourceClient.extractErrorMessages(response.data.errors);
+        throw new Error(`GraphQL Errors: ${errorMessage}`);
+      }
+
+      const vulnerabilities: VulnerabilityOccurrence[] = [];
+      const vulnEdges =
+        response.data.data?.repository?.dependencyVulnerabilityOccurrences?.edges ?? [];
+      const pageInfo = response.data.data?.repository?.dependencyVulnerabilityOccurrences
+        ?.pageInfo ?? {
+        hasNextPage: false,
+        hasPreviousPage: false,
+      };
+      const totalCount =
+        response.data.data?.repository?.dependencyVulnerabilityOccurrences?.totalCount ?? 0;
+
+      for (const { node } of vulnEdges) {
+        vulnerabilities.push({
+          id: node.id,
+          package: {
+            id: node.package.id,
+            ecosystem: node.package.ecosystem,
+            name: node.package.name,
+            purl: node.package.purl,
+          },
+          packageVersion: {
+            id: node.packageVersion.id,
+            version: node.packageVersion.version,
+            versionType: node.packageVersion.versionType,
+          },
+          vulnerability: {
+            id: node.vulnerability.id,
+            identifier: node.vulnerability.identifier,
+            aliases: node.vulnerability.aliases ?? [],
+            summary: node.vulnerability.summary,
+            details: node.vulnerability.details,
+            publishedAt: node.vulnerability.publishedAt,
+            updatedAt: node.vulnerability.updatedAt,
+            withdrawnAt: node.vulnerability.withdrawnAt,
+            severity: node.vulnerability.severity,
+            cvssV2Vector: node.vulnerability.cvssV2Vector,
+            cvssV2BaseScore: node.vulnerability.cvssV2BaseScore,
+            cvssV2Severity: node.vulnerability.cvssV2Severity,
+            cvssV3Vector: node.vulnerability.cvssV3Vector,
+            cvssV3BaseScore: node.vulnerability.cvssV3BaseScore,
+            cvssV3Severity: node.vulnerability.cvssV3Severity,
+            cvssV4Vector: node.vulnerability.cvssV4Vector,
+            cvssV4BaseScore: node.vulnerability.cvssV4BaseScore,
+            cvssV4Severity: node.vulnerability.cvssV4Severity,
+            epssScore: node.vulnerability.epssScore,
+            epssPercentile: node.vulnerability.epssPercentile,
+            introducedVersions: node.vulnerability.introducedVersions ?? [],
+            fixedVersions: node.vulnerability.fixedVersions ?? [],
+            referenceUrls: node.vulnerability.referenceUrls ?? [],
+          },
+          reachability: node.reachability,
+          fixability: node.fixability,
+        });
+      }
+
+      return {
+        items: vulnerabilities,
+        pageInfo: {
+          hasNextPage: pageInfo.hasNextPage,
+          hasPreviousPage: pageInfo.hasPreviousPage,
+          startCursor: pageInfo.startCursor,
+          endCursor: pageInfo.endCursor,
+        },
+        totalCount,
+      };
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('NoneType')) {
+        return {
+          items: [],
+          pageInfo: {
+            hasNextPage: false,
+            hasPreviousPage: false,
+          },
+          totalCount: 0,
+        };
       }
       return DeepSourceClient.handleGraphQLError(error);
     }

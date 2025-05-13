@@ -1937,7 +1937,7 @@ describe('DeepSourceClient', () => {
       const errors = [
         { message: 'First error' },
         { message: 'Second error' },
-        { message: 'Third error' }
+        { message: 'Third error' },
       ];
 
       // We'll use a mock axios error to test the full path
@@ -1947,7 +1947,7 @@ describe('DeepSourceClient', () => {
         status: 400,
         statusText: 'Bad Request',
         headers: {},
-        config: {}
+        config: {},
       };
 
       // The method will throw, so we need to catch it
@@ -2140,6 +2140,296 @@ describe('DeepSourceClient', () => {
           isActivated: true,
         },
       });
+    });
+  });
+
+  describe('getDependencyVulnerabilities', () => {
+    it('should return empty results for non-existent project', async () => {
+      // Mock the listProjects call to return projects, but none matching our query
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .reply(200, {
+          data: {
+            viewer: {
+              accounts: {
+                edges: [
+                  {
+                    node: {
+                      login: 'testorg',
+                      repositories: {
+                        edges: [
+                          {
+                            node: {
+                              name: 'existing-repo',
+                              defaultBranch: 'main',
+                              dsn: 'existing-project',
+                              isPrivate: false,
+                              isActivated: true,
+                              vcsProvider: 'github',
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        });
+
+      const client = new DeepSourceClient(API_KEY);
+      const result = await client.getDependencyVulnerabilities('non-existent-project');
+
+      expect(result).toEqual({
+        items: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: undefined,
+          endCursor: undefined,
+        },
+        totalCount: 0,
+      });
+    });
+
+    it('should parse vulnerability data correctly', async () => {
+      // Mock the listProjects call first
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .reply(200, {
+          data: {
+            viewer: {
+              accounts: {
+                edges: [
+                  {
+                    node: {
+                      login: 'testorg',
+                      repositories: {
+                        edges: [
+                          {
+                            node: {
+                              name: 'test-repo',
+                              defaultBranch: 'main',
+                              dsn: 'test-project',
+                              isPrivate: false,
+                              isActivated: true,
+                              vcsProvider: 'github',
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        });
+
+      // Mock the dependency vulnerabilities response
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .reply(200, {
+          data: {
+            repository: {
+              name: 'test-repo',
+              id: 'repo1',
+              dependencyVulnerabilityOccurrences: {
+                pageInfo: {
+                  hasNextPage: false,
+                  hasPreviousPage: false,
+                  startCursor: 'cursor1',
+                  endCursor: 'cursor2',
+                },
+                totalCount: 1,
+                edges: [
+                  {
+                    node: {
+                      id: 'vuln1',
+                      reachability: 'REACHABLE',
+                      fixability: 'AUTO_FIXABLE',
+                      package: {
+                        id: 'pkg1',
+                        ecosystem: 'NPM',
+                        name: 'express',
+                        purl: 'pkg:npm/express',
+                      },
+                      packageVersion: {
+                        id: 'ver1',
+                        version: '4.17.1',
+                        versionType: 'SEMVER',
+                      },
+                      vulnerability: {
+                        id: 'cve1',
+                        identifier: 'CVE-2022-1234',
+                        aliases: ['GHSA-abc-123'],
+                        summary: 'Security vulnerability in express',
+                        details: 'Detailed description of the vulnerability',
+                        publishedAt: '2022-01-01T12:00:00Z',
+                        updatedAt: '2022-01-02T12:00:00Z',
+                        severity: 'HIGH',
+                        cvssV2Vector: 'AV:N/AC:L/Au:N/C:P/I:P/A:P',
+                        cvssV2BaseScore: 7.5,
+                        cvssV2Severity: 'HIGH',
+                        cvssV3Vector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H',
+                        cvssV3BaseScore: 9.8,
+                        cvssV3Severity: 'CRITICAL',
+                        introducedVersions: ['4.0.0'],
+                        fixedVersions: ['4.17.2'],
+                        referenceUrls: ['https://nvd.nist.gov/vuln/detail/CVE-2022-1234'],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        });
+
+      const client = new DeepSourceClient(API_KEY);
+      const result = await client.getDependencyVulnerabilities('test-project');
+
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0]).toEqual({
+        id: 'vuln1',
+        reachability: 'REACHABLE',
+        fixability: 'AUTO_FIXABLE',
+        package: {
+          id: 'pkg1',
+          ecosystem: 'NPM',
+          name: 'express',
+          purl: 'pkg:npm/express',
+        },
+        packageVersion: {
+          id: 'ver1',
+          version: '4.17.1',
+          versionType: 'SEMVER',
+        },
+        vulnerability: {
+          id: 'cve1',
+          identifier: 'CVE-2022-1234',
+          aliases: ['GHSA-abc-123'],
+          summary: 'Security vulnerability in express',
+          details: 'Detailed description of the vulnerability',
+          publishedAt: '2022-01-01T12:00:00Z',
+          updatedAt: '2022-01-02T12:00:00Z',
+          severity: 'HIGH',
+          cvssV2Vector: 'AV:N/AC:L/Au:N/C:P/I:P/A:P',
+          cvssV2BaseScore: 7.5,
+          cvssV2Severity: 'HIGH',
+          cvssV3Vector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H',
+          cvssV3BaseScore: 9.8,
+          cvssV3Severity: 'CRITICAL',
+          introducedVersions: ['4.0.0'],
+          fixedVersions: ['4.17.2'],
+          referenceUrls: ['https://nvd.nist.gov/vuln/detail/CVE-2022-1234'],
+        },
+      });
+      expect(result.pageInfo).toEqual({
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: 'cursor1',
+        endCursor: 'cursor2',
+      });
+      expect(result.totalCount).toBe(1);
+    });
+
+    it('should handle NoneType errors when fetching vulnerabilities', async () => {
+      // Mock the listProjects call first
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .reply(200, {
+          data: {
+            viewer: {
+              accounts: {
+                edges: [
+                  {
+                    node: {
+                      login: 'testorg',
+                      repositories: {
+                        edges: [
+                          {
+                            node: {
+                              name: 'test-repo',
+                              defaultBranch: 'main',
+                              dsn: 'test-project',
+                              isPrivate: false,
+                              isActivated: true,
+                              vcsProvider: 'github',
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        });
+
+      // Mock the second request to return a NoneType error
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .reply(200, { errors: [{ message: 'NoneType object has no attribute' }] });
+
+      const client = new DeepSourceClient(API_KEY);
+      const result = await client.getDependencyVulnerabilities('test-project');
+
+      expect(result).toEqual({
+        items: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+        totalCount: 0,
+      });
+    });
+
+    it('should handle GraphQL errors when fetching vulnerabilities', async () => {
+      // Mock the listProjects call first
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .reply(200, {
+          data: {
+            viewer: {
+              accounts: {
+                edges: [
+                  {
+                    node: {
+                      login: 'testorg',
+                      repositories: {
+                        edges: [
+                          {
+                            node: {
+                              name: 'test-repo',
+                              defaultBranch: 'main',
+                              dsn: 'test-project',
+                              isPrivate: false,
+                              isActivated: true,
+                              vcsProvider: 'github',
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        });
+
+      // Mock the second request to return a GraphQL error
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .reply(200, { errors: [{ message: 'GraphQL error message' }] });
+
+      const client = new DeepSourceClient(API_KEY);
+      await expect(client.getDependencyVulnerabilities('test-project')).rejects.toThrow(
+        'GraphQL Errors: GraphQL error message'
+      );
     });
   });
 });

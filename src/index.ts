@@ -249,6 +249,25 @@ export interface DeepsourceRunParams {
 }
 
 /**
+ * Interface for parameters for fetching dependency vulnerabilities from a DeepSource project
+ * @public
+ */
+export interface DeepsourceDependencyVulnerabilitiesParams {
+  /** DeepSource project key to fetch dependency vulnerabilities for */
+  projectKey: string;
+  /** Legacy pagination: Number of items to skip */
+  offset?: number;
+  /** Relay-style pagination: Number of items to return after the 'after' cursor */
+  first?: number;
+  /** Relay-style pagination: Cursor to fetch records after this cursor */
+  after?: string;
+  /** Relay-style pagination: Number of items to return before the 'before' cursor */
+  last?: number;
+  /** Relay-style pagination: Cursor to fetch records before this cursor */
+  before?: string;
+}
+
+/**
  * Fetches and returns a specific analysis run from DeepSource by ID or commit hash
  * @param params Parameters for fetching a run, including the runIdentifier
  * @returns A response containing the run details if found
@@ -285,6 +304,99 @@ export async function handleDeepsourceRun({ runIdentifier }: DeepsourceRunParams
           finishedAt: run.finishedAt,
           summary: run.summary,
           repository: run.repository,
+        }),
+      },
+    ],
+  };
+}
+
+/**
+ * Fetches and returns dependency vulnerabilities from a specified DeepSource project
+ * @param params Parameters for fetching dependency vulnerabilities, including project key and pagination options
+ * @returns A response containing the list of dependency vulnerabilities with detailed information about each vulnerability
+ * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
+ * @public
+ */
+export async function handleDeepsourceDependencyVulnerabilities({
+  projectKey,
+  offset,
+  first,
+  after,
+  before,
+  last,
+}: DeepsourceDependencyVulnerabilitiesParams) {
+  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  /* istanbul ignore if */
+  if (!apiKey) {
+    throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
+  }
+
+  const client = new DeepSourceClient(apiKey);
+  const params = {
+    offset,
+    first,
+    after,
+    before,
+    last,
+  };
+  const result = await client.getDependencyVulnerabilities(projectKey, params);
+
+  return {
+    content: [
+      {
+        type: 'text' as const,
+        text: JSON.stringify({
+          items: result.items.map((vuln) => ({
+            id: vuln.id,
+            // Package information
+            package: {
+              name: vuln.package.name,
+              ecosystem: vuln.package.ecosystem,
+              purl: vuln.package.purl,
+            },
+            // Package version information
+            packageVersion: {
+              version: vuln.packageVersion.version,
+              versionType: vuln.packageVersion.versionType,
+            },
+            // Vulnerability details
+            vulnerability: {
+              identifier: vuln.vulnerability.identifier,
+              summary: vuln.vulnerability.summary,
+              details: vuln.vulnerability.details,
+              severity: vuln.vulnerability.severity,
+              // CVSS scores and vectors
+              cvssV2: {
+                baseScore: vuln.vulnerability.cvssV2BaseScore,
+                vector: vuln.vulnerability.cvssV2Vector,
+                severity: vuln.vulnerability.cvssV2Severity,
+              },
+              cvssV3: {
+                baseScore: vuln.vulnerability.cvssV3BaseScore,
+                vector: vuln.vulnerability.cvssV3Vector,
+                severity: vuln.vulnerability.cvssV3Severity,
+              },
+              publishedAt: vuln.vulnerability.publishedAt,
+              updatedAt: vuln.vulnerability.updatedAt,
+              fixedVersions: vuln.vulnerability.fixedVersions,
+              referenceUrls: vuln.vulnerability.referenceUrls,
+            },
+            // Reachability and fixability information
+            reachability: vuln.reachability,
+            fixability: vuln.fixability,
+          })),
+          pageInfo: result.pageInfo,
+          totalCount: result.totalCount,
+          // Add pagination help information
+          pagination_help: {
+            description: 'This API uses Relay-style cursor-based pagination',
+            forward_pagination: `To get the next page, use 'first: 10, after: "${result.pageInfo.endCursor || 'cursor_value'}"'`,
+            backward_pagination: `To get the previous page, use 'last: 10, before: "${result.pageInfo.startCursor || 'cursor_value'}"'`,
+            page_status: {
+              has_next_page: result.pageInfo.hasNextPage,
+              has_previous_page: result.pageInfo.hasPreviousPage,
+            },
+          },
         }),
       },
     ],
@@ -373,6 +485,37 @@ mcpServer.tool(
       .describe('The runUid (UUID) or commitOid (commit hash) to identify the run'),
   },
   handleDeepsourceRun
+);
+
+mcpServer.tool(
+  'deepsource_dependency_vulnerabilities',
+  `Get dependency vulnerabilities from a DeepSource project with support for Relay-style cursor-based pagination.
+For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor.
+For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor.
+The response includes \`pageInfo\` with \`hasNextPage\`, \`hasPreviousPage\`, \`startCursor\`, and \`endCursor\`
+to help navigate through pages.
+
+The response provides detailed information about each vulnerability, including:
+- Package information (name, ecosystem, purl)
+- Package version details
+- Vulnerability details (identifiers, severity, CVSS scores)
+- Reachability status (whether the vulnerability is reachable in the code)
+- Fixability information (whether and how the vulnerability can be fixed)`,
+  {
+    projectKey: z.string().describe('The unique identifier for the DeepSource project'),
+    offset: z.number().optional().describe('Legacy pagination: Number of items to skip'),
+    first: z
+      .number()
+      .optional()
+      .describe('Number of items to return after the "after" cursor (default: 10)'),
+    after: z.string().optional().describe('Cursor to fetch records after this position'),
+    before: z.string().optional().describe('Cursor to fetch records before this position'),
+    last: z
+      .number()
+      .optional()
+      .describe('Number of items to return before the "before" cursor (default: 10)'),
+  },
+  handleDeepsourceDependencyVulnerabilities
 );
 
 // Only start the server if not in test mode

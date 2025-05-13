@@ -8,6 +8,7 @@ import {
   handleDeepsourceProjectIssues,
   handleDeepsourceProjectRuns,
   handleDeepsourceRun,
+  handleDeepsourceDependencyVulnerabilities,
 } from '../index.js';
 import {
   DeepSourceClient,
@@ -674,6 +675,163 @@ describe('MCP server implementation', () => {
 
       // Verify the error is propagated
       await expect(handleDeepsourceRun(params)).rejects.toThrow('API error');
+    });
+  });
+
+  describe('deepsource_dependency_vulnerabilities tool', () => {
+    // Save original method
+    const originalGetDependencyVulnerabilities =
+      DeepSourceClient.prototype.getDependencyVulnerabilities;
+
+    afterEach(() => {
+      // Restore original method
+      DeepSourceClient.prototype.getDependencyVulnerabilities =
+        originalGetDependencyVulnerabilities;
+    });
+
+    it('returns formatted vulnerability data with all parameters', async () => {
+      // Define mock data
+      const mockVulnerabilities = {
+        items: [
+          {
+            id: 'vuln1',
+            package: {
+              id: 'pkg1',
+              ecosystem: 'NPM',
+              name: 'express',
+              purl: 'pkg:npm/express',
+            },
+            packageVersion: {
+              id: 'ver1',
+              version: '4.17.1',
+              versionType: 'SEMVER',
+            },
+            vulnerability: {
+              id: 'cve1',
+              identifier: 'CVE-2022-1234',
+              aliases: ['GHSA-abc-123'],
+              summary: 'Security vulnerability in express',
+              details: 'Detailed description of the vulnerability',
+              publishedAt: '2022-01-01T12:00:00Z',
+              updatedAt: '2022-01-02T12:00:00Z',
+              severity: 'HIGH',
+              cvssV2Vector: 'AV:N/AC:L/Au:N/C:P/I:P/A:P',
+              cvssV2BaseScore: 7.5,
+              cvssV2Severity: 'HIGH',
+              cvssV3Vector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H',
+              cvssV3BaseScore: 9.8,
+              cvssV3Severity: 'CRITICAL',
+              introducedVersions: ['4.0.0'],
+              fixedVersions: ['4.17.2'],
+              referenceUrls: ['https://nvd.nist.gov/vuln/detail/CVE-2022-1234'],
+            },
+            reachability: 'REACHABLE',
+            fixability: 'AUTO_FIXABLE',
+          },
+        ],
+        pageInfo: {
+          hasNextPage: true,
+          hasPreviousPage: false,
+          startCursor: 'start-cursor',
+          endCursor: 'end-cursor',
+        },
+        totalCount: 100,
+      };
+
+      // Create a tracked array to record calls
+      const calls: Array<[string, Record<string, unknown>?]> = [];
+
+      // Override the method for this test
+      DeepSourceClient.prototype.getDependencyVulnerabilities = function (projectKey, params) {
+        // Mock implementation for testing
+        calls.push([projectKey, params]);
+        return Promise.resolve(mockVulnerabilities);
+      };
+
+      // Parameters for the call
+      const params = {
+        projectKey: 'test-project',
+        offset: 0,
+        first: 10,
+        after: 'after-cursor',
+      };
+
+      // Call the handler
+      const result = await handleDeepsourceDependencyVulnerabilities(params);
+
+      // Verify the method was called with correct parameters
+      expect(calls.length).toBe(1);
+      expect(calls[0][0]).toBe('test-project');
+      expect(calls[0][1]).toEqual({
+        offset: 0,
+        first: 10,
+        after: 'after-cursor',
+        before: undefined,
+        last: undefined,
+      });
+
+      // Verify the response structure
+      verifyResponse(result, {
+        items: [
+          {
+            id: 'vuln1',
+            package: {
+              name: 'express',
+              ecosystem: 'NPM',
+              purl: 'pkg:npm/express',
+            },
+            packageVersion: {
+              version: '4.17.1',
+              versionType: 'SEMVER',
+            },
+            vulnerability: {
+              identifier: 'CVE-2022-1234',
+              summary: 'Security vulnerability in express',
+              details: 'Detailed description of the vulnerability',
+              severity: 'HIGH',
+              cvssV2: {
+                baseScore: 7.5,
+                vector: 'AV:N/AC:L/Au:N/C:P/I:P/A:P',
+                severity: 'HIGH',
+              },
+              cvssV3: {
+                baseScore: 9.8,
+                vector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H',
+                severity: 'CRITICAL',
+              },
+              publishedAt: '2022-01-01T12:00:00Z',
+              updatedAt: '2022-01-02T12:00:00Z',
+              fixedVersions: ['4.17.2'],
+              referenceUrls: ['https://nvd.nist.gov/vuln/detail/CVE-2022-1234'],
+            },
+            reachability: 'REACHABLE',
+            fixability: 'AUTO_FIXABLE',
+          },
+        ],
+        pageInfo: {
+          hasNextPage: true,
+          hasPreviousPage: false,
+          startCursor: 'start-cursor',
+          endCursor: 'end-cursor',
+        },
+        totalCount: 100,
+        pagination_help: expect.any(Object),
+      });
+    });
+
+    it('handles API error from DeepSourceClient for vulnerabilities', async () => {
+      // Override the method for this test to throw an error
+      DeepSourceClient.prototype.getDependencyVulnerabilities = function () {
+        return Promise.reject(new Error('API error'));
+      };
+
+      // Parameters for the call
+      const params = {
+        projectKey: 'test-project',
+      };
+
+      // Verify the error is propagated
+      await expect(handleDeepsourceDependencyVulnerabilities(params)).rejects.toThrow('API error');
     });
   });
 });
