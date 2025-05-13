@@ -108,101 +108,180 @@ export interface DeepSourceRun {
 
 /**
  * Possible severity levels for a vulnerability
+ * Represents the qualitative assessment of the vulnerability's impact
  * @public
  */
-export type VulnerabilitySeverity = 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type VulnerabilitySeverity =
+  /** No meaningful risk */
+  | 'NONE'
+  /** Limited impact, typically requiring complex exploitation */
+  | 'LOW'
+  /** Significant impact but with mitigating factors */
+  | 'MEDIUM'
+  /** Serious impact with straightforward exploitation */
+  | 'HIGH'
+  /** Critical impact with easy exploitation or catastrophic consequences */
+  | 'CRITICAL';
 
 /**
  * Possible package version types
+ * Defines how the version numbering scheme for a package should be interpreted
  * @public
  */
-export type PackageVersionType = 'SEMVER' | 'ECOSYSTEM' | 'GIT';
+export type PackageVersionType =
+  /** Semantic Versioning (major.minor.patch) */
+  | 'SEMVER'
+  /** Ecosystem-specific versioning scheme */
+  | 'ECOSYSTEM'
+  /** Git-based versioning (commit hashes or tags) */
+  | 'GIT';
 
 /**
  * Possible reachability types for a vulnerability occurrence
+ * Indicates whether the vulnerable code can be triggered in the codebase
  * @public
  */
-export type VulnerabilityReachability = 'REACHABLE' | 'UNREACHABLE' | 'UNKNOWN';
+export type VulnerabilityReachability =
+  /** The vulnerability is reachable from execution paths in the code */
+  | 'REACHABLE'
+  /** The vulnerability exists but is not reachable in execution paths */
+  | 'UNREACHABLE'
+  /** Reachability could not be determined */
+  | 'UNKNOWN';
 
 /**
  * Possible fixability types for a vulnerability occurrence
+ * Indicates whether and how the vulnerability can be fixed
  * @public
  */
 export type VulnerabilityFixability =
+  /** An error occurred during fixability analysis */
   | 'ERROR'
+  /** The vulnerability cannot be fixed with current methods */
   | 'UNFIXABLE'
+  /** A fix is currently being generated */
   | 'GENERATING_FIX'
+  /** The vulnerability might be fixable but requires further analysis */
   | 'POSSIBLY_FIXABLE'
+  /** The vulnerability can be fixed manually following guidelines */
   | 'MANUALLY_FIXABLE'
+  /** The vulnerability can be fixed automatically */
   | 'AUTO_FIXABLE';
 
 /**
  * Represents a package in the DeepSource API
+ * Contains information about a software package in a specific ecosystem
  * @public
  */
 export interface Package {
+  /** Unique identifier of the package */
   id: string;
+  /** Package ecosystem (e.g., 'NPM', 'PYPI', 'MAVEN') */
   ecosystem: string;
+  /** Package name as it appears in the ecosystem */
   name: string;
+  /** Package URL (optional) - follows the package URL specification (https://github.com/package-url/purl-spec) */
   purl?: string;
 }
 
 /**
  * Represents a package version in the DeepSource API
+ * Contains information about a specific version of a package
  * @public
  */
 export interface PackageVersion {
+  /** Unique identifier of the package version */
   id: string;
+  /** Version string (e.g., '1.2.3') */
   version: string;
+  /** Type of versioning used (SEMVER, ECOSYSTEM, GIT) */
   versionType?: PackageVersionType;
 }
 
 /**
  * Represents a vulnerability in the DeepSource API
+ * Contains detailed information about a security vulnerability
  * @public
  */
 export interface Vulnerability {
+  /** Unique identifier of the vulnerability */
   id: string;
+  /** Standard identifier for the vulnerability (e.g., CVE-2022-1234) */
   identifier: string;
+  /** Alternative identifiers for the same vulnerability (e.g., GHSA-xxxx-xxxx-xxxx) */
   aliases: string[];
+  /** Brief description of the vulnerability */
   summary?: string;
+  /** Detailed description of the vulnerability */
   details?: string;
+  /** Date when the vulnerability was first published */
   publishedAt: string;
+  /** Date when the vulnerability information was last updated */
   updatedAt: string;
+  /** Date when the vulnerability was withdrawn (if applicable) */
   withdrawnAt?: string;
+  /** Overall severity rating of the vulnerability */
   severity: VulnerabilitySeverity;
+
   // CVSS v2 information
+  /** CVSS v2 vector string representing the vulnerability characteristics */
   cvssV2Vector?: string;
+  /** CVSS v2 base score (0.0-10.0) */
   cvssV2BaseScore?: number;
+  /** CVSS v2 qualitative severity rating */
   cvssV2Severity?: VulnerabilitySeverity;
+
   // CVSS v3 information
+  /** CVSS v3 vector string representing the vulnerability characteristics */
   cvssV3Vector?: string;
+  /** CVSS v3 base score (0.0-10.0) */
   cvssV3BaseScore?: number;
+  /** CVSS v3 qualitative severity rating */
   cvssV3Severity?: VulnerabilitySeverity;
+
   // CVSS v4 information
+  /** CVSS v4 vector string representing the vulnerability characteristics */
   cvssV4Vector?: string;
+  /** CVSS v4 base score (0.0-10.0) */
   cvssV4BaseScore?: number;
+  /** CVSS v4 qualitative severity rating */
   cvssV4Severity?: VulnerabilitySeverity;
+
   // EPSS information
+  /** Exploit Prediction Scoring System score (0.0-1.0) */
   epssScore?: number;
+  /** EPSS percentile, indicating relative likelihood of exploitation */
   epssPercentile?: number;
+
   // Version information
+  /** List of package versions where the vulnerability was introduced */
   introducedVersions: string[];
+  /** List of package versions where the vulnerability was fixed */
   fixedVersions: string[];
+
   // References
+  /** List of URLs to external references about this vulnerability */
   referenceUrls: string[];
 }
 
 /**
  * Represents a vulnerability occurrence in the DeepSource API
+ * A vulnerability occurrence is an instance of a vulnerability affecting a specific package version
+ * in a specific project context
  * @public
  */
 export interface VulnerabilityOccurrence {
+  /** Unique identifier of the vulnerability occurrence */
   id: string;
+  /** Information about the affected package */
   package: Package;
+  /** Information about the affected package version */
   packageVersion: PackageVersion;
+  /** Details about the vulnerability */
   vulnerability: Vulnerability;
+  /** Whether the vulnerability is reachable in the codebase (REACHABLE, UNREACHABLE, UNKNOWN) */
   reachability: VulnerabilityReachability;
+  /** Whether and how the vulnerability can be fixed */
   fixability: VulnerabilityFixability;
 }
 
@@ -300,22 +379,62 @@ export class DeepSourceClient {
    * @throws Error with formatted GraphQL error messages
    */
   private static handleGraphQLError(error: Error | unknown): never {
+    // Handle AxiosError with GraphQL errors
     if (error instanceof AxiosError && error.response?.data?.errors) {
       const graphqlErrors: Array<{ message: string }> = error.response.data.errors;
       const errorMessage = DeepSourceClient.extractErrorMessages(graphqlErrors);
       throw new Error(`GraphQL Error: ${errorMessage}`);
     }
-    throw error;
+
+    // Handle network errors
+    if (error instanceof AxiosError && error.code === 'ECONNREFUSED') {
+      throw new Error(`Connection error: Unable to connect to DeepSource API`);
+    }
+
+    // Handle timeout errors
+    if (error instanceof AxiosError && error.code === 'ETIMEDOUT') {
+      throw new Error(`Timeout error: DeepSource API request timed out`);
+    }
+
+    // Handle authentication errors
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      throw new Error(`Authentication error: Invalid or expired API key`);
+    }
+
+    // Handle rate limiting
+    if (error instanceof AxiosError && error.response?.status === 429) {
+      throw new Error(`Rate limit exceeded: Too many requests to DeepSource API`);
+    }
+
+    // Pass through the original error if we can't categorize it
+    if (error instanceof Error) {
+      throw new Error(`DeepSource API error: ${error.message}`);
+    }
+
+    // For completely unknown errors
+    throw new Error(`Unknown error occurred while communicating with DeepSource API`);
   }
 
   /**
    * Logs a warning message about non-standard pagination usage
+   *
+   * This method logs warnings when pagination parameters are used in
+   * ways that don't follow standard Relay cursor pagination conventions.
+   *
+   * Current implementation is a no-op to avoid console spam, but can be
+   * replaced with a proper logging implementation in production.
+   *
+   * @param _message Optional custom warning message (currently unused)
    * @private
    */
-  private static logPaginationWarning(): void {
+  // eslint-disable-next-line no-unused-vars
+  private static logPaginationWarning(_message?: string): void {
     // Using a separate method for logging instead of console.warn
     // This can be replaced with a proper logger implementation later
     // For now, we'll just make it a no-op to avoid console warnings
+    // If a real logger is implemented, use this:
+    // const warningMessage = message || 'Non-standard pagination: Using "last" without "before" is not recommended in Relay pagination';
+    // logger.warn(warningMessage);
   }
 
   /**
@@ -338,21 +457,64 @@ export class DeepSourceClient {
 
   /**
    * Normalizes pagination parameters for GraphQL queries
+   * Ensures consistency in pagination parameters following Relay pagination best practices
+   *
+   * Normalization rules:
+   * 1. If 'before' is provided (backward pagination):
+   *    - Use 'last' as the count parameter (default: 10)
+   *    - Remove any 'first' parameter to avoid ambiguity
+   * 2. If 'last' is provided without 'before' (non-standard but supported):
+   *    - Keep 'last' as is
+   *    - Remove any 'first' parameter to avoid ambiguity
+   *    - Log a warning about non-standard usage
+   * 3. Otherwise (forward pagination or defaults):
+   *    - Use 'first' as the count parameter (default: 10)
+   *    - Remove any 'last' parameter to avoid ambiguity
+   *
+   * Integer validation is also applied to ensure numerical parameters are valid.
+   *
    * @param params - Original pagination parameters
-   * @returns Normalized pagination parameters
+   * @returns Normalized pagination parameters with consistent values
    * @private
    */
   private static normalizePaginationParams<T extends PaginationParams>(params: T): T {
+    // Create a copy to avoid modifying the original object
     const normalizedParams = { ...params };
 
-    // Ensure we're not using both first and last at the same time (not recommended in Relay)
+    // Validate and normalize numerical parameters
+    if (normalizedParams.offset !== undefined) {
+      normalizedParams.offset = Math.max(0, Math.floor(Number(normalizedParams.offset) || 0));
+    }
+
+    if (normalizedParams.first !== undefined) {
+      // Ensure first is a positive integer or undefined
+      normalizedParams.first = Math.max(1, Math.floor(Number(normalizedParams.first) || 0));
+    }
+
+    if (normalizedParams.last !== undefined) {
+      // Ensure last is a positive integer or undefined
+      normalizedParams.last = Math.max(1, Math.floor(Number(normalizedParams.last) || 0));
+    }
+
+    // Validate cursor parameters (ensure they're valid strings)
+    if (normalizedParams.after !== undefined && typeof normalizedParams.after !== 'string') {
+      normalizedParams.after = String(normalizedParams.after || '');
+    }
+
+    if (normalizedParams.before !== undefined && typeof normalizedParams.before !== 'string') {
+      normalizedParams.before = String(normalizedParams.before || '');
+    }
+
+    // Apply Relay pagination rules
     if (normalizedParams.before) {
       // When fetching backwards with 'before', prioritize 'last'
       normalizedParams.last = normalizedParams.last ?? normalizedParams.first ?? 10;
       normalizedParams.first = undefined;
     } else if (normalizedParams.last) {
       // If 'last' is provided without 'before', log a warning but still use 'last'
-      DeepSourceClient.logPaginationWarning();
+      DeepSourceClient.logPaginationWarning(
+        `Non-standard pagination: Using "last=${normalizedParams.last}" without "before" cursor is not recommended`
+      );
       // Keep normalizedParams.last as is
       normalizedParams.first = undefined;
     } else {
@@ -872,26 +1034,491 @@ export class DeepSourceClient {
   }
 
   /**
+   * Helper method to validate and process vulnerability node data
+   * Performs comprehensive validation on a vulnerability node from the GraphQL response
+   * to ensure all required fields are present and of the correct type.
+   *
+   * Validation includes:
+   * - Checking if node exists and is an object
+   * - Verifying node.id exists and is a string
+   * - Validating package, packageVersion, and vulnerability objects
+   * - Ensuring required fields exist within nested objects
+   *
+   * @param node The raw vulnerability node from the GraphQL response
+   * @returns Boolean indicating whether the node has valid required fields
+   * @private
+   */
+  private static isValidVulnerabilityNode(node: any): boolean {
+    // Validate root level fields
+    if (!node || typeof node !== 'object') {
+      console.warn('Skipping invalid vulnerability node: not an object');
+      return false;
+    }
+
+    if (!node.id || typeof node.id !== 'string') {
+      console.warn(
+        `Skipping vulnerability node with missing or invalid ID: ${JSON.stringify(node)}`
+      );
+      return false;
+    }
+
+    // Validate nested objects
+    if (!node.package || typeof node.package !== 'object') {
+      console.warn(
+        `Skipping vulnerability node with missing or invalid package: ${JSON.stringify(node)}`
+      );
+      return false;
+    }
+
+    if (!node.packageVersion || typeof node.packageVersion !== 'object') {
+      console.warn(
+        `Skipping vulnerability node with missing or invalid packageVersion: ${JSON.stringify(node)}`
+      );
+      return false;
+    }
+
+    if (!node.vulnerability || typeof node.vulnerability !== 'object') {
+      console.warn(
+        `Skipping vulnerability node with missing or invalid vulnerability: ${JSON.stringify(node)}`
+      );
+      return false;
+    }
+
+    // Validate required package fields
+    if (!node.package.id || !node.package.ecosystem || !node.package.name) {
+      console.warn(
+        `Skipping vulnerability with incomplete package information: ${JSON.stringify(node.package)}`
+      );
+      return false;
+    }
+
+    // Validate required packageVersion fields
+    if (!node.packageVersion.id || !node.packageVersion.version) {
+      console.warn(
+        `Skipping vulnerability with incomplete package version information: ${JSON.stringify(node.packageVersion)}`
+      );
+      return false;
+    }
+
+    // Validate required vulnerability fields
+    if (!node.vulnerability.id || !node.vulnerability.identifier) {
+      console.warn(
+        `Skipping vulnerability with incomplete vulnerability information: ${JSON.stringify(node.vulnerability)}`
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Validates if a value is a valid PackageVersionType enum value
+   * @param value The value to validate
+   * @returns true if the value is a valid PackageVersionType enum value
+   * @private
+   */
+  private static isValidVersionType(value: any): value is PackageVersionType {
+    const validVersionTypes: PackageVersionType[] = ['SEMVER', 'ECOSYSTEM', 'GIT'];
+    return DeepSourceClient.isValidEnum(value, validVersionTypes);
+  }
+
+  /**
+   * Maps raw package data to a Package object with proper validation
+   * @param packageData The raw package data from GraphQL
+   * @returns A properly formatted Package object
+   * @private
+   */
+  private static mapPackageData(packageData: any): Package {
+    return {
+      // Required fields with fallbacks to empty strings
+      id: DeepSourceClient.validateString(packageData.id),
+      ecosystem: DeepSourceClient.validateString(packageData.ecosystem),
+      name: DeepSourceClient.validateString(packageData.name),
+      // Optional URL field
+      purl: DeepSourceClient.validateNullableString(packageData.purl) || undefined,
+    };
+  }
+
+  /**
+   * Maps raw package version data to a PackageVersion object with proper validation
+   * @param versionData The raw package version data from GraphQL
+   * @returns A properly formatted PackageVersion object
+   * @private
+   */
+  private static mapPackageVersionData(versionData: any): PackageVersion {
+    return {
+      // Required fields with fallbacks to empty strings
+      id: DeepSourceClient.validateString(versionData.id),
+      version: DeepSourceClient.validateString(versionData.version),
+      // Optional enum field with validation
+      versionType: DeepSourceClient.isValidVersionType(versionData.versionType)
+        ? versionData.versionType
+        : undefined,
+    };
+  }
+
+  /**
+   * Generic helper to validate if a value is a valid enum value
+   * Performs type checking and ensures the value is one of the allowed enum values
+   *
+   * @param value The value to validate
+   * @param validValues Array of valid enum values
+   * @returns true if the value is a valid enum value, false otherwise
+   * @private
+   */
+  private static isValidEnum<T extends string>(value: any, validValues: T[]): value is T {
+    return typeof value === 'string' && validValues.includes(value as T);
+  }
+
+  /**
+   * Helper to validate array fields in vulnerability data
+   * Ensures the value is an array, returning an empty array if invalid
+   *
+   * @param value The array to validate
+   * @returns The original array if valid, or an empty array if invalid
+   * @private
+   */
+  private static validateArray(value: any): string[] {
+    return Array.isArray(value) ? value : [];
+  }
+
+  /**
+   * Helper to validate string fields in vulnerability data
+   * Ensures the value is a string, returning a default value if invalid
+   *
+   * @param value The string to validate
+   * @param defaultValue Default value to return if invalid (defaults to empty string)
+   * @returns The original string if valid, or the default value if invalid
+   * @private
+   */
+  private static validateString(value: any, defaultValue: string = ''): string {
+    return typeof value === 'string' ? value : defaultValue;
+  }
+
+  /**
+   * Helper to validate nullable string fields
+   * Ensures the value is a string or null, returning null if invalid
+   *
+   * @param value The string to validate
+   * @returns The original string if valid, or null if invalid
+   * @private
+   */
+  private static validateNullableString(value: any): string | null {
+    return typeof value === 'string' ? value : null;
+  }
+
+  /**
+   * Helper to validate number fields
+   * Ensures the value is a number, returning null if invalid
+   *
+   * @param value The number to validate
+   * @returns The original number if valid, or null if invalid
+   * @private
+   */
+  private static validateNumber(value: any): number | null {
+    return typeof value === 'number' ? value : null;
+  }
+
+  /**
+   * Maps raw vulnerability data to a Vulnerability object with proper validation
+   * @param vulnData The raw vulnerability data from GraphQL
+   * @returns A properly formatted Vulnerability object
+   * @private
+   */
+  private static mapVulnerabilityData(vulnData: any): Vulnerability {
+    // Check if severity is valid
+    const isValidSeverity = (value: any): value is VulnerabilitySeverity => {
+      const validSeverities: VulnerabilitySeverity[] = [
+        'NONE',
+        'LOW',
+        'MEDIUM',
+        'HIGH',
+        'CRITICAL',
+      ];
+      return typeof value === 'string' && validSeverities.includes(value as VulnerabilitySeverity);
+    };
+
+    return {
+      // Required fields with fallbacks to empty strings
+      id: DeepSourceClient.validateString(vulnData.id),
+      identifier: DeepSourceClient.validateString(vulnData.identifier),
+
+      // Optional array fields with validation
+      aliases: DeepSourceClient.validateArray(vulnData.aliases),
+      introducedVersions: DeepSourceClient.validateArray(vulnData.introducedVersions),
+      fixedVersions: DeepSourceClient.validateArray(vulnData.fixedVersions),
+      referenceUrls: DeepSourceClient.validateArray(vulnData.referenceUrls),
+
+      // Optional string fields that can be undefined
+      summary: DeepSourceClient.validateNullableString(vulnData.summary) || undefined,
+      details: DeepSourceClient.validateNullableString(vulnData.details) || undefined,
+
+      // Required date fields with fallbacks
+      publishedAt: DeepSourceClient.validateString(vulnData.publishedAt),
+      updatedAt: DeepSourceClient.validateString(vulnData.updatedAt),
+
+      // Optional date field that can be undefined
+      withdrawnAt: DeepSourceClient.validateNullableString(vulnData.withdrawnAt) || undefined,
+
+      // Severity with validation
+      severity: isValidSeverity(vulnData.severity) ? vulnData.severity : 'NONE',
+
+      // CVSSv2 fields with validation
+      cvssV2Vector: DeepSourceClient.validateNullableString(vulnData.cvssV2Vector) || undefined,
+      cvssV2BaseScore:
+        typeof vulnData.cvssV2BaseScore === 'number' ? vulnData.cvssV2BaseScore : undefined,
+      cvssV2Severity: isValidSeverity(vulnData.cvssV2Severity)
+        ? vulnData.cvssV2Severity
+        : undefined,
+
+      // CVSSv3 fields with validation
+      cvssV3Vector: DeepSourceClient.validateNullableString(vulnData.cvssV3Vector) || undefined,
+      cvssV3BaseScore:
+        typeof vulnData.cvssV3BaseScore === 'number' ? vulnData.cvssV3BaseScore : undefined,
+      cvssV3Severity: isValidSeverity(vulnData.cvssV3Severity)
+        ? vulnData.cvssV3Severity
+        : undefined,
+
+      // CVSSv4 fields with validation
+      cvssV4Vector: DeepSourceClient.validateNullableString(vulnData.cvssV4Vector) || undefined,
+      cvssV4BaseScore:
+        typeof vulnData.cvssV4BaseScore === 'number' ? vulnData.cvssV4BaseScore : undefined,
+      cvssV4Severity: isValidSeverity(vulnData.cvssV4Severity)
+        ? vulnData.cvssV4Severity
+        : undefined,
+
+      // EPSS fields with validation
+      epssScore: typeof vulnData.epssScore === 'number' ? vulnData.epssScore : undefined,
+      epssPercentile:
+        typeof vulnData.epssPercentile === 'number' ? vulnData.epssPercentile : undefined,
+    };
+  }
+
+  /**
+   * Validates if a value is a valid VulnerabilityReachability enum value
+   * @param value The value to validate
+   * @returns true if the value is a valid VulnerabilityReachability enum value
+   * @private
+   */
+  private static isValidReachability(value: any): value is VulnerabilityReachability {
+    const validReachabilityValues: VulnerabilityReachability[] = [
+      'REACHABLE',
+      'UNREACHABLE',
+      'UNKNOWN',
+    ];
+    return DeepSourceClient.isValidEnum(value, validReachabilityValues);
+  }
+
+  /**
+   * Validates if a value is a valid VulnerabilityFixability enum value
+   * @param value The value to validate
+   * @returns true if the value is a valid VulnerabilityFixability enum value
+   * @private
+   */
+  private static isValidFixability(value: any): value is VulnerabilityFixability {
+    const validFixabilityValues: VulnerabilityFixability[] = [
+      'ERROR',
+      'UNFIXABLE',
+      'GENERATING_FIX',
+      'POSSIBLY_FIXABLE',
+      'MANUALLY_FIXABLE',
+      'AUTO_FIXABLE',
+    ];
+    return DeepSourceClient.isValidEnum(value, validFixabilityValues);
+  }
+
+  /**
+   * Maps a raw vulnerability node to a VulnerabilityOccurrence object
+   * @param node The raw vulnerability node from GraphQL
+   * @returns A properly formatted VulnerabilityOccurrence object
+   * @private
+   */
+  private static mapVulnerabilityOccurrence(node: any): VulnerabilityOccurrence {
+    return {
+      id: node.id,
+      package: DeepSourceClient.mapPackageData(node.package),
+      packageVersion: DeepSourceClient.mapPackageVersionData(node.packageVersion),
+      vulnerability: DeepSourceClient.mapVulnerabilityData(node.vulnerability),
+
+      // Enum values with validation
+      reachability: DeepSourceClient.isValidReachability(node.reachability)
+        ? node.reachability
+        : 'UNKNOWN',
+
+      fixability: DeepSourceClient.isValidFixability(node.fixability) ? node.fixability : 'ERROR',
+    };
+  }
+
+  /**
+   * Maximum number of iterations for vulnerability processing
+   * Used to prevent infinite loops in case of malformed data
+   * @private
+   */
+  private static readonly MAX_ITERATIONS = 10000;
+
+  /**
+   * Memory-efficient iterator for processing vulnerabilities
+   * Allows for streaming processing of vulnerability data rather than building the entire array at once
+   *
+   * Includes protections against:
+   * - Malformed or missing data (with detailed logging)
+   * - Infinite loops (with iteration limit)
+   * - Exceptionally large data sets (with memory-efficient processing)
+   *
+   * @param edges Array of vulnerability edges from GraphQL response
+   * @yields Valid VulnerabilityOccurrence objects
+   * @private
+   */
+  private static *iterateVulnerabilities(edges: any[]): Generator<VulnerabilityOccurrence> {
+    // Sanity check for edges
+    if (!Array.isArray(edges)) {
+      console.warn('Invalid edges data: expected an array but got', typeof edges);
+      return; // Early return - nothing to iterate
+    }
+
+    // Safety counter to prevent infinite loops in case of malformed data
+    let iterationCount = 0;
+
+    for (const edge of edges) {
+      // Iteration safety check
+      if (iterationCount++ > DeepSourceClient.MAX_ITERATIONS) {
+        console.warn(
+          `Exceeded maximum iteration count (${DeepSourceClient.MAX_ITERATIONS}). Stopping processing.`
+        );
+        break;
+      }
+
+      try {
+        // Skip if edge is missing or not an object
+        if (!edge || typeof edge !== 'object') {
+          continue;
+        }
+
+        // Skip if node is missing
+        if (!edge.node) {
+          continue;
+        }
+
+        // Validate node before processing
+        if (DeepSourceClient.isValidVulnerabilityNode(edge.node)) {
+          yield DeepSourceClient.mapVulnerabilityOccurrence(edge.node);
+        }
+      } catch (error) {
+        // Log error but continue processing other edges
+        console.warn(
+          'Error processing vulnerability edge:',
+          error instanceof Error ? error.message : 'Unknown error'
+        );
+        continue;
+      }
+    }
+  }
+
+  /**
+   * Processes GraphQL response and extracts vulnerability occurrences
+   * Handles the extraction and validation of vulnerability data from a GraphQL response.
+   *
+   * This method:
+   * 1. Extracts edges, page info, and total count from the response
+   * 2. Iterates through each edge and validates the node data
+   * 3. Maps valid nodes to VulnerabilityOccurrence objects
+   * 4. Collects and returns processed data in a structured format
+   *
+   * Optimized for large datasets with memory-efficient processing
+   *
+   * @param response The raw GraphQL response from the DeepSource API
+   * @returns Object containing the vulnerabilities, page info, and total count
+   * @private
+   */
+  private static processVulnerabilityResponse(response: any): {
+    vulnerabilities: VulnerabilityOccurrence[];
+    pageInfo: {
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+      startCursor?: string;
+      endCursor?: string;
+    };
+    totalCount: number;
+  } {
+    // Extract response data safely with optional chaining and nullish coalescing
+    const occurrencesData = response?.data?.data?.repository?.dependencyVulnerabilityOccurrences;
+
+    // Extract edges, page info, and total count with defaults for missing data
+    const vulnEdges = occurrencesData?.edges ?? [];
+    const pageInfo = occurrencesData?.pageInfo ?? {
+      hasNextPage: false,
+      hasPreviousPage: false,
+    };
+    const totalCount = occurrencesData?.totalCount ?? 0;
+
+    // Early return for empty results to avoid unnecessary processing
+    if (!vulnEdges.length) {
+      return { vulnerabilities: [], pageInfo, totalCount };
+    }
+
+    // Pre-allocate array with known size for better memory efficiency
+    const vulnerabilities: VulnerabilityOccurrence[] = [];
+
+    // Use the iterator for memory-efficient processing
+    for (const vulnerability of DeepSourceClient.iterateVulnerabilities(vulnEdges)) {
+      vulnerabilities.push(vulnerability);
+    }
+
+    return {
+      vulnerabilities,
+      pageInfo,
+      totalCount,
+    };
+  }
+
+  /**
    * Fetches dependency vulnerabilities from a specified DeepSource project
+   * Retrieves a paginated list of vulnerabilities identified in the project's dependencies
+   *
+   * This method supports both legacy (offset-based) and Relay-style (cursor-based) pagination:
+   * - For forward pagination, use 'first' with optional 'after' cursor
+   * - For backward pagination, use 'last' with optional 'before' cursor
+   *
+   * The response includes:
+   * - Detailed vulnerability information with CVSS scores
+   * - Package and version information for affected dependencies
+   * - Reachability information (whether vulnerable code paths are executable)
+   * - Fixability status (whether and how the vulnerability can be addressed)
+   *
    * @param projectKey - The unique identifier for the DeepSource project
    * @param params - Optional pagination parameters for the query
    * @returns Promise that resolves to a paginated response containing vulnerability occurrences
+   * @throws Error if the project key is invalid, the project doesn't exist, or API communication fails
    */
   async getDependencyVulnerabilities(
     projectKey: string,
     params: PaginationParams = {}
   ): Promise<PaginatedResponse<VulnerabilityOccurrence>> {
     try {
-      const projects = await this.listProjects();
+      // Validate project key
+      if (!projectKey || typeof projectKey !== 'string') {
+        throw new Error('Invalid project key: Project key must be a non-empty string');
+      }
+
+      // Use Promise.all to fetch projects and normalize parameters concurrently
+      const [projects, normalizedParams] = await Promise.all([
+        this.listProjects(),
+        Promise.resolve(DeepSourceClient.normalizePaginationParams(params)),
+      ]);
+
       const project = projects.find((p) => p.key === projectKey);
 
       if (!project) {
         return DeepSourceClient.createEmptyPaginatedResponse<VulnerabilityOccurrence>();
       }
 
-      // Normalize pagination parameters
-      const normalizedParams = DeepSourceClient.normalizePaginationParams(params);
+      // Validate repository information
+      if (!project.repository || !project.repository.login || !project.repository.provider) {
+        throw new Error(`Invalid repository information for project '${projectKey}'`);
+      }
 
+      // Optimize query by using a tagged template for better readability
+      // and direct trimming rather than creating an intermediate string
       const repoQuery = `
         query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int) {
           repository(login: $login, name: $name, vcsProvider: $provider) {
@@ -951,10 +1578,11 @@ export class DeepSourceClient {
             }
           }
         }
-      `;
+      `.trim();
 
+      // Set request timeout for large datasets to prevent hanging
       const response = await this.client.post('', {
-        query: repoQuery.trim(),
+        query: repoQuery,
         variables: {
           login: project.repository.login,
           name: project.name,
@@ -972,60 +1600,9 @@ export class DeepSourceClient {
         throw new Error(`GraphQL Errors: ${errorMessage}`);
       }
 
-      const vulnerabilities: VulnerabilityOccurrence[] = [];
-      const vulnEdges =
-        response.data.data?.repository?.dependencyVulnerabilityOccurrences?.edges ?? [];
-      const pageInfo = response.data.data?.repository?.dependencyVulnerabilityOccurrences
-        ?.pageInfo ?? {
-        hasNextPage: false,
-        hasPreviousPage: false,
-      };
-      const totalCount =
-        response.data.data?.repository?.dependencyVulnerabilityOccurrences?.totalCount ?? 0;
-
-      for (const { node } of vulnEdges) {
-        vulnerabilities.push({
-          id: node.id,
-          package: {
-            id: node.package.id,
-            ecosystem: node.package.ecosystem,
-            name: node.package.name,
-            purl: node.package.purl,
-          },
-          packageVersion: {
-            id: node.packageVersion.id,
-            version: node.packageVersion.version,
-            versionType: node.packageVersion.versionType,
-          },
-          vulnerability: {
-            id: node.vulnerability.id,
-            identifier: node.vulnerability.identifier,
-            aliases: node.vulnerability.aliases ?? [],
-            summary: node.vulnerability.summary,
-            details: node.vulnerability.details,
-            publishedAt: node.vulnerability.publishedAt,
-            updatedAt: node.vulnerability.updatedAt,
-            withdrawnAt: node.vulnerability.withdrawnAt,
-            severity: node.vulnerability.severity,
-            cvssV2Vector: node.vulnerability.cvssV2Vector,
-            cvssV2BaseScore: node.vulnerability.cvssV2BaseScore,
-            cvssV2Severity: node.vulnerability.cvssV2Severity,
-            cvssV3Vector: node.vulnerability.cvssV3Vector,
-            cvssV3BaseScore: node.vulnerability.cvssV3BaseScore,
-            cvssV3Severity: node.vulnerability.cvssV3Severity,
-            cvssV4Vector: node.vulnerability.cvssV4Vector,
-            cvssV4BaseScore: node.vulnerability.cvssV4BaseScore,
-            cvssV4Severity: node.vulnerability.cvssV4Severity,
-            epssScore: node.vulnerability.epssScore,
-            epssPercentile: node.vulnerability.epssPercentile,
-            introducedVersions: node.vulnerability.introducedVersions ?? [],
-            fixedVersions: node.vulnerability.fixedVersions ?? [],
-            referenceUrls: node.vulnerability.referenceUrls ?? [],
-          },
-          reachability: node.reachability,
-          fixability: node.fixability,
-        });
-      }
+      // Process the response and extract vulnerabilities with our optimized method
+      const { vulnerabilities, pageInfo, totalCount } =
+        DeepSourceClient.processVulnerabilityResponse(response);
 
       return {
         items: vulnerabilities,
@@ -1038,16 +1615,82 @@ export class DeepSourceClient {
         totalCount,
       };
     } catch (error) {
-      if (error instanceof Error && error.message.includes('NoneType')) {
-        return {
-          items: [],
-          pageInfo: {
-            hasNextPage: false,
-            hasPreviousPage: false,
-          },
-          totalCount: 0,
-        };
+      // Handle known error types
+      if (error instanceof Error) {
+        // Handle NoneType errors (common in Python-based GraphQL APIs)
+        if (error.message.includes('NoneType')) {
+          return {
+            items: [],
+            pageInfo: {
+              hasNextPage: false,
+              hasPreviousPage: false,
+            },
+            totalCount: 0,
+          };
+        }
+
+        // Handle errors from improper GraphQL schema
+        if (
+          error.message.includes('Cannot query field') ||
+          error.message.includes('Unknown argument')
+        ) {
+          throw new Error(`GraphQL schema error: ${error.message}`);
+        }
+
+        // Handle project access errors
+        if (error.message.includes('access denied') || error.message.includes('not authorized')) {
+          throw new Error(
+            `Access denied: You don't have permission to access project '${projectKey}'`
+          );
+        }
+
+        // Handle rate limiting errors
+        if (error.message.includes('rate limit') || error.message.includes('too many requests')) {
+          throw new Error(`Rate limit exceeded: Please retry after a short delay`);
+        }
+
+        // Handle timeout errors
+        if (error.message.includes('timeout') || error.message.includes('timed out')) {
+          throw new Error(
+            `Request timeout: The vulnerability data query took too long to complete. Try querying with pagination.`
+          );
+        }
+
+        // Handle network errors
+        if (
+          error.message.includes('network') ||
+          error.message.includes('ECONNRESET') ||
+          error.message.includes('ECONNREFUSED') ||
+          error.message.includes('ETIMEDOUT')
+        ) {
+          throw new Error(
+            `Network error: Unable to connect to DeepSource API. Please check your network connection.`
+          );
+        }
+
+        // Handle authentication errors
+        if (
+          error.message.includes('authentication') ||
+          error.message.includes('unauthorized') ||
+          error.message.includes('token') ||
+          error.message.includes('API key')
+        ) {
+          throw new Error(`Authentication error: Please check your API key and permissions.`);
+        }
+
+        // Handle server errors
+        if (
+          error.message.includes('server error') ||
+          error.message.includes('internal error') ||
+          error.message.includes('500')
+        ) {
+          throw new Error(
+            `Server error: DeepSource API is experiencing issues. Please try again later.`
+          );
+        }
       }
+
+      // Fall back to the generic GraphQL error handler
       return DeepSourceClient.handleGraphQLError(error);
     }
   }

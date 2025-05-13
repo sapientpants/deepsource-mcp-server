@@ -249,20 +249,37 @@ export interface DeepsourceRunParams {
 }
 
 /**
- * Interface for parameters for fetching dependency vulnerabilities from a DeepSource project
+ * Interface for parameters used to fetch dependency vulnerabilities from a DeepSource project
+ *
+ * This interface supports both pagination approaches:
+ * 1. Legacy offset-based pagination: Use `offset` parameter
+ * 2. Relay-style cursor-based pagination:
+ *    - For forward pagination: Use `first` with optional `after` cursor
+ *    - For backward pagination: Use `last` with optional `before` cursor
+ *
+ * Best practices:
+ * - Prefer Relay-style pagination when possible
+ * - Don't mix offset-based and cursor-based pagination in the same call
+ * - When using cursor-based pagination, include both the count and cursor parameters
+ *
  * @public
  */
 export interface DeepsourceDependencyVulnerabilitiesParams {
-  /** DeepSource project key to fetch dependency vulnerabilities for */
+  /** DeepSource project key to fetch dependency vulnerabilities for (required) */
   projectKey: string;
+
   /** Legacy pagination: Number of items to skip */
   offset?: number;
-  /** Relay-style pagination: Number of items to return after the 'after' cursor */
+
+  /** Relay-style pagination: Number of items to return after the 'after' cursor (default: 10) */
   first?: number;
+
   /** Relay-style pagination: Cursor to fetch records after this cursor */
   after?: string;
-  /** Relay-style pagination: Number of items to return before the 'before' cursor */
+
+  /** Relay-style pagination: Number of items to return before the 'before' cursor (default: 10) */
   last?: number;
+
   /** Relay-style pagination: Cursor to fetch records before this cursor */
   before?: string;
 }
@@ -312,11 +329,54 @@ export async function handleDeepsourceRun({ runIdentifier }: DeepsourceRunParams
 
 /**
  * Fetches and returns dependency vulnerabilities from a specified DeepSource project
+ *
+ * This handler provides access to DeepSource's dependency vulnerability data,
+ * allowing AI assistants to retrieve information about security vulnerabilities
+ * in a project's dependencies.
+ *
+ * The response includes comprehensive data for each vulnerability:
+ * - Package identification (name, ecosystem, purl)
+ * - Affected version details
+ * - Vulnerability specifics (CVE ID, severity, CVSS scores)
+ * - Reachability status (whether vulnerable code paths are executable)
+ * - Fixability information (whether and how the vulnerability can be remediated)
+ *
+ * The handler supports Relay-style pagination with cursor-based navigation:
+ * - Forward pagination: Use 'first' with optional 'after' cursor
+ * - Backward pagination: Use 'last' with optional 'before' cursor
+ * - Page information includes cursors and has{Next|Previous}Page flags
+ *
  * @param params Parameters for fetching dependency vulnerabilities, including project key and pagination options
  * @returns A response containing the list of dependency vulnerabilities with detailed information about each vulnerability
- * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
+ * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set or if the API request fails
  * @public
  */
+/**
+ * Formats CVSS information into a consistent structure
+ * Helper function to standardize CVSS data formatting across different versions
+ *
+ * @param baseScore The CVSS base score
+ * @param vector The CVSS vector string
+ * @param severity The CVSS severity rating
+ * @returns Formatted CVSS information object or undefined if no base score is provided
+ * @private
+ */
+function formatCvssInfo(
+  baseScore: number | null | undefined,
+  vector: string | null | undefined,
+  severity: string | null | undefined
+) {
+  if (baseScore === null || baseScore === undefined) {
+    return undefined;
+  }
+
+  return {
+    baseScore,
+    vector: vector || undefined,
+    severity: severity || undefined,
+  };
+}
+
 export async function handleDeepsourceDependencyVulnerabilities({
   projectKey,
   offset,
@@ -332,6 +392,7 @@ export async function handleDeepsourceDependencyVulnerabilities({
   }
 
   const client = new DeepSourceClient(apiKey);
+  // Create pagination parameters object
   const params = {
     offset,
     first,
@@ -345,59 +406,137 @@ export async function handleDeepsourceDependencyVulnerabilities({
     content: [
       {
         type: 'text' as const,
-        text: JSON.stringify({
-          items: result.items.map((vuln) => ({
-            id: vuln.id,
-            // Package information
-            package: {
-              name: vuln.package.name,
-              ecosystem: vuln.package.ecosystem,
-              purl: vuln.package.purl,
-            },
-            // Package version information
-            packageVersion: {
-              version: vuln.packageVersion.version,
-              versionType: vuln.packageVersion.versionType,
-            },
-            // Vulnerability details
-            vulnerability: {
-              identifier: vuln.vulnerability.identifier,
-              summary: vuln.vulnerability.summary,
-              details: vuln.vulnerability.details,
-              severity: vuln.vulnerability.severity,
-              // CVSS scores and vectors
-              cvssV2: {
-                baseScore: vuln.vulnerability.cvssV2BaseScore,
-                vector: vuln.vulnerability.cvssV2Vector,
-                severity: vuln.vulnerability.cvssV2Severity,
+        text: JSON.stringify(
+          {
+            items: result.items.map((vuln) => ({
+              id: vuln.id,
+
+              // Package information - more concise and consistent
+              package: {
+                name: vuln.package.name,
+                ecosystem: vuln.package.ecosystem,
+                ...(vuln.package.purl && { purl: vuln.package.purl }),
               },
-              cvssV3: {
-                baseScore: vuln.vulnerability.cvssV3BaseScore,
-                vector: vuln.vulnerability.cvssV3Vector,
-                severity: vuln.vulnerability.cvssV3Severity,
+
+              // Package version information - more concise and consistent
+              packageVersion: {
+                version: vuln.packageVersion.version,
+                ...(vuln.packageVersion.versionType && {
+                  versionType: vuln.packageVersion.versionType,
+                }),
               },
-              publishedAt: vuln.vulnerability.publishedAt,
-              updatedAt: vuln.vulnerability.updatedAt,
-              fixedVersions: vuln.vulnerability.fixedVersions,
-              referenceUrls: vuln.vulnerability.referenceUrls,
-            },
-            // Reachability and fixability information
-            reachability: vuln.reachability,
-            fixability: vuln.fixability,
-          })),
-          pageInfo: result.pageInfo,
-          totalCount: result.totalCount,
-          // Add pagination help information
-          pagination_help: {
-            description: 'This API uses Relay-style cursor-based pagination',
-            forward_pagination: `To get the next page, use 'first: 10, after: "${result.pageInfo.endCursor || 'cursor_value'}"'`,
-            backward_pagination: `To get the previous page, use 'last: 10, before: "${result.pageInfo.startCursor || 'cursor_value'}"'`,
-            page_status: {
-              has_next_page: result.pageInfo.hasNextPage,
-              has_previous_page: result.pageInfo.hasPreviousPage,
+
+              // Vulnerability details - better organized and more consistent
+              vulnerability: {
+                identifier: vuln.vulnerability.identifier,
+                ...(vuln.vulnerability.aliases?.length > 0 && {
+                  aliases: vuln.vulnerability.aliases,
+                }),
+                ...(vuln.vulnerability.summary && { summary: vuln.vulnerability.summary }),
+                ...(vuln.vulnerability.details && { details: vuln.vulnerability.details }),
+                severity: vuln.vulnerability.severity,
+
+                // CVSS information - use helper function for consistency
+                ...(formatCvssInfo(
+                  vuln.vulnerability.cvssV2BaseScore,
+                  vuln.vulnerability.cvssV2Vector,
+                  vuln.vulnerability.cvssV2Severity
+                ) && {
+                  cvssV2: formatCvssInfo(
+                    vuln.vulnerability.cvssV2BaseScore,
+                    vuln.vulnerability.cvssV2Vector,
+                    vuln.vulnerability.cvssV2Severity
+                  ),
+                }),
+
+                ...(formatCvssInfo(
+                  vuln.vulnerability.cvssV3BaseScore,
+                  vuln.vulnerability.cvssV3Vector,
+                  vuln.vulnerability.cvssV3Severity
+                ) && {
+                  cvssV3: formatCvssInfo(
+                    vuln.vulnerability.cvssV3BaseScore,
+                    vuln.vulnerability.cvssV3Vector,
+                    vuln.vulnerability.cvssV3Severity
+                  ),
+                }),
+
+                ...(formatCvssInfo(
+                  vuln.vulnerability.cvssV4BaseScore,
+                  vuln.vulnerability.cvssV4Vector,
+                  vuln.vulnerability.cvssV4Severity
+                ) && {
+                  cvssV4: formatCvssInfo(
+                    vuln.vulnerability.cvssV4BaseScore,
+                    vuln.vulnerability.cvssV4Vector,
+                    vuln.vulnerability.cvssV4Severity
+                  ),
+                }),
+
+                // Include EPSS scores if available
+                ...(vuln.vulnerability.epssScore !== null && {
+                  epssScore: vuln.vulnerability.epssScore,
+                }),
+                ...(vuln.vulnerability.epssPercentile !== null && {
+                  epssPercentile: vuln.vulnerability.epssPercentile,
+                }),
+
+                // Dates
+                publishedAt: vuln.vulnerability.publishedAt,
+                updatedAt: vuln.vulnerability.updatedAt,
+                ...(vuln.vulnerability.withdrawnAt && {
+                  withdrawnAt: vuln.vulnerability.withdrawnAt,
+                }),
+
+                // Version information
+                introducedVersions: vuln.vulnerability.introducedVersions,
+                fixedVersions: vuln.vulnerability.fixedVersions,
+
+                // References
+                referenceUrls: vuln.vulnerability.referenceUrls,
+              },
+
+              // Reachability and fixability information - clear and consistent
+              reachability: vuln.reachability,
+              fixability: vuln.fixability,
+            })),
+
+            // Pagination information
+            pageInfo: result.pageInfo,
+            totalCount: result.totalCount,
+
+            // Enhanced pagination help with more details and examples
+            pagination_help: {
+              description:
+                'This API uses Relay-style cursor-based pagination for efficient data retrieval',
+              current_page: {
+                size: result.items.length,
+                has_next_page: result.pageInfo.hasNextPage,
+                has_previous_page: result.pageInfo.hasPreviousPage,
+              },
+              next_page: result.pageInfo.hasNextPage
+                ? {
+                    example: `{"first": 10, "after": "${result.pageInfo.endCursor}"}`,
+                    description: 'Use these parameters to fetch the next page of results',
+                  }
+                : null,
+              previous_page: result.pageInfo.hasPreviousPage
+                ? {
+                    example: `{"last": 10, "before": "${result.pageInfo.startCursor}"}`,
+                    description: 'Use these parameters to fetch the previous page of results',
+                  }
+                : null,
+              pagination_types: {
+                forward: 'For forward pagination, use "first" with optional "after" cursor',
+                backward: 'For backward pagination, use "last" with optional "before" cursor',
+                legacy:
+                  'Legacy offset-based pagination is also supported via the "offset" parameter',
+              },
             },
           },
-        }),
+          null,
+          2
+        ), // Pretty print JSON for better readability in tools
       },
     ],
   };
@@ -502,16 +641,28 @@ The response provides detailed information about each vulnerability, including:
 - Reachability status (whether the vulnerability is reachable in the code)
 - Fixability information (whether and how the vulnerability can be fixed)`,
   {
-    projectKey: z.string().describe('The unique identifier for the DeepSource project'),
-    offset: z.number().optional().describe('Legacy pagination: Number of items to skip'),
+    projectKey: z
+      .string()
+      .min(1, { message: 'Project key cannot be empty' })
+      .describe('The unique identifier for the DeepSource project'),
+    offset: z
+      .number()
+      .int({ message: 'Offset must be an integer' })
+      .nonnegative({ message: 'Offset must be non-negative' })
+      .optional()
+      .describe('Legacy pagination: Number of items to skip'),
     first: z
       .number()
+      .int({ message: 'First must be an integer' })
+      .positive({ message: 'First must be positive' })
       .optional()
       .describe('Number of items to return after the "after" cursor (default: 10)'),
     after: z.string().optional().describe('Cursor to fetch records after this position'),
     before: z.string().optional().describe('Cursor to fetch records before this position'),
     last: z
       .number()
+      .int({ message: 'Last must be an integer' })
+      .positive({ message: 'Last must be positive' })
       .optional()
       .describe('Number of items to return before the "before" cursor (default: 10)'),
   },

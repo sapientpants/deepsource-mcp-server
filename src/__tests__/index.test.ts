@@ -786,6 +786,7 @@ describe('MCP server implementation', () => {
             },
             vulnerability: {
               identifier: 'CVE-2022-1234',
+              aliases: ['GHSA-abc-123'],
               summary: 'Security vulnerability in express',
               details: 'Detailed description of the vulnerability',
               severity: 'HIGH',
@@ -801,6 +802,7 @@ describe('MCP server implementation', () => {
               },
               publishedAt: '2022-01-01T12:00:00Z',
               updatedAt: '2022-01-02T12:00:00Z',
+              introducedVersions: ['4.0.0'],
               fixedVersions: ['4.17.2'],
               referenceUrls: ['https://nvd.nist.gov/vuln/detail/CVE-2022-1234'],
             },
