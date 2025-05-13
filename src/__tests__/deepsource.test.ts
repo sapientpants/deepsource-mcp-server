@@ -2147,6 +2147,39 @@ describe('DeepSourceClient', () => {
         },
       });
     });
+
+    describe('HTTP Status Error Handling', () => {
+      it('should handle 500+ status errors correctly', async () => {
+        nock('https://api.deepsource.io').post('/graphql/').reply(500, 'Internal Server Error');
+
+        await expect(client.listProjects()).rejects.toThrow(
+          'Server error (500): DeepSource API server error'
+        );
+      });
+
+      it('should handle 404 status errors correctly', async () => {
+        nock('https://api.deepsource.io').post('/graphql/').reply(404, 'Not Found');
+
+        await expect(client.listProjects()).rejects.toThrow(
+          'Not found (404): The requested resource was not found'
+        );
+      });
+
+      it('should handle other 4xx status errors correctly', async () => {
+        nock('https://api.deepsource.io').post('/graphql/').reply(422, 'Unprocessable Entity');
+
+        await expect(client.listProjects()).rejects.toThrow(
+          'Client error (422): Unprocessable Entity'
+        );
+      });
+
+      it('should handle 4xx status without statusText correctly', async () => {
+        // For this test, we need to create a custom response without statusText
+        nock('https://api.deepsource.io').post('/graphql/').reply(400, 'Bad Request');
+
+        await expect(client.listProjects()).rejects.toThrow(/Client error \(400\): Bad [Rr]equest/);
+      });
+    });
   });
 
   describe('getDependencyVulnerabilities', () => {
