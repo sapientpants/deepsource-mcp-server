@@ -98,7 +98,6 @@ This would use the `deepsource_update_metric_threshold` tool:
   "thresholdValue": 80
 }
 ```
-
 ### Docker
 
 ```json
