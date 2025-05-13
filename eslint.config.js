@@ -29,6 +29,13 @@ export default [
     },
     rules: {
       'prettier/prettier': 'error',
+      // Allow export of enums without using them directly in the file
+      'no-unused-vars': ['error', { 
+        vars: 'all', 
+        args: 'after-used', 
+        ignoreRestSiblings: false,
+        varsIgnorePattern: '^(MetricShortcode|MetricKey|MetricThresholdStatus|MetricDirection)$'
+      }]
     },
   },
   {
@@ -45,5 +52,14 @@ export default [
         jest: 'readonly',
       },
     },
+    rules: {
+      // Allow jest import in test files even if not directly used
+      'no-unused-vars': ['error', { 
+        vars: 'all', 
+        args: 'after-used', 
+        ignoreRestSiblings: false,
+        varsIgnorePattern: '^(jest)$'
+      }]
+    }
   },
 ]; 

@@ -1,6 +1,19 @@
 import axios, { AxiosError } from 'axios';
 import { createLogger } from './utils/logger.js';
 import { ErrorCategory, createClassifiedError, classifyGraphQLError } from './utils/errors.js';
+import {
+  MetricShortcode,
+  MetricKey,
+  MetricThresholdStatus,
+  MetricDirection,
+  RepositoryMetric,
+  RepositoryMetricItem,
+  MetricSetting,
+  UpdateMetricThresholdParams,
+  UpdateMetricSettingParams,
+  MetricThresholdUpdateResponse,
+  MetricSettingUpdateResponse,
+} from './types/metrics.js';
 
 /**
  * @fileoverview DeepSource API client for interacting with the DeepSource service.
@@ -9,6 +22,19 @@ import { ErrorCategory, createClassifiedError, classifyGraphQLError } from './ut
  */
 
 // Interfaces and types below are exported as part of the public API
+// Re-export quality metrics types
+export { MetricShortcode, MetricDirection };
+export type {
+  MetricKey,
+  MetricThresholdStatus,
+  RepositoryMetric,
+  RepositoryMetricItem,
+  MetricSetting,
+  UpdateMetricThresholdParams,
+  UpdateMetricSettingParams,
+  MetricThresholdUpdateResponse,
+  MetricSettingUpdateResponse,
+};
 
 /**
  * Represents a DeepSource project in the API
@@ -474,8 +500,8 @@ export class DeepSourceClient {
   private static handleGraphQLSpecificError(error: unknown): never | false {
     if (
       this.isAxiosErrorWithCriteria(error) &&
-      error.response?.data &&
-      typeof error.response.data === 'object' &&
+      typeof error.response?.data === 'object' &&
+      error.response.data && // Add null check
       'errors' in error.response.data
     ) {
       const graphqlErrors: Array<{ message: string }> = error.response.data.errors as Array<{
@@ -503,7 +529,7 @@ export class DeepSourceClient {
   private static handleNetworkError(error: unknown): never | false {
     if (this.isAxiosErrorWithCriteria(error, undefined, 'ECONNREFUSED')) {
       throw createClassifiedError(
-        `Connection error: Unable to connect to DeepSource API`,
+        'Connection error: Unable to connect to DeepSource API',
         ErrorCategory.NETWORK,
         error
       );
@@ -511,7 +537,7 @@ export class DeepSourceClient {
 
     if (this.isAxiosErrorWithCriteria(error, undefined, 'ETIMEDOUT')) {
       throw createClassifiedError(
-        `Timeout error: DeepSource API request timed out`,
+        'Timeout error: DeepSource API request timed out',
         ErrorCategory.TIMEOUT,
         error
       );
@@ -529,7 +555,7 @@ export class DeepSourceClient {
   private static handleHttpStatusError(error: unknown): never | false {
     if (this.isAxiosErrorWithCriteria(error, 401)) {
       throw createClassifiedError(
-        `Authentication error: Invalid or expired API key`,
+        'Authentication error: Invalid or expired API key',
         ErrorCategory.AUTH,
         error
       );
@@ -537,7 +563,7 @@ export class DeepSourceClient {
 
     if (this.isAxiosErrorWithCriteria(error, 429)) {
       throw createClassifiedError(
-        `Rate limit exceeded: Too many requests to DeepSource API`,
+        'Rate limit exceeded: Too many requests to DeepSource API',
         ErrorCategory.RATE_LIMIT,
         error
       );
@@ -545,7 +571,7 @@ export class DeepSourceClient {
 
     // Handle other common HTTP status codes
     const axiosError = error as AxiosError;
-    if (axiosError.response && axiosError.response.status) {
+    if (axiosError.response?.status) {
       const status = axiosError.response.status;
 
       if (status >= 500) {
@@ -558,7 +584,7 @@ export class DeepSourceClient {
 
       if (status === 404) {
         throw createClassifiedError(
-          `Not found (404): The requested resource was not found`,
+          'Not found (404): The requested resource was not found',
           ErrorCategory.NOT_FOUND,
           error
         );
@@ -587,7 +613,7 @@ export class DeepSourceClient {
       throw new Error(`DeepSource API error: ${error.message}`);
     }
 
-    throw new Error(`Unknown error occurred while communicating with DeepSource API`);
+    throw new Error('Unknown error occurred while communicating with DeepSource API');
   }
 
   /**
@@ -604,9 +630,19 @@ export class DeepSourceClient {
     }
 
     // Try handling specific error types in order of specificity
-    this.handleGraphQLSpecificError(error) ||
-      this.handleNetworkError(error) ||
-      this.handleHttpStatusError(error);
+    if (this.handleGraphQLSpecificError(error)) {
+      // If handleGraphQLSpecificError returns true, it already threw an error
+      // This line will never be reached, but is needed for type checking
+      throw new Error('Unreachable code - handleGraphQLSpecificError should have thrown');
+    }
+
+    if (this.handleNetworkError(error)) {
+      throw new Error('Unreachable code - handleNetworkError should have thrown');
+    }
+
+    if (this.handleHttpStatusError(error)) {
+      throw new Error('Unreachable code - handleHttpStatusError should have thrown');
+    }
 
     // If no specific handler worked, convert to a classified error
     if (DeepSourceClient.isError(error)) {
@@ -1350,7 +1386,7 @@ export class DeepSourceClient {
    * @private
    */
   private static isValidVersionType(value: unknown): value is PackageVersionType {
-    const validVersionTypes: PackageVersionType[] = ['SEMVER', 'ECOSYSTEM', 'GIT'];
+    const validVersionTypes = ['SEMVER', 'ECOSYSTEM', 'GIT'] as PackageVersionType[];
     return DeepSourceClient.isValidEnum(value, validVersionTypes);
   }
 
@@ -1460,13 +1496,13 @@ export class DeepSourceClient {
   private static mapVulnerabilityData(vulnData: Record<string, unknown>): Vulnerability {
     // Check if severity is valid
     const isValidSeverity = (value: unknown): value is VulnerabilitySeverity => {
-      const validSeverities: VulnerabilitySeverity[] = [
+      const validSeverities = [
         'NONE',
         'LOW',
         'MEDIUM',
         'HIGH',
         'CRITICAL',
-      ];
+      ] as VulnerabilitySeverity[];
       return typeof value === 'string' && validSeverities.includes(value as VulnerabilitySeverity);
     };
 
@@ -1533,11 +1569,11 @@ export class DeepSourceClient {
    * @private
    */
   private static isValidReachability(value: unknown): value is VulnerabilityReachability {
-    const validReachabilityValues: VulnerabilityReachability[] = [
+    const validReachabilityValues = [
       'REACHABLE',
       'UNREACHABLE',
       'UNKNOWN',
-    ];
+    ] as VulnerabilityReachability[];
     return DeepSourceClient.isValidEnum(value, validReachabilityValues);
   }
 
@@ -1548,14 +1584,14 @@ export class DeepSourceClient {
    * @private
    */
   private static isValidFixability(value: unknown): value is VulnerabilityFixability {
-    const validFixabilityValues: VulnerabilityFixability[] = [
+    const validFixabilityValues = [
       'ERROR',
       'UNFIXABLE',
       'GENERATING_FIX',
       'POSSIBLY_FIXABLE',
       'MANUALLY_FIXABLE',
       'AUTO_FIXABLE',
-    ];
+    ] as VulnerabilityFixability[];
     return DeepSourceClient.isValidEnum(value, validFixabilityValues);
   }
 
@@ -2053,6 +2089,223 @@ export class DeepSourceClient {
       }
 
       // Fall back to the generic GraphQL error handler
+      return DeepSourceClient.handleGraphQLError(error);
+    }
+  }
+
+  /**
+   * Fetches quality metrics from a specified DeepSource project
+   * Retrieves metrics like code coverage, documentation coverage, etc. with their thresholds and current values
+   *
+   * @param projectKey - The unique identifier for the DeepSource project
+   * @param options - Optional filter for specific metric shortcodes
+   * @returns Promise that resolves to an array of repository metrics
+   * @throws {Error} When project key is invalid or project doesn't exist
+   * @throws {Error} When DeepSource API returns errors
+   * @throws {Error} When network, authentication or permission issues occur
+   */
+  async getQualityMetrics(
+    projectKey: string,
+    options: { shortcodeIn?: MetricShortcode[] } = {}
+  ): Promise<RepositoryMetric[]> {
+    try {
+      // Validate project key
+      this.validateProjectKey(projectKey);
+
+      // Fetch project information
+      const projects = await this.listProjects();
+      const project = projects.find((p) => p.key === projectKey);
+
+      if (!project) {
+        return [];
+      }
+
+      // Validate repository information
+      this.validateProjectRepository(project, projectKey);
+
+      // Build the metrics query
+      const metricsQuery = `
+        query($login: String!, $name: String!, $provider: VCSProvider!, $shortcodeIn: [MetricShortcode]) {
+          repository(login: $login, name: $name, vcsProvider: $provider) {
+            name
+            id
+            metrics(shortcodeIn: $shortcodeIn) {
+              name
+              shortcode
+              description
+              positiveDirection
+              unit
+              minValueAllowed
+              maxValueAllowed
+              isReported
+              isThresholdEnforced
+              items {
+                id
+                key
+                threshold
+                latestValue
+                latestValueDisplay
+                thresholdStatus
+              }
+            }
+          }
+        }
+      `;
+
+      // Execute the query
+      const response = await this.client.post('', {
+        query: metricsQuery.trim(),
+        variables: {
+          login: project.repository.login,
+          name: project.name,
+          provider: project.repository.provider,
+          shortcodeIn: options.shortcodeIn || null,
+        },
+      });
+
+      if (response.data.errors) {
+        const errorMessage = DeepSourceClient.extractErrorMessages(response.data.errors);
+        throw new Error(`GraphQL Errors: ${errorMessage}`);
+      }
+
+      // Extract and format metrics data
+      const metrics = response.data.data?.repository?.metrics || [];
+
+      return metrics.map((metric: unknown) => {
+        const m = metric as Record<string, unknown>;
+        return {
+          name: (m.name as string) || '',
+          shortcode: (m.shortcode as string) || '',
+          description: (m.description as string) || '',
+          positiveDirection: (m.positiveDirection as string) || 'UPWARD',
+          unit: m.unit as string,
+          minValueAllowed: m.minValueAllowed as number,
+          maxValueAllowed: m.maxValueAllowed as number,
+          isReported: Boolean(m.isReported),
+          isThresholdEnforced: Boolean(m.isThresholdEnforced),
+          items: ((m.items as unknown[]) || []).map((item: unknown) => {
+            const i = item as Record<string, unknown>;
+            return {
+              id: (i.id as string) || '',
+              key: (i.key as string) || 'AGGREGATE',
+              threshold: i.threshold as number | null,
+              latestValue: i.latestValue as number | null,
+              latestValueDisplay: i.latestValueDisplay as string,
+              thresholdStatus: i.thresholdStatus as string,
+            };
+          }),
+        };
+      });
+    } catch (error) {
+      // Handle errors
+      if (DeepSourceClient.isError(error)) {
+        if (DeepSourceClient.isErrorWithMessage(error, 'NoneType')) {
+          return [];
+        }
+      }
+      return DeepSourceClient.handleGraphQLError(error);
+    }
+  }
+
+  /**
+   * Sets a threshold for a specific metric in a repository
+   *
+   * @param params - The parameters for updating the threshold
+   * @returns Promise that resolves to a response indicating the success of the operation
+   * @throws {Error} When parameters are invalid
+   * @throws {Error} When DeepSource API returns errors
+   * @throws {Error} When network, authentication or permission issues occur
+   */
+  async setMetricThreshold(
+    params: UpdateMetricThresholdParams
+  ): Promise<MetricThresholdUpdateResponse> {
+    try {
+      // Build the mutation query
+      const thresholdMutation = `
+        mutation($repositoryId: ID!, $metricShortcode: MetricShortcode!, $metricKey: MetricKey!, $thresholdValue: Int) {
+          setRepositoryMetricThreshold(input: {
+            repositoryId: $repositoryId,
+            metricShortcode: $metricShortcode, 
+            metricKey: $metricKey, 
+            thresholdValue: $thresholdValue
+          }) {
+            ok
+          }
+        }
+      `;
+
+      // Execute the mutation
+      const response = await this.client.post('', {
+        query: thresholdMutation.trim(),
+        variables: {
+          repositoryId: params.repositoryId,
+          metricShortcode: params.metricShortcode,
+          metricKey: params.metricKey,
+          thresholdValue: params.thresholdValue,
+        },
+      });
+
+      if (response.data.errors) {
+        const errorMessage = DeepSourceClient.extractErrorMessages(response.data.errors);
+        throw new Error(`GraphQL Errors: ${errorMessage}`);
+      }
+
+      return {
+        ok: Boolean(response.data.data?.setRepositoryMetricThreshold?.ok),
+      };
+    } catch (error) {
+      return DeepSourceClient.handleGraphQLError(error);
+    }
+  }
+
+  /**
+   * Updates the setting for a metric in a repository
+   * This can enable/disable reporting and threshold enforcement
+   *
+   * @param params - The parameters for updating the metric settings
+   * @returns Promise that resolves to a response indicating the success of the operation
+   * @throws {Error} When parameters are invalid
+   * @throws {Error} When DeepSource API returns errors
+   * @throws {Error} When network, authentication or permission issues occur
+   */
+  async updateMetricSetting(
+    params: UpdateMetricSettingParams
+  ): Promise<MetricSettingUpdateResponse> {
+    try {
+      // Build the mutation query
+      const settingMutation = `
+        mutation($repositoryId: ID!, $metricShortcode: MetricShortcode!, $isReported: Boolean!, $isThresholdEnforced: Boolean!) {
+          updateRepositoryMetricSetting(input: {
+            repositoryId: $repositoryId,
+            metricShortcode: $metricShortcode, 
+            isReported: $isReported, 
+            isThresholdEnforced: $isThresholdEnforced
+          }) {
+            ok
+          }
+        }
+      `;
+
+      // Execute the mutation
+      const response = await this.client.post('', {
+        query: settingMutation.trim(),
+        variables: {
+          repositoryId: params.repositoryId,
+          metricShortcode: params.metricShortcode,
+          isReported: params.isReported,
+          isThresholdEnforced: params.isThresholdEnforced,
+        },
+      });
+
+      if (response.data.errors) {
+        const errorMessage = DeepSourceClient.extractErrorMessages(response.data.errors);
+        throw new Error(`GraphQL Errors: ${errorMessage}`);
+      }
+
+      return {
+        ok: Boolean(response.data.data?.updateRepositoryMetricSetting?.ok),
+      };
+    } catch (error) {
       return DeepSourceClient.handleGraphQLError(error);
     }
   }

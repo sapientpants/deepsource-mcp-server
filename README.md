@@ -23,6 +23,8 @@ The DeepSource MCP Server enables AI assistants to interact with DeepSource's co
 
 * **DeepSource API Integration**: Connects to DeepSource via GraphQL API
 * **MCP Protocol Support**: Implements the Model Context Protocol for AI assistant integration
+* **Quality Metrics & Thresholds**: Retrieve and manage code quality metrics with thresholds
+* **Dependency Vulnerabilities**: Access security vulnerability information about dependencies
 * **TypeScript/Node.js**: Built with TypeScript for type safety and modern JavaScript features
 * **Cross-Platform**: Works on Linux, macOS, and Windows
 * **Robust Error Handling**: Comprehensive error handling for network, authentication, and parsing issues
@@ -54,7 +56,7 @@ This would use the `deepsource_project_issues` tool with filters:
 }
 ```
 
-Or to filter analysis runs:
+To filter analysis runs:
 ```
 Show me the most recent Python analysis runs
 ```
@@ -65,6 +67,35 @@ This would use the `deepsource_project_runs` tool with filters:
   "projectKey": "your-project-key",
   "analyzerIn": ["python"],
   "first": 5
+}
+```
+
+For code quality metrics:
+```
+What's my code coverage percentage? Is it meeting our thresholds?
+```
+
+This would use the `deepsource_quality_metrics` tool:
+```
+{
+  "projectKey": "your-project-key",
+  "shortcodeIn": ["LCV", "BCV", "CCV"]
+}
+```
+
+For setting thresholds:
+```
+Update our line coverage threshold to 80%
+```
+
+This would use the `deepsource_update_metric_threshold` tool:
+```
+{
+  "projectKey": "your-project-key",
+  "repositoryId": "repo-id",
+  "metricShortcode": "LCV",
+  "metricKey": "AGGREGATE",
+  "thresholdValue": 80
 }
 ```
 
@@ -147,6 +178,44 @@ The DeepSource MCP Server provides the following tools:
 4. `deepsource_run`: Get a specific analysis run by its runUid or commitOid
    * Parameters:
      * `runIdentifier` (required) - The runUid (UUID) or commitOid (commit hash) to identify the run
+
+5. `deepsource_dependency_vulnerabilities`: Get dependency vulnerabilities from a DeepSource project
+   * Parameters:
+     * `projectKey` (required) - The unique identifier for the DeepSource project
+     * Pagination parameters:
+       * `offset` (optional) - Number of items to skip for pagination
+       * `first` (optional) - Number of items to return (defaults to 10)
+       * `after` (optional) - Cursor for forward pagination
+       * `before` (optional) - Cursor for backward pagination
+       * `last` (optional) - Number of items to return before the 'before' cursor (default: 10)
+
+6. `deepsource_quality_metrics`: Get quality metrics from a DeepSource project with filtering
+   * Parameters:
+     * `projectKey` (required) - The unique identifier for the DeepSource project
+     * `shortcodeIn` (optional) - Filter metrics by specific shortcodes (e.g., ["LCV", "BCV"])
+   * Returns metrics such as:
+     * Line Coverage (LCV)
+     * Branch Coverage (BCV)
+     * Documentation Coverage (DCV)
+     * Duplicate Code Percentage (DDP)
+     * Each metric includes current values, thresholds, and pass/fail status
+
+7. `deepsource_update_metric_threshold`: Update the threshold for a specific quality metric
+   * Parameters:
+     * `projectKey` (required) - The unique identifier for the DeepSource project
+     * `repositoryId` (required) - The GraphQL repository ID
+     * `metricShortcode` (required) - The shortcode of the metric to update
+     * `metricKey` (required) - The language or context key for the metric
+     * `thresholdValue` (optional) - The new threshold value, or null to remove the threshold
+   * Example: Set 80% line coverage threshold: metricShortcode="LCV", metricKey="AGGREGATE", thresholdValue=80
+
+8. `deepsource_update_metric_setting`: Update the settings for a quality metric
+   * Parameters:
+     * `projectKey` (required) - The unique identifier for the DeepSource project
+     * `repositoryId` (required) - The GraphQL repository ID
+     * `metricShortcode` (required) - The shortcode of the metric to update
+     * `isReported` (required) - Whether the metric should be reported
+     * `isThresholdEnforced` (required) - Whether the threshold should be enforced (can fail checks)
 
 ## Development
 
