@@ -142,6 +142,30 @@ DeepSource is used to maintain code quality. Here are the key patterns to follow
    }
    ```
 
+3. **Omit explicit type declarations when easily inferred** - TypeScript can infer types from initializers for variables, parameters, and properties. Explicit types add unnecessary verbosity in these cases.
+   ```typescript
+   // Bad
+   const count: number = 5;
+   const isActive: boolean = true;
+   const name: string = 'John';
+   
+   // Good
+   const count = 5;
+   const isActive = true;
+   const name = 'John';
+   ```
+
+4. **Use `@ts-expect-error` instead of `@ts-ignore`** - When suppressing TypeScript errors, use `@ts-expect-error` which will cause an error if the line it's applied to doesn't actually contain any type errors.
+   ```typescript
+   // Bad
+   // @ts-ignore
+   const value: string = 123;
+   
+   // Good
+   // @ts-expect-error - Converting number to string intentionally
+   const value: string = 123;
+   ```
+
 ### Error Handling Patterns
 
 1. **Avoid deeply nested try/catch blocks** - Refactor to use separate functions or middleware.
@@ -188,6 +212,17 @@ DeepSource is used to maintain code quality. Here are the key patterns to follow
 
 3. **Use proper null/undefined handling** - Use optional chaining and nullish coalescing operators.
    ```typescript
+   // Bad
+   if (data && data.property) {
+     return data.property.value;
+   }
+   
+   // Good
+   return data?.property?.value;
+   
+   // Bad
+   const value = data && data.property ? data.property : defaultValue;
+   
    // Good
    const value = data?.property ?? defaultValue;
    ```
@@ -208,6 +243,36 @@ DeepSource is used to maintain code quality. Here are the key patterns to follow
    }
    ```
 
+5. **Avoid unused expressions** - Expressions that don't affect the program state are often logic errors and should be avoided.
+   ```typescript
+   // Bad
+   data.property; // This does nothing
+   
+   // Good
+   const property = data.property; // Assign it if you need it
+   doSomething(data.property); // Use it in a function call
+   ```
+
+6. **Use regular strings when template literals aren't needed** - Only use template literals when you need string interpolation, multiline strings, or special characters.
+   ```typescript
+   // Bad
+   const name = `John`;
+   const greeting = `Hello World`;
+   
+   // Good
+   const name = 'John';
+   const greeting = "Hello World";
+   
+   // Good use of template literals
+   const fullGreeting = `Hello, ${name}!`;
+   const multiline = `This is a
+   multiline string`;
+   ```
+
 ### Git Commit Guidelines
 
 1. **NEVER use --no-verify flag** - Do not bypass pre-commit hooks when committing code. Pre-commit hooks are essential for maintaining code quality and catching issues before they're committed.
+
+### Memories
+- Do not use the any type. Use the never or unknown type instead.
+- Require template literals instead of string concatenation

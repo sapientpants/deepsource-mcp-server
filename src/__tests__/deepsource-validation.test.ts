@@ -6,7 +6,7 @@ import { jest } from '@jest/globals';
 import { DeepSourceClient } from '../deepsource.js';
 
 // We need to access private methods for testing
-// @ts-ignore - Accessing private static method for testing
+// @ts-expect-error - Accessing private static method for testing
 const isValidVulnerabilityNode = DeepSourceClient['isValidVulnerabilityNode'];
 
 describe('DeepSourceClient validation methods', () => {

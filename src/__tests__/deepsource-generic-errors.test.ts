@@ -7,7 +7,7 @@ import { DeepSourceClient } from '../deepsource.js';
 
 describe('DeepSourceClient generic error handling', () => {
   // We need to access private static methods for testing
-  // @ts-ignore - Accessing private static method for testing
+  // @ts-expect-error - Accessing private static method for testing
   const handleGenericError = DeepSourceClient['handleGenericError'];
 
   describe('handleGenericError method', () => {

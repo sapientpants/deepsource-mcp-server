@@ -1958,7 +1958,7 @@ describe('DeepSourceClient', () => {
 
       // The method will throw, so we need to catch it
       try {
-        // @ts-ignore - Accessing private static method for testing
+        // @ts-expect-error - Accessing private static method for testing
         DeepSourceClient['handleGraphQLError'](axiosError);
         // Should not reach this point
         expect(true).toBe(false);
@@ -1973,7 +1973,7 @@ describe('DeepSourceClient', () => {
     });
 
     it('should create empty paginated responses with consistent structure', () => {
-      // @ts-ignore - Accessing private instance method for testing
+      // @ts-expect-error - Accessing private instance method for testing
       const emptyResponse = client['createEmptyPaginatedResponse']();
 
       expect(emptyResponse).toEqual({
