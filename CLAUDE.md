@@ -398,10 +398,132 @@ The following guidelines are based on frequent DeepSource issues detected in thi
    }
    ```
 
+### Test Coverage Best Practices
+
+1. **Maintain high test coverage** - Ensure all code paths, especially edge cases, are well-tested:
+   ```typescript
+   // For edge cases in error handling
+   test('should handle null input gracefully', () => {
+     expect(processData(null)).toEqual({ error: 'Invalid input' });
+   });
+   
+   // For conditional branches
+   test('should use default value when config is missing', () => {
+     expect(getConfig(undefined).retryCount).toBe(3);
+   });
+   ```
+
+2. **Mock external dependencies** - When testing functions that depend on external services:
+   ```typescript
+   test('handles API errors correctly', () => {
+     // Setup a mock
+     jest.spyOn(apiService, 'fetchData').mockRejectedValue(new Error('Network error'));
+     
+     // Test error handling
+     return expect(client.getData()).rejects.toThrow('Failed to fetch data');
+   });
+   ```
+
+3. **Test both success and failure paths** - Especially for async operations:
+   ```typescript
+   describe('API client', () => {
+     it('handles successful response', async () => {
+       // Test happy path
+     });
+     
+     it('handles timeouts', async () => {
+       // Test timeout path
+     });
+     
+     it('handles service unavailable errors', async () => {
+       // Test server error path
+     });
+   });
+   ```
+
+### Advanced TypeScript Best Practices
+
+1. **Use branded types for type safety** - Create distinct types for values of the same primitive type:
+   ```typescript
+   // Branded type for user IDs
+   type UserID = string & { readonly __brand: unique symbol };
+   
+   // Branded type for project keys
+   type ProjectKey = string & { readonly __brand: unique symbol };
+   
+   // Functions can now be specific about which type they accept
+   function getUserDetails(id: UserID) { /* ... */ }
+   function getProjectDetails(key: ProjectKey) { /* ... */ }
+   
+   // Prevents passing a project key where a user ID is expected
+   getUserDetails(projectKey); // Type error
+   ```
+
+2. **Prefer interfaces for public APIs** - Use interfaces for external contracts and types for internal structures:
+   ```typescript
+   // Public API interface
+   export interface ClientOptions {
+     apiKey: string;
+     timeout?: number;
+     retries?: number;
+   }
+   
+   // Internal type
+   type RateLimitConfig = {
+     maxRequests: number;
+     timeWindow: number;
+     strategy: 'queue' | 'error' | 'exponential';
+   };
+   ```
+
+3. **Use discriminated unions for complex state management** - Makes type narrowing more precise:
+   ```typescript
+   type RequestState = 
+     | { status: 'idle' }
+     | { status: 'loading' }
+     | { status: 'success', data: Response }
+     | { status: 'error', error: Error };
+   
+   function handleRequest(state: RequestState) {
+     switch (state.status) {
+       case 'loading':
+         // TypeScript knows no data or error exists here
+         showLoadingIndicator();
+         break;
+       case 'success':
+         // TypeScript knows data exists here
+         displayData(state.data);
+         break;
+     }
+   }
+   ```
+
+4. **Use const assertions for literal types** - Preserve literal types in object literals:
+   ```typescript
+   // Without const assertion
+   const config = {
+     environment: 'production',
+     features: ['metrics', 'logging']
+   };
+   // config.environment has type 'string'
+   
+   // With const assertion
+   const config = {
+     environment: 'production',
+     features: ['metrics', 'logging']
+   } as const;
+   // config.environment has type 'production'
+   // config.features has type readonly ['metrics', 'logging']
+   ```
+
 ### Memories
-- Do not use the any type. Use the never or unknown type instead.
+- Do not use the any type. Use the never, unknown, or Record<string, unknown> instead.
 - Prefer Record<string, unknown> over any when working with objects of unknown structure.
 - Use template literals only when needed for interpolation or multiline strings.
 - Convert instance methods that don't use 'this' to static methods.
 - Implement proper functionality in all methods, never leave empty method bodies.
 - Create reusable type validation helpers for commonly validated types.
+- Use branded types to prevent mixing similar primitive values (like different string IDs).
+- Use discriminated unions for complex state management.
+- Add comprehensive tests for edge cases, not just the happy paths.
+- Use const assertions to preserve literal types in object literals.
