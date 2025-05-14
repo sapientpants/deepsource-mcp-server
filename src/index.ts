@@ -137,14 +137,8 @@ export async function handleDeepsourceProjectIssues({
           // Add pagination help information
           pagination_help: {
             description: 'This API uses Relay-style cursor-based pagination',
-            forward_pagination:
-              'To get the next page, use \'first: 10, after: "' +
-              (result.pageInfo.endCursor || 'cursor_value') +
-              '"\'',
-            backward_pagination:
-              'To get the previous page, use \'last: 10, before: "' +
-              (result.pageInfo.startCursor || 'cursor_value') +
-              '"\'',
+            forward_pagination: `To get the next page, use 'first: 10, after: "${result.pageInfo.endCursor || 'cursor_value'}"'`,
+            backward_pagination: `To get the previous page, use 'last: 10, before: "${result.pageInfo.startCursor || 'cursor_value'}"'`,
             page_status: {
               has_next_page: result.pageInfo.hasNextPage,
               has_previous_page: result.pageInfo.hasPreviousPage,
@@ -233,14 +227,8 @@ export async function handleDeepsourceProjectRuns({
           // Add pagination help information
           pagination_help: {
             description: 'This API uses Relay-style cursor-based pagination',
-            forward_pagination:
-              'To get the next page, use \'first: 10, after: "' +
-              (result.pageInfo.endCursor || 'cursor_value') +
-              '"\'',
-            backward_pagination:
-              'To get the previous page, use \'last: 10, before: "' +
-              (result.pageInfo.startCursor || 'cursor_value') +
-              '"\'',
+            forward_pagination: `To get the next page, use 'first: 10, after: "${result.pageInfo.endCursor || 'cursor_value'}"'`,
+            backward_pagination: `To get the previous page, use 'last: 10, before: "${result.pageInfo.startCursor || 'cursor_value'}"'`,
             page_status: {
               has_next_page: result.pageInfo.hasNextPage,
               has_previous_page: result.pageInfo.hasPreviousPage,
@@ -340,30 +328,6 @@ export async function handleDeepsourceRun({ runIdentifier }: DeepsourceRunParams
   };
 }
 
-/**
- * Fetches and returns dependency vulnerabilities from a specified DeepSource project
- *
- * This handler provides access to DeepSource's dependency vulnerability data,
- * allowing AI assistants to retrieve information about security vulnerabilities
- * in a project's dependencies.
- *
- * The response includes comprehensive data for each vulnerability:
- * - Package identification (name, ecosystem, purl)
- * - Affected version details
- * - Vulnerability specifics (CVE ID, severity, CVSS scores)
- * - Reachability status (whether vulnerable code paths are executable)
- * - Fixability information (whether and how the vulnerability can be remediated)
- *
- * The handler supports Relay-style pagination with cursor-based navigation:
- * - Forward pagination: Use 'first' with optional 'after' cursor
- * - Backward pagination: Use 'last' with optional 'before' cursor
- * - Page information includes cursors and has{Next|Previous}Page flags
- *
- * @param params Parameters for fetching dependency vulnerabilities, including project key and pagination options
- * @returns A response containing the list of dependency vulnerabilities with detailed information about each vulnerability
- * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set or if the API request fails
- * @public
- */
 /**
  * Formats CVSS information into a consistent structure
  * Helper function to standardize CVSS data formatting across different versions
@@ -565,133 +529,6 @@ export async function handleDeepsourceDependencyVulnerabilities({
     ],
   };
 }
-
-// Register the tools with the handlers
-mcpServer.tool(
-  'deepsource_projects',
-  'List all available DeepSource projects. Returns a list of project objects with "key" and "name" properties.',
-  handleDeepsourceProjects
-);
-
-mcpServer.tool(
-  'deepsource_project_issues',
-  `Get issues from a DeepSource project with support for Relay-style cursor-based pagination and filtering.
-For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor.
-For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor.
-The response includes \`pageInfo\` with \`hasNextPage\`, \`hasPreviousPage\`, \`startCursor\`, and \`endCursor\`
-to help navigate through pages.
-
-Filtering options:
-- \`path\`: Filter issues by specific file path
-- \`analyzerIn\`: Filter issues by specific analyzers
-- \`tags\`: Filter issues by tags`,
-  {
-    projectKey: z.string().describe('The unique identifier for the DeepSource project'),
-    offset: z.number().optional().describe('Legacy pagination: Number of items to skip'),
-    first: z
-      .number()
-      .optional()
-      .describe('Number of items to return after the "after" cursor (default: 10)'),
-    after: z.string().optional().describe('Cursor to fetch records after this position'),
-    before: z.string().optional().describe('Cursor to fetch records before this position'),
-    last: z
-      .number()
-      .optional()
-      .describe('Number of items to return before the "before" cursor (default: 10)'),
-    path: z.string().optional().describe('Filter issues by specific file path'),
-    analyzerIn: z
-      .array(z.string())
-      .optional()
-      .describe('Filter issues by specific analyzers (e.g. ["python", "javascript"])'),
-    tags: z.array(z.string()).optional().describe('Filter issues by tags'),
-  },
-  handleDeepsourceProjectIssues
-);
-
-mcpServer.tool(
-  'deepsource_project_runs',
-  `List analysis runs for a DeepSource project with support for Relay-style cursor-based pagination and filtering.
-For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor.
-For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor.
-The response includes \`pageInfo\` with \`hasNextPage\`, \`hasPreviousPage\`, \`startCursor\`, and \`endCursor\`
-to help navigate through pages.
-
-Filtering options:
-- \`analyzerIn\`: Filter runs by specific analyzers`,
-  {
-    projectKey: z.string().describe('The unique identifier for the DeepSource project'),
-    offset: z.number().optional().describe('Legacy pagination: Number of items to skip'),
-    first: z
-      .number()
-      .optional()
-      .describe('Number of items to return after the "after" cursor (default: 10)'),
-    after: z.string().optional().describe('Cursor to fetch records after this position'),
-    before: z.string().optional().describe('Cursor to fetch records before this position'),
-    last: z
-      .number()
-      .optional()
-      .describe('Number of items to return before the "before" cursor (default: 10)'),
-    analyzerIn: z
-      .array(z.string())
-      .optional()
-      .describe('Filter runs by specific analyzers (e.g. ["python", "javascript"])'),
-  },
-  handleDeepsourceProjectRuns
-);
-
-mcpServer.tool(
-  'deepsource_run',
-  'Get a specific analysis run by its runUid (UUID) or commitOid (commit hash).',
-  {
-    runIdentifier: z
-      .string()
-      .describe('The runUid (UUID) or commitOid (commit hash) to identify the run'),
-  },
-  handleDeepsourceRun
-);
-
-mcpServer.tool(
-  'deepsource_dependency_vulnerabilities',
-  `Get dependency vulnerabilities from a DeepSource project with support for Relay-style cursor-based pagination.
-For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor.
-For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor.
-The response includes \`pageInfo\` with \`hasNextPage\`, \`hasPreviousPage\`, \`startCursor\`, and \`endCursor\`
-to help navigate through pages.
-
-The response provides detailed information about each vulnerability, including:
-- Package information (name, ecosystem, purl)
-- Package version details
-- Vulnerability details (identifiers, severity, CVSS scores)
-- Reachability status (whether the vulnerability is reachable in the code)
-- Fixability information (whether and how the vulnerability can be fixed)`,
-  {
-    projectKey: z
-      .string()
-      .min(1, { message: 'Project key cannot be empty' })
-      .describe('The unique identifier for the DeepSource project'),
-    offset: z
-      .number()
-      .int({ message: 'Offset must be an integer' })
-      .nonnegative({ message: 'Offset must be non-negative' })
-      .optional()
-      .describe('Legacy pagination: Number of items to skip'),
-    first: z
-      .number()
-      .int({ message: 'First must be an integer' })
-      .positive({ message: 'First must be positive' })
-      .optional()
-      .describe('Number of items to return after the "after" cursor (default: 10)'),
-    after: z.string().optional().describe('Cursor to fetch records after this position'),
-    before: z.string().optional().describe('Cursor to fetch records before this position'),
-    last: z
-      .number()
-      .int({ message: 'Last must be an integer' })
-      .positive({ message: 'Last must be positive' })
-      .optional()
-      .describe('Number of items to return before the "before" cursor (default: 10)'),
-  },
-  handleDeepsourceDependencyVulnerabilities
-);
 
 /**
  * Interface for parameters for fetching quality metrics
@@ -1039,6 +876,133 @@ export async function handleDeepsourceComplianceReport({
     ],
   };
 }
+
+// Register the tools with the handlers
+mcpServer.tool(
+  'deepsource_projects',
+  'List all available DeepSource projects. Returns a list of project objects with "key" and "name" properties.',
+  handleDeepsourceProjects
+);
+
+mcpServer.tool(
+  'deepsource_project_issues',
+  `Get issues from a DeepSource project with support for Relay-style cursor-based pagination and filtering.
+For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor.
+For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor.
+The response includes \`pageInfo\` with \`hasNextPage\`, \`hasPreviousPage\`, \`startCursor\`, and \`endCursor\`
+to help navigate through pages.
+
+Filtering options:
+- \`path\`: Filter issues by specific file path
+- \`analyzerIn\`: Filter issues by specific analyzers
+- \`tags\`: Filter issues by tags`,
+  {
+    projectKey: z.string().describe('The unique identifier for the DeepSource project'),
+    offset: z.number().optional().describe('Legacy pagination: Number of items to skip'),
+    first: z
+      .number()
+      .optional()
+      .describe('Number of items to return after the "after" cursor (default: 10)'),
+    after: z.string().optional().describe('Cursor to fetch records after this position'),
+    before: z.string().optional().describe('Cursor to fetch records before this position'),
+    last: z
+      .number()
+      .optional()
+      .describe('Number of items to return before the "before" cursor (default: 10)'),
+    path: z.string().optional().describe('Filter issues by specific file path'),
+    analyzerIn: z
+      .array(z.string())
+      .optional()
+      .describe('Filter issues by specific analyzers (e.g. ["python", "javascript"])'),
+    tags: z.array(z.string()).optional().describe('Filter issues by tags'),
+  },
+  handleDeepsourceProjectIssues
+);
+
+mcpServer.tool(
+  'deepsource_project_runs',
+  `List analysis runs for a DeepSource project with support for Relay-style cursor-based pagination and filtering.
+For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor.
+For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor.
+The response includes \`pageInfo\` with \`hasNextPage\`, \`hasPreviousPage\`, \`startCursor\`, and \`endCursor\`
+to help navigate through pages.
+
+Filtering options:
+- \`analyzerIn\`: Filter runs by specific analyzers`,
+  {
+    projectKey: z.string().describe('The unique identifier for the DeepSource project'),
+    offset: z.number().optional().describe('Legacy pagination: Number of items to skip'),
+    first: z
+      .number()
+      .optional()
+      .describe('Number of items to return after the "after" cursor (default: 10)'),
+    after: z.string().optional().describe('Cursor to fetch records after this position'),
+    before: z.string().optional().describe('Cursor to fetch records before this position'),
+    last: z
+      .number()
+      .optional()
+      .describe('Number of items to return before the "before" cursor (default: 10)'),
+    analyzerIn: z
+      .array(z.string())
+      .optional()
+      .describe('Filter runs by specific analyzers (e.g. ["python", "javascript"])'),
+  },
+  handleDeepsourceProjectRuns
+);
+
+mcpServer.tool(
+  'deepsource_run',
+  'Get a specific analysis run by its runUid (UUID) or commitOid (commit hash).',
+  {
+    runIdentifier: z
+      .string()
+      .describe('The runUid (UUID) or commitOid (commit hash) to identify the run'),
+  },
+  handleDeepsourceRun
+);
+
+mcpServer.tool(
+  'deepsource_dependency_vulnerabilities',
+  `Get dependency vulnerabilities from a DeepSource project with support for Relay-style cursor-based pagination.
+For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor.
+For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor.
+The response includes \`pageInfo\` with \`hasNextPage\`, \`hasPreviousPage\`, \`startCursor\`, and \`endCursor\`
+to help navigate through pages.
+
+The response provides detailed information about each vulnerability, including:
+- Package information (name, ecosystem, purl)
+- Package version details
+- Vulnerability details (identifiers, severity, CVSS scores)
+- Reachability status (whether the vulnerability is reachable in the code)
+- Fixability information (whether and how the vulnerability can be fixed)`,
+  {
+    projectKey: z
+      .string()
+      .min(1, { message: 'Project key cannot be empty' })
+      .describe('The unique identifier for the DeepSource project'),
+    offset: z
+      .number()
+      .int({ message: 'Offset must be an integer' })
+      .nonnegative({ message: 'Offset must be non-negative' })
+      .optional()
+      .describe('Legacy pagination: Number of items to skip'),
+    first: z
+      .number()
+      .int({ message: 'First must be an integer' })
+      .positive({ message: 'First must be positive' })
+      .optional()
+      .describe('Number of items to return after the "after" cursor (default: 10)'),
+    after: z.string().optional().describe('Cursor to fetch records after this position'),
+    before: z.string().optional().describe('Cursor to fetch records before this position'),
+    last: z
+      .number()
+      .int({ message: 'Last must be an integer' })
+      .positive({ message: 'Last must be positive' })
+      .optional()
+      .describe('Number of items to return before the "before" cursor (default: 10)'),
+  },
+  handleDeepsourceDependencyVulnerabilities
+);
 
 // Register quality metrics tools
 mcpServer.tool(

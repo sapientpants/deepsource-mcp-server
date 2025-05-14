@@ -549,26 +549,13 @@ export class DeepSourceClient {
       return false;
     }
 
-    // Check if it has the axios error shape
+    // Check if it has the axios error shape and matches all criteria
     const potentialAxiosError = error as Partial<AxiosError>;
-    if (!potentialAxiosError.isAxiosError) {
-      return false;
-    }
-
-    // Check status code if provided
-    if (statusCode !== undefined) {
-      const status = potentialAxiosError.response?.status;
-      if (status !== statusCode) {
-        return false;
-      }
-    }
-
-    // Check error code if provided
-    if (errorCode !== undefined && potentialAxiosError.code !== errorCode) {
-      return false;
-    }
-
-    return true;
+    return (
+      Boolean(potentialAxiosError.isAxiosError) &&
+      (statusCode === undefined || potentialAxiosError.response?.status === statusCode) &&
+      (errorCode === undefined || potentialAxiosError.code === errorCode)
+    );
   }
 
   /**
@@ -2257,7 +2244,7 @@ export class DeepSourceClient {
             name
             id
             reports {
-              ${this.getReportField(reportType)} {
+              ${DeepSourceClient.getReportField(reportType)} {
                 key
                 title
                 currentValue
@@ -2310,7 +2297,7 @@ export class DeepSourceClient {
         title:
           typeof reportData.title === 'string'
             ? reportData.title
-            : this.getTitleForReportType(reportType),
+            : DeepSourceClient.getTitleForReportType(reportType),
         currentValue:
           typeof reportData.currentValue === 'number' ? reportData.currentValue : undefined,
         status:
@@ -2337,7 +2324,7 @@ export class DeepSourceClient {
    * @returns The GraphQL field name for the report
    * @private
    */
-  private getReportField(reportType: ReportType): string {
+  private static getReportField(reportType: ReportType): string {
     switch (reportType) {
       case ReportType.OWASP_TOP_10:
         return 'owaspTop10';
@@ -2366,7 +2353,7 @@ export class DeepSourceClient {
    * @returns A user-friendly title for the report
    * @private
    */
-  private getTitleForReportType(reportType: ReportType): string {
+  private static getTitleForReportType(reportType: ReportType): string {
     switch (reportType) {
       case ReportType.OWASP_TOP_10:
         return 'OWASP Top 10';
@@ -2430,7 +2417,7 @@ export class DeepSourceClient {
     }
 
     // Get the field name for the report type
-    const fieldName = this.getReportField(reportType);
+    const fieldName = DeepSourceClient.getReportField(reportType);
     if (!fieldName) {
       return null;
     }
