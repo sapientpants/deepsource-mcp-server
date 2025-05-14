@@ -335,6 +335,28 @@ The following guidelines are based on frequent DeepSource issues detected in thi
    const message = `Hello, ${name}!`;
    ```
 
+3. **Use optional chaining instead of logical operators (JS-W1044)** - Modern JavaScript offers more concise syntax for property access and method calls:
+   ```typescript
+   // Bad
+   function getUserName(user) {
+     return user && user.profile && user.profile.name;
+   }
+   
+   // Good
+   function getUserName(user) {
+     return user?.profile?.name;
+   }
+   
+   // Bad
+   const callback = someObj && someObj.callback;
+   if (callback) {
+     callback();
+   }
+   
+   // Good
+   someObj?.callback?.();
+   ```
+
 ### Improving Method Organization
 
 1. **Make instance methods static when they don't use `this` (JS-0105)** - Methods that don't reference instance properties or methods should be static:
@@ -400,7 +422,7 @@ The following guidelines are based on frequent DeepSource issues detected in thi
 
 ### Test Coverage Best Practices
 
-1. **Maintain high test coverage** - Ensure all code paths, especially edge cases, are well-tested:
+1. **Maintain high test coverage (TCV-001)** - Ensure all code paths, especially edge cases, are well-tested:
    ```typescript
    // For edge cases in error handling
    test('should handle null input gracefully', () => {
@@ -439,6 +461,159 @@ The following guidelines are based on frequent DeepSource issues detected in thi
        // Test server error path
      });
    });
+   ```
+
+4. **Test code before merging** - DeepSource flags lines that aren't covered by tests as critical issues:
+   ```typescript
+   // Before adding new methods or classes
+   // 1. Write tests first (TDD approach)
+   // 2. Implement the feature
+   // 3. Verify test coverage with 'pnpm run test:coverage'
+   
+   // Prioritize testing:
+   // - Error handling branches
+   // - Edge cases (null, undefined, empty values)
+   // - Complex business logic
+   // - Public API methods
+   ```
+
+5. **Write test cases for all possible scenarios** - Consider all possible paths through the code:
+   ```typescript
+   // For a function with multiple conditions:
+   test('returns correct result when all conditions are met', () => { /* ... */ });
+   test('throws error when first condition fails', () => { /* ... */ });
+   test('returns fallback when second condition fails', () => { /* ... */ });
+   ```
+
+### Import and Module Best Practices
+
+1. **Avoid wildcard imports (JS-C1003)** - Use explicit imports instead of importing everything from a module:
+   ```typescript
+   // Bad
+   import * as utils from './utils';
+   
+   // Good
+   import { formatDate, validateInput } from './utils';
+   ```
+
+2. **Use named imports for better clarity** - This makes it easier to track dependencies:
+   ```typescript
+   // Bad - obscures which parts of the library you're using
+   import * as _ from 'lodash';
+   
+   // Good - clearly indicates which functions you're using
+   import { isEmpty, isEqual, cloneDeep } from 'lodash';
+   ```
+
+3. **Add comments for necessary wildcard imports** - When a library requires wildcard imports:
+   ```typescript
+   // skipcq: JS-C1003 - This library does not expose itself as an ES Module
+   import * as Sentry from '@sentry/node';
+   ```
+
+### Function Complexity Management
+
+1. **Reduce cyclomatic complexity (JS-R1005)** - Break down complex functions with many decision points:
+   ```typescript
+   // Bad - high cyclomatic complexity
+   function processPayment(payment) {
+     if (payment.type === 'credit') {
+       if (payment.amount > 1000) {
+         if (payment.verified) {
+           // Process verified high-value credit payment
+         } else {
+           // Request verification for high-value payment
+         }
+       } else {
+         // Process regular credit payment
+       }
+     } else if (payment.type === 'debit') {
+       // Similar nested conditions for debit
+     } else if (payment.type === 'crypto') {
+       // Similar nested conditions for crypto
+     }
+   }
+   
+   // Good - extract functions and use early returns
+   function processPayment(payment) {
+     if (payment.type === 'credit') {
+       return processCreditPayment(payment);
+     } else if (payment.type === 'debit') {
+       return processDebitPayment(payment);
+     } else if (payment.type === 'crypto') {
+       return processCryptoPayment(payment);
+     }
+     return { error: 'Unsupported payment type' };
+   }
+   
+   function processCreditPayment(payment) {
+     if (payment.amount <= 1000) {
+       return processRegularCreditPayment(payment);
+     }
+     
+     return payment.verified
+       ? processVerifiedHighValueCreditPayment(payment)
+       : requestVerificationForHighValuePayment(payment);
+   }
+   ```
+
+2. **Use lookup tables instead of long if-else chains** - Simplify decision trees:
+   ```typescript
+   // Bad - long if-else chain
+   function getCountryCode(country) {
+     if (country === 'United States') return 'US';
+     else if (country === 'United Kingdom') return 'UK';
+     else if (country === 'Canada') return 'CA';
+     else if (country === 'Australia') return 'AU';
+     // ... many more conditions
+     else return 'UNKNOWN';
+   }
+   
+   // Good - lookup table
+   function getCountryCode(country) {
+     const countryMap = {
+       'United States': 'US',
+       'United Kingdom': 'UK',
+       'Canada': 'CA',
+       'Australia': 'AU',
+       // ... many more mappings
+     };
+     
+     return countryMap[country] || 'UNKNOWN';
+   }
+   ```
+
+3. **Separate concerns into different functions** - Each function should have a single responsibility:
+   ```typescript
+   // Bad - function doing too much
+   function processOrder(order) {
+     // Validate order
+     // Calculate tax
+     // Apply discounts
+     // Process payment
+     // Update inventory
+     // Send confirmation email
+   }
+   
+   // Good - separated concerns
+   function processOrder(order) {
+     if (!validateOrder(order)) {
+       return { error: 'Invalid order' };
+     }
+     
+     const orderWithTax = calculateTax(order);
+     const finalOrder = applyDiscounts(orderWithTax);
+     
+     const paymentResult = processPayment(finalOrder);
+     if (!paymentResult.success) {
+       return { error: 'Payment failed', details: paymentResult.error };
+     }
+     
+     updateInventory(finalOrder);
+     sendConfirmationEmail(finalOrder);
+     
+     return { success: true, orderId: finalOrder.id };
+   }
    ```
 
 ### Advanced TypeScript Best Practices
@@ -527,3 +702,9 @@ The following guidelines are based on frequent DeepSource issues detected in thi
 - Use discriminated unions for complex state management.
 - Add comprehensive tests for edge cases, not just the happy paths.
 - Use const assertions to preserve literal types in object literals.
+- Use optional chaining (?.) instead of logical operators (&&) for nested property access.
+- Avoid wildcard imports; use named imports for better clarity.
+- Break down complex functions to reduce cyclomatic complexity.
+- Use lookup tables instead of long if-else chains for mapping values.
+- Separate concerns into different functions with single responsibilities.
+- Always maintain high test coverage to prevent TCV-001 (Lines not covered in tests) issues.
