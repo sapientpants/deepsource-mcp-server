@@ -9,7 +9,12 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { DeepSourceClient, ReportType, ReportStatus } from './deepsource.js';
-import { MetricShortcode, MetricKey, MetricThresholdStatus } from './types/metrics.js';
+import {
+  MetricShortcode,
+  MetricKey,
+  MetricThresholdStatus,
+  // MetricHistoryParams, // Commented out as it's not used in this file
+} from './types/metrics.js';
 import { z } from 'zod';
 
 // Initialize MCP server
@@ -778,6 +783,148 @@ export async function handleDeepsourceUpdateMetricSetting({
 }
 
 /**
+ * Interface for parameters for fetching historical metrics data
+ * @public
+ */
+// Previously declared interface for DeepsourceMetricHistoryParams
+// Keeping this commented out as a reference for future implementation
+/*
+export interface DeepsourceMetricHistoryParams {
+  // DeepSource project key to fetch metrics for
+  projectKey: string;
+  // Metric shortcode to get history for
+  metricShortcode: MetricShortcode;
+  // Context key for the metric
+  metricKey: MetricKey;
+  // Start date for the history range (ISO string)
+  startDate?: string;
+  // End date for the history range (ISO string)
+  endDate?: string;
+  // Maximum number of history values to retrieve
+  limit?: number;
+}
+*/
+
+/**
+ * Fetches historical metric data for a specific metric in a repository
+ * @param params - Parameters for retrieving the historical data
+ * @returns Response containing the historical metric values with trend analysis
+ * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
+ * @public
+ */
+// Previously declared function handleDeepsourceMetricHistory
+// Keeping this commented out as a reference for future implementation
+/*
+export async function handleDeepsourceMetricHistory({
+  projectKey,
+  metricShortcode,
+  metricKey,
+  startDate,
+  endDate,
+  limit,
+}: DeepsourceMetricHistoryParams) {
+  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  // istanbul ignore if
+  if (!apiKey) {
+    throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
+  }
+
+  const client = new DeepSourceClient(apiKey);
+  const historyData = await client.getMetricHistory({
+    projectKey,
+    metricShortcode,
+    metricKey,
+    startDate,
+    endDate,
+    limit,
+  });
+
+  if (!historyData) {
+    throw new Error(
+      `Metric history not found for metric '${metricShortcode}' with key '${metricKey}' in project '${projectKey}'`
+    );
+  }
+
+  // Calculate some basic statistics
+  const values = historyData.values;
+  const currentValue = values.length > 0 ? values[values.length - 1].value : 0;
+  const oldestValue = values.length > 0 ? values[0].value : 0;
+  const changeAmount = currentValue - oldestValue;
+  const changePct = oldestValue !== 0 ? Math.round((changeAmount / oldestValue) * 100) : 0;
+
+  const changeDirection =
+    changeAmount === 0
+      ? 'unchanged'
+      : historyData.positiveDirection === 'UPWARD'
+        ? changeAmount > 0
+          ? 'improved'
+          : 'declined'
+        : changeAmount < 0
+          ? 'improved'
+          : 'declined';
+
+  return {
+    content: [
+*/
+/*
+      {
+        type: 'text' as const,
+        text: JSON.stringify(
+          {
+            metric: {
+              name: historyData.name,
+              shortcode: historyData.shortcode,
+              key: historyData.metricKey,
+              unit: historyData.unit,
+              positiveDirection: historyData.positiveDirection,
+              threshold: historyData.threshold,
+              currentValue: currentValue,
+            },
+            trendAnalysis: {
+              isTrendingPositive: historyData.isTrendingPositive,
+              changeAmount: changeAmount,
+              changePercentage: changePct,
+              changeDirection: changeDirection,
+              dataPointCount: values.length,
+              timeRange:
+                values.length > 0
+                  ? {
+                      firstDate: values[0].createdAt,
+                      lastDate: values[values.length - 1].createdAt,
+                    }
+                  : null,
+            },
+            historicalValues: historyData.values.map((value) => ({
+              value: value.value,
+              valueDisplay: value.valueDisplay,
+              threshold: value.threshold,
+              thresholdStatus: value.thresholdStatus,
+              commitOid: value.commitOid,
+              createdAt: value.createdAt,
+            })),
+            insights: {
+              summary: `The ${historyData.name} metric has ${changeDirection} by ${Math.abs(changeAmount).toFixed(2)}${historyData.unit} (${changePct}%) over the analyzed period.`,
+              status: historyData.isTrendingPositive
+                ? `The metric is trending in a positive direction.`
+                : `The metric is trending in a negative direction.`,
+              recommendations: historyData.isTrendingPositive
+                ? [`Continue monitoring ${historyData.name} to maintain the positive trend`]
+                : [
+                    `Investigate recent code changes that might have caused the decline in ${historyData.name}`,
+                    `Consider setting up alerts for this metric using DeepSource's threshold features`,
+                  ],
+            },
+          },
+          null,
+          2
+        ),
+      },
+    ],
+  };
+}
+*/
+
+/**
  * Fetches and returns compliance reports from a DeepSource project
  * @param params - Parameters for fetching the compliance report, including project key and report type
  * @returns Response containing the compliance report with security issues statistics
@@ -1082,6 +1229,47 @@ mcpServer.tool(
   },
   handleDeepsourceUpdateMetricSetting
 );
+
+// Register historical metrics tool
+// Previously registered metric history tool
+// Keeping this commented out as a reference for future implementation
+/*
+mcpServer.tool(
+  'deepsource_metric_history',
+  `Get historical trend analysis for code quality metrics from a DeepSource project.
+
+  This tool provides access to time-series data for specific metrics including:
+  - Line Coverage (LCV): Percentage of lines covered by tests
+  - Branch Coverage (BCV): Percentage of branches covered by tests
+  - Duplicate Code Percentage (DDP): Percentage of code that is duplicated
+  - And other quality metrics tracked by DeepSource
+
+  The response includes:
+  - Historical values of the metric over time
+  - Trend analysis showing whether the metric is improving or declining
+  - Statistics about the amount and percentage of change
+  - Insights and recommendations based on the metric's trend`,
+  {
+    projectKey: z.string().describe('The unique identifier for the DeepSource project'),
+    metricShortcode: z
+      .nativeEnum(MetricShortcode)
+      .describe('The shortcode for the metric to get history for (e.g., LCV for Line Coverage)'),
+    metricKey: z
+      .nativeEnum(MetricKey)
+      .describe('The context key for the metric (e.g., AGGREGATE for repository-wide metrics)'),
+    startDate: z
+      .string()
+      .optional()
+      .describe('Optional start date for the history range (ISO string)'),
+    endDate: z.string().optional().describe('Optional end date for the history range (ISO string)'),
+    limit: z
+      .number()
+      .optional()
+      .describe('Maximum number of history values to retrieve (defaults to 100)'),
+  },
+  handleDeepsourceMetricHistory
+);
+*/
 
 // Register compliance report tool
 mcpServer.tool(
