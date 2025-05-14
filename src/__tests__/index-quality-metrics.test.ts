@@ -2,6 +2,7 @@
  * Tests for the DeepSource quality metrics handlers
  */
 import nock from 'nock';
+// Import only the specific handlers needed
 import {
   handleDeepsourceQualityMetrics,
   handleDeepsourceUpdateMetricThreshold,

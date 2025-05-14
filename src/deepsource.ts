@@ -2268,45 +2268,53 @@ export class DeepSourceClient {
   }
 
   /**
-   * Fetches historical metric data for a specific metric in a repository
-   * This method retrieves time-series data for a single metric to enable trend analysis
-   *
-   * @param params - Parameters for retrieving metric history:
-   *   - projectKey: The unique identifier for the DeepSource project
-   *   - metricShortcode: The code for the metric to get history for (e.g., LCV, BCV)
-   *   - metricKey: The context key for the metric (e.g., AGGREGATE, PYTHON)
-   *   - startDate: Optional start date for the history range (ISO string)
-   *   - endDate: Optional end date for the history range (ISO string)
-   *   - limit: Optional maximum number of history points to retrieve
-   *
-   * @returns Promise that resolves to a response containing historical metric values
-   * @throws Error if the project key, metric shortcode, or metric key is invalid
-   * @throws Error when network, authentication or permission issues occur
-   * @public
+   * Check if an error indicates a "not found" condition
+   * @param error - The error to check
+   * @returns True if the error indicates a not found condition
+   * @private
    */
+  private static isNotFoundError(error: unknown): boolean {
+    return (
+      DeepSourceClient.isError(error) &&
+      (error.message.includes('NoneType') || error.message.includes('not found'))
+    );
+  }
+
+  /**
+   * Process the main metric history logic after test environment check
+   * @param params - Parameters for retrieving metric history
+   * @returns Promise with the metric history response
+   * @private
+   */
+  private async processRegularMetricHistory(
+    params: MetricHistoryParams
+  ): Promise<MetricHistoryResponse> {
+    // Validate parameters and get project
+    const { project, metric, metricItem } = await this.validateAndGetMetricInfo(params);
+
+    // Fetch and process historical data
+    const historyValues = await this.fetchHistoricalValues(params, project, metricItem);
+
+    // Calculate trend and create response
+    return this.createMetricHistoryResponse(params, metric, metricItem, historyValues);
+  }
+
   async getMetricHistory(params: MetricHistoryParams): Promise<MetricHistoryResponse | null> {
     try {
-      // Handle test environment separately to reduce complexity
+      // Handle test environment separately
       const testResult = await this.handleTestEnvironment(params);
       if (testResult !== undefined) {
         return testResult;
       }
 
-      // Validate parameters and get project
-      const { project, metric, metricItem } = await this.validateAndGetMetricInfo(params);
-
-      // Fetch and process historical data
-      const historyValues = await this.fetchHistoricalValues(params, project, metricItem);
-
-      // Calculate trend and create response
-      return this.createMetricHistoryResponse(params, metric, metricItem, historyValues);
+      // Handle regular processing
+      return await this.processRegularMetricHistory(params);
     } catch (error) {
-      if (
-        DeepSourceClient.isError(error) &&
-        (error.message.includes('NoneType') || error.message.includes('not found'))
-      ) {
+      // Handle not found errors
+      if (DeepSourceClient.isNotFoundError(error)) {
         return null;
       }
+      // Handle other errors
       return DeepSourceClient.handleGraphQLError(error);
     }
   }
@@ -2609,7 +2617,7 @@ export class DeepSourceClient {
     }
 
     // Extract and process the data
-    return this.processHistoricalData(response.data.data, params);
+    return DeepSourceClient.processHistoricalData(response.data.data, params);
   }
 
   /**
@@ -2619,7 +2627,7 @@ export class DeepSourceClient {
    * @returns Array of historical metric values
    * @private
    */
-  private processHistoricalData(
+  private static processHistoricalData(
     data: Record<string, unknown>,
     params: MetricHistoryParams
   ): MetricHistoryValue[] {
