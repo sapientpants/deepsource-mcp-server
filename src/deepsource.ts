@@ -726,34 +726,6 @@ export class DeepSourceClient {
   }
 
   /**
-   * Logs a warning message about non-standard pagination usage
-   *
-   * This method logs warnings when pagination parameters are used in
-   * ways that don't follow standard Relay cursor pagination conventions.
-   *
-   * Logs warnings about non-standard pagination usage via the centralized logger.
-   *
-   * @param message Optional custom warning message
-   * @private
-   */
-  /**
-   * Logs a warning message about non-standard pagination usage
-   *
-   * This method provides consistent warning messages for pagination anti-patterns
-   * in Relay-style cursor-based pagination. It helps developers understand
-   * why their pagination approach might cause unexpected behavior.
-   *
-   * @param message Optional custom warning message to use instead of the default
-   * @private
-   */
-  private logPaginationWarning(message?: string): void {
-    const warningMessage =
-      message ||
-      'Non-standard pagination: Using "last" without "before" is not recommended in Relay pagination';
-    this.logger.warn(warningMessage);
-  }
-
-  /**
    * Creates an empty paginated response
    * @template T The type of items in the response
    * @returns {PaginatedResponse<T>} Empty paginated response with consistent structure
@@ -773,6 +745,24 @@ export class DeepSourceClient {
   }
 
   /**
+   * Logs a warning message about non-standard pagination usage
+   *
+   * This method provides consistent warning messages for pagination anti-patterns
+   * in Relay-style cursor-based pagination. It helps developers understand
+   * why their pagination approach might cause unexpected behavior.
+   *
+   * @param message Optional custom warning message to use instead of the default
+   * @private
+   */
+  private static logPaginationWarning(message?: string): void {
+    // Using the static logger instead of console.warn for better log management
+    const warningMessage =
+      message ||
+      'Non-standard pagination: Using "last" without "before" is not recommended in Relay pagination';
+    DeepSourceClient.logger.warn(warningMessage);
+  }
+
+  /**
    * Normalizes pagination parameters for GraphQL queries
    * Ensures consistency in pagination parameters following Relay pagination best practices
    *
@@ -788,15 +778,12 @@ export class DeepSourceClient {
    *    - Use 'first' as the count parameter (default: 10)
    *    - Remove any 'last' parameter to avoid ambiguity
    *
-   * Integer validation is also applied to ensure numerical parameters are valid.
-   *
    * @template T Type that extends PaginationParams
    * @param {T} params - Original pagination parameters
    * @returns {T} Normalized pagination parameters with consistent values
    * @private
    */
-  private normalizePaginationParams<T extends PaginationParams>(params: T): T {
-    // Create a copy to avoid modifying the original object
+  private static normalizePaginationParams<T extends PaginationParams>(params: T): T {
     const normalizedParams = { ...params };
 
     // Validate and normalize numerical parameters
@@ -824,49 +811,6 @@ export class DeepSourceClient {
     }
 
     // Apply Relay pagination rules
-    if (normalizedParams.before) {
-      // When fetching backwards with 'before', prioritize 'last'
-      normalizedParams.last = normalizedParams.last ?? normalizedParams.first ?? 10;
-      normalizedParams.first = undefined;
-    } else if (normalizedParams.last) {
-      // If 'last' is provided without 'before', log a warning but still use 'last'
-      this.logPaginationWarning(
-        `Non-standard pagination: Using "last=${normalizedParams.last}" without "before" cursor is not recommended`
-      );
-      // Keep normalizedParams.last as is
-      normalizedParams.first = undefined;
-    } else {
-      // Default or forward pagination with 'after', prioritize 'first'
-      normalizedParams.first = normalizedParams.first ?? 10;
-      normalizedParams.last = undefined;
-    }
-
-    return normalizedParams;
-  }
-
-  /**
-   * Logs a warning message about non-standard pagination usage
-   * @param message Optional custom warning message
-   * @private
-   */
-  private static logPaginationWarning(message?: string): void {
-    // Using the static logger instead of console.warn for better log management
-    const warningMessage =
-      message ||
-      'Non-standard pagination: Using "last" without "before" is not recommended in Relay pagination';
-    DeepSourceClient.logger.warn(warningMessage);
-  }
-
-  /**
-   * Normalizes pagination parameters for GraphQL queries
-   * @param params - Original pagination parameters
-   * @returns Normalized pagination parameters
-   * @private
-   */
-  private static normalizePaginationParams<T extends PaginationParams>(params: T): T {
-    const normalizedParams = { ...params };
-
-    // Ensure we're not using both first and last at the same time (not recommended in Relay)
     if (normalizedParams.before) {
       // When fetching backwards with 'before', prioritize 'last'
       normalizedParams.last = normalizedParams.last ?? normalizedParams.first ?? 10;
@@ -972,8 +916,8 @@ export class DeepSourceClient {
         return DeepSourceClient.createEmptyPaginatedResponse<DeepSourceIssue>();
       }
 
-      // Normalize pagination parameters using the helper method
-      const normalizedParams = this.normalizePaginationParams(params);
+      // Normalize pagination parameters using the static helper method
+      const normalizedParams = DeepSourceClient.normalizePaginationParams(params);
 
       // Keeping template literal here since it contains a lot of variable references
       // with complex GraphQL query structure. The benefits of converting to string
@@ -1096,8 +1040,8 @@ export class DeepSourceClient {
         return DeepSourceClient.createEmptyPaginatedResponse<DeepSourceRun>();
       }
 
-      // Normalize pagination parameters using the helper method
-      const normalizedParams = this.normalizePaginationParams(params);
+      // Normalize pagination parameters using the static helper method
+      const normalizedParams = DeepSourceClient.normalizePaginationParams(params);
 
       const repoQuery =
         'query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int, $analyzerIn: [String]) {\n          repository(login: $login, name: $name, vcsProvider: $provider) {\n            name\n            id\n            analysisRuns(offset: $offset, first: $first, after: $after, before: $before, last: $last) {\n              pageInfo {\n                hasNextPage\n                hasPreviousPage\n                startCursor\n                endCursor\n              }\n              totalCount\n              edges {\n                node {\n                  id\n                  runUid\n                  commitOid\n                  branchName\n                  baseOid\n                  status\n                  createdAt\n                  updatedAt\n                  finishedAt\n                  summary {\n                    occurrencesIntroduced\n                    occurrencesResolved\n                    occurrencesSuppressed\n                    occurrenceDistributionByAnalyzer {\n                      analyzerShortcode\n                      introduced\n                    }\n                    occurrenceDistributionByCategory {\n                      category\n                      introduced\n                    }\n                  }\n                  repository {\n                    name\n                    id\n                  }\n                  checks(analyzerIn: $analyzerIn) {\n                    edges {\n                      node {\n                        analyzer {\n                          shortcode\n                        }\n                      }\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n';
@@ -1953,7 +1897,7 @@ export class DeepSourceClient {
       // Use Promise.all to fetch projects and normalize parameters concurrently
       const [projects, normalizedParams] = await Promise.all([
         this.listProjects(),
-        Promise.resolve(this.normalizePaginationParams(params)),
+        Promise.resolve(DeepSourceClient.normalizePaginationParams(params)),
       ]);
 
       const project = projects.find((p) => p.key === projectKey);
@@ -2236,39 +2180,39 @@ export class DeepSourceClient {
       // Validate repository information
       DeepSourceClient.validateProjectRepository(project, projectKey);
 
-      // Build the compliance report query
-      // Keeping template literal here since it uses interpolation with this.getReportField(reportType)
-      const reportQuery = `
-        query($login: String!, $name: String!, $provider: VCSProvider!, $reportKey: ReportKey!) {
-          repository(login: $login, name: $name, vcsProvider: $provider) {
-            name
-            id
-            reports {
-              ${DeepSourceClient.getReportField(reportType)} {
-                key
-                title
-                currentValue
-                status
-                securityIssueStats {
-                  key
-                  title
-                  occurrence {
-                    critical
-                    major
-                    minor
-                    total
-                  }
-                }
-                trends {
-                  label
-                  value
-                  changePercentage
-                }
-              }
-            }
-          }
-        }
-      `;
+      // Build the compliance report query using string concatenation
+      // Only use template literal for the dynamic field name
+      const fieldName = DeepSourceClient.getReportField(reportType);
+      const reportQuery =
+        'query($login: String!, $name: String!, $provider: VCSProvider!, $reportKey: ReportKey!) {' +
+        '  repository(login: $login, name: $name, vcsProvider: $provider) {' +
+        '    name' +
+        '    id' +
+        '    reports {' +
+        `      ${fieldName} {` +
+        '        key' +
+        '        title' +
+        '        currentValue' +
+        '        status' +
+        '        securityIssueStats {' +
+        '          key' +
+        '          title' +
+        '          occurrence {' +
+        '            critical' +
+        '            major' +
+        '            minor' +
+        '            total' +
+        '          }' +
+        '        }' +
+        '        trends {' +
+        '          label' +
+        '          value' +
+        '          changePercentage' +
+        '        }' +
+        '      }' +
+        '    }' +
+        '  }' +
+        '}';
 
       // Execute the query
       const response = await this.client.post('', {
@@ -2287,7 +2231,7 @@ export class DeepSourceClient {
       }
 
       // Extract the report data from the response
-      const reportData = this.extractReportData(response, reportType);
+      const reportData = DeepSourceClient.extractReportData(response, reportType);
       if (!reportData) {
         return null;
       }
@@ -2383,7 +2327,7 @@ export class DeepSourceClient {
    * @returns The extracted report data or null if not found
    * @private
    */
-  private extractReportData(
+  private static extractReportData(
     response: unknown,
     reportType: ReportType
   ): Record<string, unknown> | null {

@@ -767,11 +767,8 @@ describe('DeepSourceClient', () => {
         },
       };
 
-      // Spy on instance method logPaginationWarning instead of static method
-      const logPaginationWarningSpy = jest.spyOn(
-        client as unknown as { logPaginationWarning: () => void },
-        'logPaginationWarning'
-      );
+      // Spy on static method logPaginationWarning
+      const logPaginationWarningSpy = jest.spyOn(DeepSourceClient, 'logPaginationWarning');
 
       try {
         nock('https://api.deepsource.io')
@@ -1475,11 +1472,8 @@ describe('DeepSourceClient', () => {
         },
       };
 
-      // Spy on instance method logPaginationWarning instead of static method
-      const logPaginationWarningSpy = jest.spyOn(
-        client as unknown as { logPaginationWarning: () => void },
-        'logPaginationWarning'
-      );
+      // Spy on static method logPaginationWarning
+      const logPaginationWarningSpy = jest.spyOn(DeepSourceClient, 'logPaginationWarning');
 
       try {
         nock('https://api.deepsource.io')
