@@ -498,7 +498,7 @@ export class DeepSourceClient {
    * @private
    */
   private static extractErrorMessages(errors: Array<{ message: string }>): string {
-    const errorMessages = errors.map((e) => e.message);
+    const errorMessages = errors.map((error) => error.message);
     return errorMessages.join(', ');
   }
 
@@ -744,6 +744,16 @@ export class DeepSourceClient {
    * Logs warnings about non-standard pagination usage via the centralized logger.
    *
    * @param message Optional custom warning message
+   * @private
+   */
+  /**
+   * Logs a warning message about non-standard pagination usage
+   *
+   * This method provides consistent warning messages for pagination anti-patterns
+   * in Relay-style cursor-based pagination. It helps developers understand
+   * why their pagination approach might cause unexpected behavior.
+   *
+   * @param message Optional custom warning message to use instead of the default
    * @private
    */
   private logPaginationWarning(message?: string): void {
@@ -1270,14 +1280,14 @@ export class DeepSourceClient {
    * - Validating package, packageVersion, and vulnerability objects
    * - Ensuring required fields exist within nested objects
    *
-   * @param {unknown} node The raw vulnerability node from the GraphQL response
-   * @returns {boolean} Boolean indicating whether the node has valid required fields
-   * @private
-   */
-  /**
-   * Validates if a node from the GraphQL response is a valid vulnerability node
-   * @param node - The node to validate from GraphQL response
-   * @returns {boolean} True if the node is a valid vulnerability node, false otherwise
+   * Validates a vulnerability node has the expected structure
+   *
+   * Performs deep validation of vulnerability data returned from DeepSource API,
+   * checking for required fields and proper structure at various levels.
+   * Logs detailed warnings for specific validation failures to aid in debugging.
+   *
+   * @param node The unknown object to validate as a vulnerability node
+   * @returns true if the node has valid structure, false otherwise
    * @private
    */
   private static isValidVulnerabilityNode(node: unknown): boolean {
@@ -1651,7 +1661,15 @@ export class DeepSourceClient {
    * - Infinite loops (with iteration limit)
    * - Exceptionally large data sets (with memory-efficient processing)
    *
-   * @param edges Array of vulnerability edges from GraphQL response
+   * Generator function that safely processes vulnerability edges from GraphQL response
+   *
+   * This method provides robust iteration over API response data with the following safety features:
+   * - Validates input data structure before processing
+   * - Limits maximum iterations to prevent infinite loops with malformed data
+   * - Handles and logs errors for individual items without failing the entire process
+   * - Implements yield pattern for memory efficiency with large datasets
+   *
+   * @param edges Array of raw vulnerability edges from GraphQL response
    * @yields Valid VulnerabilityOccurrence objects
    * @private
    */
@@ -2071,8 +2089,8 @@ export class DeepSourceClient {
       // Extract and format metrics data
       const metrics = response.data.data?.repository?.metrics || [];
 
-      return metrics.map((metric: unknown) => {
-        const metricRecord = metric as Record<string, unknown>;
+      return metrics.map((metricItem: unknown) => {
+        const metricRecord = metricItem as Record<string, unknown>;
         return {
           name: (metricRecord.name as string) || '',
           shortcode: (metricRecord.shortcode as string) || '',
@@ -2083,8 +2101,8 @@ export class DeepSourceClient {
           maxValueAllowed: metricRecord.maxValueAllowed as number,
           isReported: Boolean(metricRecord.isReported),
           isThresholdEnforced: Boolean(metricRecord.isThresholdEnforced),
-          items: ((metricRecord.items as unknown[]) || []).map((item: unknown) => {
-            const itemRecord = item as Record<string, unknown>;
+          items: ((metricRecord.items as unknown[]) || []).map((metricItemData: unknown) => {
+            const itemRecord = metricItemData as Record<string, unknown>;
             return {
               id: (itemRecord.id as string) || '',
               key: (itemRecord.key as string) || 'AGGREGATE',

@@ -137,8 +137,14 @@ export async function handleDeepsourceProjectIssues({
           // Add pagination help information
           pagination_help: {
             description: 'This API uses Relay-style cursor-based pagination',
-            forward_pagination: `To get the next page, use 'first: 10, after: "${result.pageInfo.endCursor || 'cursor_value'}"'`,
-            backward_pagination: `To get the previous page, use 'last: 10, before: "${result.pageInfo.startCursor || 'cursor_value'}"'`,
+            forward_pagination:
+              'To get the next page, use \'first: 10, after: "' +
+              (result.pageInfo.endCursor || 'cursor_value') +
+              '"\'',
+            backward_pagination:
+              'To get the previous page, use \'last: 10, before: "' +
+              (result.pageInfo.startCursor || 'cursor_value') +
+              '"\'',
             page_status: {
               has_next_page: result.pageInfo.hasNextPage,
               has_previous_page: result.pageInfo.hasPreviousPage,
@@ -227,8 +233,14 @@ export async function handleDeepsourceProjectRuns({
           // Add pagination help information
           pagination_help: {
             description: 'This API uses Relay-style cursor-based pagination',
-            forward_pagination: `To get the next page, use 'first: 10, after: "${result.pageInfo.endCursor || 'cursor_value'}"'`,
-            backward_pagination: `To get the previous page, use 'last: 10, before: "${result.pageInfo.startCursor || 'cursor_value'}"'`,
+            forward_pagination:
+              'To get the next page, use \'first: 10, after: "' +
+              (result.pageInfo.endCursor || 'cursor_value') +
+              '"\'',
+            backward_pagination:
+              'To get the previous page, use \'last: 10, before: "' +
+              (result.pageInfo.startCursor || 'cursor_value') +
+              '"\'',
             page_status: {
               has_next_page: result.pageInfo.hasNextPage,
               has_previous_page: result.pageInfo.hasPreviousPage,
