@@ -2184,7 +2184,7 @@ export class DeepSourceClient {
       // Only use template literal for the dynamic field name
       const fieldName = DeepSourceClient.getReportField(reportType);
       const reportQuery =
-        'query($login: String!, $name: String!, $provider: VCSProvider!, $reportKey: ReportKey!) {' +
+        'query($login: String!, $name: String!, $provider: VCSProvider!) {' +
         '  repository(login: $login, name: $name, vcsProvider: $provider) {' +
         '    name' +
         '    id' +
@@ -2221,7 +2221,6 @@ export class DeepSourceClient {
           login: project.repository.login,
           name: project.name,
           provider: project.repository.provider,
-          reportKey: reportType,
         },
       });
 
