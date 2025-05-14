@@ -1,4 +1,3 @@
-import { jest } from '@jest/globals';
 import { DeepSourceClient } from '../deepsource';
 
 // Import types from metrics.ts

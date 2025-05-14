@@ -1,4 +1,3 @@
-import { jest } from '@jest/globals';
 import { DeepSourceClient } from '../deepsource';
 
 // We need to access private static methods, so we'll create a way to access them

@@ -30,10 +30,7 @@ describe('DeepSourceClient GraphQL Query Execution', () => {
       // Mock the GraphQL response
       nock(API_URL)
         .post('/graphql/')
-        .reply(200, (_uri, requestBody) => {
-          // Skip query structure verification in this test
-          typeof requestBody === 'string' ? JSON.parse(requestBody) : requestBody;
-
+        .reply(200, () => {
           // Return mock data
           return {
             data: {
