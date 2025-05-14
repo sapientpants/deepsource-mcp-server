@@ -9,113 +9,146 @@ import { MetricKey } from '../types/metrics';
 // Mock environment variables for testing
 process.env.DEEPSOURCE_API_KEY = 'test-api-key';
 
-describe('DeepSource MCP Quality Metrics Handlers', () => {
-  // Mock API responses for consistent testing
-  beforeEach(() => {
-    nock.cleanAll();
+// Helper functions for setting up API mocks
+function setupSuccessMocks() {
+  // Setup common API responses for successful cases
+  nock('https://api.deepsource.io')
+    .persist()
+    .post('/graphql/')
+    .reply(200, (uri, requestBody) => {
+      const body = typeof requestBody === 'string' ? JSON.parse(requestBody) : requestBody;
 
-    // Setup common API responses
-    nock('https://api.deepsource.io')
-      .persist()
-      .post('/graphql/')
-      .reply(200, (uri, requestBody) => {
-        const body = typeof requestBody === 'string' ? JSON.parse(requestBody) : requestBody;
-
-        // Mock response for project list query
-        if (body.query && body.query.includes('viewer')) {
-          return {
-            data: {
-              viewer: {
-                email: 'test@example.com',
-                accounts: {
-                  edges: [
-                    {
-                      node: {
-                        login: 'testorg',
-                        repositories: {
-                          edges: [
-                            {
-                              node: {
-                                name: 'Test Project',
-                                defaultBranch: 'main',
-                                dsn: 'test-project',
-                                id: 'repo123',
-                                isPrivate: false,
-                                isActivated: true,
-                                vcsProvider: 'github',
-                              },
+      // Mock response for project list query
+      if (body.query && body.query.includes('viewer')) {
+        return {
+          data: {
+            viewer: {
+              email: 'test@example.com',
+              accounts: {
+                edges: [
+                  {
+                    node: {
+                      login: 'testorg',
+                      repositories: {
+                        edges: [
+                          {
+                            node: {
+                              name: 'Test Project',
+                              defaultBranch: 'main',
+                              dsn: 'test-project',
+                              id: 'repo123',
+                              isPrivate: false,
+                              isActivated: true,
+                              vcsProvider: 'github',
                             },
-                          ],
-                        },
+                          },
+                        ],
                       },
                     },
-                  ],
-                },
-              },
-            },
-          };
-        }
-
-        // Mock response for quality metrics query
-        if (body.query && body.query.includes('metrics')) {
-          return {
-            data: {
-              repository: {
-                name: 'Test Project',
-                id: 'repo123',
-                metrics: [
-                  {
-                    name: 'Line Coverage',
-                    shortcode: 'LCV',
-                    description: 'Percentage of lines covered by tests',
-                    positiveDirection: 'UPWARD',
-                    unit: '%',
-                    minValueAllowed: 0,
-                    maxValueAllowed: 100,
-                    isReported: true,
-                    isThresholdEnforced: true,
-                    items: [
-                      {
-                        id: 'metric1',
-                        key: 'AGGREGATE',
-                        threshold: 80,
-                        latestValue: 85.5,
-                        latestValueDisplay: '85.5%',
-                        thresholdStatus: 'PASSING',
-                      },
-                    ],
                   },
                 ],
               },
             },
-          };
-        }
+          },
+        };
+      }
 
-        // Mock response for threshold update mutation
-        if (body.query && body.query.includes('setRepositoryMetricThreshold')) {
-          return {
-            data: {
-              setRepositoryMetricThreshold: {
-                ok: true,
-              },
+      // Mock response for quality metrics query
+      if (body.query && body.query.includes('metrics')) {
+        return {
+          data: {
+            repository: {
+              name: 'Test Project',
+              id: 'repo123',
+              metrics: [
+                {
+                  name: 'Line Coverage',
+                  shortcode: 'LCV',
+                  description: 'Percentage of lines covered by tests',
+                  positiveDirection: 'UPWARD',
+                  unit: '%',
+                  minValueAllowed: 0,
+                  maxValueAllowed: 100,
+                  isReported: true,
+                  isThresholdEnforced: true,
+                  items: [
+                    {
+                      id: 'metric1',
+                      key: 'AGGREGATE',
+                      threshold: 80,
+                      latestValue: 85.5,
+                      latestValueDisplay: '85.5%',
+                      thresholdStatus: 'PASSING',
+                    },
+                  ],
+                },
+              ],
             },
-          };
-        }
+          },
+        };
+      }
 
-        // Mock response for metric setting update mutation
-        if (body.query && body.query.includes('updateRepositoryMetricSetting')) {
-          return {
-            data: {
-              updateRepositoryMetricSetting: {
-                ok: true,
-              },
+      // Mock response for threshold update mutation
+      if (body.query && body.query.includes('setRepositoryMetricThreshold')) {
+        return {
+          data: {
+            setRepositoryMetricThreshold: {
+              ok: true,
             },
-          };
-        }
+          },
+        };
+      }
 
-        // Default fallback response
-        return { data: {} };
-      });
+      // Mock response for metric setting update mutation
+      if (body.query && body.query.includes('updateRepositoryMetricSetting')) {
+        return {
+          data: {
+            updateRepositoryMetricSetting: {
+              ok: true,
+            },
+          },
+        };
+      }
+
+      // Default fallback response
+      return { data: {} };
+    });
+}
+
+function setupAuthErrorMock() {
+  nock('https://api.deepsource.io')
+    .post('/graphql/')
+    .reply(401, { errors: [{ message: 'Unauthorized access' }] });
+}
+
+function setupThresholdFailureMock() {
+  nock('https://api.deepsource.io')
+    .post('/graphql/')
+    .reply(200, {
+      data: {
+        setRepositoryMetricThreshold: {
+          ok: false,
+        },
+      },
+    });
+}
+
+function setupMetricSettingFailureMock() {
+  nock('https://api.deepsource.io')
+    .post('/graphql/')
+    .reply(200, {
+      data: {
+        updateRepositoryMetricSetting: {
+          ok: false,
+        },
+      },
+    });
+}
+
+describe('DeepSource MCP Quality Metrics Handlers', () => {
+  // Clean up nock before and after each test
+  beforeEach(() => {
+    nock.cleanAll();
   });
 
   afterEach(() => {
@@ -128,6 +161,9 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
 
   describe('Quality Metrics Handler', () => {
     it('should fetch and format quality metrics', async () => {
+      // Setup mocks for this test
+      setupSuccessMocks();
+
       // Call the handler function directly
       const result = await indexModule.handleDeepsourceQualityMetrics({
         projectKey: 'test-project',
@@ -159,11 +195,8 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
     });
 
     it('should handle API errors gracefully', async () => {
-      // Setup a mock that returns an error
-      nock.cleanAll();
-      nock('https://api.deepsource.io')
-        .post('/graphql/')
-        .reply(401, { errors: [{ message: 'Unauthorized access' }] });
+      // Setup auth error mock
+      setupAuthErrorMock();
 
       // Call handler and expect it to throw
       await expect(
@@ -176,6 +209,9 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
 
   describe('Update Metric Threshold Handler', () => {
     it('should update metric threshold and return success', async () => {
+      // Setup mocks for this test
+      setupSuccessMocks();
+
       // Call the handler
       const result = await indexModule.handleDeepsourceUpdateMetricThreshold({
         projectKey: 'test-project',
@@ -200,6 +236,9 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
     });
 
     it('should handle threshold removal', async () => {
+      // Setup mocks for this test
+      setupSuccessMocks();
+
       // Call the handler with null threshold
       const result = await indexModule.handleDeepsourceUpdateMetricThreshold({
         projectKey: 'test-project',
@@ -217,17 +256,8 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
     });
 
     it('should handle failure when updating threshold', async () => {
-      // Setup a mock that returns a failure
-      nock.cleanAll();
-      nock('https://api.deepsource.io')
-        .post('/graphql/')
-        .reply(200, {
-          data: {
-            setRepositoryMetricThreshold: {
-              ok: false,
-            },
-          },
-        });
+      // Setup failure mock
+      setupThresholdFailureMock();
 
       // Call the handler
       const result = await indexModule.handleDeepsourceUpdateMetricThreshold({
@@ -248,6 +278,9 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
 
   describe('Update Metric Setting Handler', () => {
     it('should update metric settings and return success', async () => {
+      // Setup mocks for this test
+      setupSuccessMocks();
+
       // Call the handler
       const result = await indexModule.handleDeepsourceUpdateMetricSetting({
         projectKey: 'test-project',
@@ -265,6 +298,9 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
     });
 
     it('should handle disabling a metric', async () => {
+      // Setup mocks for this test
+      setupSuccessMocks();
+
       // Call the handler with disabled settings
       const result = await indexModule.handleDeepsourceUpdateMetricSetting({
         projectKey: 'test-project',
@@ -281,17 +317,8 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
     });
 
     it('should handle failure when updating settings', async () => {
-      // Setup a mock that returns a failure
-      nock.cleanAll();
-      nock('https://api.deepsource.io')
-        .post('/graphql/')
-        .reply(200, {
-          data: {
-            updateRepositoryMetricSetting: {
-              ok: false,
-            },
-          },
-        });
+      // Setup metrics setting failure mock
+      setupMetricSettingFailureMock();
 
       // Call the handler
       const result = await indexModule.handleDeepsourceUpdateMetricSetting({
