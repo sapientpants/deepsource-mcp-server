@@ -2,7 +2,12 @@
  * Tests for the DeepSource quality metrics handlers
  */
 import nock from 'nock';
-import * as indexModule from '../index';
+// Import individual handlers explicitly for better code clarity
+import {
+  handleDeepsourceQualityMetrics,
+  handleDeepsourceUpdateMetricThreshold,
+  handleDeepsourceUpdateMetricSetting,
+} from '../index';
 import { MetricShortcode } from '../deepsource';
 import { MetricKey } from '../types/metrics';
 
@@ -19,7 +24,7 @@ function setupSuccessMocks() {
       const body = typeof requestBody === 'string' ? JSON.parse(requestBody) : requestBody;
 
       // Mock response for project list query
-      if (body.query && body.query.includes('viewer')) {
+      if (body.query?.includes('viewer')) {
         return {
           data: {
             viewer: {
@@ -54,7 +59,7 @@ function setupSuccessMocks() {
       }
 
       // Mock response for quality metrics query
-      if (body.query && body.query.includes('metrics')) {
+      if (body.query?.includes('metrics')) {
         return {
           data: {
             repository: {
@@ -89,7 +94,7 @@ function setupSuccessMocks() {
       }
 
       // Mock response for threshold update mutation
-      if (body.query && body.query.includes('setRepositoryMetricThreshold')) {
+      if (body.query?.includes('setRepositoryMetricThreshold')) {
         return {
           data: {
             setRepositoryMetricThreshold: {
@@ -100,7 +105,7 @@ function setupSuccessMocks() {
       }
 
       // Mock response for metric setting update mutation
-      if (body.query && body.query.includes('updateRepositoryMetricSetting')) {
+      if (body.query?.includes('updateRepositoryMetricSetting')) {
         return {
           data: {
             updateRepositoryMetricSetting: {
@@ -165,7 +170,7 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
       setupSuccessMocks();
 
       // Call the handler function directly
-      const result = await indexModule.handleDeepsourceQualityMetrics({
+      const result = await handleDeepsourceQualityMetrics({
         projectKey: 'test-project',
         shortcodeIn: [MetricShortcode.LCV],
       });
@@ -200,7 +205,7 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
 
       // Call handler and expect it to throw
       await expect(
-        indexModule.handleDeepsourceQualityMetrics({
+        handleDeepsourceQualityMetrics({
           projectKey: 'test-project',
         })
       ).rejects.toThrow();
@@ -213,7 +218,7 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
       setupSuccessMocks();
 
       // Call the handler
-      const result = await indexModule.handleDeepsourceUpdateMetricThreshold({
+      const result = await handleDeepsourceUpdateMetricThreshold({
         projectKey: 'test-project',
         repositoryId: 'repo123',
         metricShortcode: MetricShortcode.LCV,
@@ -240,7 +245,7 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
       setupSuccessMocks();
 
       // Call the handler with null threshold
-      const result = await indexModule.handleDeepsourceUpdateMetricThreshold({
+      const result = await handleDeepsourceUpdateMetricThreshold({
         projectKey: 'test-project',
         repositoryId: 'repo123',
         metricShortcode: MetricShortcode.LCV,
@@ -260,7 +265,7 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
       setupThresholdFailureMock();
 
       // Call the handler
-      const result = await indexModule.handleDeepsourceUpdateMetricThreshold({
+      const result = await handleDeepsourceUpdateMetricThreshold({
         projectKey: 'test-project',
         repositoryId: 'repo123',
         metricShortcode: MetricShortcode.LCV,
@@ -282,7 +287,7 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
       setupSuccessMocks();
 
       // Call the handler
-      const result = await indexModule.handleDeepsourceUpdateMetricSetting({
+      const result = await handleDeepsourceUpdateMetricSetting({
         projectKey: 'test-project',
         repositoryId: 'repo123',
         metricShortcode: MetricShortcode.LCV,
@@ -302,7 +307,7 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
       setupSuccessMocks();
 
       // Call the handler with disabled settings
-      const result = await indexModule.handleDeepsourceUpdateMetricSetting({
+      const result = await handleDeepsourceUpdateMetricSetting({
         projectKey: 'test-project',
         repositoryId: 'repo123',
         metricShortcode: MetricShortcode.LCV,
@@ -321,7 +326,7 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
       setupMetricSettingFailureMock();
 
       // Call the handler
-      const result = await indexModule.handleDeepsourceUpdateMetricSetting({
+      const result = await handleDeepsourceUpdateMetricSetting({
         projectKey: 'test-project',
         repositoryId: 'repo123',
         metricShortcode: MetricShortcode.LCV,
