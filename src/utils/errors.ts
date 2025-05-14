@@ -99,73 +99,38 @@ export function isClassifiedError(error: unknown): error is ClassifiedError {
 export function classifyGraphQLError(error: Error): ErrorCategory {
   const message = error.message.toLowerCase();
 
-  // Check for auth errors
-  if (
-    message.includes('authentication') ||
-    message.includes('unauthorized') ||
-    message.includes('access denied') ||
-    message.includes('not authorized') ||
-    message.includes('forbidden') ||
-    message.includes('token') ||
-    message.includes('api key')
-  ) {
-    return ErrorCategory.AUTH;
-  }
+  // Define error patterns and their corresponding categories
+  const errorPatterns: Record<ErrorCategory, string[]> = {
+    [ErrorCategory.AUTH]: [
+      'authentication',
+      'unauthorized',
+      'access denied',
+      'not authorized',
+      'forbidden',
+      'token',
+      'api key',
+    ],
+    [ErrorCategory.RATE_LIMIT]: ['rate limit', 'too many requests', 'throttled'],
+    [ErrorCategory.NETWORK]: ['network', 'connection', 'econnreset', 'econnrefused'],
+    [ErrorCategory.TIMEOUT]: ['timeout', 'timed out', 'etimedout'],
+    [ErrorCategory.SCHEMA]: [
+      'cannot query field',
+      'unknown argument',
+      'unknown type',
+      'field not defined',
+    ],
+    [ErrorCategory.NOT_FOUND]: ['not found', 'nonetype', 'does not exist'],
+    [ErrorCategory.SERVER]: ['server error', 'internal error', '500'],
+    [ErrorCategory.CLIENT]: [],
+    [ErrorCategory.FORMAT]: [],
+    [ErrorCategory.OTHER]: [],
+  };
 
-  // Check for rate limit errors
-  if (
-    message.includes('rate limit') ||
-    message.includes('too many requests') ||
-    message.includes('throttled')
-  ) {
-    return ErrorCategory.RATE_LIMIT;
-  }
-
-  // Check for network errors
-  if (
-    message.includes('network') ||
-    message.includes('connection') ||
-    message.includes('econnreset') ||
-    message.includes('econnrefused')
-  ) {
-    return ErrorCategory.NETWORK;
-  }
-
-  // Check for timeout errors
-  if (
-    message.includes('timeout') ||
-    message.includes('timed out') ||
-    message.includes('etimedout')
-  ) {
-    return ErrorCategory.TIMEOUT;
-  }
-
-  // Check for schema errors
-  if (
-    message.includes('cannot query field') ||
-    message.includes('unknown argument') ||
-    message.includes('unknown type') ||
-    message.includes('field not defined')
-  ) {
-    return ErrorCategory.SCHEMA;
-  }
-
-  // Check for not found errors
-  if (
-    message.includes('not found') ||
-    message.includes('nonetype') ||
-    message.includes('does not exist')
-  ) {
-    return ErrorCategory.NOT_FOUND;
-  }
-
-  // Check for server errors
-  if (
-    message.includes('server error') ||
-    message.includes('internal error') ||
-    message.includes('500')
-  ) {
-    return ErrorCategory.SERVER;
+  // Check each category's patterns
+  for (const [category, patterns] of Object.entries(errorPatterns)) {
+    if (patterns.some((pattern) => message.includes(pattern))) {
+      return category as ErrorCategory;
+    }
   }
 
   // Default to OTHER

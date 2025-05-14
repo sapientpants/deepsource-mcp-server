@@ -112,7 +112,7 @@ describe('MCP server implementation', () => {
       const calls: Array<unknown[]> = [];
 
       // Override the method for this test with a function that records calls
-      DeepSourceClient.prototype.listProjects = function (...args) {
+      DeepSourceClient.prototype.listProjects = (...args) => {
         calls.push(args);
         return Promise.resolve(mockProjects);
       };
@@ -132,7 +132,7 @@ describe('MCP server implementation', () => {
 
     it('handles empty projects list', async () => {
       // Override the method for this test
-      DeepSourceClient.prototype.listProjects = function () {
+      DeepSourceClient.prototype.listProjects = () => {
         // Mock implementation returning empty array for testing empty results
         return Promise.resolve([]);
       };
@@ -146,7 +146,7 @@ describe('MCP server implementation', () => {
 
     it('handles error from DeepSourceClient', async () => {
       // Override the method for this test to throw an error
-      DeepSourceClient.prototype.listProjects = function () {
+      DeepSourceClient.prototype.listProjects = () => {
         return Promise.reject(new Error('API error'));
       };
 
@@ -186,7 +186,7 @@ describe('MCP server implementation', () => {
       const calls: Array<[string, PaginationParams?]> = [];
 
       // Override the method for this test
-      DeepSourceClient.prototype.getIssues = function (projectKey, pagination) {
+      DeepSourceClient.prototype.getIssues = (projectKey, pagination) => {
         // Mock implementation for testing with pagination parameters
         calls.push([projectKey, pagination]);
         return Promise.resolve(mockIssues);
@@ -266,7 +266,7 @@ describe('MCP server implementation', () => {
       const calls: Array<[string, PaginationParams?]> = [];
 
       // Override the method for this test
-      DeepSourceClient.prototype.getIssues = function (projectKey, pagination) {
+      DeepSourceClient.prototype.getIssues = (projectKey, pagination) => {
         // Mock implementation for testing with minimal parameters
         calls.push([projectKey, pagination]);
         return Promise.resolve(mockIssues);
@@ -324,7 +324,7 @@ describe('MCP server implementation', () => {
       const calls: Array<[string, PaginationParams?]> = [];
 
       // Override the method for this test
-      DeepSourceClient.prototype.getIssues = function (projectKey, pagination) {
+      DeepSourceClient.prototype.getIssues = (projectKey, pagination) => {
         // Mock implementation for testing with partial parameters
         calls.push([projectKey, pagination]);
         return Promise.resolve(mockIssues);
@@ -370,7 +370,7 @@ describe('MCP server implementation', () => {
 
     it('handles error from DeepSourceClient', async () => {
       // Override the method for this test to throw an error
-      DeepSourceClient.prototype.getIssues = function () {
+      DeepSourceClient.prototype.getIssues = () => {
         return Promise.reject(new Error('API error'));
       };
 
@@ -425,7 +425,7 @@ describe('MCP server implementation', () => {
       const calls: Array<[string, Record<string, unknown>?]> = [];
 
       // Override the method for this test
-      DeepSourceClient.prototype.listRuns = function (projectKey, pagination) {
+      DeepSourceClient.prototype.listRuns = (projectKey, pagination) => {
         // Mock implementation for testing with pagination parameters
         calls.push([projectKey, pagination]);
         return Promise.resolve(mockRuns);
@@ -515,7 +515,7 @@ describe('MCP server implementation', () => {
       const calls: Array<[string, Record<string, unknown>?]> = [];
 
       // Override the method for this test
-      DeepSourceClient.prototype.listRuns = function (projectKey, pagination) {
+      DeepSourceClient.prototype.listRuns = (projectKey, pagination) => {
         // Mock implementation for testing with minimal parameters
         calls.push([projectKey, pagination]);
         return Promise.resolve(mockRuns);
@@ -558,7 +558,7 @@ describe('MCP server implementation', () => {
 
     it('handles error from DeepSourceClient for project runs', async () => {
       // Override the method for this test to throw an error
-      DeepSourceClient.prototype.listRuns = function () {
+      DeepSourceClient.prototype.listRuns = () => {
         return Promise.reject(new Error('API error'));
       };
 
@@ -602,7 +602,7 @@ describe('MCP server implementation', () => {
       const calls: Array<[string]> = [];
 
       // Override the method for this test
-      DeepSourceClient.prototype.getRun = function (runIdentifier) {
+      DeepSourceClient.prototype.getRun = (runIdentifier) => {
         // Mock implementation for testing
         calls.push([runIdentifier]);
         return Promise.resolve(mockRun);
@@ -647,7 +647,7 @@ describe('MCP server implementation', () => {
 
     it('handles run not found error', async () => {
       // Override the method for this test to return null
-      DeepSourceClient.prototype.getRun = function () {
+      DeepSourceClient.prototype.getRun = () => {
         return Promise.resolve(null);
       };
 
@@ -664,7 +664,7 @@ describe('MCP server implementation', () => {
 
     it('handles API error from DeepSourceClient for run', async () => {
       // Override the method for this test to throw an error
-      DeepSourceClient.prototype.getRun = function () {
+      DeepSourceClient.prototype.getRun = () => {
         return Promise.reject(new Error('API error'));
       };
 
@@ -742,7 +742,7 @@ describe('MCP server implementation', () => {
       const calls: Array<[string, Record<string, unknown>?]> = [];
 
       // Override the method for this test
-      DeepSourceClient.prototype.getDependencyVulnerabilities = function (projectKey, params) {
+      DeepSourceClient.prototype.getDependencyVulnerabilities = (projectKey, params) => {
         // Mock implementation for testing
         calls.push([projectKey, params]);
         return Promise.resolve(mockVulnerabilities);
@@ -823,7 +823,7 @@ describe('MCP server implementation', () => {
 
     it('handles API error from DeepSourceClient for vulnerabilities', async () => {
       // Override the method for this test to throw an error
-      DeepSourceClient.prototype.getDependencyVulnerabilities = function () {
+      DeepSourceClient.prototype.getDependencyVulnerabilities = () => {
         return Promise.reject(new Error('API error'));
       };
 

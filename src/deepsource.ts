@@ -37,6 +37,86 @@ export type {
 };
 
 /**
+ * Available report types in DeepSource
+ * This enum combines both compliance-specific and general report types
+ * and is referenced in API functions like getComplianceReport() and handleDeepsourceComplianceReport().
+ * @public
+ */
+/* eslint-disable no-unused-vars */
+export enum ReportType {
+  // Compliance-specific report types
+  OWASP_TOP_10 = 'OWASP_TOP_10',
+  SANS_TOP_25 = 'SANS_TOP_25',
+  MISRA_C = 'MISRA_C',
+
+  // General report types
+  CODE_COVERAGE = 'CODE_COVERAGE',
+  CODE_HEALTH_TREND = 'CODE_HEALTH_TREND',
+  ISSUE_DISTRIBUTION = 'ISSUE_DISTRIBUTION',
+  ISSUES_PREVENTED = 'ISSUES_PREVENTED',
+  ISSUES_AUTOFIXED = 'ISSUES_AUTOFIXED',
+}
+/* eslint-enable no-unused-vars */
+
+/**
+ * Report status indicating whether the report is passing, failing, or not applicable
+ * This enum is exported as part of the public API for use in MCP tools
+ * and is referenced in handleDeepsourceComplianceReport().
+ * @public
+ */
+/* eslint-disable no-unused-vars */
+export enum ReportStatus {
+  PASSING = 'PASSING',
+  FAILING = 'FAILING',
+  NOOP = 'NOOP',
+}
+/* eslint-enable no-unused-vars */
+
+/**
+ * Trend information for reports
+ * @public
+ */
+export interface ReportTrend {
+  label?: string;
+  value?: number;
+  changePercentage?: number;
+}
+
+/**
+ * Severity distribution of issues
+ * @public
+ */
+export interface SeverityDistribution {
+  critical: number;
+  major: number;
+  minor: number;
+  total: number;
+}
+
+/**
+ * Security issue statistic
+ * @public
+ */
+export interface SecurityIssueStat {
+  key: string;
+  title: string;
+  occurrence: SeverityDistribution;
+}
+
+/**
+ * Compliance report interface
+ * @public
+ */
+export interface ComplianceReport {
+  key: ReportType;
+  title: string;
+  currentValue?: number;
+  status?: ReportStatus;
+  securityIssueStats: SecurityIssueStat[];
+  trends?: ReportTrend[];
+}
+
+/**
  * Represents a DeepSource project in the API
  * @public
  */
@@ -421,7 +501,7 @@ export class DeepSourceClient {
    * @private
    */
   private static extractErrorMessages(errors: Array<{ message: string }>): string {
-    const errorMessages = errors.map((e) => e.message);
+    const errorMessages = errors.map((error) => error.message);
     return errorMessages.join(', ');
   }
 
@@ -669,6 +749,16 @@ export class DeepSourceClient {
    * @param message Optional custom warning message
    * @private
    */
+  /**
+   * Logs a warning message about non-standard pagination usage
+   *
+   * This method provides consistent warning messages for pagination anti-patterns
+   * in Relay-style cursor-based pagination. It helps developers understand
+   * why their pagination approach might cause unexpected behavior.
+   *
+   * @param message Optional custom warning message to use instead of the default
+   * @private
+   */
   private logPaginationWarning(message?: string): void {
     const warningMessage =
       message ||
@@ -818,32 +908,8 @@ export class DeepSourceClient {
    */
   async listProjects(): Promise<DeepSourceProject[]> {
     try {
-      const viewerQuery = `
-        query {
-          viewer {
-            email
-            accounts {
-              edges {
-                node {
-                  login
-                  repositories(first: 100) {
-                    edges {
-                      node {
-                        name
-                        defaultBranch
-                        dsn
-                        isPrivate
-                        isActivated
-                        vcsProvider
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      `;
+      const viewerQuery =
+        'query {\n          viewer {\n            email\n            accounts {\n              edges {\n                node {\n                  login\n                  repositories(first: 100) {\n                    edges {\n                      node {\n                        name\n                        defaultBranch\n                        dsn\n                        isPrivate\n                        isActivated\n                        vcsProvider\n                      }\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n';
 
       const response = await this.client.post('', {
         query: viewerQuery.trim(),
@@ -925,51 +991,8 @@ export class DeepSourceClient {
       // Keeping template literal here since it contains a lot of variable references
       // with complex GraphQL query structure. The benefits of converting to string
       // concatenation would be outweighed by reduced readability
-      const repoQuery = `
-        query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int, $path: String, $analyzerIn: [String], $tags: [String]) {
-          repository(login: $login, name: $name, vcsProvider: $provider) {
-            name
-            defaultBranch
-            dsn
-            isPrivate
-            issues(offset: $offset, first: $first, after: $after, before: $before, last: $last, path: $path, analyzerIn: $analyzerIn, tags: $tags) {
-              pageInfo {
-                hasNextPage
-                hasPreviousPage
-                startCursor
-                endCursor
-              }
-              totalCount
-              edges {
-                node {
-                  id
-                  issue {
-                    shortcode
-                    title
-                    category
-                    severity
-                    description
-                    tags
-                  }
-                  occurrences(first: 100) {
-                    edges {
-                      node {
-                        id
-                        path
-                        beginLine
-                        endLine
-                        beginColumn
-                        endColumn
-                        title
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      `;
+      const repoQuery =
+        'query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int, $path: String, $analyzerIn: [String], $tags: [String]) {\n          repository(login: $login, name: $name, vcsProvider: $provider) {\n            name\n            defaultBranch\n            dsn\n            isPrivate\n            issues(offset: $offset, first: $first, after: $after, before: $before, last: $last, path: $path, analyzerIn: $analyzerIn, tags: $tags) {\n              pageInfo {\n                hasNextPage\n                hasPreviousPage\n                startCursor\n                endCursor\n              }\n              totalCount\n              edges {\n                node {\n                  id\n                  issue {\n                    shortcode\n                    title\n                    category\n                    severity\n                    description\n                    tags\n                  }\n                  occurrences(first: 100) {\n                    edges {\n                      node {\n                        id\n                        path\n                        beginLine\n                        endLine\n                        beginColumn\n                        endColumn\n                        title\n                      }\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n';
 
       const response = await this.client.post('', {
         query: repoQuery.trim(),
@@ -1089,62 +1112,8 @@ export class DeepSourceClient {
       // Normalize pagination parameters using the helper method
       const normalizedParams = this.normalizePaginationParams(params);
 
-      const repoQuery = `
-        query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int, $analyzerIn: [String]) {
-          repository(login: $login, name: $name, vcsProvider: $provider) {
-            name
-            id
-            analysisRuns(offset: $offset, first: $first, after: $after, before: $before, last: $last) {
-              pageInfo {
-                hasNextPage
-                hasPreviousPage
-                startCursor
-                endCursor
-              }
-              totalCount
-              edges {
-                node {
-                  id
-                  runUid
-                  commitOid
-                  branchName
-                  baseOid
-                  status
-                  createdAt
-                  updatedAt
-                  finishedAt
-                  summary {
-                    occurrencesIntroduced
-                    occurrencesResolved
-                    occurrencesSuppressed
-                    occurrenceDistributionByAnalyzer {
-                      analyzerShortcode
-                      introduced
-                    }
-                    occurrenceDistributionByCategory {
-                      category
-                      introduced
-                    }
-                  }
-                  repository {
-                    name
-                    id
-                  }
-                  checks(analyzerIn: $analyzerIn) {
-                    edges {
-                      node {
-                        analyzer {
-                          shortcode
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      `;
+      const repoQuery =
+        'query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int, $analyzerIn: [String]) {\n          repository(login: $login, name: $name, vcsProvider: $provider) {\n            name\n            id\n            analysisRuns(offset: $offset, first: $first, after: $after, before: $before, last: $last) {\n              pageInfo {\n                hasNextPage\n                hasPreviousPage\n                startCursor\n                endCursor\n              }\n              totalCount\n              edges {\n                node {\n                  id\n                  runUid\n                  commitOid\n                  branchName\n                  baseOid\n                  status\n                  createdAt\n                  updatedAt\n                  finishedAt\n                  summary {\n                    occurrencesIntroduced\n                    occurrencesResolved\n                    occurrencesSuppressed\n                    occurrenceDistributionByAnalyzer {\n                      analyzerShortcode\n                      introduced\n                    }\n                    occurrenceDistributionByCategory {\n                      category\n                      introduced\n                    }\n                  }\n                  repository {\n                    name\n                    id\n                  }\n                  checks(analyzerIn: $analyzerIn) {\n                    edges {\n                      node {\n                        analyzer {\n                          shortcode\n                        }\n                      }\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n';
 
       const response = await this.client.post('', {
         query: repoQuery.trim(),
@@ -1239,38 +1208,8 @@ export class DeepSourceClient {
         runIdentifier
       );
 
-      const runQuery = `
-        query($runUid: UUID, $commitOid: String) {
-          run(runUid: $runUid, commitOid: $commitOid) {
-            id
-            runUid
-            commitOid
-            branchName
-            baseOid
-            status
-            createdAt
-            updatedAt
-            finishedAt
-            summary {
-              occurrencesIntroduced
-              occurrencesResolved
-              occurrencesSuppressed
-              occurrenceDistributionByAnalyzer {
-                analyzerShortcode
-                introduced
-              }
-              occurrenceDistributionByCategory {
-                category
-                introduced
-              }
-            }
-            repository {
-              name
-              id
-            }
-          }
-        }
-      `;
+      const runQuery =
+        'query($runUid: UUID, $commitOid: String) {\n          run(runUid: $runUid, commitOid: $commitOid) {\n            id\n            runUid\n            commitOid\n            branchName\n            baseOid\n            status\n            createdAt\n            updatedAt\n            finishedAt\n            summary {\n              occurrencesIntroduced\n              occurrencesResolved\n              occurrencesSuppressed\n              occurrenceDistributionByAnalyzer {\n                analyzerShortcode\n                introduced\n              }\n              occurrenceDistributionByCategory {\n                category\n                introduced\n              }\n            }\n            repository {\n              name\n              id\n            }\n          }\n        }\n';
 
       const response = await this.client.post('', {
         query: runQuery.trim(),
@@ -1344,14 +1283,14 @@ export class DeepSourceClient {
    * - Validating package, packageVersion, and vulnerability objects
    * - Ensuring required fields exist within nested objects
    *
-   * @param {unknown} node The raw vulnerability node from the GraphQL response
-   * @returns {boolean} Boolean indicating whether the node has valid required fields
-   * @private
-   */
-  /**
-   * Validates if a node from the GraphQL response is a valid vulnerability node
-   * @param node - The node to validate from GraphQL response
-   * @returns {boolean} True if the node is a valid vulnerability node, false otherwise
+   * Validates a vulnerability node has the expected structure
+   *
+   * Performs deep validation of vulnerability data returned from DeepSource API,
+   * checking for required fields and proper structure at various levels.
+   * Logs detailed warnings for specific validation failures to aid in debugging.
+   *
+   * @param node The unknown object to validate as a vulnerability node
+   * @returns true if the node has valid structure, false otherwise
    * @private
    */
   private static isValidVulnerabilityNode(node: unknown): boolean {
@@ -1442,7 +1381,7 @@ export class DeepSourceClient {
    * @private
    */
   private static isValidVersionType(value: unknown): value is PackageVersionType {
-    const validVersionTypes = ['SEMVER', 'ECOSYSTEM', 'GIT'] as PackageVersionType[];
+    const validVersionTypes: PackageVersionType[] = ['SEMVER', 'ECOSYSTEM', 'GIT'];
     return DeepSourceClient.isValidEnum(value, validVersionTypes);
   }
 
@@ -1515,7 +1454,7 @@ export class DeepSourceClient {
    * @returns The original string if valid, or the default value if invalid
    * @private
    */
-  private static validateString(value: unknown, defaultValue: string = ''): string {
+  private static validateString(value: unknown, defaultValue = '') {
     return typeof value === 'string' ? value : defaultValue;
   }
 
@@ -1552,13 +1491,13 @@ export class DeepSourceClient {
   private static mapVulnerabilityData(vulnData: Record<string, unknown>): Vulnerability {
     // Check if severity is valid
     const isValidSeverity = (value: unknown): value is VulnerabilitySeverity => {
-      const validSeverities = [
+      const validSeverities: VulnerabilitySeverity[] = [
         'NONE',
         'LOW',
         'MEDIUM',
         'HIGH',
         'CRITICAL',
-      ] as VulnerabilitySeverity[];
+      ];
       return typeof value === 'string' && validSeverities.includes(value as VulnerabilitySeverity);
     };
 
@@ -1625,11 +1564,11 @@ export class DeepSourceClient {
    * @private
    */
   private static isValidReachability(value: unknown): value is VulnerabilityReachability {
-    const validReachabilityValues = [
+    const validReachabilityValues: VulnerabilityReachability[] = [
       'REACHABLE',
       'UNREACHABLE',
       'UNKNOWN',
-    ] as VulnerabilityReachability[];
+    ];
     return DeepSourceClient.isValidEnum(value, validReachabilityValues);
   }
 
@@ -1640,14 +1579,14 @@ export class DeepSourceClient {
    * @private
    */
   private static isValidFixability(value: unknown): value is VulnerabilityFixability {
-    const validFixabilityValues = [
+    const validFixabilityValues: VulnerabilityFixability[] = [
       'ERROR',
       'UNFIXABLE',
       'GENERATING_FIX',
       'POSSIBLY_FIXABLE',
       'MANUALLY_FIXABLE',
       'AUTO_FIXABLE',
-    ] as VulnerabilityFixability[];
+    ];
     return DeepSourceClient.isValidEnum(value, validFixabilityValues);
   }
 
@@ -1725,7 +1664,15 @@ export class DeepSourceClient {
    * - Infinite loops (with iteration limit)
    * - Exceptionally large data sets (with memory-efficient processing)
    *
-   * @param edges Array of vulnerability edges from GraphQL response
+   * Generator function that safely processes vulnerability edges from GraphQL response
+   *
+   * This method provides robust iteration over API response data with the following safety features:
+   * - Validates input data structure before processing
+   * - Limits maximum iterations to prevent infinite loops with malformed data
+   * - Handles and logs errors for individual items without failing the entire process
+   * - Implements yield pattern for memory efficiency with large datasets
+   *
+   * @param edges Array of raw vulnerability edges from GraphQL response
    * @yields Valid VulnerabilityOccurrence objects
    * @private
    */
@@ -1884,66 +1831,7 @@ export class DeepSourceClient {
    * @private
    */
   private static buildVulnerabilityQuery(): string {
-    return `
-      query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int) {
-        repository(login: $login, name: $name, vcsProvider: $provider) {
-          name
-          id
-          dependencyVulnerabilityOccurrences(offset: $offset, first: $first, after: $after, before: $before, last: $last) {
-            pageInfo {
-              hasNextPage
-              hasPreviousPage
-              startCursor
-              endCursor
-            }
-            totalCount
-            edges {
-              node {
-                id
-                reachability
-                fixability
-                package {
-                  id
-                  ecosystem
-                  name
-                  purl
-                }
-                packageVersion {
-                  id
-                  version
-                  versionType
-                }
-                vulnerability {
-                  id
-                  identifier
-                  aliases
-                  summary
-                  details
-                  publishedAt
-                  updatedAt
-                  withdrawnAt
-                  severity
-                  cvssV2Vector
-                  cvssV2BaseScore
-                  cvssV2Severity
-                  cvssV3Vector
-                  cvssV3BaseScore
-                  cvssV3Severity
-                  cvssV4Vector
-                  cvssV4BaseScore
-                  cvssV4Severity
-                  epssScore
-                  epssPercentile
-                  introducedVersions
-                  fixedVersions
-                  referenceUrls
-                }
-              }
-            }
-          }
-        }
-      }
-    `.trim();
+    return 'query($login: String!, $name: String!, $provider: VCSProvider!, $offset: Int, $first: Int, $after: String, $before: String, $last: Int) {\n        repository(login: $login, name: $name, vcsProvider: $provider) {\n          name\n          id\n          dependencyVulnerabilityOccurrences(offset: $offset, first: $first, after: $after, before: $before, last: $last) {\n            pageInfo {\n              hasNextPage\n              hasPreviousPage\n              startCursor\n              endCursor\n            }\n            totalCount\n            edges {\n              node {\n                id\n                reachability\n                fixability\n                package {\n                  id\n                  ecosystem\n                  name\n                  purl\n                }\n                packageVersion {\n                  id\n                  version\n                  versionType\n                }\n                vulnerability {\n                  id\n                  identifier\n                  aliases\n                  summary\n                  details\n                  publishedAt\n                  updatedAt\n                  withdrawnAt\n                  severity\n                  cvssV2Vector\n                  cvssV2BaseScore\n                  cvssV2Severity\n                  cvssV3Vector\n                  cvssV3BaseScore\n                  cvssV3Severity\n                  cvssV4Vector\n                  cvssV4BaseScore\n                  cvssV4Severity\n                  epssScore\n                  epssPercentile\n                  introducedVersions\n                  fixedVersions\n                  referenceUrls\n                }\n              }\n            }\n          }\n        }\n      }\n'.trim();
   }
 
   /**
@@ -1974,7 +1862,7 @@ export class DeepSourceClient {
 
       case ErrorCategory.RATE_LIMIT:
         throw createClassifiedError(
-          `Rate limit exceeded: Please retry after a short delay`,
+          'Rate limit exceeded: Please retry after a short delay',
           category,
           error,
           { projectKey }
@@ -1982,7 +1870,7 @@ export class DeepSourceClient {
 
       case ErrorCategory.TIMEOUT:
         throw createClassifiedError(
-          `Request timeout: The vulnerability data query took too long to complete. Try querying with pagination.`,
+          'Request timeout: The vulnerability data query took too long to complete. Try querying with pagination.',
           category,
           error,
           { projectKey }
@@ -1990,7 +1878,7 @@ export class DeepSourceClient {
 
       case ErrorCategory.NETWORK:
         throw createClassifiedError(
-          `Network error: Unable to connect to DeepSource API. Please check your network connection.`,
+          'Network error: Unable to connect to DeepSource API. Please check your network connection.',
           category,
           error,
           { projectKey }
@@ -1998,7 +1886,7 @@ export class DeepSourceClient {
 
       case ErrorCategory.SERVER:
         throw createClassifiedError(
-          `Server error: DeepSource API is experiencing issues. Please try again later.`,
+          'Server error: DeepSource API is experiencing issues. Please try again later.',
           category,
           error,
           { projectKey }
@@ -2006,7 +1894,7 @@ export class DeepSourceClient {
 
       case ErrorCategory.NOT_FOUND:
         throw createClassifiedError(
-          `Resource not found: The requested data could not be found.`,
+          'Resource not found: The requested data could not be found.',
           category,
           error,
           { projectKey }
@@ -2182,33 +2070,8 @@ export class DeepSourceClient {
       DeepSourceClient.validateProjectRepository(project, projectKey);
 
       // Build the metrics query
-      const metricsQuery = `
-        query($login: String!, $name: String!, $provider: VCSProvider!, $shortcodeIn: [MetricShortcode]) {
-          repository(login: $login, name: $name, vcsProvider: $provider) {
-            name
-            id
-            metrics(shortcodeIn: $shortcodeIn) {
-              name
-              shortcode
-              description
-              positiveDirection
-              unit
-              minValueAllowed
-              maxValueAllowed
-              isReported
-              isThresholdEnforced
-              items {
-                id
-                key
-                threshold
-                latestValue
-                latestValueDisplay
-                thresholdStatus
-              }
-            }
-          }
-        }
-      `;
+      const metricsQuery =
+        'query($login: String!, $name: String!, $provider: VCSProvider!, $shortcodeIn: [MetricShortcode]) {\n          repository(login: $login, name: $name, vcsProvider: $provider) {\n            name\n            id\n            metrics(shortcodeIn: $shortcodeIn) {\n              name\n              shortcode\n              description\n              positiveDirection\n              unit\n              minValueAllowed\n              maxValueAllowed\n              isReported\n              isThresholdEnforced\n              items {\n                id\n                key\n                threshold\n                latestValue\n                latestValueDisplay\n                thresholdStatus\n              }\n            }\n          }\n        }\n';
 
       // Execute the query
       const response = await this.client.post('', {
@@ -2229,27 +2092,27 @@ export class DeepSourceClient {
       // Extract and format metrics data
       const metrics = response.data.data?.repository?.metrics || [];
 
-      return metrics.map((metric: unknown) => {
-        const m = metric as Record<string, unknown>;
+      return metrics.map((metricItem: unknown) => {
+        const metricRecord = metricItem as Record<string, unknown>;
         return {
-          name: (m.name as string) || '',
-          shortcode: (m.shortcode as string) || '',
-          description: (m.description as string) || '',
-          positiveDirection: (m.positiveDirection as string) || 'UPWARD',
-          unit: m.unit as string,
-          minValueAllowed: m.minValueAllowed as number,
-          maxValueAllowed: m.maxValueAllowed as number,
-          isReported: Boolean(m.isReported),
-          isThresholdEnforced: Boolean(m.isThresholdEnforced),
-          items: ((m.items as unknown[]) || []).map((item: unknown) => {
-            const i = item as Record<string, unknown>;
+          name: (metricRecord.name as string) || '',
+          shortcode: (metricRecord.shortcode as string) || '',
+          description: (metricRecord.description as string) || '',
+          positiveDirection: (metricRecord.positiveDirection as string) || 'UPWARD',
+          unit: metricRecord.unit as string,
+          minValueAllowed: metricRecord.minValueAllowed as number,
+          maxValueAllowed: metricRecord.maxValueAllowed as number,
+          isReported: Boolean(metricRecord.isReported),
+          isThresholdEnforced: Boolean(metricRecord.isThresholdEnforced),
+          items: ((metricRecord.items as unknown[]) || []).map((metricItemData: unknown) => {
+            const itemRecord = metricItemData as Record<string, unknown>;
             return {
-              id: (i.id as string) || '',
-              key: (i.key as string) || 'AGGREGATE',
-              threshold: i.threshold as number | null,
-              latestValue: i.latestValue as number | null,
-              latestValueDisplay: i.latestValueDisplay as string,
-              thresholdStatus: i.thresholdStatus as string,
+              id: (itemRecord.id as string) || '',
+              key: (itemRecord.key as string) || 'AGGREGATE',
+              threshold: itemRecord.threshold as number | null,
+              latestValue: itemRecord.latestValue as number | null,
+              latestValueDisplay: itemRecord.latestValueDisplay as string,
+              thresholdStatus: itemRecord.thresholdStatus as string,
             };
           }),
         };
@@ -2279,18 +2142,8 @@ export class DeepSourceClient {
   ): Promise<MetricThresholdUpdateResponse> {
     try {
       // Build the mutation query
-      const thresholdMutation = `
-        mutation($repositoryId: ID!, $metricShortcode: MetricShortcode!, $metricKey: MetricKey!, $thresholdValue: Int) {
-          setRepositoryMetricThreshold(input: {
-            repositoryId: $repositoryId,
-            metricShortcode: $metricShortcode, 
-            metricKey: $metricKey, 
-            thresholdValue: $thresholdValue
-          }) {
-            ok
-          }
-        }
-      `;
+      const thresholdMutation =
+        'mutation($repositoryId: ID!, $metricShortcode: MetricShortcode!, $metricKey: MetricKey!, $thresholdValue: Int) {\n          setRepositoryMetricThreshold(input: {\n            repositoryId: $repositoryId,\n            metricShortcode: $metricShortcode, \n            metricKey: $metricKey, \n            thresholdValue: $thresholdValue\n          }) {\n            ok\n          }\n        }\n';
 
       // Execute the mutation
       const response = await this.client.post('', {
@@ -2331,18 +2184,8 @@ export class DeepSourceClient {
   ): Promise<MetricSettingUpdateResponse> {
     try {
       // Build the mutation query
-      const settingMutation = `
-        mutation($repositoryId: ID!, $metricShortcode: MetricShortcode!, $isReported: Boolean!, $isThresholdEnforced: Boolean!) {
-          updateRepositoryMetricSetting(input: {
-            repositoryId: $repositoryId,
-            metricShortcode: $metricShortcode, 
-            isReported: $isReported, 
-            isThresholdEnforced: $isThresholdEnforced
-          }) {
-            ok
-          }
-        }
-      `;
+      const settingMutation =
+        'mutation($repositoryId: ID!, $metricShortcode: MetricShortcode!, $isReported: Boolean!, $isThresholdEnforced: Boolean!) {\n          updateRepositoryMetricSetting(input: {\n            repositoryId: $repositoryId,\n            metricShortcode: $metricShortcode, \n            isReported: $isReported, \n            isThresholdEnforced: $isThresholdEnforced\n          }) {\n            ok\n          }\n        }\n';
 
       // Execute the mutation
       const response = await this.client.post('', {
@@ -2366,5 +2209,238 @@ export class DeepSourceClient {
     } catch (error) {
       return DeepSourceClient.handleGraphQLError(error);
     }
+  }
+
+  /**
+   * Fetches security compliance reports from a DeepSource project
+   * @param projectKey - The unique identifier for the DeepSource project
+   * @param reportType - The type of report to fetch (OWASP_TOP_10, SANS_TOP_25, or MISRA_C)
+   * @returns Promise that resolves to a compliance report with security stats
+   * @throws Error if the project key is invalid, report type is unsupported, or API request fails
+   * @public
+   */
+  async getComplianceReport(
+    projectKey: string,
+    reportType: ReportType
+  ): Promise<ComplianceReport | null> {
+    try {
+      // Validate project key
+      DeepSourceClient.validateProjectKey(projectKey);
+
+      // Validate report type is a compliance report
+      if (
+        reportType !== ReportType.OWASP_TOP_10 &&
+        reportType !== ReportType.SANS_TOP_25 &&
+        reportType !== ReportType.MISRA_C
+      ) {
+        throw new Error(
+          `Invalid report type: ${reportType}. Must be one of OWASP_TOP_10, SANS_TOP_25, or MISRA_C`
+        );
+      }
+
+      // Fetch project information
+      const projects = await this.listProjects();
+      const project = projects.find((p) => p.key === projectKey);
+
+      if (!project) {
+        return null;
+      }
+
+      // Validate repository information
+      DeepSourceClient.validateProjectRepository(project, projectKey);
+
+      // Build the compliance report query
+      // Keeping template literal here since it uses interpolation with this.getReportField(reportType)
+      const reportQuery = `
+        query($login: String!, $name: String!, $provider: VCSProvider!, $reportKey: ReportKey!) {
+          repository(login: $login, name: $name, vcsProvider: $provider) {
+            name
+            id
+            reports {
+              ${this.getReportField(reportType)} {
+                key
+                title
+                currentValue
+                status
+                securityIssueStats {
+                  key
+                  title
+                  occurrence {
+                    critical
+                    major
+                    minor
+                    total
+                  }
+                }
+                trends {
+                  label
+                  value
+                  changePercentage
+                }
+              }
+            }
+          }
+        }
+      `;
+
+      // Execute the query
+      const response = await this.client.post('', {
+        query: reportQuery.trim(),
+        variables: {
+          login: project.repository.login,
+          name: project.name,
+          provider: project.repository.provider,
+          reportKey: reportType,
+        },
+      });
+
+      if (response.data.errors) {
+        const errorMessage = DeepSourceClient.extractErrorMessages(response.data.errors);
+        throw new Error(`GraphQL Errors: ${errorMessage}`);
+      }
+
+      // Extract the report data from the response
+      const reportData = this.extractReportData(response, reportType);
+      if (!reportData) {
+        return null;
+      }
+
+      return {
+        key: reportType,
+        title:
+          typeof reportData.title === 'string'
+            ? reportData.title
+            : this.getTitleForReportType(reportType),
+        currentValue:
+          typeof reportData.currentValue === 'number' ? reportData.currentValue : undefined,
+        status:
+          typeof reportData.status === 'string' ? (reportData.status as ReportStatus) : undefined,
+        securityIssueStats: Array.isArray(reportData.securityIssueStats)
+          ? (reportData.securityIssueStats as SecurityIssueStat[])
+          : [],
+        trends: Array.isArray(reportData.trends) ? (reportData.trends as ReportTrend[]) : undefined,
+      };
+    } catch (error) {
+      if (
+        DeepSourceClient.isError(error) &&
+        (error.message.includes('NoneType') || error.message.includes('not found'))
+      ) {
+        return null;
+      }
+      return DeepSourceClient.handleGraphQLError(error);
+    }
+  }
+
+  /**
+   * Gets the GraphQL field name for a given report type
+   * @param reportType - The type of report
+   * @returns The GraphQL field name for the report
+   * @private
+   */
+  private getReportField(reportType: ReportType): string {
+    switch (reportType) {
+      case ReportType.OWASP_TOP_10:
+        return 'owaspTop10';
+      case ReportType.SANS_TOP_25:
+        return 'sansTop25';
+      case ReportType.MISRA_C:
+        return 'misraC';
+      case ReportType.CODE_COVERAGE:
+        return 'codeCoverage';
+      case ReportType.CODE_HEALTH_TREND:
+        return 'codeHealthTrend';
+      case ReportType.ISSUE_DISTRIBUTION:
+        return 'issueDistribution';
+      case ReportType.ISSUES_PREVENTED:
+        return 'issuesPrevented';
+      case ReportType.ISSUES_AUTOFIXED:
+        return 'issuesAutofixed';
+      default:
+        throw new Error(`Unsupported report type: ${reportType}`);
+    }
+  }
+
+  /**
+   * Gets a default title for a report type when the API doesn't return one
+   * @param reportType - The type of report
+   * @returns A user-friendly title for the report
+   * @private
+   */
+  private getTitleForReportType(reportType: ReportType): string {
+    switch (reportType) {
+      case ReportType.OWASP_TOP_10:
+        return 'OWASP Top 10';
+      case ReportType.SANS_TOP_25:
+        return 'SANS Top 25';
+      case ReportType.MISRA_C:
+        return 'MISRA-C';
+      case ReportType.CODE_COVERAGE:
+        return 'Code Coverage';
+      case ReportType.CODE_HEALTH_TREND:
+        return 'Code Health Trend';
+      case ReportType.ISSUE_DISTRIBUTION:
+        return 'Issue Distribution';
+      case ReportType.ISSUES_PREVENTED:
+        return 'Issues Prevented';
+      case ReportType.ISSUES_AUTOFIXED:
+        return 'Issues Autofixed';
+      default:
+        return 'Unknown Report';
+    }
+  }
+
+  /**
+   * Extracts the report data from the GraphQL response
+   * @param response - The GraphQL response
+   * @param reportType - The type of report being extracted
+   * @returns The extracted report data or null if not found
+   * @private
+   */
+  private extractReportData(
+    response: unknown,
+    reportType: ReportType
+  ): Record<string, unknown> | null {
+    if (!response || typeof response !== 'object') {
+      return null;
+    }
+
+    const typedResponse = response as Record<string, unknown>;
+    const data = typedResponse.data as Record<string, unknown> | undefined;
+
+    if (!data || typeof data !== 'object') {
+      return null;
+    }
+
+    const gqlData = data.data as Record<string, unknown> | undefined;
+
+    if (!gqlData || typeof gqlData !== 'object') {
+      return null;
+    }
+
+    const repository = gqlData.repository as Record<string, unknown> | undefined;
+
+    if (!repository || typeof repository !== 'object') {
+      return null;
+    }
+
+    const reports = repository.reports as Record<string, unknown> | undefined;
+
+    if (!reports || typeof reports !== 'object') {
+      return null;
+    }
+
+    // Get the field name for the report type
+    const fieldName = this.getReportField(reportType);
+    if (!fieldName) {
+      return null;
+    }
+
+    const reportData = reports[fieldName] as Record<string, unknown> | undefined;
+
+    if (!reportData || typeof reportData !== 'object') {
+      return null;
+    }
+
+    return reportData;
   }
 }
