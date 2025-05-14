@@ -43,10 +43,23 @@ export type {
  * @public
  */
 /* eslint-disable no-unused-vars */
-export enum ReportType {
+/**
+ * Compliance-specific report types.
+ * This enum is used in compliance-related functions like getComplianceReport().
+ * @public
+ */
+export enum ComplianceReportType {
   OWASP_TOP_10 = 'OWASP_TOP_10',
   SANS_TOP_25 = 'SANS_TOP_25',
   MISRA_C = 'MISRA_C',
+}
+
+/**
+ * General report types unrelated to compliance.
+ * This enum is used in various metrics-related functions.
+ * @public
+ */
+export enum ReportType {
   CODE_COVERAGE = 'CODE_COVERAGE',
   CODE_HEALTH_TREND = 'CODE_HEALTH_TREND',
   ISSUE_DISTRIBUTION = 'ISSUE_DISTRIBUTION',
