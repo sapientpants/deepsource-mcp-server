@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/sapientpants-deepsource-mcp-server-badge.png)](https://mseep.ai/app/sapientpants-deepsource-mcp-server)
+
 # DeepSource MCP Server
 
 [![CI](https://github.com/sapientpants/deepsource-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/sapientpants/deepsource-mcp-server/actions/workflows/ci.yml)
