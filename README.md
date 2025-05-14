@@ -233,7 +233,7 @@ The DeepSource MCP Server provides the following tools:
 9. `deepsource_compliance_report`: Get security compliance reports from a DeepSource project
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
-     * `reportType` (required) - The type of compliance report to fetch (OWASP_TOP_10, SANS_TOP_25, or MISRA_C)
+     * `reportType` (required) - The type of compliance report to fetch ([OWASP Top 10](https://owasp.org/www-project-top-ten/), [SANS Top 25](https://cwe.mitre.org/top25/), or [MISRA-C](https://www.misra.org.uk/))
    * Returns comprehensive security compliance data including:
      * Security issue statistics by category and severity
      * Compliance status (passing/failing)
