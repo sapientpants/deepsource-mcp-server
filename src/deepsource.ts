@@ -38,28 +38,18 @@ export type {
 
 /**
  * Available report types in DeepSource
- * This enum is exported as part of the public API for use in MCP tools
- * and is referenced in getComplianceReport() and handleDeepsourceComplianceReport().
+ * This enum combines both compliance-specific and general report types
+ * and is referenced in API functions like getComplianceReport() and handleDeepsourceComplianceReport().
  * @public
  */
 /* eslint-disable no-unused-vars */
-/**
- * Compliance-specific report types.
- * This enum is used in compliance-related functions like getComplianceReport().
- * @public
- */
-export enum ComplianceReportType {
+export enum ReportType {
+  // Compliance-specific report types
   OWASP_TOP_10 = 'OWASP_TOP_10',
   SANS_TOP_25 = 'SANS_TOP_25',
   MISRA_C = 'MISRA_C',
-}
 
-/**
- * General report types unrelated to compliance.
- * This enum is used in various metrics-related functions.
- * @public
- */
-export enum ReportType {
+  // General report types
   CODE_COVERAGE = 'CODE_COVERAGE',
   CODE_HEALTH_TREND = 'CODE_HEALTH_TREND',
   ISSUE_DISTRIBUTION = 'ISSUE_DISTRIBUTION',
