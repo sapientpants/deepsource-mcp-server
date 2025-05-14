@@ -2347,14 +2347,14 @@ export class DeepSourceClient {
       params.metricShortcode === MetricShortcode.LCV &&
       params.metricKey === MetricKey.AGGREGATE
     ) {
-      return this.createLineCoverageTestData();
+      return DeepSourceClient.createLineCoverageTestData();
     }
     // DDP metric test case
     else if (
       params.metricShortcode === MetricShortcode.DDP &&
       params.metricKey === MetricKey.AGGREGATE
     ) {
-      return this.createDuplicateCodeTestData();
+      return DeepSourceClient.createDuplicateCodeTestData();
     }
 
     return undefined;
@@ -2366,7 +2366,7 @@ export class DeepSourceClient {
    * @returns Metric history response for line coverage test
    * @private
    */
-  private createLineCoverageTestData(/* params */): MetricHistoryResponse {
+  private static createLineCoverageTestData(/* params */): MetricHistoryResponse {
     const historyValues: MetricHistoryValue[] = [];
     const isNegativeTrendTest = process.env.NEGATIVE_TREND_TEST === 'true';
 
@@ -2457,7 +2457,7 @@ export class DeepSourceClient {
    * @returns Metric history response for duplicate code test
    * @private
    */
-  private createDuplicateCodeTestData(/* params */): MetricHistoryResponse {
+  private static createDuplicateCodeTestData(/* params */): MetricHistoryResponse {
     const historyValues: MetricHistoryValue[] = [];
 
     // Mock test data for Duplicate Code Percentage
@@ -2680,7 +2680,7 @@ export class DeepSourceClient {
     );
 
     if (!itemData || !itemData.values || !itemData.values.edges) {
-      throw new Error(`Metric item data not found or invalid in response`);
+      throw new Error('Metric item data not found or invalid in response');
     }
 
     // Extract historical values

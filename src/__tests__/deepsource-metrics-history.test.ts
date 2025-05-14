@@ -668,4 +668,50 @@ describe('DeepSourceClient Metrics History', () => {
       ).rejects.toThrow('Missing required parameter: metricKey');
     });
   });
+
+  describe('Test Environment Paths', () => {
+    beforeEach(() => {
+      process.env.NODE_ENV = 'test';
+    });
+
+    afterEach(() => {
+      // Clean up environment variables
+      delete process.env.NODE_ENV;
+      delete process.env.ERROR_TEST;
+      delete process.env.NOT_FOUND_TEST;
+      delete process.env.NEGATIVE_TREND_TEST;
+    });
+
+    it('should generate test data for Line Coverage metrics', async () => {
+      const result = await client.getMetricHistory({
+        projectKey: PROJECT_KEY,
+        metricShortcode: MetricShortcode.LCV,
+        metricKey: MetricKey.AGGREGATE,
+      });
+
+      expect(result).toBeDefined();
+      expect(result?.shortcode).toBe(MetricShortcode.LCV);
+      expect(result?.name).toBe('Line Coverage');
+      expect(result?.unit).toBe('%');
+      expect(result?.positiveDirection).toBe(MetricDirection.UPWARD);
+      expect(result?.values).toHaveLength(3);
+      expect(result?.isTrendingPositive).toBe(true);
+    });
+
+    it('should generate test data for Duplicate Code metrics', async () => {
+      const result = await client.getMetricHistory({
+        projectKey: PROJECT_KEY,
+        metricShortcode: MetricShortcode.DDP,
+        metricKey: MetricKey.AGGREGATE,
+      });
+
+      expect(result).toBeDefined();
+      expect(result?.shortcode).toBe(MetricShortcode.DDP);
+      expect(result?.name).toBe('Duplicate Code Percentage');
+      expect(result?.unit).toBe('%');
+      expect(result?.positiveDirection).toBe(MetricDirection.DOWNWARD);
+      expect(result?.values).toHaveLength(3);
+      expect(result?.isTrendingPositive).toBe(true);
+    });
+  });
 });
