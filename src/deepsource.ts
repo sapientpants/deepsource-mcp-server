@@ -2562,6 +2562,16 @@ export class DeepSourceClient {
    * @returns Array of historical metric values
    * @private
    */
+  /**
+   * Fetches historical values for a metric item
+   * Note: This method must remain an instance method because it uses this.client
+   * which is needed for API calls to the DeepSource GraphQL endpoint
+   * @param params - The metric history parameters
+   * @param project - The project information
+   * @param metricItem - The metric item information
+   * @returns Array of historical metric values
+   * @private
+   */
   private async fetchHistoricalValues(
     params: MetricHistoryParams,
     project: DeepSourceProject,
@@ -2605,7 +2615,7 @@ export class DeepSourceClient {
       variables: {
         login: project.repository.login,
         name: project.name,
-        provider: project.repository.provider,
+        provider: this.getVcsProvider(project.repository.provider),
         first: params.limit || 100, // Default to 100 if not specified
         metricItemId: metricItem.id,
       },
@@ -2622,6 +2632,25 @@ export class DeepSourceClient {
 
   /**
    * Processes historical data from GraphQL response
+   * @param data - The GraphQL response data
+   * @param params - The metric history parameters
+   * @returns Array of historical metric values
+   * @private
+   */
+  /**
+   * Converts provider string to VCS provider enum value
+   * This is a helper method to ensure proper provider formatting
+   * @param provider - Provider name from repository
+   * @returns VCS provider enum value
+   * @private
+   */
+  private getVcsProvider(provider: string): string {
+    return provider.toUpperCase();
+  }
+
+  /**
+   * Processes historical data from GraphQL response
+   * This method is static as it doesn't require instance context
    * @param data - The GraphQL response data
    * @param params - The metric history parameters
    * @returns Array of historical metric values
