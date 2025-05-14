@@ -177,3 +177,64 @@ export interface RepositoryMetric {
   /** List of metric items for different contexts */
   items: RepositoryMetricItem[];
 }
+
+/**
+ * A single historical metric value
+ * @public
+ */
+export interface MetricHistoryValue {
+  /** The numerical value of the metric */
+  value: number;
+  /** Formatted display string for the value */
+  valueDisplay: string;
+  /** Threshold value at the time this value was recorded, if set */
+  threshold?: number | null;
+  /** Status of the threshold comparison at the time this value was recorded */
+  thresholdStatus?: MetricThresholdStatus;
+  /** The commit SHA this value was recorded for */
+  commitOid: string;
+  /** The timestamp when this value was recorded */
+  createdAt: string;
+}
+
+/**
+ * Parameters for retrieving metric history
+ * @public
+ */
+export interface MetricHistoryParams {
+  /** Project key to get metrics for */
+  projectKey: string;
+  /** Metric shortcode to get history for */
+  metricShortcode: MetricShortcode;
+  /** Context key for the metric */
+  metricKey: MetricKey;
+  /** Start date for the history range (ISO string) */
+  startDate?: string;
+  /** End date for the history range (ISO string) */
+  endDate?: string;
+  /** Maximum number of history values to retrieve */
+  limit?: number;
+}
+
+/**
+ * Response containing historical metric values
+ * @public
+ */
+export interface MetricHistoryResponse {
+  /** Metric shortcode */
+  shortcode: MetricShortcode;
+  /** Context key for the metric */
+  metricKey: MetricKey;
+  /** Name of the metric */
+  name: string;
+  /** Unit of measurement (e.g., '%') */
+  unit: string;
+  /** Direction in which higher values are considered better */
+  positiveDirection: MetricDirection;
+  /** Current threshold value, if set */
+  threshold: number | null;
+  /** Whether values are trending in a positive direction */
+  isTrendingPositive: boolean;
+  /** Historical values over time */
+  values: MetricHistoryValue[];
+}
