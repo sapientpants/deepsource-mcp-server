@@ -2366,7 +2366,7 @@ export class DeepSourceClient {
       case ReportType.ISSUES_AUTOFIXED:
         return 'issuesAutofixed';
       default:
-        return '';
+        throw new Error(`Unsupported report type: ${reportType}`);
     }
   }
 
