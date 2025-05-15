@@ -250,10 +250,10 @@ These lines are not executed during any test cases, creating potential risks for
     - ~~Test both success and failure scenarios~~
     - ✅ Fixed by creating test file deepsource-vulnerability-response.test.ts with specific tests for empty edges arrays and early return path
 
-29. **src/deepsource.ts:1720**
-    - Add test cases for this uncovered code
-    - Test various input combinations to cover this line
-    - Check that all error conditions are properly tested
+29. ~~**src/deepsource.ts:1720**~~ (FIXED)
+    - ~~Add test cases for this uncovered code~~
+    - ~~Test various input combinations to cover this line~~
+    - ✅ Fixed by adding tests to deepsource-vulnerability-response.test.ts that verify handling of missing or non-object dependencyVulnerabilityOccurrences
 
 30. **src/deepsource.ts:1712**
     - Add test coverage for this line
