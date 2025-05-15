@@ -6,8 +6,10 @@ import { jest } from '@jest/globals';
 import { DeepSourceClient } from '../deepsource.js';
 
 // We need to access private methods for testing
-// @ts-expect-error - Accessing private static method for testing
+// @ts-expect-error - Accessing private static methods for testing
 const isValidVulnerabilityNode = DeepSourceClient['isValidVulnerabilityNode'];
+// @ts-expect-error - Accessing private static method for testing
+const validateProjectKey = DeepSourceClient['validateProjectKey'];
 
 describe('DeepSourceClient validation methods', () => {
   // Create a spy for the logger
@@ -29,6 +31,45 @@ describe('DeepSourceClient validation methods', () => {
   afterAll(() => {
     // Restore the original logger
     DeepSourceClient['logger'] = originalLogger;
+  });
+
+  describe('validateProjectKey', () => {
+    it('should not throw for valid project keys', () => {
+      // Valid non-empty strings should not throw
+      expect(() => validateProjectKey('test-project')).not.toThrow();
+      expect(() => validateProjectKey('abc123')).not.toThrow();
+      expect(() => validateProjectKey('PROJECT_KEY')).not.toThrow();
+    });
+
+    it('should throw for null or undefined project keys', () => {
+      // Should throw for null or undefined
+      expect(() => validateProjectKey(null as unknown as string)).toThrow(
+        'Invalid project key: Project key must be a non-empty string'
+      );
+      expect(() => validateProjectKey(undefined as unknown as string)).toThrow(
+        'Invalid project key: Project key must be a non-empty string'
+      );
+    });
+
+    it('should throw for empty string project keys', () => {
+      // Should throw for empty string
+      expect(() => validateProjectKey('')).toThrow(
+        'Invalid project key: Project key must be a non-empty string'
+      );
+    });
+
+    it('should throw for non-string project keys', () => {
+      // Should throw for non-string values
+      expect(() => validateProjectKey(123 as unknown as string)).toThrow(
+        'Invalid project key: Project key must be a non-empty string'
+      );
+      expect(() => validateProjectKey({} as unknown as string)).toThrow(
+        'Invalid project key: Project key must be a non-empty string'
+      );
+      expect(() => validateProjectKey(true as unknown as string)).toThrow(
+        'Invalid project key: Project key must be a non-empty string'
+      );
+    });
   });
 
   describe('isValidVulnerabilityNode', () => {

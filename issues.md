@@ -238,10 +238,11 @@ These lines are not executed during any test cases, creating potential risks for
     - ~~Ensure proper error handling is tested~~
     - ✅ Fixed by creating test file deepsource-vulnerability-error-handling.test.ts with specific tests for fallback error handling in getDependencyVulnerabilities
 
-27. **src/deepsource.ts:1859**
-    - Add test cases to cover this line
-    - Test with different input parameters
-    - Ensure all execution paths are covered
+27. ~~**src/deepsource.ts:1859**~~ (FIXED)
+    - ~~Add test cases to cover this line~~
+    - ~~Test with different input parameters~~
+    - ~~Ensure all execution paths are covered~~
+    - ✅ Fixed by adding validateProjectKey tests to deepsource-validation.test.ts with tests for valid strings, nullish values, and non-string values
 
 28. **src/deepsource.ts:1747**
     - Add test coverage for this uncovered line
