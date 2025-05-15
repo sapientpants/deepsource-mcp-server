@@ -226,10 +226,11 @@ These lines are not executed during any test cases, creating potential risks for
     - ~~Ensure all error handling paths are covered~~
     - ✅ Fixed by creating test file deepsource-quality-metrics-errors.test.ts with specific tests for NoneType errors in getQualityMetrics
 
-25. **src/deepsource.ts:2025**
-    - Add test cases for this uncovered code
-    - Test various scenarios that would execute this line
-    - Ensure all conditional branches are tested
+25. ~~**src/deepsource.ts:2025**~~ (FIXED)
+    - ~~Add test cases for this uncovered code~~
+    - ~~Test various scenarios that would execute this line~~
+    - ~~Ensure all conditional branches are tested~~
+    - ✅ Fixed by enhancing deepsource-quality-metrics-errors.test.ts to directly test the extractErrorMessages method and adding tests for error handling
 
 26. **src/deepsource.ts:1975**
     - Add test coverage for this line
