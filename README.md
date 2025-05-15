@@ -7,6 +7,7 @@
 [![npm version](https://img.shields.io/npm/v/deepsource-mcp-server.svg)](https://www.npmjs.com/package/deepsource-mcp-server)
 [![npm downloads](https://img.shields.io/npm/dm/deepsource-mcp-server.svg)](https://www.npmjs.com/package/deepsource-mcp-server)
 [![License](https://img.shields.io/npm/l/deepsource-mcp-server.svg)](https://github.com/sapientpants/deepsource-mcp-server/blob/main/LICENSE)
+[![smithery badge](https://smithery.ai/badge/@sapientpants/deepsource-mcp-server)](https://smithery.ai/server/@sapientpants/deepsource-mcp-server)
 
 A Model Context Protocol (MCP) server that integrates with DeepSource to provide AI assistants with access to code quality metrics, issues, and analysis results.
 
@@ -112,6 +113,14 @@ This would use the `deepsource_update_metric_threshold` tool:
   "thresholdValue": 80
 }
 ```
+### Installing via Smithery
+
+To install DeepSource Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@sapientpants/deepsource-mcp-server):
+
+```bash
+npx -y @smithery/cli install @sapientpants/deepsource-mcp-server --client claude
+```
+
 ### Docker
 
 ```json
