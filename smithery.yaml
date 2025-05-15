@@ -1,0 +1,31 @@
+# Smithery configuration file: https://smithery.ai/docs/build/project-config
+
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - deepsourceApiKey
+    properties:
+      deepsourceApiKey:
+        type: string
+        description: DeepSource API key used to authenticate with the DeepSource GraphQL API
+      nodeEnv:
+        type: string
+        default: production
+        description: Node environment
+  commandFunction:
+    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    |-
+    (config) => ({
+      command: 'node',
+      args: ['--experimental-specifier-resolution=node', 'dist/index.js'],
+      env: {
+        DEEPSOURCE_API_KEY: config.deepsourceApiKey,
+        NODE_ENV: config.nodeEnv || 'production'
+      }
+    })
+  exampleConfig:
+    deepsourceApiKey: your-deepsource-api-key
+    nodeEnv: production
