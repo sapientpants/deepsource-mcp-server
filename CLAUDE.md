@@ -691,8 +691,82 @@ The following guidelines are based on frequent DeepSource issues detected in thi
    // config.features has type readonly ['metrics', 'logging']
    ```
 
+## Development Workflow Best Practices
+
+To avoid common DeepSource issues and maintain high code quality, follow these steps when making changes:
+
+### Pre-Coding Workflow
+
+1. **Plan your changes**
+   - Review existing patterns in the codebase for consistency
+   - Write tests before implementing features (TDD approach) 
+   - Design functions and classes to minimize complexity
+
+2. **Setup proper tooling**
+   - Use IDE extensions for ESLint, Prettier, and TypeScript
+   - Configure pre-commit hooks for automated checks
+   - Familiarize yourself with DeepSource issues in the project
+
+### Implementation Checklist
+
+1. **Type Safety**
+   - Use `unknown` instead of `any` for unknown types
+   - Use `Record<string, unknown>` for objects with unknown structure
+   - Create proper type guards with type predicates for complex objects
+   - Omit explicit type declarations when TypeScript can infer them
+   - Use branded types for IDs and similar primitive values
+
+2. **Method Organization**
+   - Convert non-instance methods to static (those not using `this`)
+   - Keep methods small and focused with a single responsibility
+   - Break down complex functions to reduce cyclomatic complexity
+   - Use lookup tables instead of long if-else chains
+   - Use early returns to reduce nesting
+
+3. **Code Style**
+   - Use regular strings instead of template literals when no interpolation is needed
+   - Use template literals for string concatenation instead of the plus operator
+   - Use optional chaining (?.) instead of logical operators (&&) for nested property access
+   - Use nullish coalescing (??) instead of logical OR for default values
+   - Add JSDoc comments for all public methods
+
+4. **Import Management**
+   - Use named imports instead of wildcard imports
+   - Explicitly import only what you need from modules
+   - Add appropriate comments for necessary wildcard imports
+
+### Pre-Commit Verification
+
+Run these commands before committing changes:
+
+```bash
+# Check for type errors
+pnpm run check-types
+
+# Run linter to catch potential issues
+pnpm run lint
+
+# Format code according to codebase standards
+pnpm run format
+
+# Verify test coverage
+pnpm run test:coverage
+
+# Run full CI check (combines several checks)
+pnpm run ci
+```
+
+Manually verify:
+- No instances of `any` type remain
+- All public methods have proper JSDoc documentation
+- Non-instance methods are marked as static
+- Template literals are used appropriately
+- Complex functions are broken down
+- Error handling is robust
+
 ### Memories
-- Do not use the any type. Use the never, unknown, or Record<string, unknown> instead.
+
+- Do not use the any type. Use never, unknown, or Record<string, unknown> instead.
 - Prefer Record<string, unknown> over any when working with objects of unknown structure.
 - Use template literals only when needed for interpolation or multiline strings.
 - Convert instance methods that don't use 'this' to static methods.
