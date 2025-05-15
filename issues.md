@@ -260,15 +260,16 @@ These lines are not executed during any test cases, creating potential risks for
     - ~~Ensure all execution paths are tested~~
     - ✅ Fixed by adding tests to deepsource-vulnerability-response.test.ts that verify handling of missing or non-object repository property
 
-31. **src/deepsource.ts:1706**
-    - Add test cases to cover this line
-    - Test with different input parameters to ensure coverage
-    - Mock dependencies as needed to trigger this code path
+31. ~~**src/deepsource.ts:1706**~~ (FIXED)
+    - ~~Add test cases to cover this line~~
+    - ~~Test with different input parameters to ensure coverage~~
+    - ✅ Fixed by adding tests to deepsource-vulnerability-response.test.ts for missing or non-object data.data property in GraphQL responses
 
-32. **src/deepsource.ts:1700**
-    - Add test coverage for this uncovered line
-    - Test all possible input combinations
-    - Ensure all error handling paths are covered
+32. ~~**src/deepsource.ts:1700**~~ (FIXED)
+    - ~~Add test coverage for this uncovered line~~
+    - ~~Test all possible input combinations~~
+    - ~~Ensure all error handling paths are covered~~
+    - ✅ Fixed by adding tests to deepsource-vulnerability-response.test.ts for missing or non-object response.data property
 
 33. **src/deepsource.ts:1676**
     - Add test cases for this uncovered code
