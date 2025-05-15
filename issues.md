@@ -82,85 +82,101 @@ Replace banned types with safer alternatives for better type safety.
 
 These lines are not executed during any test cases, creating potential risks for undetected bugs.
 
-1. **src/deepsource.ts:2686**
-   - Add test cases that exercise this line of code
-   - Ensure all code paths are properly tested
-   - Consider edge cases that might trigger this line
+1. ~~**src/deepsource.ts:2686**~~ (FIXED)
+   - ~~Add test cases that exercise this line of code~~
+   - ~~Ensure all code paths are properly tested~~
+   - ~~Consider edge cases that might trigger this line~~
+   - ✅ Fixed by adding tests for invalid metric item data in historical data response
 
-2. **src/deepsource.ts:2677**
-   - Add test coverage for this uncovered line
-   - Ensure all conditional branches are tested
-   - Write tests that cover both success and failure paths
+2. ~~**src/deepsource.ts:2677**~~ (FIXED)
+   - ~~Add test coverage for this uncovered line~~
+   - ~~Ensure all conditional branches are tested~~
+   - ~~Write tests that cover both success and failure paths~~
+   - ✅ Fixed by adding tests for missing metrics in historical data response
 
-3. **src/deepsource.ts:2668**
-   - Add test cases for this uncovered code
-   - Ensure proper error handling is tested
-   - Test both happy path and edge cases
+3. ~~**src/deepsource.ts:2668**~~ (FIXED)
+   - ~~Add test cases for this uncovered code~~
+   - ~~Ensure proper error handling is tested~~
+   - ~~Test both happy path and edge cases~~
+   - ✅ Fixed by adding tests for missing repository data
 
-4. **src/deepsource.ts:2733**
-   - Add test coverage for this line
-   - Test various input combinations to cover this path
-   - Consider refactoring if code is unreachable
+4. ~~**src/deepsource.ts:2733**~~ (FIXED)
+   - ~~Add test coverage for this line~~
+   - ~~Test various input combinations to cover this path~~
+   - ~~Consider refactoring if code is unreachable~~
+   - ✅ Fixed by adding tests for createMetricHistoryResponse
 
-5. **src/deepsource.ts:2727**
-   - Add test cases to cover this line
-   - Ensure all execution paths are tested
-   - Test edge cases that might trigger this code
+5. ~~**src/deepsource.ts:2727**~~ (FIXED)
+   - ~~Add test cases to cover this line~~
+   - ~~Ensure all execution paths are tested~~
+   - ~~Test edge cases that might trigger this code~~
+   - ✅ Fixed by adding tests for createMetricHistoryResponse
 
-6. **src/deepsource.ts:2639**
-   - Add test coverage for this uncovered line
-   - Write tests that exercise this specific code path
-   - Consider the specific conditions needed to execute this line
+6. ~~**src/deepsource.ts:2639**~~ (FIXED)
+   - ~~Add test coverage for this uncovered line~~
+   - ~~Write tests that exercise this specific code path~~
+   - ~~Consider the specific conditions needed to execute this line~~
+   - ✅ Fixed by adding tests for processHistoricalData
 
-7. **src/deepsource.ts:2633**
-   - Add test cases to cover this line
-   - Test with different input parameters to ensure coverage
-   - Mock dependencies as needed to trigger this code path
+7. ~~**src/deepsource.ts:2633**~~ (FIXED)
+   - ~~Add test cases to cover this line~~
+   - ~~Test with different input parameters to ensure coverage~~
+   - ~~Mock dependencies as needed to trigger this code path~~
+   - ✅ Fixed by testing GraphQL error handling in fetchHistoricalValues
 
-8. **src/deepsource.ts:2622**
-   - Add test coverage for this uncovered line
-   - Ensure error handling paths are properly tested
-   - Consider potential edge cases that would execute this code
+8. ~~**src/deepsource.ts:2622**~~ (FIXED)
+   - ~~Add test coverage for this uncovered line~~
+   - ~~Ensure error handling paths are properly tested~~
+   - ~~Consider potential edge cases that would execute this code~~
+   - ✅ Fixed by testing GraphQL API calls in fetchHistoricalValues
 
-9. **src/deepsource.ts:2590**
-   - Add test cases for this uncovered code
-   - Test with various inputs to ensure full coverage
-   - Check that all error conditions are properly tested
+9. ~~**src/deepsource.ts:2590**~~ (FIXED)
+   - ~~Add test cases for this uncovered code~~
+   - ~~Test with various inputs to ensure full coverage~~
+   - ~~Check that all error conditions are properly tested~~
+   - ✅ Fixed by testing GraphQL queries in fetchHistoricalValues
 
-10. **src/deepsource.ts:2563**
-    - Add test coverage for this line
-    - Test all possible execution paths
-    - Ensure boundary conditions are properly tested
+10. ~~**src/deepsource.ts:2563**~~ (FIXED)
+    - ~~Add test coverage for this line~~
+    - ~~Test all possible execution paths~~
+    - ~~Ensure boundary conditions are properly tested~~
+    - ✅ Fixed by adding tests for validateAndGetMetricInfo
 
-11. **src/deepsource.ts:2556**
-    - Add test cases to cover this line
-    - Ensure proper error handling is tested
-    - Test all possible input combinations
+11. ~~**src/deepsource.ts:2556**~~ (FIXED)
+    - ~~Add test cases to cover this line~~
+    - ~~Ensure proper error handling is tested~~
+    - ~~Test all possible input combinations~~
+    - ✅ Fixed by adding tests for metric item validation
 
-12. **src/deepsource.ts:2550**
-    - Add test coverage for this uncovered line
-    - Test edge cases that might trigger this code
-    - Ensure all conditional paths are covered
+12. ~~**src/deepsource.ts:2550**~~ (FIXED)
+    - ~~Add test coverage for this uncovered line~~
+    - ~~Test edge cases that might trigger this code~~
+    - ~~Ensure all conditional paths are covered~~
+    - ✅ Fixed by adding tests for metric validation
 
-13. **src/deepsource.ts:2546**
-    - Add test cases for this uncovered code
-    - Test various input combinations to cover this line
-    - Check that all error conditions are properly tested
+13. ~~**src/deepsource.ts:2546**~~ (FIXED)
+    - ~~Add test cases for this uncovered code~~
+    - ~~Test various input combinations to cover this line~~
+    - ~~Check that all error conditions are properly tested~~
+    - ✅ Fixed by adding tests for getQualityMetrics call in validateAndGetMetricInfo
 
-14. **src/deepsource.ts:2543**
-    - Add test coverage for this line
-    - Ensure all execution paths are tested
-    - Write tests that simulate the conditions needed to reach this code
+14. ~~**src/deepsource.ts:2543**~~ (FIXED)
+    - ~~Add test coverage for this line~~
+    - ~~Ensure all execution paths are tested~~
+    - ~~Write tests that simulate the conditions needed to reach this code~~
+    - ✅ Fixed by adding tests for project repository validation
 
-15. **src/deepsource.ts:2538**
-    - Add test cases to cover this line
-    - Test with different input parameters to ensure coverage
-    - Mock dependencies as needed to trigger this code path
+15. ~~**src/deepsource.ts:2538**~~ (FIXED)
+    - ~~Add test cases to cover this line~~
+    - ~~Test with different input parameters to ensure coverage~~
+    - ~~Mock dependencies as needed to trigger this code path~~
+    - ✅ Fixed by adding tests for project not found errors
 
-16. **src/deepsource.ts:2535**
-    - Add test coverage for this uncovered line
-    - Test all possible input combinations
-    - Ensure all error handling paths are covered
+16. ~~**src/deepsource.ts:2535**~~ (FIXED)
+    - ~~Add test coverage for this uncovered line~~
+    - ~~Test all possible input combinations~~
+    - ~~Ensure all error handling paths are covered~~
+    - ✅ Fixed by adding tests for listProjects call in validateAndGetMetricInfo
 
 17. **src/deepsource.ts:2341**
     - Add test cases for this uncovered code
