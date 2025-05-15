@@ -208,10 +208,11 @@ These lines are not executed during any test cases, creating potential risks for
     - ~~Check that all error conditions are properly tested~~
     - ✅ Fixed by adding tests for isNotFoundError in deepsource-metric-history-errors.test.ts
 
-22. **src/deepsource.ts:2139**
-    - Add test coverage for this line
-    - Ensure all execution paths are tested
-    - Write tests that simulate the conditions needed to reach this code
+22. ~~**src/deepsource.ts:2139**~~ (FIXED)
+    - ~~Add test coverage for this line~~
+    - ~~Ensure all execution paths are tested~~
+    - ~~Write tests that simulate the conditions needed to reach this code~~
+    - ✅ Fixed by creating test file deepsource-metric-setting-updates.test.ts with specific tests for GraphQL error handling
 
 23. **src/deepsource.ts:2097**
     - Add test cases to cover this line
