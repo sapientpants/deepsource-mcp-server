@@ -1,13 +1,32 @@
-import { DeepSourceClient } from '../deepsource';
-import { MetricDirection, MetricKey, MetricShortcode } from '../types/metrics';
+import { MetricDirection, MetricKey, MetricShortcode } from '../types/metrics.js';
+import { getPrivateMethod } from './test-utils/private-method-access.js';
 
 describe('DeepSource Historical Data Processing', () => {
   describe('processHistoricalData', () => {
-    // We need to access the private static method
+    // Define types for better documentation
+    type HistoricalParams = {
+      projectKey: string;
+      metricShortcode: MetricShortcode;
+      metricKey: MetricKey;
+      startDate?: string;
+      endDate?: string;
+      limit?: number;
+    };
 
-    // @ts-expect-error - This is a private method we're accessing for testing
-    const processHistoricalData = (DeepSourceClient as Record<string, unknown>)
-      .processHistoricalData;
+    type HistoricalValue = {
+      value: number;
+      valueDisplay: string;
+      threshold?: number | null;
+      thresholdStatus?: string;
+      commitOid: string;
+      createdAt: string;
+    };
+
+    // Access the private static method using our utility
+    const processHistoricalData =
+      getPrivateMethod<(_data: unknown, _params: HistoricalParams) => HistoricalValue[]>(
+        'processHistoricalData'
+      );
 
     it('should process historical data from GraphQL response', () => {
       // Sample GraphQL response data
@@ -264,11 +283,14 @@ describe('DeepSource Historical Data Processing', () => {
   });
 
   describe('calculateTrendDirection', () => {
-    // We need to access the private static method
+    // Define type for better documentation
+    type TrendValue = { value: number; createdAt: string };
 
-    // @ts-expect-error - This is a private method we're accessing for testing
-    const calculateTrendDirection = (DeepSourceClient as Record<string, unknown>)
-      .calculateTrendDirection;
+    // Access the private static method using our utility
+    const calculateTrendDirection =
+      getPrivateMethod<(_values: TrendValue[], _direction: string | MetricDirection) => boolean>(
+        'calculateTrendDirection'
+      );
 
     it('should return true when not enough data points', () => {
       // One data point isn't enough to determine a trend

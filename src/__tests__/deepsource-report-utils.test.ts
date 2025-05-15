@@ -2,13 +2,16 @@
  * Tests for DeepSource report utility methods
  * Focuses on testing the internal utility methods related to report processing
  */
-import { DeepSourceClient, ReportType } from '../deepsource';
+import { ReportType } from '../deepsource.js';
+import { getPrivateMethod } from './test-utils/private-method-access.js';
 
 describe('DeepSource Report Utility Methods', () => {
   describe('extractReportData', () => {
-    // We need to access the private static method
-    // @ts-expect-error - This is a private method we're accessing for testing
-    const extractReportData = (DeepSourceClient as Record<string, unknown>).extractReportData;
+    // Access the private static method using our utility
+    const extractReportData =
+      getPrivateMethod<(_response: unknown, _reportType: ReportType) => unknown>(
+        'extractReportData'
+      );
 
     it('should return null for null response', () => {
       const result = extractReportData(null, ReportType.OWASP_TOP_10);
@@ -142,9 +145,8 @@ describe('DeepSource Report Utility Methods', () => {
   });
 
   describe('getReportField', () => {
-    // We need to access the private static method
-    // @ts-expect-error - This is a private method we're accessing for testing
-    const getReportField = (DeepSourceClient as Record<string, unknown>).getReportField;
+    // Access the private static method using our utility
+    const getReportField = getPrivateMethod<(_reportType: ReportType) => string>('getReportField');
 
     it('should return correct field name for OWASP_TOP_10', () => {
       const fieldName = getReportField(ReportType.OWASP_TOP_10);
@@ -192,10 +194,9 @@ describe('DeepSource Report Utility Methods', () => {
   });
 
   describe('getTitleForReportType', () => {
-    // We need to access the private static method
-    // @ts-expect-error - This is a private method we're accessing for testing
-    const getTitleForReportType = (DeepSourceClient as Record<string, unknown>)
-      .getTitleForReportType;
+    // Access the private static method using our utility
+    const getTitleForReportType =
+      getPrivateMethod<(_reportType: ReportType) => string>('getTitleForReportType');
 
     it('should return correct title for OWASP_TOP_10', () => {
       const title = getTitleForReportType(ReportType.OWASP_TOP_10);

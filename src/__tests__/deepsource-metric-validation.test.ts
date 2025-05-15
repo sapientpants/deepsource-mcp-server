@@ -1,12 +1,12 @@
-import { DeepSourceClient } from '../deepsource';
-import { MetricDirection } from '../types/metrics';
+import { MetricDirection } from '../types/metrics.js';
+import { getPrivateMethod } from './test-utils/private-method-access.js';
 
 describe('DeepSource Validation Utilities', () => {
   describe('validateProjectRepository', () => {
-    // Access the private static method
-    // @ts-expect-error - This is a private method we're accessing for testing
-    const validateProjectRepository = (DeepSourceClient as Record<string, unknown>)
-      .validateProjectRepository;
+    // Access the private static method using our utility
+    const validateProjectRepository = getPrivateMethod<
+      (_project: unknown, _projectKey: string) => void
+    >('validateProjectRepository');
 
     it('should throw error when repository is missing', () => {
       const projectWithoutRepo = {
@@ -53,9 +53,8 @@ describe('DeepSource Validation Utilities', () => {
   });
 
   describe('getVcsProvider', () => {
-    // Access the private static method
-    // @ts-expect-error - This is a private method we're accessing for testing
-    const getVcsProvider = (DeepSourceClient as Record<string, unknown>).getVcsProvider;
+    // Access the private static method using our utility
+    const getVcsProvider = getPrivateMethod<(_provider: string) => string>('getVcsProvider');
 
     it('should convert provider string to uppercase', () => {
       expect(getVcsProvider('github')).toBe('GITHUB');
@@ -73,9 +72,8 @@ describe('DeepSource Validation Utilities', () => {
   });
 
   describe('isNotFoundError', () => {
-    // Access the private static method
-    // @ts-expect-error - This is a private method we're accessing for testing
-    const isNotFoundError = (DeepSourceClient as Record<string, unknown>).isNotFoundError;
+    // Access the private static method using our utility
+    const isNotFoundError = getPrivateMethod<(_error: unknown) => boolean>('isNotFoundError');
 
     it('should identify GraphQL not found errors', () => {
       const notFoundError = new Error('GraphQL error: Resource not found');
@@ -105,10 +103,12 @@ describe('DeepSource Validation Utilities', () => {
   });
 
   describe('calculateTrendDirection', () => {
-    // Access the private static method
-    // @ts-expect-error - This is a private method we're accessing for testing
-    const calculateTrendDirection = (DeepSourceClient as Record<string, unknown>)
-      .calculateTrendDirection;
+    // Access the private static method using our utility
+    type TrendValue = { value: number; createdAt: string };
+    const calculateTrendDirection =
+      getPrivateMethod<(_values: TrendValue[], _direction: string | MetricDirection) => boolean>(
+        'calculateTrendDirection'
+      );
 
     it('should return true when not enough data points', () => {
       // One data point isn't enough to determine a trend

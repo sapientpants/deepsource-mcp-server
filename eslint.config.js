@@ -54,11 +54,13 @@ export default [
     },
     rules: {
       // Allow jest import in test files even if not directly used
+      // Also allow parameters with underscore prefix to indicate intentionally unused
       'no-unused-vars': ['error', { 
         vars: 'all', 
         args: 'after-used', 
         ignoreRestSiblings: false,
-        varsIgnorePattern: '^(jest)$'
+        varsIgnorePattern: '^(jest)$',
+        argsIgnorePattern: '^_'
       }]
     }
   },
