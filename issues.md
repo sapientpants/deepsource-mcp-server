@@ -214,10 +214,11 @@ These lines are not executed during any test cases, creating potential risks for
     - ~~Write tests that simulate the conditions needed to reach this code~~
     - ✅ Fixed by creating test file deepsource-metric-setting-updates.test.ts with specific tests for GraphQL error handling
 
-23. **src/deepsource.ts:2097**
-    - Add test cases to cover this line
-    - Test with different input parameters to ensure coverage
-    - Mock dependencies as needed to trigger this code path
+23. ~~**src/deepsource.ts:2097**~~ (FIXED)
+    - ~~Add test cases to cover this line~~
+    - ~~Test with different input parameters to ensure coverage~~
+    - ~~Mock dependencies as needed to trigger this code path~~
+    - ✅ Fixed by creating test file deepsource-metric-threshold-errors.test.ts with specific tests for GraphQL error handling in setMetricThreshold
 
 24. **src/deepsource.ts:2061**
     - Add test coverage for this uncovered line
