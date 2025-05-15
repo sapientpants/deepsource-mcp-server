@@ -178,30 +178,35 @@ These lines are not executed during any test cases, creating potential risks for
     - ~~Ensure all error handling paths are covered~~
     - ✅ Fixed by adding tests for listProjects call in validateAndGetMetricInfo
 
-17. **src/deepsource.ts:2341**
-    - Add test cases for this uncovered code
-    - Test various scenarios that would execute this line
-    - Ensure all conditional branches are tested
+17. ~~**src/deepsource.ts:2341**~~ (FIXED)
+    - ~~Add test cases for this uncovered code~~
+    - ~~Test various scenarios that would execute this line~~
+    - ~~Ensure all conditional branches are tested~~
+    - ✅ Fixed by adding tests for handleTestEnvironment in deepsource-metric-history-errors.test.ts
 
-18. **src/deepsource.ts:2324**
-    - Add test coverage for this line
-    - Test edge cases that might trigger this code
-    - Ensure proper error handling is tested
+18. ~~**src/deepsource.ts:2324**~~ (FIXED)
+    - ~~Add test coverage for this line~~
+    - ~~Test edge cases that might trigger this code~~
+    - ~~Ensure proper error handling is tested~~
+    - ✅ Fixed by adding tests for error handling in getMetricHistory
 
-19. **src/deepsource.ts:2299**
-    - Add test cases to cover this line
-    - Test with different input parameters
-    - Ensure all execution paths are covered
+19. ~~**src/deepsource.ts:2299**~~ (FIXED)
+    - ~~Add test cases to cover this line~~
+    - ~~Test with different input parameters~~
+    - ~~Ensure all execution paths are covered~~
+    - ✅ Fixed by adding tests for processRegularMetricHistory in deepsource-metric-history-errors.test.ts
 
-20. **src/deepsource.ts:2296**
-    - Add test coverage for this uncovered line
-    - Write tests that exercise this specific code path
-    - Test both success and failure scenarios
+20. ~~**src/deepsource.ts:2296**~~ (FIXED)
+    - ~~Add test coverage for this uncovered line~~
+    - ~~Write tests that exercise this specific code path~~
+    - ~~Test both success and failure scenarios~~
+    - ✅ Fixed by adding tests for processRegularMetricHistory with mocked dependencies
 
-21. **src/deepsource.ts:2264**
-    - Add test cases for this uncovered code
-    - Test various input combinations to cover this line
-    - Check that all error conditions are properly tested
+21. ~~**src/deepsource.ts:2264**~~ (FIXED)
+    - ~~Add test cases for this uncovered code~~
+    - ~~Test various input combinations to cover this line~~
+    - ~~Check that all error conditions are properly tested~~
+    - ✅ Fixed by adding tests for isNotFoundError in deepsource-metric-history-errors.test.ts
 
 22. **src/deepsource.ts:2139**
     - Add test coverage for this line
