@@ -376,7 +376,8 @@ These lines are not executed during any test cases, creating potential risks for
 
 ### JS-0099: Found warning comments in code (MINOR)
 
-1. **src/__tests__/deepsource-metric-threshold-updates.test.ts:29**
-   - Remove or address warning comments (TODO, FIXME, XXX)
-   - Implement the functionality that is marked with the TODO
-   - Review the code and update or remove the comment if the issue has been resolved
+1. ~~**src/__tests__/deepsource-metric-threshold-updates.test.ts:29**~~ (FIXED)
+   - ~~Remove or address warning comments (TODO, FIXME, XXX)~~
+   - ~~Implement the functionality that is marked with the TODO~~
+   - ~~Review the code and update or remove the comment if the issue has been resolved~~
+   - ✅ Fixed by replacing the TODO comment with descriptive notes about where the integration tests are actually implemented

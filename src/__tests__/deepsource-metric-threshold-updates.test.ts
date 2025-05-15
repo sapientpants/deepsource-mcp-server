@@ -26,4 +26,5 @@ describe('DeepSourceClient Metric Threshold Updates', () => {
   });
 });
 
-// TODO: Add integration tests for metric history and threshold updates once mocking is fixed
+// Integration tests for metric history are implemented in deepsource-metrics-history.test.ts
+// Threshold update error handling is implemented in deepsource-metric-threshold-errors.test.ts
