@@ -1,7 +1,7 @@
 import { DeepSourceClient } from '../deepsource.js';
 // We're not using getPrivateMethod directly in this file, but we import it for consistency
 // with other test files in the codebase. Instead we're directly mocking a static method
-// using DeepSourceClient.prototype.constructor.
+// using DeepSourceClient.prototype.constructor as shown below.
 // eslint-disable-next-line no-unused-vars
 import { getPrivateMethod } from './test-utils/private-method-access.js';
 
@@ -66,7 +66,8 @@ describe('DeepSource Metric Response Utilities', () => {
   describe('createMetricHistoryResponse', () => {
     beforeAll(() => {
       // Mock implementation using our utility for consistent pattern
-      DeepSourceClient.prototype.constructor['createMetricHistoryResponse'] =
+      // Use type assertion to avoid 'any' type
+      (DeepSourceClient.prototype.constructor as Record<string, unknown>)['createMetricHistoryResponse'] =
         mockCreateHistoryResponse;
     });
 
