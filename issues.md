@@ -255,10 +255,10 @@ These lines are not executed during any test cases, creating potential risks for
     - ~~Test various input combinations to cover this line~~
     - ✅ Fixed by adding tests to deepsource-vulnerability-response.test.ts that verify handling of missing or non-object dependencyVulnerabilityOccurrences
 
-30. **src/deepsource.ts:1712**
-    - Add test coverage for this line
-    - Ensure all execution paths are tested
-    - Write tests that simulate the conditions needed to reach this code
+30. ~~**src/deepsource.ts:1712**~~ (FIXED)
+    - ~~Add test coverage for this line~~
+    - ~~Ensure all execution paths are tested~~
+    - ✅ Fixed by adding tests to deepsource-vulnerability-response.test.ts that verify handling of missing or non-object repository property
 
 31. **src/deepsource.ts:1706**
     - Add test cases to cover this line
