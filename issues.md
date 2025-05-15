@@ -25,11 +25,13 @@ Some built-in types are considered dangerous or have better alternatives. These 
 
 #### Occurrences:
 
-1. **File**: `src/__tests__/deepsource-report-utils.test.ts`, **Line**: 196
-   - Likely using `Object` or `{}` type which should be replaced with more specific type definitions
+1. **File**: `src/__tests__/deepsource-report-utils.test.ts`, **Line**: 196 - ✅ FIXED
+   - Banned type usage in the title getter function
+   - Fixed by creating a specific `ReportTitleGetter` type
 
-2. **File**: `src/__tests__/deepsource-report-utils.test.ts`, **Line**: 146
-   - Another occurrence of banned type usage
+2. **File**: `src/__tests__/deepsource-report-utils.test.ts`, **Line**: 146 - ✅ FIXED
+   - Banned type usage in the field getter function
+   - Fixed by creating a specific `ReportFieldGetter` type
 
 3. **File**: `src/__tests__/deepsource-report-utils.test.ts`, **Line**: 11 - ✅ FIXED
    - Banned type usage at the beginning of the test file
@@ -67,7 +69,7 @@ Comments like "TODO", "FIXME", and "XXX" indicate code that may need attention b
 ## Summary
 
 - **Critical Issues**: 2 occurrences of `any` type usage - ✅ FIXED
-- **Major Issues**: 9 occurrences of banned type usage - ⏳ IN PROGRESS (1/9 fixed)
+- **Major Issues**: 9 occurrences of banned type usage - ⏳ IN PROGRESS (3/9 fixed)
 - **Minor Issues**: 1 occurrence of warning comments in code - ✅ FIXED
 
 All issues appear to be in test files, which suggests they likely don't affect production code directly. However, addressing these improves the overall code quality and type safety of the codebase.
@@ -83,6 +85,8 @@ All issues appear to be in test files, which suggests they likely don't affect p
 
 3. **Use of banned types** (JS-0296) - In Progress
    - Created specific `ReportData` type in `deepsource-report-utils.test.ts` to replace generic `unknown` return type
+   - Created specific `ReportFieldGetter` type to replace inline function type
+   - Created specific `ReportTitleGetter` type to replace inline function type
 
 ## Recommended Actions for Remaining Issues
 

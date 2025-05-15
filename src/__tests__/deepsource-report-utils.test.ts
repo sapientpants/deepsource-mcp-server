@@ -14,7 +14,7 @@ describe('DeepSource Report Utility Methods', () => {
       title: string;
       securityIssueStats: Array<Record<string, unknown>>;
     } | null;
-    
+
     const extractReportData =
       getPrivateMethod<(_response: unknown, _reportType: ReportType) => ReportData>(
         'extractReportData'
@@ -153,7 +153,10 @@ describe('DeepSource Report Utility Methods', () => {
 
   describe('getReportField', () => {
     // Access the private static method using our utility
-    const getReportField = getPrivateMethod<(_reportType: ReportType) => string>('getReportField');
+    // Define a specific type for the report field getter function
+    type ReportFieldGetter = (_reportType: ReportType) => string;
+
+    const getReportField = getPrivateMethod<ReportFieldGetter>('getReportField');
 
     it('should return correct field name for OWASP_TOP_10', () => {
       const fieldName = getReportField(ReportType.OWASP_TOP_10);
@@ -202,8 +205,10 @@ describe('DeepSource Report Utility Methods', () => {
 
   describe('getTitleForReportType', () => {
     // Access the private static method using our utility
-    const getTitleForReportType =
-      getPrivateMethod<(_reportType: ReportType) => string>('getTitleForReportType');
+    // Define a specific type for the report title getter function
+    type ReportTitleGetter = (_reportType: ReportType) => string;
+
+    const getTitleForReportType = getPrivateMethod<ReportTitleGetter>('getTitleForReportType');
 
     it('should return correct title for OWASP_TOP_10', () => {
       const title = getTitleForReportType(ReportType.OWASP_TOP_10);
