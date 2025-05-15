@@ -244,10 +244,11 @@ These lines are not executed during any test cases, creating potential risks for
     - ~~Ensure all execution paths are covered~~
     - ✅ Fixed by adding validateProjectKey tests to deepsource-validation.test.ts with tests for valid strings, nullish values, and non-string values
 
-28. **src/deepsource.ts:1747**
-    - Add test coverage for this uncovered line
-    - Write tests that exercise this specific code path
-    - Test both success and failure scenarios
+28. ~~**src/deepsource.ts:1747**~~ (FIXED)
+    - ~~Add test coverage for this uncovered line~~
+    - ~~Write tests that exercise this specific code path~~
+    - ~~Test both success and failure scenarios~~
+    - ✅ Fixed by creating test file deepsource-vulnerability-response.test.ts with specific tests for empty edges arrays and early return path
 
 29. **src/deepsource.ts:1720**
     - Add test cases for this uncovered code
