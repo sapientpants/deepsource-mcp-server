@@ -271,10 +271,11 @@ These lines are not executed during any test cases, creating potential risks for
     - ~~Ensure all error handling paths are covered~~
     - ✅ Fixed by adding tests to deepsource-vulnerability-response.test.ts for missing or non-object response.data property
 
-33. **src/deepsource.ts:1676**
-    - Add test cases for this uncovered code
-    - Test various scenarios that would execute this line
-    - Ensure all conditional branches are tested
+33. ~~**src/deepsource.ts:1676**~~ (FIXED)
+    - ~~Add test cases for this uncovered code~~
+    - ~~Test various scenarios that would execute this line~~
+    - ~~Ensure all conditional branches are tested~~
+    - ✅ Fixed by adding comprehensive tests to deepsource-vulnerability-response.test.ts for null, undefined, and non-object responses
 
 34. **src/deepsource.ts:1642**
     - Add test coverage for this line
