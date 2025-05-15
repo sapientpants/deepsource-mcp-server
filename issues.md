@@ -220,10 +220,11 @@ These lines are not executed during any test cases, creating potential risks for
     - ~~Mock dependencies as needed to trigger this code path~~
     - ✅ Fixed by creating test file deepsource-metric-threshold-errors.test.ts with specific tests for GraphQL error handling in setMetricThreshold
 
-24. **src/deepsource.ts:2061**
-    - Add test coverage for this uncovered line
-    - Test all possible input combinations
-    - Ensure all error handling paths are covered
+24. ~~**src/deepsource.ts:2061**~~ (FIXED)
+    - ~~Add test coverage for this uncovered line~~
+    - ~~Test all possible input combinations~~
+    - ~~Ensure all error handling paths are covered~~
+    - ✅ Fixed by creating test file deepsource-quality-metrics-errors.test.ts with specific tests for NoneType errors in getQualityMetrics
 
 25. **src/deepsource.ts:2025**
     - Add test cases for this uncovered code
