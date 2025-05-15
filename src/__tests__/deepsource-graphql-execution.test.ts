@@ -1,10 +1,9 @@
 /**
  * Tests for GraphQL query execution and response handling in DeepSourceClient
  */
-import { jest } from '@jest/globals';
-import { DeepSourceClient } from '../deepsource';
+import type { DeepSourceClient } from '../deepsource';
+import { DeepSourceClient as DeepSourceClientClass } from '../deepsource';
 import nock from 'nock';
-
 describe('DeepSourceClient GraphQL Query Execution', () => {
   const API_KEY = 'test-api-key';
   const API_URL = 'https://api.deepsource.io';
@@ -12,7 +11,7 @@ describe('DeepSourceClient GraphQL Query Execution', () => {
   let client: DeepSourceClient;
 
   beforeEach(() => {
-    client = new DeepSourceClient(API_KEY);
+    client = new DeepSourceClientClass(API_KEY);
     nock.cleanAll();
   });
 

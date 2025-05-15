@@ -2296,13 +2296,22 @@ export class DeepSourceClient {
     const historyValues = await this.fetchHistoricalValues(params, project, metricItem);
 
     // Calculate trend and create response
-    return this.createMetricHistoryResponse(params, metric, metricItem, historyValues);
+    return DeepSourceClient.createMetricHistoryResponse(params, metric, metricItem, historyValues);
   }
 
+  /**
+   * Retrieves historical data for a specific quality metric
+   * This method provides access to time-series data for metrics like line coverage,
+   * duplicate code percentage, and other quality indicators tracked by DeepSource.
+   * @param params - Parameters specifying the metric and project
+   * @returns Historical data for the metric or null if not found
+   * @throws {Error} When required parameters are missing or invalid
+   * @throws {Error} When network or authentication issues occur
+   */
   async getMetricHistory(params: MetricHistoryParams): Promise<MetricHistoryResponse | null> {
     try {
       // Handle test environment separately
-      const testResult = await this.handleTestEnvironment(params);
+      const testResult = await DeepSourceClient.handleTestEnvironment(params);
       if (testResult !== undefined) {
         return testResult;
       }
@@ -2325,7 +2334,7 @@ export class DeepSourceClient {
    * @returns Metric history response for test environment or undefined if not in test mode
    * @private
    */
-  private async handleTestEnvironment(
+  private static async handleTestEnvironment(
     params: MetricHistoryParams
   ): Promise<MetricHistoryResponse | null | undefined> {
     if (process.env.NODE_ENV !== 'test') {
@@ -2615,7 +2624,7 @@ export class DeepSourceClient {
       variables: {
         login: project.repository.login,
         name: project.name,
-        provider: this.getVcsProvider(project.repository.provider),
+        provider: DeepSourceClient.getVcsProvider(project.repository.provider),
         first: params.limit || 100, // Default to 100 if not specified
         metricItemId: metricItem.id,
       },
@@ -2630,13 +2639,7 @@ export class DeepSourceClient {
     return DeepSourceClient.processHistoricalData(response.data.data, params);
   }
 
-  /**
-   * Processes historical data from GraphQL response
-   * @param data - The GraphQL response data
-   * @param params - The metric history parameters
-   * @returns Array of historical metric values
-   * @private
-   */
+  // Removed duplicate JSDoc comment - see complete comment below at line 2661
   /**
    * Converts provider string to VCS provider enum value
    * This is a helper method to ensure proper provider formatting
@@ -2644,7 +2647,7 @@ export class DeepSourceClient {
    * @returns VCS provider enum value
    * @private
    */
-  private getVcsProvider(provider: string): string {
+  private static getVcsProvider(provider: string): string {
     return provider.toUpperCase();
   }
 
@@ -2714,7 +2717,7 @@ export class DeepSourceClient {
    * @returns Metric history response
    * @private
    */
-  private createMetricHistoryResponse(
+  private static createMetricHistoryResponse(
     params: MetricHistoryParams,
     metric: RepositoryMetric,
     metricItem: RepositoryMetricItem,
