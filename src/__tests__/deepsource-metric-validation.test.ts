@@ -3,8 +3,9 @@ import { MetricDirection } from '../types/metrics';
 
 describe('DeepSource Validation Utilities', () => {
   describe('validateProjectRepository', () => {
-    // Access the private static method using any
-    const validateProjectRepository = (DeepSourceClient as any).validateProjectRepository;
+    // Access the private static method
+    const validateProjectRepository = (DeepSourceClient as Record<string, unknown>)
+      .validateProjectRepository as Function;
 
     it('should throw error when repository is missing', () => {
       const projectWithoutRepo = {
@@ -51,8 +52,8 @@ describe('DeepSource Validation Utilities', () => {
   });
 
   describe('getVcsProvider', () => {
-    // Access the private static method using any
-    const getVcsProvider = (DeepSourceClient as any).getVcsProvider;
+    // Access the private static method
+    const getVcsProvider = (DeepSourceClient as Record<string, unknown>).getVcsProvider as Function;
 
     it('should convert provider string to uppercase', () => {
       expect(getVcsProvider('github')).toBe('GITHUB');
@@ -70,8 +71,9 @@ describe('DeepSource Validation Utilities', () => {
   });
 
   describe('isNotFoundError', () => {
-    // Access the private static method using any
-    const isNotFoundError = (DeepSourceClient as any).isNotFoundError;
+    // Access the private static method
+    const isNotFoundError = (DeepSourceClient as Record<string, unknown>)
+      .isNotFoundError as Function;
 
     it('should identify GraphQL not found errors', () => {
       const notFoundError = new Error('GraphQL error: Resource not found');
@@ -101,8 +103,9 @@ describe('DeepSource Validation Utilities', () => {
   });
 
   describe('calculateTrendDirection', () => {
-    // Access the private static method using any
-    const calculateTrendDirection = (DeepSourceClient as any).calculateTrendDirection;
+    // Access the private static method
+    const calculateTrendDirection = (DeepSourceClient as Record<string, unknown>)
+      .calculateTrendDirection as Function;
 
     it('should return true when not enough data points', () => {
       // One data point isn't enough to determine a trend

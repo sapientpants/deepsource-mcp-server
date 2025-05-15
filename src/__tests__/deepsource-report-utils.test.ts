@@ -7,7 +7,8 @@ import { DeepSourceClient, ReportType } from '../deepsource';
 describe('DeepSource Report Utility Methods', () => {
   describe('extractReportData', () => {
     // We need to access the private static method
-    const extractReportData = (DeepSourceClient as any).extractReportData;
+    const extractReportData = (DeepSourceClient as Record<string, unknown>)
+      .extractReportData as Function;
 
     it('should return null for null response', () => {
       const result = extractReportData(null, ReportType.OWASP_TOP_10);
@@ -142,7 +143,7 @@ describe('DeepSource Report Utility Methods', () => {
 
   describe('getReportField', () => {
     // We need to access the private static method
-    const getReportField = (DeepSourceClient as any).getReportField;
+    const getReportField = (DeepSourceClient as Record<string, unknown>).getReportField as Function;
 
     it('should return correct field name for OWASP_TOP_10', () => {
       const fieldName = getReportField(ReportType.OWASP_TOP_10);
@@ -191,7 +192,8 @@ describe('DeepSource Report Utility Methods', () => {
 
   describe('getTitleForReportType', () => {
     // We need to access the private static method
-    const getTitleForReportType = (DeepSourceClient as any).getTitleForReportType;
+    const getTitleForReportType = (DeepSourceClient as Record<string, unknown>)
+      .getTitleForReportType as Function;
 
     it('should return correct title for OWASP_TOP_10', () => {
       const title = getTitleForReportType(ReportType.OWASP_TOP_10);

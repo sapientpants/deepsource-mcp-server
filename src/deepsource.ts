@@ -534,7 +534,7 @@ export class DeepSourceClient {
    * @private
    */
   private static isErrorWithMessage(error: unknown, substring: string): error is Error {
-    return this.isError(error) && error.message.includes(substring);
+    return this.isError(error) && error.message?.includes(substring);
   }
 
   /**
@@ -2189,36 +2189,36 @@ export class DeepSourceClient {
       // Build the compliance report query using string concatenation
       // Only use template literal for the dynamic field name
       const fieldName = DeepSourceClient.getReportField(reportType);
-      const reportQuery =
-        'query($login: String!, $name: String!, $provider: VCSProvider!) {' +
-        '  repository(login: $login, name: $name, vcsProvider: $provider) {' +
-        '    name' +
-        '    id' +
-        '    reports {' +
-        `      ${fieldName} {` +
-        '        key' +
-        '        title' +
-        '        currentValue' +
-        '        status' +
-        '        securityIssueStats {' +
-        '          key' +
-        '          title' +
-        '          occurrence {' +
-        '            critical' +
-        '            major' +
-        '            minor' +
-        '            total' +
-        '          }' +
-        '        }' +
-        '        trends {' +
-        '          label' +
-        '          value' +
-        '          changePercentage' +
-        '        }' +
-        '      }' +
-        '    }' +
-        '  }' +
-        '}';
+      const reportQuery = `
+        query($login: String!, $name: String!, $provider: VCSProvider!) {
+          repository(login: $login, name: $name, vcsProvider: $provider) {
+            name
+            id
+            reports {
+              ${fieldName} {
+                key
+                title
+                currentValue
+                status
+                securityIssueStats {
+                  key
+                  title
+                  occurrence {
+                    critical
+                    major
+                    minor
+                    total
+                  }
+                }
+                trends {
+                  label
+                  value
+                  changePercentage
+                }
+              }
+            }
+          }
+        }`;
 
       // Execute the query
       const response = await this.client.post('', {
@@ -2276,7 +2276,7 @@ export class DeepSourceClient {
   private static isNotFoundError(error: unknown): boolean {
     return (
       DeepSourceClient.isError(error) &&
-      (error.message.includes('NoneType') || error.message.includes('not found'))
+      (error.message?.includes('NoneType') || error.message?.includes('not found'))
     );
   }
 

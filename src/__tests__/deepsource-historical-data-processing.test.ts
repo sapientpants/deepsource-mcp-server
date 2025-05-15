@@ -3,8 +3,9 @@ import { MetricDirection, MetricKey, MetricShortcode } from '../types/metrics';
 
 describe('DeepSource Historical Data Processing', () => {
   describe('processHistoricalData', () => {
-    // We need to access the private static method using any
-    const processHistoricalData = (DeepSourceClient as any).processHistoricalData;
+    // We need to access the private static method
+    const processHistoricalData = (DeepSourceClient as Record<string, unknown>)
+      .processHistoricalData as Function;
 
     it('should process historical data from GraphQL response', () => {
       // Sample GraphQL response data
@@ -261,8 +262,9 @@ describe('DeepSource Historical Data Processing', () => {
   });
 
   describe('calculateTrendDirection', () => {
-    // We need to access the private static method using any
-    const calculateTrendDirection = (DeepSourceClient as any).calculateTrendDirection;
+    // We need to access the private static method
+    const calculateTrendDirection = (DeepSourceClient as Record<string, unknown>)
+      .calculateTrendDirection as Function;
 
     it('should return true when not enough data points', () => {
       // One data point isn't enough to determine a trend
