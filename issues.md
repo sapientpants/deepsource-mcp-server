@@ -232,10 +232,11 @@ These lines are not executed during any test cases, creating potential risks for
     - ~~Ensure all conditional branches are tested~~
     - ✅ Fixed by enhancing deepsource-quality-metrics-errors.test.ts to directly test the extractErrorMessages method and adding tests for error handling
 
-26. **src/deepsource.ts:1975**
-    - Add test coverage for this line
-    - Test edge cases that might trigger this code
-    - Ensure proper error handling is tested
+26. ~~**src/deepsource.ts:1975**~~ (FIXED)
+    - ~~Add test coverage for this line~~
+    - ~~Test edge cases that might trigger this code~~
+    - ~~Ensure proper error handling is tested~~
+    - ✅ Fixed by creating test file deepsource-vulnerability-error-handling.test.ts with specific tests for fallback error handling in getDependencyVulnerabilities
 
 27. **src/deepsource.ts:1859**
     - Add test cases to cover this line
