@@ -8,8 +8,15 @@ import { getPrivateMethod } from './test-utils/private-method-access.js';
 describe('DeepSource Report Utility Methods', () => {
   describe('extractReportData', () => {
     // Access the private static method using our utility
+    // Define a more specific return type for the report data
+    type ReportData = {
+      key: string;
+      title: string;
+      securityIssueStats: Array<Record<string, unknown>>;
+    } | null;
+    
     const extractReportData =
-      getPrivateMethod<(_response: unknown, _reportType: ReportType) => unknown>(
+      getPrivateMethod<(_response: unknown, _reportType: ReportType) => ReportData>(
         'extractReportData'
       );
 

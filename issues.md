@@ -31,8 +31,9 @@ Some built-in types are considered dangerous or have better alternatives. These 
 2. **File**: `src/__tests__/deepsource-report-utils.test.ts`, **Line**: 146
    - Another occurrence of banned type usage
 
-3. **File**: `src/__tests__/deepsource-report-utils.test.ts`, **Line**: 11
+3. **File**: `src/__tests__/deepsource-report-utils.test.ts`, **Line**: 11 - ✅ FIXED
    - Banned type usage at the beginning of the test file
+   - Fixed by creating a specific `ReportData` type instead of using generic `unknown` return type
 
 4. **File**: `src/__tests__/deepsource-metric-validation.test.ts`, **Line**: 108
    - Banned type usage in test code
@@ -66,7 +67,7 @@ Comments like "TODO", "FIXME", and "XXX" indicate code that may need attention b
 ## Summary
 
 - **Critical Issues**: 2 occurrences of `any` type usage - ✅ FIXED
-- **Major Issues**: 9 occurrences of banned type usage - ⏳ PENDING
+- **Major Issues**: 9 occurrences of banned type usage - ⏳ IN PROGRESS (1/9 fixed)
 - **Minor Issues**: 1 occurrence of warning comments in code - ✅ FIXED
 
 All issues appear to be in test files, which suggests they likely don't affect production code directly. However, addressing these improves the overall code quality and type safety of the codebase.
@@ -79,6 +80,9 @@ All issues appear to be in test files, which suggests they likely don't affect p
 2. **Usage of the `any` type** (JS-0323)
    - Added proper type assertion using `Record<string, unknown>` in `deepsource-metrics-response.test.ts` to avoid implicit `any` type
    - Added better comments to explain the code's intention
+
+3. **Use of banned types** (JS-0296) - In Progress
+   - Created specific `ReportData` type in `deepsource-report-utils.test.ts` to replace generic `unknown` return type
 
 ## Recommended Actions for Remaining Issues
 
