@@ -9,7 +9,7 @@ import {
   MetricHistoryParams,
   MetricShortcode,
 } from '../deepsource.js';
-import { MetricKey } from '../types/metrics.js';
+import { MetricKey, MetricHistoryResponse } from '../types/metrics.js';
 import { getPrivateMethod } from './test-utils/private-method-access.js';
 
 describe('DeepSource Metric History Error Handling', () => {
@@ -168,7 +168,15 @@ describe('DeepSource Metric History Error Handling', () => {
         .spyOn(client, 'fetchHistoricalValues')
         .mockResolvedValue([{ value: 75, createdAt: '2023-01-01T12:00:00Z' }]);
 
-      const createMetricHistoryResponse = getPrivateMethod<any>('createMetricHistoryResponse');
+      type CreateMetricHistoryResponseType = (
+        _params: MetricHistoryParams,
+        _metric: { name: string; unit: string; positiveDirection: string | MetricDirection },
+        _metricItem: { threshold: number | null },
+        _historyValues: Array<{ value: number; createdAt: string }>
+      ) => MetricHistoryResponse;
+      const createMetricHistoryResponse = getPrivateMethod<CreateMetricHistoryResponseType>(
+        'createMetricHistoryResponse'
+      );
       const createSpy = jest.spyOn(
         DeepSourceClient,
         createMetricHistoryResponse.name as keyof typeof DeepSourceClient

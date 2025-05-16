@@ -332,7 +332,7 @@ describe('DeepSource Historical Data Error Handling', () => {
         _params: MetricHistoryParams,
         _metric: { name: string; unit: string; positiveDirection: string | MetricDirection },
         _metricItem: { threshold: number },
-        _historyValues: any[]
+        _historyValues: Array<{ value: number; createdAt: string }>
       ) => unknown
     >('createMetricHistoryResponse');
 
@@ -360,7 +360,10 @@ describe('DeepSource Historical Data Error Handling', () => {
       ];
 
       // Spy on calculateTrendDirection method
-      const calculateTrendDirection = getPrivateMethod<any>('calculateTrendDirection');
+      const calculateTrendDirection =
+        getPrivateMethod<
+          (_values: Array<{ value: number }>, _positiveDirection: string) => boolean
+        >('calculateTrendDirection');
       const spy = jest.spyOn(
         DeepSourceClient,
         calculateTrendDirection.name as keyof typeof DeepSourceClient
@@ -410,7 +413,10 @@ describe('DeepSource Historical Data Error Handling', () => {
       ];
 
       // Spy on calculateTrendDirection method
-      const calculateTrendDirection = getPrivateMethod<any>('calculateTrendDirection');
+      const calculateTrendDirection =
+        getPrivateMethod<
+          (_values: Array<{ value: number }>, _positiveDirection: string) => boolean
+        >('calculateTrendDirection');
       const spy = jest.spyOn(
         DeepSourceClient,
         calculateTrendDirection.name as keyof typeof DeepSourceClient
