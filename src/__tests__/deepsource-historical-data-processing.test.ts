@@ -23,10 +23,11 @@ describe('DeepSource Historical Data Processing', () => {
     };
 
     // Access the private static method using our utility
+    // Define a specific type for the historical data processor function
+    type HistoricalDataProcessor = (_data: unknown, _params: HistoricalParams) => HistoricalValue[];
+
     const processHistoricalData =
-      getPrivateMethod<(_data: unknown, _params: HistoricalParams) => HistoricalValue[]>(
-        'processHistoricalData'
-      );
+      getPrivateMethod<HistoricalDataProcessor>('processHistoricalData');
 
     it('should process historical data from GraphQL response', () => {
       // Sample GraphQL response data
@@ -287,10 +288,14 @@ describe('DeepSource Historical Data Processing', () => {
     type TrendValue = { value: number; createdAt: string };
 
     // Access the private static method using our utility
+    // Define a specific type for the trend direction calculator function
+    type TrendDirectionCalculator = (
+      _values: TrendValue[],
+      _direction: string | MetricDirection
+    ) => boolean;
+
     const calculateTrendDirection =
-      getPrivateMethod<(_values: TrendValue[], _direction: string | MetricDirection) => boolean>(
-        'calculateTrendDirection'
-      );
+      getPrivateMethod<TrendDirectionCalculator>('calculateTrendDirection');
 
     it('should return true when not enough data points', () => {
       // One data point isn't enough to determine a trend
