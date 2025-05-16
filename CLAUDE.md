@@ -485,6 +485,118 @@ The following guidelines are based on frequent DeepSource issues detected in thi
    test('returns fallback when second condition fails', () => { /* ... */ });
    ```
 
+### Testing Type-Safe Patterns (Avoid `any` in Tests)
+
+Based on common issues found in this codebase, follow these specific patterns for type-safe testing:
+
+1. **Mocking Private Methods Without `any`** - Instead of using `as any` for private method access:
+   ```typescript
+   // Bad - uses 'as any' which bypasses type checking
+   jest.spyOn(DeepSourceClient as any, 'privateMethod');
+   jest.spyOn(DeepSourceClient, 'privateMethod' as any);
+   
+   // Good - create a properly typed access helper
+   type PrivateMethodAccess = {
+     privateMethod: typeof DeepSourceClient.prototype.privateMethod;
+   };
+   
+   const clientWithPrivate = DeepSourceClient as unknown as PrivateMethodAccess;
+   jest.spyOn(clientWithPrivate, 'privateMethod');
+   
+   // Alternative - use a test utility for accessing private methods
+   import { getPrivateMethod } from './test-utils/private-method-access';
+   const privateMethod = getPrivateMethod<YourMethodType>('privateMethod');
+   ```
+
+2. **Testing Functions with Unknown Parameters** - Use proper type assertions:
+   ```typescript
+   // Bad - forces type with 'as any'
+   const result = processVulnerabilityResponse(mockResponse as any);
+   
+   // Good - use unknown and validate
+   const result = processVulnerabilityResponse(mockResponse as unknown);
+   
+   // Better - create proper mock with interface
+   interface MockVulnerabilityResponse {
+     data: { vulnerabilities: Array<VulnerabilityItem> };
+   }
+   const mockResponse: MockVulnerabilityResponse = {
+     data: { vulnerabilities: [] }
+   };
+   const result = processVulnerabilityResponse(mockResponse);
+   ```
+
+3. **Type-Safe Test Data Creation** - Define interfaces for test data:
+   ```typescript
+   // Bad - using 'any' for test data
+   const testCases = [null as any, undefined as any, {} as any];
+   
+   // Good - use union types
+   type TestCase = null | undefined | Record<string, unknown>;
+   const testCases: TestCase[] = [null, undefined, {}];
+   
+   // Better - create specific test interfaces
+   interface InvalidTestCase {
+     input: unknown;
+     expectedError: string;
+   }
+   const invalidCases: InvalidTestCase[] = [
+     { input: null, expectedError: 'Value cannot be null' },
+     { input: undefined, expectedError: 'Value is required' },
+     { input: {}, expectedError: 'Invalid structure' }
+   ];
+   ```
+
+4. **Accessing Private Properties for Testing** - Use proper TypeScript patterns:
+   ```typescript
+   // Bad - using index notation with 'any'
+   (DeepSourceClient as any)['iterateVulnerabilities'] = mockIterator;
+   
+   // Good - use proper type assertions
+   interface PrivateAccess {
+     iterateVulnerabilities: typeof mockIterator;
+   }
+   (DeepSourceClient as unknown as PrivateAccess).iterateVulnerabilities = mockIterator;
+   
+   // Better - use Partial and type assertion
+   const clientWithMock = DeepSourceClient as DeepSourceClient & {
+     iterateVulnerabilities: typeof mockIterator;
+   };
+   clientWithMock.iterateVulnerabilities = mockIterator;
+   ```
+
+5. **Generic Type Parameters in Tests** - Avoid `any` in generics:
+   ```typescript
+   // Bad - using 'any' as generic parameter
+   const calculateTrendDirection = getPrivateMethod<any>('calculateTrendDirection');
+   
+   // Good - use proper type or unknown
+   type TrendCalculator = (values: number[]) => 'up' | 'down' | 'stable';
+   const calculateTrendDirection = getPrivateMethod<TrendCalculator>('calculateTrendDirection');
+   
+   // Alternative - let TypeScript infer when possible
+   const calculateTrendDirection = getPrivateMethod('calculateTrendDirection');
+   ```
+
+6. **Array Type Declarations** - Use specific types instead of `any[]`:
+   ```typescript
+   // Bad
+   _historyValues: any[]
+   
+   // Good - use specific type
+   _historyValues: HistoryValue[]
+   
+   // Alternative - use unknown[] if type is truly unknown
+   _historyValues: unknown[]
+   
+   // Best - define the structure
+   interface HistoryValue {
+     timestamp: number;
+     value: number;
+   }
+   _historyValues: HistoryValue[]
+   ```
+
 ### Import and Module Best Practices
 
 1. **Avoid wildcard imports (JS-C1003)** - Use explicit imports instead of importing everything from a module:
@@ -691,6 +803,21 @@ The following guidelines are based on frequent DeepSource issues detected in thi
    // config.features has type readonly ['metrics', 'logging']
    ```
 
+## Common DeepSource Issue Quick Reference
+
+Based on issues frequently detected in this codebase:
+
+| Issue Code | Description | Quick Fix |
+|------------|-------------|----------|
+| JS-0323 | Use of `any` type | Replace with `unknown`, `Record<string, unknown>`, or specific types |
+| JS-0331 | Unnecessary type declarations | Remove explicit types that TypeScript can infer |
+| JS-0296 | Use of banned types | Replace `object` with `Record<string, unknown>`, use lowercase primitives |
+| JS-0099 | Warning comments (TODO, FIXME) | Convert to proper JSDoc documentation |
+| JS-R1004 | Useless template literals | Use regular strings when no interpolation needed |
+| JS-0105 | Non-static methods that don't use `this` | Convert to static methods |
+| JS-C1003 | Wildcard imports | Use named imports instead |
+| JS-R1005 | High cyclomatic complexity | Break down complex functions |
+
 ## Development Workflow Best Practices
 
 To avoid common DeepSource issues and maintain high code quality, follow these steps when making changes:
@@ -757,12 +884,14 @@ pnpm run ci
 ```
 
 Manually verify:
-- No instances of `any` type remain
+- No instances of `any` type remain (search for "any" and "as any" in all files)
 - All public methods have proper JSDoc documentation
 - Non-instance methods are marked as static
-- Template literals are used appropriately
+- Template literals are used appropriately (only for interpolation)
 - Complex functions are broken down
 - Error handling is robust
+- No banned types are used (object, Function, uppercase primitives)
+- TODO comments are converted to proper JSDoc format
 
 ### Memories
 
@@ -782,3 +911,9 @@ Manually verify:
 - Use lookup tables instead of long if-else chains for mapping values.
 - Separate concerns into different functions with single responsibilities.
 - Always maintain high test coverage to prevent TCV-001 (Lines not covered in tests) issues.
+- When testing, avoid `as any` type assertions - use proper interfaces or `unknown` with type guards.
+- For mocking private methods, create typed access helpers instead of using `as any`.
+- Define specific interfaces for test data instead of using `any` type.
+- Use `Record<string, unknown>` instead of `as any` when accessing object properties of unknown type.
+- For generic type parameters in tests, use specific types or let TypeScript infer instead of using `<any>`.
+- Replace `any[]` with specific array types or `unknown[]` if the type is truly unknown.
