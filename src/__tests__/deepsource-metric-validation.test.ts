@@ -5,7 +5,10 @@ describe('DeepSource Validation Utilities', () => {
   describe('validateProjectRepository', () => {
     // Access the private static method using our utility
     // Define a specific type for the project repository validator function
-    type ProjectRepositoryValidator = (_project: unknown, _projectKey: string) => void;
+    interface ProjectRepositoryValidatorFn {
+      (_project: unknown, _projectKey: string): void;
+    }
+    type ProjectRepositoryValidator = ProjectRepositoryValidatorFn;
 
     const validateProjectRepository = getPrivateMethod<ProjectRepositoryValidator>(
       'validateProjectRepository'
@@ -58,7 +61,10 @@ describe('DeepSource Validation Utilities', () => {
   describe('getVcsProvider', () => {
     // Access the private static method using our utility
     // Define a specific type for the VCS provider converter function
-    type VcsProviderConverter = (_provider: string) => string;
+    interface VcsProviderConverterFn {
+      (_provider: string): string;
+    }
+    type VcsProviderConverter = VcsProviderConverterFn;
 
     const getVcsProvider = getPrivateMethod<VcsProviderConverter>('getVcsProvider');
 
@@ -80,7 +86,10 @@ describe('DeepSource Validation Utilities', () => {
   describe('isNotFoundError', () => {
     // Access the private static method using our utility
     // Define a specific type for the error detector function
-    type NotFoundErrorDetector = (_error: unknown) => boolean;
+    interface NotFoundErrorDetectorFn {
+      (_error: unknown): boolean;
+    }
+    type NotFoundErrorDetector = NotFoundErrorDetectorFn;
 
     const isNotFoundError = getPrivateMethod<NotFoundErrorDetector>('isNotFoundError');
 
@@ -114,11 +123,14 @@ describe('DeepSource Validation Utilities', () => {
   describe('calculateTrendDirection', () => {
     // Access the private static method using our utility
     // Define value objects and function type separately for better readability
-    type TrendValue = { value: number; createdAt: string };
-    type TrendDirectionCalculator = (
-      _values: TrendValue[],
-      _direction: string | MetricDirection
-    ) => boolean;
+    interface TrendValue {
+      value: number;
+      createdAt: string;
+    }
+    interface TrendDirectionCalculatorFn {
+      (_values: TrendValue[], _direction: string | MetricDirection): boolean;
+    }
+    type TrendDirectionCalculator = TrendDirectionCalculatorFn;
 
     const calculateTrendDirection =
       getPrivateMethod<TrendDirectionCalculator>('calculateTrendDirection');

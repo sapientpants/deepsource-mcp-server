@@ -4,27 +4,30 @@ import { getPrivateMethod } from './test-utils/private-method-access.js';
 describe('DeepSource Historical Data Processing', () => {
   describe('processHistoricalData', () => {
     // Define types for better documentation
-    type HistoricalParams = {
+    interface HistoricalParams {
       projectKey: string;
       metricShortcode: MetricShortcode;
       metricKey: MetricKey;
       startDate?: string;
       endDate?: string;
       limit?: number;
-    };
+    }
 
-    type HistoricalValue = {
+    interface HistoricalValue {
       value: number;
       valueDisplay: string;
       threshold?: number | null;
       thresholdStatus?: string;
       commitOid: string;
       createdAt: string;
-    };
+    }
 
     // Access the private static method using our utility
     // Define a specific type for the historical data processor function
-    type HistoricalDataProcessor = (_data: unknown, _params: HistoricalParams) => HistoricalValue[];
+    interface HistoricalDataProcessorFn {
+      (_data: unknown, _params: HistoricalParams): HistoricalValue[];
+    }
+    type HistoricalDataProcessor = HistoricalDataProcessorFn;
 
     const processHistoricalData =
       getPrivateMethod<HistoricalDataProcessor>('processHistoricalData');
@@ -285,14 +288,17 @@ describe('DeepSource Historical Data Processing', () => {
 
   describe('calculateTrendDirection', () => {
     // Define type for better documentation
-    type TrendValue = { value: number; createdAt: string };
+    interface TrendValue {
+      value: number;
+      createdAt: string;
+    }
 
     // Access the private static method using our utility
     // Define a specific type for the trend direction calculator function
-    type TrendDirectionCalculator = (
-      _values: TrendValue[],
-      _direction: string | MetricDirection
-    ) => boolean;
+    interface TrendDirectionCalculatorFn {
+      (_values: TrendValue[], _direction: string | MetricDirection): boolean;
+    }
+    type TrendDirectionCalculator = TrendDirectionCalculatorFn;
 
     const calculateTrendDirection =
       getPrivateMethod<TrendDirectionCalculator>('calculateTrendDirection');

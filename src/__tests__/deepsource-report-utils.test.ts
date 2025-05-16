@@ -9,11 +9,12 @@ describe('DeepSource Report Utility Methods', () => {
   describe('extractReportData', () => {
     // Access the private static method using our utility
     // Define a more specific return type for the report data
-    type ReportData = {
+    interface ReportDataStructure {
       key: string;
       title: string;
       securityIssueStats: Array<Record<string, unknown>>;
-    } | null;
+    }
+    type ReportData = ReportDataStructure | null;
 
     const extractReportData =
       getPrivateMethod<(_response: unknown, _reportType: ReportType) => ReportData>(
@@ -154,7 +155,10 @@ describe('DeepSource Report Utility Methods', () => {
   describe('getReportField', () => {
     // Access the private static method using our utility
     // Define a specific type for the report field getter function
-    type ReportFieldGetter = (_reportType: ReportType) => string;
+    interface ReportFieldGetterFn {
+      (_reportType: ReportType): string;
+    }
+    type ReportFieldGetter = ReportFieldGetterFn;
 
     const getReportField = getPrivateMethod<ReportFieldGetter>('getReportField');
 
@@ -206,7 +210,10 @@ describe('DeepSource Report Utility Methods', () => {
   describe('getTitleForReportType', () => {
     // Access the private static method using our utility
     // Define a specific type for the report title getter function
-    type ReportTitleGetter = (_reportType: ReportType) => string;
+    interface ReportTitleGetterFn {
+      (_reportType: ReportType): string;
+    }
+    type ReportTitleGetter = ReportTitleGetterFn;
 
     const getTitleForReportType = getPrivateMethod<ReportTitleGetter>('getTitleForReportType');
 
