@@ -116,10 +116,10 @@ export interface SecurityIssueStat {
 export interface ComplianceReport {
   key: ReportType;
   title: string;
-  currentValue?: number;
-  status?: ReportStatus;
+  currentValue?: number | undefined;
+  status?: ReportStatus | undefined;
   securityIssueStats: SecurityIssueStat[];
-  trends?: ReportTrend[];
+  trends?: ReportTrend[] | undefined;
 }
 
 /**
@@ -295,7 +295,7 @@ export interface Package {
   /** Package name as it appears in the ecosystem */
   name: string;
   /** Package URL (optional) - follows the package URL specification (https://github.com/package-url/purl-spec) */
-  purl?: string;
+  purl?: string | undefined;
 }
 
 /**
@@ -309,7 +309,7 @@ export interface PackageVersion {
   /** Version string (e.g., '1.2.3') */
   version: string;
   /** Type of versioning used (SEMVER, ECOSYSTEM, GIT) */
-  versionType?: PackageVersionType;
+  versionType?: PackageVersionType | undefined;
 }
 
 /**
@@ -325,47 +325,47 @@ export interface Vulnerability {
   /** Alternative identifiers for the same vulnerability (e.g., GHSA-xxxx-xxxx-xxxx) */
   aliases: string[];
   /** Brief description of the vulnerability */
-  summary?: string;
+  summary?: string | undefined;
   /** Detailed description of the vulnerability */
-  details?: string;
+  details?: string | undefined;
   /** Date when the vulnerability was first published */
   publishedAt: string;
   /** Date when the vulnerability information was last updated */
   updatedAt: string;
   /** Date when the vulnerability was withdrawn (if applicable) */
-  withdrawnAt?: string;
+  withdrawnAt?: string | undefined;
   /** Overall severity rating of the vulnerability */
   severity: VulnerabilitySeverity;
 
   // CVSS v2 information
   /** CVSS v2 vector string representing the vulnerability characteristics */
-  cvssV2Vector?: string;
+  cvssV2Vector?: string | undefined;
   /** CVSS v2 base score (0.0-10.0) */
-  cvssV2BaseScore?: number;
+  cvssV2BaseScore?: number | undefined;
   /** CVSS v2 qualitative severity rating */
-  cvssV2Severity?: VulnerabilitySeverity;
+  cvssV2Severity?: VulnerabilitySeverity | undefined;
 
   // CVSS v3 information
   /** CVSS v3 vector string representing the vulnerability characteristics */
-  cvssV3Vector?: string;
+  cvssV3Vector?: string | undefined;
   /** CVSS v3 base score (0.0-10.0) */
-  cvssV3BaseScore?: number;
+  cvssV3BaseScore?: number | undefined;
   /** CVSS v3 qualitative severity rating */
-  cvssV3Severity?: VulnerabilitySeverity;
+  cvssV3Severity?: VulnerabilitySeverity | undefined;
 
   // CVSS v4 information
   /** CVSS v4 vector string representing the vulnerability characteristics */
-  cvssV4Vector?: string;
+  cvssV4Vector?: string | undefined;
   /** CVSS v4 base score (0.0-10.0) */
-  cvssV4BaseScore?: number;
+  cvssV4BaseScore?: number | undefined;
   /** CVSS v4 qualitative severity rating */
-  cvssV4Severity?: VulnerabilitySeverity;
+  cvssV4Severity?: VulnerabilitySeverity | undefined;
 
   // EPSS information
   /** Exploit Prediction Scoring System score (0.0-1.0) */
-  epssScore?: number;
+  epssScore?: number | undefined;
   /** EPSS percentile, indicating relative likelihood of exploitation */
-  epssPercentile?: number;
+  epssPercentile?: number | undefined;
 
   // Version information
   /** List of package versions where the vulnerability was introduced */
@@ -405,15 +405,15 @@ export interface VulnerabilityOccurrence {
  */
 export interface PaginationParams {
   /** Legacy pagination: Number of items to skip */
-  offset?: number;
+  offset?: number | undefined;
   /** Relay-style pagination: Number of items to return after the 'after' cursor */
-  first?: number;
+  first?: number | undefined;
   /** Relay-style pagination: Cursor to fetch records after this cursor */
-  after?: string;
+  after?: string | undefined;
   /** Relay-style pagination: Cursor to fetch records before this cursor */
-  before?: string;
+  before?: string | undefined;
   /** Relay-style pagination: Number of items to return before the 'before' cursor */
-  last?: number;
+  last?: number | undefined;
 }
 
 /**
@@ -422,11 +422,11 @@ export interface PaginationParams {
  */
 export interface IssueFilterParams extends PaginationParams {
   /** Filter issues by path (file path) */
-  path?: string;
+  path?: string | undefined;
   /** Filter issues by analyzer shortcodes (e.g. ["python", "javascript"]) */
-  analyzerIn?: string[];
+  analyzerIn?: string[] | undefined;
   /** Filter issues by tags */
-  tags?: string[];
+  tags?: string[] | undefined;
 }
 
 /**
@@ -435,7 +435,7 @@ export interface IssueFilterParams extends PaginationParams {
  */
 export interface RunFilterParams extends PaginationParams {
   /** Filter runs by analyzer shortcodes (e.g. ["python", "javascript"]) */
-  analyzerIn?: string[];
+  analyzerIn?: string[] | undefined;
 }
 
 /**
@@ -448,8 +448,8 @@ export interface PaginatedResponse<T> {
   pageInfo: {
     hasNextPage: boolean;
     hasPreviousPage: boolean;
-    startCursor?: string;
-    endCursor?: string;
+    startCursor?: string | undefined;
+    endCursor?: string | undefined;
   };
   totalCount: number;
 }
@@ -467,11 +467,7 @@ export class DeepSourceClient {
    */
   private client;
 
-  /**
-   * Logger instance for the DeepSourceClient
-   * @private
-   */
-  private logger = createLogger('DeepSourceClient');
+  // Note: Instance logger not needed as we only use static logger
 
   /**
    * Static logger for static methods
@@ -522,7 +518,7 @@ export class DeepSourceClient {
       error !== null &&
       typeof error === 'object' &&
       'message' in error &&
-      typeof (error as Record<string, unknown>).message === 'string'
+      typeof (error as Record<string, unknown>)['message'] === 'string'
     );
   }
 
@@ -681,13 +677,6 @@ export class DeepSourceClient {
    * @returns Never returns, always throws
    * @private
    */
-  private static handleGenericError(error: unknown): never {
-    if (DeepSourceClient.isError(error)) {
-      throw new Error(`DeepSource API error: ${error.message}`);
-    }
-
-    throw new Error('Unknown error occurred while communicating with DeepSource API');
-  }
 
   /**
    * Main error handler that coordinates all error processing
@@ -743,8 +732,6 @@ export class DeepSourceClient {
       pageInfo: {
         hasNextPage: false,
         hasPreviousPage: false,
-        startCursor: undefined,
-        endCursor: undefined,
       },
       totalCount: 0,
     };
@@ -820,18 +807,18 @@ export class DeepSourceClient {
     if (normalizedParams.before) {
       // When fetching backwards with 'before', prioritize 'last'
       normalizedParams.last = normalizedParams.last ?? normalizedParams.first ?? 10;
-      normalizedParams.first = undefined;
+      delete normalizedParams.first;
     } else if (normalizedParams.last) {
       // If 'last' is provided without 'before', log a warning but still use 'last'
       DeepSourceClient.logPaginationWarning(
         `Non-standard pagination: Using "last=${normalizedParams.last}" without "before" cursor is not recommended`
       );
       // Keep normalizedParams.last as is
-      normalizedParams.first = undefined;
+      delete normalizedParams.first;
     } else {
       // Default or forward pagination with 'after', prioritize 'first'
       normalizedParams.first = normalizedParams.first ?? 10;
-      normalizedParams.last = undefined;
+      delete normalizedParams.last;
     }
 
     return normalizedParams;
@@ -1239,13 +1226,17 @@ export class DeepSourceClient {
 
     const record = node as Record<string, unknown>;
 
-    if (!('id' in record) || typeof record.id !== 'string') {
+    if (!('id' in record) || typeof record['id'] !== 'string') {
       DeepSourceClient.logger.warn('Skipping vulnerability node with missing or invalid ID', node);
       return false;
     }
 
     // Validate nested objects
-    if (!('package' in record) || typeof record.package !== 'object' || record.package === null) {
+    if (
+      !('package' in record) ||
+      typeof record['package'] !== 'object' ||
+      record['package'] === null
+    ) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability node with missing or invalid package',
         node
@@ -1255,8 +1246,8 @@ export class DeepSourceClient {
 
     if (
       !('packageVersion' in record) ||
-      typeof record.packageVersion !== 'object' ||
-      record.packageVersion === null
+      typeof record['packageVersion'] !== 'object' ||
+      record['packageVersion'] === null
     ) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability node with missing or invalid packageVersion',
@@ -1267,8 +1258,8 @@ export class DeepSourceClient {
 
     if (
       !('vulnerability' in record) ||
-      typeof record.vulnerability !== 'object' ||
-      record.vulnerability === null
+      typeof record['vulnerability'] !== 'object' ||
+      record['vulnerability'] === null
     ) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability node with missing or invalid vulnerability',
@@ -1277,9 +1268,9 @@ export class DeepSourceClient {
       return false;
     }
 
-    const packageRecord = record.package as Record<string, unknown>;
-    const packageVersionRecord = record.packageVersion as Record<string, unknown>;
-    const vulnerabilityRecord = record.vulnerability as Record<string, unknown>;
+    const packageRecord = record['package'] as Record<string, unknown>;
+    const packageVersionRecord = record['packageVersion'] as Record<string, unknown>;
+    const vulnerabilityRecord = record['vulnerability'] as Record<string, unknown>;
 
     // Validate required package fields
     if (!('id' in packageRecord) || !('ecosystem' in packageRecord) || !('name' in packageRecord)) {
@@ -1329,14 +1320,20 @@ export class DeepSourceClient {
    * @private
    */
   private static mapPackageData(packageData: Record<string, unknown>): Package {
-    return {
+    const result: Package = {
       // Required fields with fallbacks to empty strings
-      id: DeepSourceClient.validateString(packageData.id),
-      ecosystem: DeepSourceClient.validateString(packageData.ecosystem),
-      name: DeepSourceClient.validateString(packageData.name),
-      // Optional URL field
-      purl: DeepSourceClient.validateNullableString(packageData.purl) ?? undefined,
+      id: DeepSourceClient.validateString(packageData['id']),
+      ecosystem: DeepSourceClient.validateString(packageData['ecosystem']),
+      name: DeepSourceClient.validateString(packageData['name']),
     };
+
+    // Optional URL field
+    const purl = DeepSourceClient.validateNullableString(packageData['purl']);
+    if (purl !== null) {
+      result.purl = purl;
+    }
+
+    return result;
   }
 
   /**
@@ -1346,15 +1343,18 @@ export class DeepSourceClient {
    * @private
    */
   private static mapPackageVersionData(versionData: Record<string, unknown>): PackageVersion {
-    return {
+    const result: PackageVersion = {
       // Required fields with fallbacks to empty strings
-      id: DeepSourceClient.validateString(versionData.id),
-      version: DeepSourceClient.validateString(versionData.version),
-      // Optional enum field with validation
-      versionType: DeepSourceClient.isValidVersionType(versionData.versionType)
-        ? versionData.versionType
-        : undefined,
+      id: DeepSourceClient.validateString(versionData['id']),
+      version: DeepSourceClient.validateString(versionData['version']),
     };
+
+    // Optional enum field with validation
+    if (DeepSourceClient.isValidVersionType(versionData['versionType'])) {
+      result.versionType = versionData['versionType'];
+    }
+
+    return result;
   }
 
   /**
@@ -1408,18 +1408,6 @@ export class DeepSourceClient {
   }
 
   /**
-   * Helper to validate number fields
-   * Ensures the value is a number, returning null if invalid
-   *
-   * @param value The number to validate
-   * @returns The original number if valid, or null if invalid
-   * @private
-   */
-  private static validateNumber(value: unknown): number | null {
-    return typeof value === 'number' ? value : null;
-  }
-
-  /**
    * Maps raw vulnerability data to a Vulnerability object with proper validation
    * @param vulnData The raw vulnerability data from GraphQL
    * @returns A properly formatted Vulnerability object
@@ -1438,60 +1426,94 @@ export class DeepSourceClient {
       return typeof value === 'string' && validSeverities.includes(value as VulnerabilitySeverity);
     };
 
-    return {
+    const result: Vulnerability = {
       // Required fields with fallbacks to empty strings
-      id: DeepSourceClient.validateString(vulnData.id),
-      identifier: DeepSourceClient.validateString(vulnData.identifier),
+      id: DeepSourceClient.validateString(vulnData['id']),
+      identifier: DeepSourceClient.validateString(vulnData['identifier']),
 
       // Optional array fields with validation
-      aliases: DeepSourceClient.validateArray(vulnData.aliases),
-      introducedVersions: DeepSourceClient.validateArray(vulnData.introducedVersions),
-      fixedVersions: DeepSourceClient.validateArray(vulnData.fixedVersions),
-      referenceUrls: DeepSourceClient.validateArray(vulnData.referenceUrls),
-
-      // Optional string fields that can be undefined
-      summary: DeepSourceClient.validateNullableString(vulnData.summary) ?? undefined,
-      details: DeepSourceClient.validateNullableString(vulnData.details) ?? undefined,
+      aliases: DeepSourceClient.validateArray(vulnData['aliases']),
+      introducedVersions: DeepSourceClient.validateArray(vulnData['introducedVersions']),
+      fixedVersions: DeepSourceClient.validateArray(vulnData['fixedVersions']),
+      referenceUrls: DeepSourceClient.validateArray(vulnData['referenceUrls']),
 
       // Required date fields with fallbacks
-      publishedAt: DeepSourceClient.validateString(vulnData.publishedAt),
-      updatedAt: DeepSourceClient.validateString(vulnData.updatedAt),
-
-      // Optional date field that can be undefined
-      withdrawnAt: DeepSourceClient.validateNullableString(vulnData.withdrawnAt) ?? undefined,
+      publishedAt: DeepSourceClient.validateString(vulnData['publishedAt']),
+      updatedAt: DeepSourceClient.validateString(vulnData['updatedAt']),
 
       // Severity with validation
-      severity: isValidSeverity(vulnData.severity) ? vulnData.severity : 'NONE',
-
-      // CVSSv2 fields with validation
-      cvssV2Vector: DeepSourceClient.validateNullableString(vulnData.cvssV2Vector) ?? undefined,
-      cvssV2BaseScore:
-        typeof vulnData.cvssV2BaseScore === 'number' ? vulnData.cvssV2BaseScore : undefined,
-      cvssV2Severity: isValidSeverity(vulnData.cvssV2Severity)
-        ? vulnData.cvssV2Severity
-        : undefined,
-
-      // CVSSv3 fields with validation
-      cvssV3Vector: DeepSourceClient.validateNullableString(vulnData.cvssV3Vector) ?? undefined,
-      cvssV3BaseScore:
-        typeof vulnData.cvssV3BaseScore === 'number' ? vulnData.cvssV3BaseScore : undefined,
-      cvssV3Severity: isValidSeverity(vulnData.cvssV3Severity)
-        ? vulnData.cvssV3Severity
-        : undefined,
-
-      // CVSSv4 fields with validation
-      cvssV4Vector: DeepSourceClient.validateNullableString(vulnData.cvssV4Vector) ?? undefined,
-      cvssV4BaseScore:
-        typeof vulnData.cvssV4BaseScore === 'number' ? vulnData.cvssV4BaseScore : undefined,
-      cvssV4Severity: isValidSeverity(vulnData.cvssV4Severity)
-        ? vulnData.cvssV4Severity
-        : undefined,
-
-      // EPSS fields with validation
-      epssScore: typeof vulnData.epssScore === 'number' ? vulnData.epssScore : undefined,
-      epssPercentile:
-        typeof vulnData.epssPercentile === 'number' ? vulnData.epssPercentile : undefined,
+      severity: isValidSeverity(vulnData['severity']) ? vulnData['severity'] : 'NONE',
     };
+
+    // Optional string fields
+    const summary = DeepSourceClient.validateNullableString(vulnData['summary']);
+    if (summary !== null) {
+      result.summary = summary;
+    }
+
+    const details = DeepSourceClient.validateNullableString(vulnData['details']);
+    if (details !== null) {
+      result.details = details;
+    }
+
+    // Optional date field
+    const withdrawnAt = DeepSourceClient.validateNullableString(vulnData['withdrawnAt']);
+    if (withdrawnAt !== null) {
+      result.withdrawnAt = withdrawnAt;
+    }
+
+    // CVSSv2 fields
+    const cvssV2Vector = DeepSourceClient.validateNullableString(vulnData['cvssV2Vector']);
+    if (cvssV2Vector !== null) {
+      result.cvssV2Vector = cvssV2Vector;
+    }
+
+    if (typeof vulnData['cvssV2BaseScore'] === 'number') {
+      result.cvssV2BaseScore = vulnData['cvssV2BaseScore'];
+    }
+
+    if (isValidSeverity(vulnData['cvssV2Severity'])) {
+      result.cvssV2Severity = vulnData['cvssV2Severity'];
+    }
+
+    // CVSSv3 fields
+    const cvssV3Vector = DeepSourceClient.validateNullableString(vulnData['cvssV3Vector']);
+    if (cvssV3Vector !== null) {
+      result.cvssV3Vector = cvssV3Vector;
+    }
+
+    if (typeof vulnData['cvssV3BaseScore'] === 'number') {
+      result.cvssV3BaseScore = vulnData['cvssV3BaseScore'];
+    }
+
+    if (isValidSeverity(vulnData['cvssV3Severity'])) {
+      result.cvssV3Severity = vulnData['cvssV3Severity'];
+    }
+
+    // CVSSv4 fields
+    const cvssV4Vector = DeepSourceClient.validateNullableString(vulnData['cvssV4Vector']);
+    if (cvssV4Vector !== null) {
+      result.cvssV4Vector = cvssV4Vector;
+    }
+
+    if (typeof vulnData['cvssV4BaseScore'] === 'number') {
+      result.cvssV4BaseScore = vulnData['cvssV4BaseScore'];
+    }
+
+    if (isValidSeverity(vulnData['cvssV4Severity'])) {
+      result.cvssV4Severity = vulnData['cvssV4Severity'];
+    }
+
+    // EPSS fields
+    if (typeof vulnData['epssScore'] === 'number') {
+      result.epssScore = vulnData['epssScore'];
+    }
+
+    if (typeof vulnData['epssPercentile'] === 'number') {
+      result.epssPercentile = vulnData['epssPercentile'];
+    }
+
+    return result;
   }
 
   /**
@@ -1537,21 +1559,23 @@ export class DeepSourceClient {
     node: Record<string, unknown>
   ): VulnerabilityOccurrence {
     return {
-      id: String(node.id),
-      package: DeepSourceClient.mapPackageData(node.package as Record<string, unknown>),
+      id: String(node['id']),
+      package: DeepSourceClient.mapPackageData(node['package'] as Record<string, unknown>),
       packageVersion: DeepSourceClient.mapPackageVersionData(
-        node.packageVersion as Record<string, unknown>
+        node['packageVersion'] as Record<string, unknown>
       ),
       vulnerability: DeepSourceClient.mapVulnerabilityData(
-        node.vulnerability as Record<string, unknown>
+        node['vulnerability'] as Record<string, unknown>
       ),
 
       // Enum values with validation
-      reachability: DeepSourceClient.isValidReachability(node.reachability)
-        ? node.reachability
+      reachability: DeepSourceClient.isValidReachability(node['reachability'])
+        ? node['reachability']
         : 'UNKNOWN',
 
-      fixability: DeepSourceClient.isValidFixability(node.fixability) ? node.fixability : 'ERROR',
+      fixability: DeepSourceClient.isValidFixability(node['fixability'])
+        ? node['fixability']
+        : 'ERROR',
     };
   }
 
@@ -1579,14 +1603,16 @@ export class DeepSourceClient {
     const typedEdge = edge as Record<string, unknown>;
 
     // Skip if node is missing
-    if (!typedEdge.node) {
+    if (!typedEdge['node']) {
       return null;
     }
 
     // Validate node before processing
-    if (DeepSourceClient.isValidVulnerabilityNode(typedEdge.node)) {
+    if (DeepSourceClient.isValidVulnerabilityNode(typedEdge['node'])) {
       // Now that validation passed, we can safely cast and map the node
-      return DeepSourceClient.mapVulnerabilityOccurrence(typedEdge.node as Record<string, unknown>);
+      return DeepSourceClient.mapVulnerabilityOccurrence(
+        typedEdge['node'] as Record<string, unknown>
+      );
     }
 
     return null;
@@ -1694,25 +1720,25 @@ export class DeepSourceClient {
     };
 
     const typedResponse = response as Record<string, unknown>;
-    const data = typedResponse.data as Record<string, unknown> | undefined;
+    const data = typedResponse['data'] as Record<string, unknown> | undefined;
 
     if (!data || typeof data !== 'object') {
       return emptyResult;
     }
 
-    const gqlData = data.data as Record<string, unknown> | undefined;
+    const gqlData = data['data'] as Record<string, unknown> | undefined;
 
     if (!gqlData || typeof gqlData !== 'object') {
       return emptyResult;
     }
 
-    const repository = gqlData.repository as Record<string, unknown> | undefined;
+    const repository = gqlData['repository'] as Record<string, unknown> | undefined;
 
     if (!repository || typeof repository !== 'object') {
       return emptyResult;
     }
 
-    const occurrencesData = repository.dependencyVulnerabilityOccurrences as
+    const occurrencesData = repository['dependencyVulnerabilityOccurrences'] as
       | Record<string, unknown>
       | undefined;
 
@@ -1721,18 +1747,20 @@ export class DeepSourceClient {
     }
 
     // Extract edges, page info, and total count with defaults for missing data
-    const vulnEdges = Array.isArray(occurrencesData.edges) ? occurrencesData.edges : [];
+    const vulnEdges = Array.isArray(occurrencesData['edges']) ? occurrencesData['edges'] : [];
 
-    const pageInfoData = occurrencesData.pageInfo as Record<string, unknown> | undefined;
+    const pageInfoData = occurrencesData['pageInfo'] as Record<string, unknown> | undefined;
     const pageInfo =
       pageInfoData && typeof pageInfoData === 'object'
         ? {
-            hasNextPage: Boolean(pageInfoData.hasNextPage),
-            hasPreviousPage: Boolean(pageInfoData.hasPreviousPage),
-            startCursor:
-              typeof pageInfoData.startCursor === 'string' ? pageInfoData.startCursor : undefined,
-            endCursor:
-              typeof pageInfoData.endCursor === 'string' ? pageInfoData.endCursor : undefined,
+            hasNextPage: Boolean(pageInfoData['hasNextPage']),
+            hasPreviousPage: Boolean(pageInfoData['hasPreviousPage']),
+            ...(typeof pageInfoData['startCursor'] === 'string' && {
+              startCursor: pageInfoData['startCursor'],
+            }),
+            ...(typeof pageInfoData['endCursor'] === 'string' && {
+              endCursor: pageInfoData['endCursor'],
+            }),
           }
         : {
             hasNextPage: false,
@@ -1740,7 +1768,7 @@ export class DeepSourceClient {
           };
 
     const totalCount =
-      typeof occurrencesData.totalCount === 'number' ? occurrencesData.totalCount : 0;
+      typeof occurrencesData['totalCount'] === 'number' ? occurrencesData['totalCount'] : 0;
 
     // Early return for empty results to avoid unnecessary processing
     if (!vulnEdges.length) {
@@ -2032,24 +2060,24 @@ export class DeepSourceClient {
       return metrics.map((metricItem: unknown) => {
         const metricRecord = metricItem as Record<string, unknown>;
         return {
-          name: (metricRecord.name as string) || '',
-          shortcode: (metricRecord.shortcode as string) || '',
-          description: (metricRecord.description as string) || '',
-          positiveDirection: (metricRecord.positiveDirection as string) || 'UPWARD',
-          unit: metricRecord.unit as string,
-          minValueAllowed: metricRecord.minValueAllowed as number,
-          maxValueAllowed: metricRecord.maxValueAllowed as number,
-          isReported: Boolean(metricRecord.isReported),
-          isThresholdEnforced: Boolean(metricRecord.isThresholdEnforced),
-          items: ((metricRecord.items as unknown[]) || []).map((metricItemData: unknown) => {
+          name: (metricRecord['name'] as string) || '',
+          shortcode: (metricRecord['shortcode'] as string) || '',
+          description: (metricRecord['description'] as string) || '',
+          positiveDirection: (metricRecord['positiveDirection'] as string) || 'UPWARD',
+          unit: metricRecord['unit'] as string,
+          minValueAllowed: metricRecord['minValueAllowed'] as number,
+          maxValueAllowed: metricRecord['maxValueAllowed'] as number,
+          isReported: Boolean(metricRecord['isReported']),
+          isThresholdEnforced: Boolean(metricRecord['isThresholdEnforced']),
+          items: ((metricRecord['items'] as unknown[]) || []).map((metricItemData: unknown) => {
             const itemRecord = metricItemData as Record<string, unknown>;
             return {
-              id: (itemRecord.id as string) || '',
-              key: (itemRecord.key as string) || 'AGGREGATE',
-              threshold: itemRecord.threshold as number | null,
-              latestValue: itemRecord.latestValue as number | null,
-              latestValueDisplay: itemRecord.latestValueDisplay as string,
-              thresholdStatus: itemRecord.thresholdStatus as string,
+              id: (itemRecord['id'] as string) || '',
+              key: (itemRecord['key'] as string) || 'AGGREGATE',
+              threshold: itemRecord['threshold'] as number | null,
+              latestValue: itemRecord['latestValue'] as number | null,
+              latestValueDisplay: itemRecord['latestValueDisplay'] as string,
+              thresholdStatus: itemRecord['thresholdStatus'] as string,
             };
           }),
         };
@@ -2244,17 +2272,21 @@ export class DeepSourceClient {
       return {
         key: reportType,
         title:
-          typeof reportData.title === 'string'
-            ? reportData.title
+          typeof reportData['title'] === 'string'
+            ? reportData['title']
             : DeepSourceClient.getTitleForReportType(reportType),
         currentValue:
-          typeof reportData.currentValue === 'number' ? reportData.currentValue : undefined,
+          typeof reportData['currentValue'] === 'number' ? reportData['currentValue'] : undefined,
         status:
-          typeof reportData.status === 'string' ? (reportData.status as ReportStatus) : undefined,
-        securityIssueStats: Array.isArray(reportData.securityIssueStats)
-          ? (reportData.securityIssueStats as SecurityIssueStat[])
+          typeof reportData['status'] === 'string'
+            ? (reportData['status'] as ReportStatus)
+            : undefined,
+        securityIssueStats: Array.isArray(reportData['securityIssueStats'])
+          ? (reportData['securityIssueStats'] as SecurityIssueStat[])
           : [],
-        trends: Array.isArray(reportData.trends) ? (reportData.trends as ReportTrend[]) : undefined,
+        trends: Array.isArray(reportData['trends'])
+          ? (reportData['trends'] as ReportTrend[])
+          : undefined,
       };
     } catch (error) {
       if (
@@ -2337,17 +2369,17 @@ export class DeepSourceClient {
   private static async handleTestEnvironment(
     params: MetricHistoryParams
   ): Promise<MetricHistoryResponse | null | undefined> {
-    if (process.env.NODE_ENV !== 'test') {
+    if (process.env['NODE_ENV'] !== 'test') {
       return undefined;
     }
 
     // Error handling test case
-    if (process.env.ERROR_TEST === 'true') {
+    if (process.env['ERROR_TEST'] === 'true') {
       throw new Error('GraphQL Error: Unauthorized access');
     }
 
     // Project not found test case
-    if (process.env.NOT_FOUND_TEST === 'true') {
+    if (process.env['NOT_FOUND_TEST'] === 'true') {
       return null;
     }
 
@@ -2377,7 +2409,7 @@ export class DeepSourceClient {
    */
   private static createLineCoverageTestData(/* params */): MetricHistoryResponse {
     const historyValues: MetricHistoryValue[] = [];
-    const isNegativeTrendTest = process.env.NEGATIVE_TREND_TEST === 'true';
+    const isNegativeTrendTest = process.env['NEGATIVE_TREND_TEST'] === 'true';
 
     if (isNegativeTrendTest) {
       // Mock data for negative trend test
@@ -2663,14 +2695,14 @@ export class DeepSourceClient {
     data: Record<string, unknown>,
     params: MetricHistoryParams
   ): MetricHistoryValue[] {
-    const repository = data?.repository as Record<string, unknown> | undefined;
-    if (!repository || !Array.isArray(repository.metrics)) {
+    const repository = data?.['repository'] as Record<string, unknown> | undefined;
+    if (!repository || !Array.isArray(repository['metrics'])) {
       throw new Error('Repository or metrics data not found in response');
     }
 
     // Find the specific metric
-    const metricData = repository.metrics.find(
-      (m: Record<string, unknown>) => m.shortcode === params.metricShortcode
+    const metricData = repository['metrics'].find(
+      (m: Record<string, unknown>) => m['shortcode'] === params.metricShortcode
     );
 
     if (!metricData) {
@@ -2678,17 +2710,17 @@ export class DeepSourceClient {
     }
 
     // Find the specific metric item
-    const itemData = metricData.items.find(
-      (item: Record<string, unknown>) => item.key === params.metricKey
+    const itemData = metricData['items'].find(
+      (item: Record<string, unknown>) => item['key'] === params.metricKey
     );
 
-    if (!itemData || !itemData.values || !itemData.values.edges) {
+    if (!itemData || !itemData['values'] || !itemData['values']['edges']) {
       throw new Error('Metric item data not found or invalid in response');
     }
 
     // Extract historical values
     const historyValues: MetricHistoryValue[] = [];
-    for (const edge of itemData.values.edges) {
+    for (const edge of itemData['values']['edges']) {
       if (!edge.node) continue;
 
       const node = edge.node;
@@ -2759,8 +2791,8 @@ export class DeepSourceClient {
     }
 
     // Get the first and last values for comparison
-    const firstValue = values[0].value;
-    const lastValue = values[values.length - 1].value;
+    const firstValue = values[0]!.value;
+    const lastValue = values[values.length - 1]!.value;
 
     // Calculate the change
     const change = lastValue - firstValue;
@@ -2851,25 +2883,25 @@ export class DeepSourceClient {
     }
 
     const typedResponse = response as Record<string, unknown>;
-    const data = typedResponse.data as Record<string, unknown> | undefined;
+    const data = typedResponse['data'] as Record<string, unknown> | undefined;
 
     if (!data || typeof data !== 'object') {
       return null;
     }
 
-    const gqlData = data.data as Record<string, unknown> | undefined;
+    const gqlData = data['data'] as Record<string, unknown> | undefined;
 
     if (!gqlData || typeof gqlData !== 'object') {
       return null;
     }
 
-    const repository = gqlData.repository as Record<string, unknown> | undefined;
+    const repository = gqlData['repository'] as Record<string, unknown> | undefined;
 
     if (!repository || typeof repository !== 'object') {
       return null;
     }
 
-    const reports = repository.reports as Record<string, unknown> | undefined;
+    const reports = repository['reports'] as Record<string, unknown> | undefined;
 
     if (!reports || typeof reports !== 'object') {
       return null;

@@ -8,7 +8,7 @@
  * @enum {string}
  */
 // This enum is part of the public API and is used by consumers, even if not all values are used in this file
-/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars -- Exported enum part of public API */
 export enum ErrorCategory {
   /** Error related to authentication or authorization */
   AUTH = 'AUTH',
@@ -31,7 +31,7 @@ export enum ErrorCategory {
   /** Other uncategorized errors */
   OTHER = 'OTHER',
 }
-/* eslint-enable no-unused-vars */
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 /**
  * Enriched error with additional metadata
@@ -71,8 +71,12 @@ export function createClassifiedError(
 ): ClassifiedError {
   const error = new Error(message) as ClassifiedError;
   error.category = category;
-  error.originalError = originalError;
-  error.metadata = metadata;
+  if (originalError !== undefined) {
+    error.originalError = originalError;
+  }
+  if (metadata !== undefined) {
+    error.metadata = metadata;
+  }
   return error;
 }
 
@@ -87,7 +91,7 @@ export function isClassifiedError(error: unknown): error is ClassifiedError {
       typeof error === 'object' &&
       'message' in error &&
       'category' in error &&
-      typeof (error as Record<string, unknown>).category === 'string'
+      typeof (error as Record<string, unknown>)['category'] === 'string'
   );
 }
 

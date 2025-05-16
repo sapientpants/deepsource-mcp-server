@@ -35,7 +35,7 @@ export const mcpServer = new McpServer({
  * @public
  */
 export async function handleDeepsourceProjects() {
-  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  const apiKey = process.env['DEEPSOURCE_API_KEY'];
   if (!apiKey) {
     throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
   }
@@ -66,21 +66,21 @@ export interface DeepsourceProjectIssuesParams {
   /** DeepSource project key to fetch issues for */
   projectKey: string;
   /** Legacy pagination: Number of items to skip */
-  offset?: number;
+  offset?: number | undefined;
   /** Relay-style pagination: Number of items to return after the 'after' cursor */
-  first?: number;
+  first?: number | undefined;
   /** Relay-style pagination: Cursor to fetch records after this cursor */
-  after?: string;
+  after?: string | undefined;
   /** Relay-style pagination: Number of items to return before the 'before' cursor */
-  last?: number;
+  last?: number | undefined;
   /** Relay-style pagination: Cursor to fetch records before this cursor */
-  before?: string;
+  before?: string | undefined;
   /** Filter issues by file path */
-  path?: string;
+  path?: string | undefined;
   /** Filter issues by analyzer shortcodes */
-  analyzerIn?: string[];
+  analyzerIn?: string[] | undefined;
   /** Filter issues by tags */
-  tags?: string[];
+  tags?: string[] | undefined;
 }
 
 /**
@@ -101,7 +101,7 @@ export async function handleDeepsourceProjectIssues({
   analyzerIn,
   tags,
 }: DeepsourceProjectIssuesParams) {
-  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  const apiKey = process.env['DEEPSOURCE_API_KEY'];
   /* istanbul ignore if */
   if (!apiKey) {
     throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
@@ -163,17 +163,17 @@ export interface DeepsourceProjectRunsParams {
   /** DeepSource project key to fetch runs for */
   projectKey: string;
   /** Legacy pagination: Number of items to skip */
-  offset?: number;
+  offset?: number | undefined;
   /** Relay-style pagination: Number of items to return after the 'after' cursor */
-  first?: number;
+  first?: number | undefined;
   /** Relay-style pagination: Cursor to fetch records after this cursor */
-  after?: string;
+  after?: string | undefined;
   /** Relay-style pagination: Number of items to return before the 'before' cursor */
-  last?: number;
+  last?: number | undefined;
   /** Relay-style pagination: Cursor to fetch records before this cursor */
-  before?: string;
+  before?: string | undefined;
   /** Filter runs by analyzer shortcodes */
-  analyzerIn?: string[];
+  analyzerIn?: string[] | undefined;
 }
 
 /**
@@ -192,7 +192,7 @@ export async function handleDeepsourceProjectRuns({
   last,
   analyzerIn,
 }: DeepsourceProjectRunsParams) {
-  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  const apiKey = process.env['DEEPSOURCE_API_KEY'];
   /* istanbul ignore if */
   if (!apiKey) {
     throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
@@ -275,19 +275,19 @@ export interface DeepsourceDependencyVulnerabilitiesParams {
   projectKey: string;
 
   /** Legacy pagination: Number of items to skip */
-  offset?: number;
+  offset?: number | undefined;
 
   /** Relay-style pagination: Number of items to return after the 'after' cursor (default: 10) */
-  first?: number;
+  first?: number | undefined;
 
   /** Relay-style pagination: Cursor to fetch records after this cursor */
-  after?: string;
+  after?: string | undefined;
 
   /** Relay-style pagination: Number of items to return before the 'before' cursor (default: 10) */
-  last?: number;
+  last?: number | undefined;
 
   /** Relay-style pagination: Cursor to fetch records before this cursor */
-  before?: string;
+  before?: string | undefined;
 }
 
 /**
@@ -298,7 +298,7 @@ export interface DeepsourceDependencyVulnerabilitiesParams {
  * @public
  */
 export async function handleDeepsourceRun({ runIdentifier }: DeepsourceRunParams) {
-  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  const apiKey = process.env['DEEPSOURCE_API_KEY'];
   /* istanbul ignore if */
   if (!apiKey) {
     throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
@@ -378,7 +378,7 @@ export async function handleDeepsourceDependencyVulnerabilities({
   before,
   last,
 }: DeepsourceDependencyVulnerabilitiesParams) {
-  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  const apiKey = process.env['DEEPSOURCE_API_KEY'];
   /* istanbul ignore if */
   if (!apiKey) {
     throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
@@ -602,14 +602,14 @@ export async function handleDeepsourceQualityMetrics({
   projectKey,
   shortcodeIn,
 }: DeepsourceQualityMetricsParams) {
-  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  const apiKey = process.env['DEEPSOURCE_API_KEY'];
   /* istanbul ignore if */
   if (!apiKey) {
     throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
   }
 
   const client = new DeepSourceClient(apiKey);
-  const metrics = await client.getQualityMetrics(projectKey, { shortcodeIn });
+  const metrics = await client.getQualityMetrics(projectKey, shortcodeIn ? { shortcodeIn } : {});
 
   return {
     content: [
@@ -686,7 +686,7 @@ export async function handleDeepsourceUpdateMetricThreshold({
   metricKey,
   thresholdValue,
 }: DeepsourceUpdateMetricThresholdParams) {
-  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  const apiKey = process.env['DEEPSOURCE_API_KEY'];
   /* istanbul ignore if */
   if (!apiKey) {
     throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
@@ -740,7 +740,7 @@ export async function handleDeepsourceUpdateMetricSetting({
   isReported,
   isThresholdEnforced,
 }: DeepsourceUpdateMetricSettingParams) {
-  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  const apiKey = process.env['DEEPSOURCE_API_KEY'];
   /* istanbul ignore if */
   if (!apiKey) {
     throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
@@ -823,7 +823,7 @@ export async function handleDeepsourceMetricHistory({
   endDate,
   limit,
 }: DeepsourceMetricHistoryParams) {
-  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  const apiKey = process.env['DEEPSOURCE_API_KEY'];
   // istanbul ignore if
   if (!apiKey) {
     throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
@@ -935,7 +935,7 @@ export async function handleDeepsourceComplianceReport({
   projectKey,
   reportType,
 }: DeepsourceComplianceReportParams) {
-  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  const apiKey = process.env['DEEPSOURCE_API_KEY'];
   /* istanbul ignore if */
   if (!apiKey) {
     throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
@@ -1171,7 +1171,7 @@ mcpServer.tool(
       .optional()
       .describe('Filter metrics by specific shortcodes (e.g., ["LCV", "BCV"])'),
   },
-  handleDeepsourceQualityMetrics
+  handleDeepsourceQualityMetrics as never
 );
 
 mcpServer.tool(
@@ -1199,7 +1199,7 @@ mcpServer.tool(
       .optional()
       .describe('The new threshold value (null to remove the threshold)'),
   },
-  handleDeepsourceUpdateMetricThreshold
+  handleDeepsourceUpdateMetricThreshold as never
 );
 
 mcpServer.tool(
@@ -1297,7 +1297,7 @@ mcpServer.tool(
 
 // Only start the server if not in test mode
 /* istanbul ignore if */
-if (process.env.NODE_ENV !== 'test') {
+if (process.env['NODE_ENV'] !== 'test') {
   const transport = new StdioServerTransport();
   await mcpServer.connect(transport);
 }

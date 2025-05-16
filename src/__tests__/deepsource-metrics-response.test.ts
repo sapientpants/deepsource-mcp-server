@@ -1,9 +1,4 @@
 import { DeepSourceClient } from '../deepsource.js';
-// We're not using getPrivateMethod directly in this file, but we import it for consistency
-// with other test files in the codebase. Instead we're directly mocking a static method
-// using DeepSourceClient.prototype.constructor with proper type assertions.
-// eslint-disable-next-line no-unused-vars
-import { getPrivateMethod } from './test-utils/private-method-access.js';
 
 interface MetricHistoryValue {
   timestamp?: string;

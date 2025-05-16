@@ -9,14 +9,14 @@
  * @enum {string}
  */
 // This enum is part of the public API and is used by consumers, even if not all values are used in this file
-/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars -- Exported enum part of public API */
 export enum LogLevel {
   DEBUG = 'DEBUG',
   INFO = 'INFO',
   WARN = 'WARN',
   ERROR = 'ERROR',
 }
-/* eslint-enable no-unused-vars */
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 /**
  * Environment-aware logging configuration
@@ -35,7 +35,7 @@ const LOG_LEVELS_PRIORITY: Record<LogLevel, number> = {
  * @private
  */
 function shouldLog(level: LogLevel): boolean {
-  const configuredLevel = (process.env.LOG_LEVEL || 'INFO') as LogLevel;
+  const configuredLevel = (process.env['LOG_LEVEL'] || 'INFO') as LogLevel;
   return LOG_LEVELS_PRIORITY[level] >= LOG_LEVELS_PRIORITY[configuredLevel];
 }
 
@@ -57,7 +57,7 @@ function formatLogMessage(level: LogLevel, message: string, context?: string): s
  * Logger service for consistent logging throughout the application
  */
 export class Logger {
-  private context?: string;
+  private context?: string | undefined;
 
   /**
    * Create a new logger instance, optionally with a context

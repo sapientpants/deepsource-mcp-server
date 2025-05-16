@@ -3,11 +3,11 @@
  * @packageDocumentation
  */
 
-/* eslint-disable no-unused-vars */
 /**
  * Shortcodes for the different types of metrics that DeepSource supports
  * @public
  */
+/* eslint-disable @typescript-eslint/no-unused-vars -- Exported enum part of public API */
 export enum MetricShortcode {
   /** Line Coverage - percentage of lines covered by tests */
   LCV = 'LCV',
@@ -24,11 +24,13 @@ export enum MetricShortcode {
   /** Complexity - code complexity metrics */
   CMP = 'CMP',
 }
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 /**
  * Keys for different metric contexts, like programming languages or aggregates
  * @public
  */
+/* eslint-disable @typescript-eslint/no-unused-vars -- Exported enum part of public API */
 export enum MetricKey {
   /** Aggregate metrics for the entire repository */
   AGGREGATE = 'AGGREGATE',
@@ -47,11 +49,13 @@ export enum MetricKey {
   /** Rust-specific metrics */
   RUST = 'RUST',
 }
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 /**
  * Status of a metric's threshold comparison
  * @public
  */
+/* eslint-disable @typescript-eslint/no-unused-vars -- Exported enum part of public API */
 export enum MetricThresholdStatus {
   /** Metric is passing (meets or exceeds threshold) */
   PASSING = 'PASSING',
@@ -60,18 +64,20 @@ export enum MetricThresholdStatus {
   /** Metric threshold status is unknown or not applicable */
   UNKNOWN = 'UNKNOWN',
 }
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 /**
  * Direction in which a metric is considered "positive"
  * @public
  */
+/* eslint-disable @typescript-eslint/no-unused-vars -- Exported enum part of public API */
 export enum MetricDirection {
   /** Higher values are better (e.g., code coverage) */
   UPWARD = 'UPWARD',
   /** Lower values are better (e.g., duplicate code percentage) */
   DOWNWARD = 'DOWNWARD',
 }
-/* eslint-enable no-unused-vars */
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 /**
  * Settings for a specific metric
