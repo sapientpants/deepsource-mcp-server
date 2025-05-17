@@ -72,8 +72,8 @@ TODO/FIXME/XXX comments indicate incomplete work or known issues that should be 
 
 ## Notes
 - All current issues are in test files only - production code is clean
-- The last DeepSource run introduced 39 issues (38 ANTI_PATTERN, 1 DOCUMENTATION), but many have been fixed
-- Current issues represent the remaining work to achieve full DeepSource compliance
+- These issues need to be fixed to achieve full DeepSource compliance
+- Based on DeepSource API query from fix-quality-issues branch
 
 ## Next Steps
 1. Fix all Critical issues first (JS-0323)
