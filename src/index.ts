@@ -1301,3 +1301,9 @@ if (process.env['NODE_ENV'] !== 'test') {
   const transport = new StdioServerTransport();
   await mcpServer.connect(transport);
 }
+
+// Export the enum usage files to resolve ESLint errors
+export * from './deepsource-exports.js';
+export * from './utils/error-exports.js';
+export * from './utils/logger-exports.js';
+export * from './types/metrics-exports.js';

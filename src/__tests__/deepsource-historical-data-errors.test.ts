@@ -186,7 +186,7 @@ describe('DeepSource Historical Data Error Handling', () => {
   describe('processHistoricalData', () => {
     // Access the static private method
     const processHistoricalData =
-      getPrivateMethod<(_data: Record<string, unknown>, _params: MetricHistoryParams) => unknown[]>(
+      getPrivateMethod<(data: Record<string, unknown>, params: MetricHistoryParams) => unknown[]>(
         'processHistoricalData'
       );
 

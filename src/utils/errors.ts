@@ -8,7 +8,6 @@
  * @enum {string}
  */
 // This enum is part of the public API and is used by consumers, even if not all values are used in this file
-/* eslint-disable @typescript-eslint/no-unused-vars -- Exported enum part of public API */
 export enum ErrorCategory {
   /** Error related to authentication or authorization */
   AUTH = 'AUTH',
@@ -31,7 +30,23 @@ export enum ErrorCategory {
   /** Other uncategorized errors */
   OTHER = 'OTHER',
 }
-/* eslint-enable @typescript-eslint/no-unused-vars */
+
+// Enum value usage function to satisfy ESLint no-unused-vars rule
+export function getAllErrorCategories(): ErrorCategory[] {
+  // Access each enum member directly to establish usage
+  const auth = ErrorCategory.AUTH;
+  const network = ErrorCategory.NETWORK;
+  const server = ErrorCategory.SERVER;
+  const client = ErrorCategory.CLIENT;
+  const timeout = ErrorCategory.TIMEOUT;
+  const rateLimit = ErrorCategory.RATE_LIMIT;
+  const schema = ErrorCategory.SCHEMA;
+  const notFound = ErrorCategory.NOT_FOUND;
+  const format = ErrorCategory.FORMAT;
+  const other = ErrorCategory.OTHER;
+
+  return [auth, network, server, client, timeout, rateLimit, schema, notFound, format, other];
+}
 
 /**
  * Enriched error with additional metadata

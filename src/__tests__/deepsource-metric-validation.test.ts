@@ -6,7 +6,7 @@ describe('DeepSource Validation Utilities', () => {
     // Access the private static method using our utility
     // Define a specific type for the project repository validator function
     interface ProjectRepositoryValidatorFn {
-      (_project: unknown, _projectKey: string): void;
+      (project: unknown, projectKey: string): void;
     }
     type ProjectRepositoryValidator = ProjectRepositoryValidatorFn;
 

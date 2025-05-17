@@ -1,5 +1,5 @@
 import js from '@eslint/js';
-import * as tseslint from '@typescript-eslint/eslint-plugin';
+import tseslint from '@typescript-eslint/eslint-plugin';
 import tsparser from '@typescript-eslint/parser';
 import prettier from 'eslint-plugin-prettier';
 
@@ -28,7 +28,21 @@ export default [
       prettier: prettier,
     },
     rules: {
+      ...tseslint.configs.recommended.rules,
       'prettier/prettier': 'error',
+      // Disable the base rule for TypeScript files
+      'no-unused-vars': 'off',
+      // Use TypeScript-specific no-unused-vars rule that understands enums
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          vars: 'all',
+          args: 'after-used',
+          ignoreRestSiblings: true,
+          varsIgnorePattern: '^_',
+          argsIgnorePattern: '^_'
+        }
+      ],
     },
   },
   {

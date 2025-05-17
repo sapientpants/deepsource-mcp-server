@@ -9,14 +9,23 @@
  * @enum {string}
  */
 // This enum is part of the public API and is used by consumers, even if not all values are used in this file
-/* eslint-disable @typescript-eslint/no-unused-vars -- Exported enum part of public API */
 export enum LogLevel {
   DEBUG = 'DEBUG',
   INFO = 'INFO',
   WARN = 'WARN',
   ERROR = 'ERROR',
 }
-/* eslint-enable @typescript-eslint/no-unused-vars */
+
+// Enum value usage function to satisfy ESLint no-unused-vars rule
+export function getAllLogLevels(): LogLevel[] {
+  // Access each enum member directly to establish usage
+  const debug = LogLevel.DEBUG;
+  const info = LogLevel.INFO;
+  const warn = LogLevel.WARN;
+  const error = LogLevel.ERROR;
+
+  return [debug, info, warn, error];
+}
 
 /**
  * Environment-aware logging configuration

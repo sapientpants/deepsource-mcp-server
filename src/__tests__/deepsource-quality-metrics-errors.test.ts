@@ -18,7 +18,7 @@ describe('DeepSourceClient Quality Metrics Error Handling', () => {
   describe('extractErrorMessages', () => {
     // Get access to the private static method
     const extractErrorMessages =
-      getPrivateMethod<(_errors: Array<{ message: string }>) => string>('extractErrorMessages');
+      getPrivateMethod<(errors: Array<{ message: string }>) => string>('extractErrorMessages');
 
     it('should concatenate multiple error messages with commas', () => {
       const errors = [{ message: 'Error 1' }, { message: 'Error 2' }, { message: 'Error 3' }];
