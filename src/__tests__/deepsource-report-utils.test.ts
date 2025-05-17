@@ -2,13 +2,24 @@
  * Tests for DeepSource report utility methods
  * Focuses on testing the internal utility methods related to report processing
  */
-import { DeepSourceClient, ReportType } from '../deepsource';
+import { ReportType } from '../deepsource.js';
+import { getPrivateMethod } from './test-utils/private-method-access.js';
 
 describe('DeepSource Report Utility Methods', () => {
   describe('extractReportData', () => {
-    // We need to access the private static method
-    const extractReportData = (DeepSourceClient as Record<string, unknown>)
-      .extractReportData as Function;
+    // Access the private static method using our utility
+    // Define a more specific return type for the report data
+    interface ReportDataStructure {
+      key: string;
+      title: string;
+      securityIssueStats: Array<Record<string, unknown>>;
+    }
+    type ReportData = ReportDataStructure | null;
+
+    const extractReportData =
+      getPrivateMethod<(response: unknown, reportType: ReportType) => ReportData>(
+        'extractReportData'
+      );
 
     it('should return null for null response', () => {
       const result = extractReportData(null, ReportType.OWASP_TOP_10);
@@ -142,8 +153,14 @@ describe('DeepSource Report Utility Methods', () => {
   });
 
   describe('getReportField', () => {
-    // We need to access the private static method
-    const getReportField = (DeepSourceClient as Record<string, unknown>).getReportField as Function;
+    // Access the private static method using our utility
+    // Define a specific type for the report field getter function
+    interface ReportFieldGetterFn {
+      (reportType: ReportType): string;
+    }
+    type ReportFieldGetter = ReportFieldGetterFn;
+
+    const getReportField = getPrivateMethod<ReportFieldGetter>('getReportField');
 
     it('should return correct field name for OWASP_TOP_10', () => {
       const fieldName = getReportField(ReportType.OWASP_TOP_10);
@@ -191,9 +208,14 @@ describe('DeepSource Report Utility Methods', () => {
   });
 
   describe('getTitleForReportType', () => {
-    // We need to access the private static method
-    const getTitleForReportType = (DeepSourceClient as Record<string, unknown>)
-      .getTitleForReportType as Function;
+    // Access the private static method using our utility
+    // Define a specific type for the report title getter function
+    interface ReportTitleGetterFn {
+      (reportType: ReportType): string;
+    }
+    type ReportTitleGetter = ReportTitleGetterFn;
+
+    const getTitleForReportType = getPrivateMethod<ReportTitleGetter>('getTitleForReportType');
 
     it('should return correct title for OWASP_TOP_10', () => {
       const title = getTitleForReportType(ReportType.OWASP_TOP_10);

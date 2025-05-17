@@ -1,11 +1,18 @@
-import { DeepSourceClient } from '../deepsource';
-import { MetricDirection } from '../types/metrics';
+import { MetricDirection } from '../types/metrics.js';
+import { getPrivateMethod } from './test-utils/private-method-access.js';
 
 describe('DeepSource Validation Utilities', () => {
   describe('validateProjectRepository', () => {
-    // Access the private static method
-    const validateProjectRepository = (DeepSourceClient as Record<string, unknown>)
-      .validateProjectRepository as Function;
+    // Access the private static method using our utility
+    // Define a specific type for the project repository validator function
+    interface ProjectRepositoryValidatorFn {
+      (project: unknown, projectKey: string): void;
+    }
+    type ProjectRepositoryValidator = ProjectRepositoryValidatorFn;
+
+    const validateProjectRepository = getPrivateMethod<ProjectRepositoryValidator>(
+      'validateProjectRepository'
+    );
 
     it('should throw error when repository is missing', () => {
       const projectWithoutRepo = {
@@ -52,8 +59,14 @@ describe('DeepSource Validation Utilities', () => {
   });
 
   describe('getVcsProvider', () => {
-    // Access the private static method
-    const getVcsProvider = (DeepSourceClient as Record<string, unknown>).getVcsProvider as Function;
+    // Access the private static method using our utility
+    // Define a specific type for the VCS provider converter function
+    interface VcsProviderConverterFn {
+      (_provider: string): string;
+    }
+    type VcsProviderConverter = VcsProviderConverterFn;
+
+    const getVcsProvider = getPrivateMethod<VcsProviderConverter>('getVcsProvider');
 
     it('should convert provider string to uppercase', () => {
       expect(getVcsProvider('github')).toBe('GITHUB');
@@ -71,9 +84,14 @@ describe('DeepSource Validation Utilities', () => {
   });
 
   describe('isNotFoundError', () => {
-    // Access the private static method
-    const isNotFoundError = (DeepSourceClient as Record<string, unknown>)
-      .isNotFoundError as Function;
+    // Access the private static method using our utility
+    // Define a specific type for the error detector function
+    interface NotFoundErrorDetectorFn {
+      (_error: unknown): boolean;
+    }
+    type NotFoundErrorDetector = NotFoundErrorDetectorFn;
+
+    const isNotFoundError = getPrivateMethod<NotFoundErrorDetector>('isNotFoundError');
 
     it('should identify GraphQL not found errors', () => {
       const notFoundError = new Error('GraphQL error: Resource not found');
@@ -103,9 +121,19 @@ describe('DeepSource Validation Utilities', () => {
   });
 
   describe('calculateTrendDirection', () => {
-    // Access the private static method
-    const calculateTrendDirection = (DeepSourceClient as Record<string, unknown>)
-      .calculateTrendDirection as Function;
+    // Access the private static method using our utility
+    // Define value objects and function type separately for better readability
+    interface TrendValue {
+      value: number;
+      createdAt: string;
+    }
+    interface TrendDirectionCalculatorFn {
+      (_values: TrendValue[], _direction: string | MetricDirection): boolean;
+    }
+    type TrendDirectionCalculator = TrendDirectionCalculatorFn;
+
+    const calculateTrendDirection =
+      getPrivateMethod<TrendDirectionCalculator>('calculateTrendDirection');
 
     it('should return true when not enough data points', () => {
       // One data point isn't enough to determine a trend

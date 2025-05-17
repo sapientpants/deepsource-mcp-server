@@ -1,7 +1,12 @@
-import { DeepSourceClient } from '../deepsource';
+import { DeepSourceClient } from '../deepsource.js';
+
+interface MetricHistoryValue {
+  timestamp?: string;
+  value?: number;
+}
 
 // Create a mock implementation for tests
-const mockCreateHistoryResponse = (historyValues: any[]) => {
+const mockCreateHistoryResponse = (historyValues: MetricHistoryValue[]) => {
   // Calculate percent change between first and last values with valid values
   let firstValidValueIndex = -1;
   let lastValidValueIndex = -1;
@@ -55,8 +60,11 @@ const mockCreateHistoryResponse = (historyValues: any[]) => {
 describe('DeepSource Metric Response Utilities', () => {
   describe('createMetricHistoryResponse', () => {
     beforeAll(() => {
-      // Mock implementation
-      (DeepSourceClient as any).createMetricHistoryResponse = mockCreateHistoryResponse;
+      // Mock implementation using our utility for consistent pattern
+      // Use type assertion with proper type safety
+      (DeepSourceClient.prototype.constructor as Record<string, unknown>)[
+        'createMetricHistoryResponse'
+      ] = mockCreateHistoryResponse;
     });
 
     it('should create a properly structured history response', () => {
