@@ -16,7 +16,7 @@ describe('DeepSource Compliance Reports', () => {
     // Create a fresh client instance
     client = new DeepSourceClient(API_KEY);
 
-    // Clean up any existing nock interceptors
+    // Clean up all existing nock interceptors
     nock.cleanAll();
 
     // Mock the environment variable

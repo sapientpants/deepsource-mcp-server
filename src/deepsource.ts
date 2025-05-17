@@ -783,14 +783,14 @@ export class DeepSourceClient {
    * Normalization rules:
    * 1. If 'before' is provided (backward pagination):
    *    - Use 'last' as the count parameter (default: 10)
-   *    - Remove any 'first' parameter to avoid ambiguity
+   *    - Remove the 'first' parameter to avoid ambiguity
    * 2. If 'last' is provided without 'before' (non-standard but supported):
    *    - Keep 'last' as is
-   *    - Remove any 'first' parameter to avoid ambiguity
+   *    - Remove the 'first' parameter to avoid ambiguity
    *    - Log a warning about non-standard usage
    * 3. Otherwise (forward pagination or defaults):
    *    - Use 'first' as the count parameter (default: 10)
-   *    - Remove any 'last' parameter to avoid ambiguity
+   *    - Remove the 'last' parameter to avoid ambiguity
    *
    * @template T Type that extends PaginationParams
    * @param {T} params - Original pagination parameters

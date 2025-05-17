@@ -62,9 +62,8 @@ describe('DeepSource Metric Response Utilities', () => {
     beforeAll(() => {
       // Mock implementation using our utility for consistent pattern
       // Use type assertion with proper type safety
-      (DeepSourceClient.prototype.constructor as Record<string, unknown>)[
-        'createMetricHistoryResponse'
-      ] = mockCreateHistoryResponse;
+      (DeepSourceClient as unknown as Record<string, unknown>)['createMetricHistoryResponse'] =
+        mockCreateHistoryResponse;
     });
 
     it('should create a properly structured history response', () => {

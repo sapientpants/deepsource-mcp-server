@@ -817,7 +817,25 @@ describe('MCP server implementation', () => {
           endCursor: 'end-cursor',
         },
         totalCount: 100,
-        pagination_help: expect.any(Object),
+        pagination_help: {
+          description:
+            'This API uses Relay-style cursor-based pagination for efficient data retrieval',
+          current_page: {
+            size: 1,
+            has_next_page: true,
+            has_previous_page: false,
+          },
+          next_page: {
+            example: '{"first": 10, "after": "end-cursor"}',
+            description: 'Use these parameters to fetch the next page of results',
+          },
+          previous_page: null,
+          pagination_types: {
+            forward: 'For forward pagination, use "first" with optional "after" cursor',
+            backward: 'For backward pagination, use "last" with optional "before" cursor',
+            legacy: 'Legacy offset-based pagination is also supported via the "offset" parameter',
+          },
+        },
       });
     });
 

@@ -85,7 +85,7 @@ describe('Logger', () => {
 
       logger.debug('Test debug message', testData);
 
-      expect(mockDebug).toHaveBeenCalledWith(expect.any(String), testData);
+      expect(mockDebug).toHaveBeenCalledWith(expect.stringContaining('DEBUG'), testData);
     });
 
     it('should use empty string when no data is provided', () => {
@@ -93,7 +93,7 @@ describe('Logger', () => {
 
       logger.debug('Test debug message');
 
-      expect(mockDebug).toHaveBeenCalledWith(expect.any(String), '');
+      expect(mockDebug).toHaveBeenCalledWith(expect.stringContaining('DEBUG'), '');
     });
   });
 
@@ -136,7 +136,7 @@ describe('Logger', () => {
 
       logger.info('Test info message', testData);
 
-      expect(mockInfo).toHaveBeenCalledWith(expect.any(String), testData);
+      expect(mockInfo).toHaveBeenCalledWith(expect.stringContaining('INFO'), testData);
     });
   });
 
@@ -170,7 +170,7 @@ describe('Logger', () => {
 
       logger.warn('Test warn message', testData);
 
-      expect(mockWarn).toHaveBeenCalledWith(expect.any(String), testData);
+      expect(mockWarn).toHaveBeenCalledWith(expect.stringContaining('WARN'), testData);
     });
   });
 
@@ -218,7 +218,7 @@ describe('Logger', () => {
 
       logger.error('Test error message');
 
-      expect(mockError).toHaveBeenCalledWith(expect.any(String), '');
+      expect(mockError).toHaveBeenCalledWith(expect.stringContaining('ERROR'), '');
     });
   });
 
