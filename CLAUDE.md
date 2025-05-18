@@ -65,11 +65,16 @@ The codebase is structured around two main components:
 1. **MCP Server Integration (src/index.ts)**: 
    - Sets up the Model Context Protocol server
    - Registers and implements tool handlers for DeepSource API integration
-   - Provides four main tools for AI assistants: 
+   - Provides nine main tools for AI assistants: 
      - `deepsource_projects` - List all available projects
      - `deepsource_project_issues` - Get issues with filtering and pagination
      - `deepsource_project_runs` - List analysis runs with filtering and pagination
      - `deepsource_run` - Get details for a specific run
+     - `deepsource_dependency_vulnerabilities` - Get dependency vulnerabilities with pagination
+     - `deepsource_quality_metrics` - Get quality metrics with optional filtering
+     - `deepsource_update_metric_threshold` - Update metric thresholds
+     - `deepsource_update_metric_setting` - Update metric settings for reporting and enforcement
+     - `deepsource_compliance_report` - Get security compliance reports (OWASP, SANS, MISRA-C)
 
 2. **DeepSource Client (src/deepsource.ts)**:
    - Implements communication with DeepSource's GraphQL API
@@ -208,7 +213,7 @@ DeepSource is used to maintain code quality. Here are the key patterns to follow
 
 1. **Keep methods small and focused** - Methods should do one thing and do it well.
 
-2. **Avoid static methods when instance methods make sense** - Static methods make testing harder.
+2. **Use instance methods when they need access to instance state** - Instance methods should be used when they require access to instance properties or methods. Methods that don't use `this` should be made static.
 
 3. **Use proper null/undefined handling** - Use optional chaining and nullish coalescing operators.
    ```typescript
@@ -253,15 +258,18 @@ DeepSource is used to maintain code quality. Here are the key patterns to follow
    doSomething(data.property); // Use it in a function call
    ```
 
-6. **Use regular strings when template literals aren't needed** - Only use template literals when you need string interpolation, multiline strings, or special characters.
+6. **Use regular strings when template literals aren't needed** - Only use template literals when you need string interpolation, multiline strings, or special characters. Use single quotes for regular strings unless you need to include a single quote in the string.
    ```typescript
    // Bad
    const name = `John`;
    const greeting = `Hello World`;
    
-   // Good
+   // Good - prefer single quotes
    const name = 'John';
-   const greeting = "Hello World";
+   const greeting = 'Hello World';
+   
+   // Good - use double quotes when the string contains single quotes
+   const message = "Don't forget to save!";
    
    // Good use of template literals
    const fullGreeting = `Hello, ${name}!`;
@@ -335,26 +343,34 @@ The following guidelines are based on frequent DeepSource issues detected in thi
    const message = `Hello, ${name}!`;
    ```
 
-3. **Use optional chaining instead of logical operators (JS-W1044)** - Modern JavaScript offers more concise syntax for property access and method calls:
+3. **Use optional chaining for nested property access (JS-W1044)** - Use optional chaining (?.) for nested property access, but use logical operators for other purposes:
    ```typescript
-   // Bad
+   // Bad - for nested property access
    function getUserName(user) {
      return user && user.profile && user.profile.name;
    }
    
-   // Good
+   // Good - for nested property access
    function getUserName(user) {
      return user?.profile?.name;
    }
    
-   // Bad
+   // Bad - for method calls
    const callback = someObj && someObj.callback;
    if (callback) {
      callback();
    }
    
-   // Good
+   // Good - for method calls
    someObj?.callback?.();
+   
+   // Still use logical operators when appropriate:
+   // Good - for boolean checks
+   const isValid = input && input.length > 0;
+   
+   // Good - for nullish coalescing (prefer ?? over || for default values)
+   const timeout = config.timeout ?? 5000;
+   const name = user.name ?? 'Anonymous';
    ```
 
 ### Improving Method Organization
