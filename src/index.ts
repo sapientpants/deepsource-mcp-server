@@ -1024,6 +1024,98 @@ export async function handleDeepsourceComplianceReport({
   };
 }
 
+/**
+ * Interface for parameters for fetching the latest run for a specific branch
+ * @public
+ */
+export interface DeepsourceLatestBranchRunParams {
+  /** DeepSource project key to fetch the latest run for */
+  projectKey: string;
+  /** The name of the branch to get the latest run for */
+  branchName: string;
+}
+
+/**
+ * Fetches and returns the latest analysis run for a specific branch
+ * @param params Parameters for fetching the latest run, including project key and branch name
+ * @returns A response containing the latest run details for the specified branch
+ * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
+ * @public
+ */
+export async function handleDeepsourceLatestBranchRun({
+  projectKey,
+  branchName,
+}: DeepsourceLatestBranchRunParams) {
+  const apiKey = process.env['DEEPSOURCE_API_KEY'];
+  /* istanbul ignore if */
+  if (!apiKey) {
+    throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
+  }
+
+  const client = new DeepSourceClient(apiKey);
+  const latestRun = await client.getLatestRunForBranch(projectKey, branchName);
+
+  if (!latestRun) {
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            error: `No runs found for branch '${branchName}' in project '${projectKey}'`,
+            suggestions: [
+              'Check if the branch name is correct',
+              'Verify that analysis runs have been triggered for this branch',
+              'Use deepsource_project_runs to see all available runs',
+            ],
+          }),
+        },
+      ],
+    };
+  }
+
+  return {
+    content: [
+      {
+        type: 'text' as const,
+        text: JSON.stringify({
+          run: {
+            id: latestRun.id,
+            runUid: latestRun.runUid,
+            commitOid: latestRun.commitOid,
+            branchName: latestRun.branchName,
+            baseOid: latestRun.baseOid,
+            status: latestRun.status,
+            createdAt: latestRun.createdAt,
+            updatedAt: latestRun.updatedAt,
+            finishedAt: latestRun.finishedAt,
+            summary: latestRun.summary,
+            repository: latestRun.repository,
+          },
+          analysis: {
+            total_issues_introduced: latestRun.summary.occurrencesIntroduced,
+            total_issues_resolved: latestRun.summary.occurrencesResolved,
+            total_issues_suppressed: latestRun.summary.occurrencesSuppressed,
+            analyzers_summary:
+              latestRun.summary.occurrenceDistributionByAnalyzer?.map((dist) => ({
+                analyzer: dist.analyzerShortcode,
+                introduced: dist.introduced,
+              })) ?? [],
+            categories_summary:
+              latestRun.summary.occurrenceDistributionByCategory?.map((dist) => ({
+                category: dist.category,
+                introduced: dist.introduced,
+              })) ?? [],
+          },
+          next_steps: [
+            'Use deepsource_project_issues to view the specific issues for this project',
+            'Use deepsource_run to get more details about this specific run',
+          ],
+        }),
+      },
+    ],
+  };
+}
+
 // Register the tools with the handlers
 mcpServer.tool(
   'deepsource_projects',
@@ -1106,6 +1198,16 @@ mcpServer.tool(
       .describe('The runUid (UUID) or commitOid (commit hash) to identify the run'),
   },
   handleDeepsourceRun
+);
+
+mcpServer.tool(
+  'deepsource_latest_branch_run',
+  'Get the latest analysis run for a specific branch. This tool retrieves all runs for a project and finds the most recent one for the specified branch.',
+  {
+    projectKey: z.string().describe('The unique identifier for the DeepSource project'),
+    branchName: z.string().describe('The name of the branch to get the latest run for'),
+  },
+  handleDeepsourceLatestBranchRun
 );
 
 mcpServer.tool(

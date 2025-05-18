@@ -1218,6 +1218,66 @@ export class DeepSourceClient {
   }
 
   /**
+   * Fetches the latest analysis run for a specific branch
+   * @param projectKey - The unique identifier for the DeepSource project
+   * @param branchName - The name of the branch to get the latest run for
+   * @returns Promise that resolves to the latest run for the branch, or null if not found
+   * @throws {Error} When project key is invalid or project doesn't exist
+   * @throws {Error} When DeepSource API returns errors
+   * @throws {Error} When network, authentication or permission issues occur
+   */
+  async getLatestRunForBranch(
+    projectKey: string,
+    branchName: string
+  ): Promise<DeepSourceRun | null> {
+    try {
+      let allBranchRuns: DeepSourceRun[] = [];
+      let hasNextPage = true;
+      let afterCursor: string | undefined;
+      let latestRun: DeepSourceRun | null = null;
+
+      // Paginate through all runs to find all runs for the branch
+      while (hasNextPage) {
+        const runsResponse = await this.listRuns(projectKey, {
+          first: 50, // Fetch more runs per page
+          after: afterCursor,
+        });
+
+        // Filter runs for this specific branch
+        const branchRuns = runsResponse.items.filter((run) => run.branchName === branchName);
+
+        if (branchRuns.length > 0) {
+          allBranchRuns = allBranchRuns.concat(branchRuns);
+
+          // Keep track of the latest run we've seen so far
+          for (const run of branchRuns) {
+            if (!latestRun || new Date(run.createdAt) > new Date(latestRun.createdAt)) {
+              latestRun = run;
+            }
+          }
+        }
+
+        hasNextPage = runsResponse.pageInfo.hasNextPage;
+        afterCursor = runsResponse.pageInfo.endCursor || undefined;
+      }
+
+      // If we found any runs, sort all branch runs to ensure we have the absolute latest
+      if (allBranchRuns.length > 0) {
+        allBranchRuns.sort((a, b) => {
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return dateB - dateA; // Sort descending (latest first)
+        });
+        return allBranchRuns[0] || null;
+      }
+
+      return null;
+    } catch (error) {
+      return DeepSourceClient.handleGraphQLError(error);
+    }
+  }
+
+  /**
    * Helper method to validate and process vulnerability node data
    * Performs comprehensive validation on a vulnerability node from the GraphQL response
    * to ensure all required fields are present and of the correct type.
