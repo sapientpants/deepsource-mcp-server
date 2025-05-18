@@ -1234,7 +1234,7 @@ mcpServer.tool(
 // Keeping this commented out as a reference for future implementation
 /*
 mcpServer.tool(
-  'deepsource_metric_history',
+  'metric_history',
   `Get historical trend analysis for code quality metrics from a DeepSource project.
 
   This tool provides access to time-series data for specific metrics including:
