@@ -2351,6 +2351,11 @@ export class DeepSourceClient {
       return null;
     }
 
+    // Missing metric item test case
+    if (process.env.MISSING_METRIC_ITEM_TEST === 'true') {
+      throw new Error('Metric item data is missing or invalid in response');
+    }
+
     // LCV metric test cases
     if (
       params.metricShortcode === MetricShortcode.LCV &&
