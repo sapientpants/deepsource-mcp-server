@@ -6,6 +6,9 @@ import { ReportType } from '../deepsource.js';
 import { getPrivateMethod } from './test-utils/private-method-access.js';
 
 describe('DeepSource Report Utility Methods', () => {
+  // Helper function to create typed empty objects for tests
+  const createEmptyObject = (): Record<string, never> => ({}) as Record<string, never>;
+
   describe('extractReportData', () => {
     // Access the private static method using our utility
     // Define a more specific return type for the report data
@@ -32,7 +35,7 @@ describe('DeepSource Report Utility Methods', () => {
     });
 
     it('should return null when data property is missing', () => {
-      const response = { notData: {} };
+      const response = { notData: createEmptyObject() };
       const result = extractReportData(response, ReportType.OWASP_TOP_10);
       expect(result).toBeNull();
     });
@@ -44,7 +47,7 @@ describe('DeepSource Report Utility Methods', () => {
     });
 
     it('should return null when GraphQL data is missing', () => {
-      const response = { data: {} };
+      const response = { data: createEmptyObject() };
       const result = extractReportData(response, ReportType.OWASP_TOP_10);
       expect(result).toBeNull();
     });
@@ -56,7 +59,7 @@ describe('DeepSource Report Utility Methods', () => {
     });
 
     it('should return null when repository is missing', () => {
-      const response = { data: { data: {} } };
+      const response = { data: { data: createEmptyObject() } };
       const result = extractReportData(response, ReportType.OWASP_TOP_10);
       expect(result).toBeNull();
     });
@@ -68,7 +71,7 @@ describe('DeepSource Report Utility Methods', () => {
     });
 
     it('should return null when reports is missing', () => {
-      const response = { data: { data: { repository: {} } } };
+      const response = { data: { data: { repository: createEmptyObject() } } };
       const result = extractReportData(response, ReportType.OWASP_TOP_10);
       expect(result).toBeNull();
     });
@@ -84,7 +87,7 @@ describe('DeepSource Report Utility Methods', () => {
         data: {
           data: {
             repository: {
-              reports: {},
+              reports: createEmptyObject(),
             },
           },
         },
