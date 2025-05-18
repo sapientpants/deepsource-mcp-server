@@ -26,3 +26,6 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db 
 **/.claude/settings.local.json
+
+# Local configuration
+CLAUDE.local.md
