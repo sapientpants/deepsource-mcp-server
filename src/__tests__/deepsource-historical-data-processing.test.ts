@@ -264,6 +264,112 @@ describe('DeepSource Historical Data Processing', () => {
       expect(result[1].createdAt).toBe('2023-01-15T12:00:00Z');
       expect(result[2].createdAt).toBe('2023-02-01T12:00:00Z');
     });
+
+    it('should throw error when metric item data is not found', () => {
+      const sampleData = {
+        repository: {
+          metrics: [
+            {
+              shortcode: 'LCV',
+              name: 'Line Coverage',
+              positiveDirection: 'UPWARD',
+              unit: '%',
+              items: [
+                {
+                  id: 'metric1',
+                  key: 'PYTHON', // Different key than requested
+                  threshold: 80,
+                  values: {
+                    edges: [],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const params = {
+        projectKey: 'test-project',
+        metricShortcode: MetricShortcode.LCV,
+        metricKey: MetricKey.AGGREGATE, // Requesting AGGREGATE but only PYTHON exists
+      };
+
+      // Should throw error when metric item with requested key is not found
+      expect(() => processHistoricalData(sampleData, params)).toThrow(
+        'Metric item data not found or invalid in response'
+      );
+    });
+
+    it('should throw error when metric item has invalid values structure', () => {
+      const sampleData = {
+        repository: {
+          metrics: [
+            {
+              shortcode: 'LCV',
+              name: 'Line Coverage',
+              positiveDirection: 'UPWARD',
+              unit: '%',
+              items: [
+                {
+                  id: 'metric1',
+                  key: 'AGGREGATE',
+                  threshold: 80,
+                  values: null, // Invalid values structure
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const params = {
+        projectKey: 'test-project',
+        metricShortcode: MetricShortcode.LCV,
+        metricKey: MetricKey.AGGREGATE,
+      };
+
+      // Should throw error when values structure is invalid
+      expect(() => processHistoricalData(sampleData, params)).toThrow(
+        'Metric item data not found or invalid in response'
+      );
+    });
+
+    it('should throw error when metric item has missing edges', () => {
+      const sampleData = {
+        repository: {
+          metrics: [
+            {
+              shortcode: 'LCV',
+              name: 'Line Coverage',
+              positiveDirection: 'UPWARD',
+              unit: '%',
+              items: [
+                {
+                  id: 'metric1',
+                  key: 'AGGREGATE',
+                  threshold: 80,
+                  values: {
+                    // Missing edges property
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const params = {
+        projectKey: 'test-project',
+        metricShortcode: MetricShortcode.LCV,
+        metricKey: MetricKey.AGGREGATE,
+      };
+
+      // Should throw error when edges are missing
+      expect(() => processHistoricalData(sampleData, params)).toThrow(
+        'Metric item data not found or invalid in response'
+      );
+    });
   });
 
   describe('calculateTrendDirection', () => {
