@@ -47,7 +47,7 @@ Once connected, your AI assistant can use DeepSource data with queries like:
 What issues are in the JavaScript files of my project?
 ```
 
-This would use the `deepsource_project_issues` tool with filters:
+This would use the `project_issues` tool with filters:
 ```
 {
   "projectKey": "your-project-key",
@@ -62,7 +62,7 @@ To filter analysis runs:
 Show me the most recent Python analysis runs
 ```
 
-This would use the `deepsource_project_runs` tool with filters:
+This would use the `project_runs` tool with filters:
 ```
 {
   "projectKey": "your-project-key",
@@ -76,7 +76,7 @@ For code quality metrics:
 What's my code coverage percentage? Is it meeting our thresholds?
 ```
 
-This would use the `deepsource_quality_metrics` tool:
+This would use the `quality_metrics` tool:
 ```
 {
   "projectKey": "your-project-key",
@@ -89,7 +89,7 @@ For security compliance reports:
 Are we compliant with OWASP Top 10 security standards?
 ```
 
-This would use the `deepsource_compliance_report` tool:
+This would use the `compliance_report` tool:
 ```
 {
   "projectKey": "your-project-key",
@@ -102,7 +102,7 @@ For setting thresholds:
 Update our line coverage threshold to 80%
 ```
 
-This would use the `deepsource_update_metric_threshold` tool:
+This would use the `update_metric_threshold` tool:
 ```
 {
   "projectKey": "your-project-key",
@@ -158,11 +158,11 @@ This would use the `deepsource_update_metric_threshold` tool:
 
 The DeepSource MCP Server provides the following tools:
 
-1. `deepsource_projects`: List all available DeepSource projects
+1. `projects`: List all available DeepSource projects
    * Parameters:
      * No required parameters
 
-2. `deepsource_project_issues`: Get issues from a DeepSource project with filtering
+2. `project_issues`: Get issues from a DeepSource project with filtering
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * Pagination parameters:
@@ -176,7 +176,7 @@ The DeepSource MCP Server provides the following tools:
        * `analyzerIn` (optional) - Filter issues by specific analyzers (e.g., ["python", "javascript"])
        * `tags` (optional) - Filter issues by tags
 
-3. `deepsource_project_runs`: List analysis runs for a DeepSource project with filtering
+3. `project_runs`: List analysis runs for a DeepSource project with filtering
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * Pagination parameters:
@@ -188,11 +188,11 @@ The DeepSource MCP Server provides the following tools:
      * Filtering parameters:
        * `analyzerIn` (optional) - Filter runs by specific analyzers (e.g., ["python", "javascript"])
 
-4. `deepsource_run`: Get a specific analysis run by its runUid or commitOid
+4. `run`: Get a specific analysis run by its runUid or commitOid
    * Parameters:
      * `runIdentifier` (required) - The runUid (UUID) or commitOid (commit hash) to identify the run
 
-5. `deepsource_dependency_vulnerabilities`: Get dependency vulnerabilities from a DeepSource project
+5. `dependency_vulnerabilities`: Get dependency vulnerabilities from a DeepSource project
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * Pagination parameters:
@@ -202,7 +202,7 @@ The DeepSource MCP Server provides the following tools:
        * `before` (optional) - Cursor for backward pagination
        * `last` (optional) - Number of items to return before the 'before' cursor (default: 10)
 
-6. `deepsource_quality_metrics`: Get quality metrics from a DeepSource project with filtering
+6. `quality_metrics`: Get quality metrics from a DeepSource project with filtering
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * `shortcodeIn` (optional) - Filter metrics by specific shortcodes (e.g., ["LCV", "BCV"])
@@ -213,7 +213,7 @@ The DeepSource MCP Server provides the following tools:
      * Duplicate Code Percentage (DDP)
      * Each metric includes current values, thresholds, and pass/fail status
 
-7. `deepsource_update_metric_threshold`: Update the threshold for a specific quality metric
+7. `update_metric_threshold`: Update the threshold for a specific quality metric
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * `repositoryId` (required) - The GraphQL repository ID
@@ -222,7 +222,7 @@ The DeepSource MCP Server provides the following tools:
      * `thresholdValue` (optional) - The new threshold value, or null to remove the threshold
    * Example: Set 80% line coverage threshold: metricShortcode="LCV", metricKey="AGGREGATE", thresholdValue=80
 
-8. `deepsource_update_metric_setting`: Update the settings for a quality metric
+8. `update_metric_setting`: Update the settings for a quality metric
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * `repositoryId` (required) - The GraphQL repository ID
@@ -230,7 +230,7 @@ The DeepSource MCP Server provides the following tools:
      * `isReported` (required) - Whether the metric should be reported
      * `isThresholdEnforced` (required) - Whether the threshold should be enforced (can fail checks)
 
-9. `deepsource_compliance_report`: Get security compliance reports from a DeepSource project
+9. `compliance_report`: Get security compliance reports from a DeepSource project
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * `reportType` (required) - The type of compliance report to fetch ([OWASP Top 10](https://owasp.org/www-project-top-ten/), [SANS Top 25](https://cwe.mitre.org/top25/), or [MISRA-C](https://www.misra.org.uk/))

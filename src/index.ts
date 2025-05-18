@@ -658,10 +658,9 @@ export async function handleDeepsourceQualityMetrics({
             usage_examples: {
               filtering:
                 'To filter metrics by type, use the shortcodeIn parameter with specific metric codes (e.g., ["LCV", "BCV"])',
-              updating_threshold:
-                'To update a threshold, use the deepsource_update_metric_threshold tool',
+              updating_threshold: 'To update a threshold, use the update_metric_threshold tool',
               updating_settings:
-                'To update metric settings (e.g., enable reporting or threshold enforcement), use the deepsource_update_metric_setting tool',
+                'To update metric settings (e.g., enable reporting or threshold enforcement), use the update_metric_setting tool',
             },
           },
           null,
@@ -715,7 +714,7 @@ export async function handleDeepsourceUpdateMetricThreshold({
               ? `Successfully ${thresholdValue !== null && thresholdValue !== undefined ? 'updated' : 'removed'} threshold for ${metricShortcode} (${metricKey})`
               : `Failed to update threshold for ${metricShortcode} (${metricKey})`,
             next_steps: result.ok
-              ? ['Use deepsource_quality_metrics to view the updated metrics']
+              ? ['Use quality_metrics to view the updated metrics']
               : ['Check if you have sufficient permissions', 'Verify the repository ID is correct'],
           },
           null,
@@ -771,7 +770,7 @@ export async function handleDeepsourceUpdateMetricSetting({
               ? `Successfully updated settings for ${metricShortcode}`
               : `Failed to update settings for ${metricShortcode}`,
             next_steps: result.ok
-              ? ['Use deepsource_quality_metrics to view the updated metrics']
+              ? ['Use quality_metrics to view the updated metrics']
               : ['Check if you have sufficient permissions', 'Verify the repository ID is correct'],
           },
           null,
@@ -1001,7 +1000,7 @@ export async function handleDeepsourceComplianceReport({
                 report.status === ReportStatus.FAILING
                   ? [
                       'Fix critical security issues first',
-                      'Use deepsource_project_issues to view specific issues',
+                      'Use project_issues to view specific issues',
                       'Implement security best practices for your codebase',
                     ]
                   : ['Continue monitoring security compliance', 'Run regular security scans'],
@@ -1026,13 +1025,13 @@ export async function handleDeepsourceComplianceReport({
 
 // Register the tools with the handlers
 mcpServer.tool(
-  'deepsource_projects',
+  'projects',
   'List all available DeepSource projects. Returns a list of project objects with "key" and "name" properties.',
   handleDeepsourceProjects
 );
 
 mcpServer.tool(
-  'deepsource_project_issues',
+  'project_issues',
   `Get issues from a DeepSource project with support for Relay-style cursor-based pagination and filtering.
 For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor.
 For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor.
@@ -1067,7 +1066,7 @@ Filtering options:
 );
 
 mcpServer.tool(
-  'deepsource_project_runs',
+  'project_runs',
   `List analysis runs for a DeepSource project with support for Relay-style cursor-based pagination and filtering.
 For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor.
 For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor.
@@ -1098,7 +1097,7 @@ Filtering options:
 );
 
 mcpServer.tool(
-  'deepsource_run',
+  'run',
   'Get a specific analysis run by its runUid (UUID) or commitOid (commit hash).',
   {
     runIdentifier: z
@@ -1109,7 +1108,7 @@ mcpServer.tool(
 );
 
 mcpServer.tool(
-  'deepsource_dependency_vulnerabilities',
+  'dependency_vulnerabilities',
   `Get dependency vulnerabilities from a DeepSource project with support for Relay-style cursor-based pagination.
 For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor.
 For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor.
@@ -1153,7 +1152,7 @@ The response provides detailed information about each vulnerability, including:
 
 // Register quality metrics tools
 mcpServer.tool(
-  'deepsource_quality_metrics',
+  'quality_metrics',
   `Get quality metrics from a DeepSource project with optional filtering by metric type.
   
   Metrics include code coverage, duplicate code percentage, and more, along with their:
@@ -1175,7 +1174,7 @@ mcpServer.tool(
 );
 
 mcpServer.tool(
-  'deepsource_update_metric_threshold',
+  'update_metric_threshold',
   `Update the threshold for a specific quality metric in a DeepSource project.
   
   This allows setting or removing threshold values that determine if a metric passes or fails.
@@ -1188,7 +1187,7 @@ mcpServer.tool(
     projectKey: z.string().describe('The unique identifier for the DeepSource project'),
     repositoryId: z
       .string()
-      .describe('The GraphQL repository ID (get this from deepsource_quality_metrics response)'),
+      .describe('The GraphQL repository ID (get this from quality_metrics response)'),
     metricShortcode: z
       .nativeEnum(MetricShortcode)
       .describe('The shortcode of the metric to update'),
@@ -1203,7 +1202,7 @@ mcpServer.tool(
 );
 
 mcpServer.tool(
-  'deepsource_update_metric_setting',
+  'update_metric_setting',
   `Update the settings for a quality metric in a DeepSource project.
   
   This allows configuring how metrics are used in the project:
@@ -1218,7 +1217,7 @@ mcpServer.tool(
     projectKey: z.string().describe('The unique identifier for the DeepSource project'),
     repositoryId: z
       .string()
-      .describe('The GraphQL repository ID (get this from deepsource_quality_metrics response)'),
+      .describe('The GraphQL repository ID (get this from quality_metrics response)'),
     metricShortcode: z
       .nativeEnum(MetricShortcode)
       .describe('The shortcode of the metric to update'),
@@ -1273,7 +1272,7 @@ mcpServer.tool(
 
 // Register compliance report tool
 mcpServer.tool(
-  'deepsource_compliance_report',
+  'compliance_report',
   `Get security compliance reports from a DeepSource project.
 
   This tool provides access to industry-standard security compliance reports including:
