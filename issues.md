@@ -103,26 +103,28 @@ Total Issues: 4 introduced, 0 resolved
 
 ## Major Issues
 
-### 4. Use of a banned type detected (JS-0296)
+### 4. ~~Use of a banned type detected (JS-0296)~~ ✅ FIXED
 **Severity:** MAJOR  
 **Category:** ANTI_PATTERN  
 
-**Files and Locations:**
-- `src/__tests__/deepsource-report-utils.test.ts:196`
-- `src/__tests__/deepsource-report-utils.test.ts:146`
-- `src/__tests__/deepsource-report-utils.test.ts:11`
-- `src/__tests__/deepsource-metric-validation.test.ts:108`
-- `src/__tests__/deepsource-metric-validation.test.ts:76`
-- `src/__tests__/deepsource-metric-validation.test.ts:56`
-- `src/__tests__/deepsource-metric-validation.test.ts:8`
-- `src/__tests__/deepsource-historical-data-processing.test.ts:267`
-- `src/__tests__/deepsource-historical-data-processing.test.ts:8`
+~~**Files and Locations:**~~
+- ~~`src/__tests__/deepsource-report-utils.test.ts:196`~~
+- ~~`src/__tests__/deepsource-report-utils.test.ts:146`~~
+- ~~`src/__tests__/deepsource-report-utils.test.ts:11`~~
+- ~~`src/__tests__/deepsource-metric-validation.test.ts:108`~~
+- ~~`src/__tests__/deepsource-metric-validation.test.ts:76`~~
+- ~~`src/__tests__/deepsource-metric-validation.test.ts:56`~~
+- ~~`src/__tests__/deepsource-metric-validation.test.ts:8`~~
+- ~~`src/__tests__/deepsource-historical-data-processing.test.ts:267`~~
+- ~~`src/__tests__/deepsource-historical-data-processing.test.ts:8`~~
 
-**TODO:** Replace dangerous or harmful types:
-- Avoid using the `object` type - use `Record<string, unknown>` instead
-- Don't use `{}` or `Object` types - they mean "any non-nullish value"
-- Avoid the `Function` type - use specific function signatures instead
-- Use lower-case primitive types (`string`, `number`, `boolean`) instead of upper-case ones (`String`, `Number`, `Boolean`)
+~~**TODO:** Replace dangerous or harmful types:~~
+- ~~Avoid using the `object` type - use `Record<string, unknown>` instead~~
+- ~~Don't use `{}` or `Object` types - they mean "any non-nullish value"~~
+- ~~Avoid the `Function` type - use specific function signatures instead~~
+- ~~Use lower-case primitive types (`string`, `number`, `boolean`) instead of upper-case ones (`String`, `Number`, `Boolean`)~~
+
+**FIXED:** Replaced all `Function` types with specific function signatures and added necessary imports and eslint-disable comments for unused parameters.
 
 ---
 
