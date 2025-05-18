@@ -80,7 +80,7 @@ describe('MCP server implementation', () => {
     });
   });
 
-  describe('deepsource_projects tool', () => {
+  describe('projects tool', () => {
     it('returns formatted projects', async () => {
       // Define mock data with proper DeepSourceProject structure
       const mockProjects: DeepSourceProject[] = [
@@ -155,7 +155,7 @@ describe('MCP server implementation', () => {
     });
   });
 
-  describe('deepsource_project_issues tool', () => {
+  describe('project_issues tool', () => {
     it('returns formatted issues with all parameters', async () => {
       // Define mock data with proper DeepSourceIssue structure
       const mockIssues: PaginatedResponse<DeepSourceIssue> = {
@@ -384,7 +384,7 @@ describe('MCP server implementation', () => {
     });
   });
 
-  describe('deepsource_project_runs tool', () => {
+  describe('project_runs tool', () => {
     it('returns formatted runs with all parameters', async () => {
       // Define mock data for runs response
       const mockRuns = {
@@ -572,7 +572,7 @@ describe('MCP server implementation', () => {
     });
   });
 
-  describe('deepsource_run tool', () => {
+  describe('run tool', () => {
     it('returns formatted run details', async () => {
       // Define mock data
       const mockRun = {
@@ -678,7 +678,7 @@ describe('MCP server implementation', () => {
     });
   });
 
-  describe('deepsource_dependency_vulnerabilities tool', () => {
+  describe('dependency_vulnerabilities tool', () => {
     // Save original method
     const originalGetDependencyVulnerabilities =
       DeepSourceClient.prototype.getDependencyVulnerabilities;

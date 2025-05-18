@@ -198,9 +198,7 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
 
       // Verify usage examples are included
       expect(parsedResponse.usage_examples).toBeDefined();
-      expect(parsedResponse.usage_examples.updating_threshold).toContain(
-        'deepsource_update_metric_threshold'
-      );
+      expect(parsedResponse.usage_examples.updating_threshold).toContain('update_metric_threshold');
     });
 
     it('should handle API errors gracefully', async () => {

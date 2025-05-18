@@ -66,15 +66,15 @@ The codebase is structured around two main components:
    - Sets up the Model Context Protocol server
    - Registers and implements tool handlers for DeepSource API integration
    - Provides nine main tools for AI assistants: 
-     - `deepsource_projects` - List all available projects
-     - `deepsource_project_issues` - Get issues with filtering and pagination
-     - `deepsource_project_runs` - List analysis runs with filtering and pagination
-     - `deepsource_run` - Get details for a specific run
-     - `deepsource_dependency_vulnerabilities` - Get dependency vulnerabilities with pagination
-     - `deepsource_quality_metrics` - Get quality metrics with optional filtering
-     - `deepsource_update_metric_threshold` - Update metric thresholds
-     - `deepsource_update_metric_setting` - Update metric settings for reporting and enforcement
-     - `deepsource_compliance_report` - Get security compliance reports (OWASP, SANS, MISRA-C)
+     - `projects` - List all available projects
+     - `project_issues` - Get issues with filtering and pagination
+     - `project_runs` - List analysis runs with filtering and pagination
+     - `run` - Get details for a specific run
+     - `dependency_vulnerabilities` - Get dependency vulnerabilities with pagination
+     - `quality_metrics` - Get quality metrics with optional filtering
+     - `update_metric_threshold` - Update metric thresholds
+     - `update_metric_setting` - Update metric settings for reporting and enforcement
+     - `compliance_report` - Get security compliance reports (OWASP, SANS, MISRA-C)
 
 2. **DeepSource Client (src/deepsource.ts)**:
    - Implements communication with DeepSource's GraphQL API
