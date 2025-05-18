@@ -70,7 +70,7 @@ The codebase is structured around two main components:
      - `project_issues` - Get issues with filtering and pagination
      - `project_runs` - List analysis runs with filtering and pagination
      - `run` - Get details for a specific run
-     - `recent_run_issues` - Get issues from the most recent run on a specific branch
+     - `recent_run_issues` - Get issues from the most recent run on a specific branch with pagination
      - `dependency_vulnerabilities` - Get dependency vulnerabilities with pagination
      - `quality_metrics` - Get quality metrics with optional filtering
      - `update_metric_threshold` - Update metric thresholds

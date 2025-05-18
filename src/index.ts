@@ -263,6 +263,14 @@ export interface DeepsourceRecentRunIssuesParams {
   projectKey: string;
   /** Branch name to get the most recent run from */
   branchName: string;
+  /** Relay-style pagination: Number of issues to return (default: 10) */
+  first?: number;
+  /** Relay-style pagination: Cursor to fetch issues after this cursor */
+  after?: string;
+  /** Relay-style pagination: Number of issues to return before a cursor */
+  last?: number;
+  /** Relay-style pagination: Cursor to fetch issues before this cursor */
+  before?: string;
 }
 
 /**
@@ -345,9 +353,9 @@ export async function handleDeepsourceRun({ runIdentifier }: DeepsourceRunParams
 }
 
 /**
- * Fetches issues from the most recent analysis run on a specific branch
- * @param params Parameters for fetching issues, including project key and branch name
- * @returns A response containing the issues from the most recent run on the branch
+ * Fetches issues from the most recent analysis run on a specific branch with pagination support
+ * @param params Parameters for fetching issues, including project key, branch name, and pagination options
+ * @returns A response containing the issues from the most recent run on the branch with pagination info
  * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
  * @throws Error if no runs are found for the specified branch
  * @public
@@ -355,6 +363,10 @@ export async function handleDeepsourceRun({ runIdentifier }: DeepsourceRunParams
 export async function handleDeepsourceRecentRunIssues({
   projectKey,
   branchName,
+  first,
+  after,
+  last,
+  before,
 }: DeepsourceRecentRunIssuesParams) {
   const apiKey = process.env.DEEPSOURCE_API_KEY;
   /* istanbul ignore if */
@@ -396,7 +408,10 @@ export async function handleDeepsourceRecentRunIssues({
 
   // Now get issues from the project (these are at the repository level, not run-specific)
   const issues = await client.getIssues(projectKey, {
-    first: 100,
+    first,
+    after,
+    last,
+    before,
   });
 
   return {
@@ -424,6 +439,7 @@ export async function handleDeepsourceRecentRunIssues({
             line_number: issue.line_number,
             tags: issue.tags,
           })),
+          pageInfo: issues.pageInfo,
           totalCount: issues.totalCount,
           metadata: {
             branch: branchName,
@@ -431,6 +447,16 @@ export async function handleDeepsourceRecentRunIssues({
             runDate: mostRecentRun.createdAt,
             description: `Issues from the most recent analysis run on branch '${branchName}'`,
             note: 'Issues are at the repository level; DeepSource API does not provide run-specific issue filtering',
+          },
+          // Add pagination help information
+          pagination_help: {
+            description: 'This API uses Relay-style cursor-based pagination',
+            forward_pagination: `To get the next page, use 'first: ${first || 10}, after: "${issues.pageInfo.endCursor || 'cursor_value'}"'`,
+            backward_pagination: `To get the previous page, use 'last: ${last || 10}, before: "${issues.pageInfo.startCursor || 'cursor_value'}"'`,
+            page_status: {
+              has_next_page: issues.pageInfo.hasNextPage,
+              has_previous_page: issues.pageInfo.hasPreviousPage,
+            },
           },
         }),
       },
@@ -1214,10 +1240,24 @@ mcpServer.tool(
 
 mcpServer.tool(
   'recent_run_issues',
-  'Get issues from the most recent analysis run on a specific branch. This is useful for checking what issues were found in the latest analysis.',
+  `Get issues from the most recent analysis run on a specific branch with support for Relay-style cursor-based pagination.
+For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor.
+For backward pagination, use \`last\` (defaults to 10) with optional \`before\` cursor.
+The response includes \`pageInfo\` with \`hasNextPage\`, \`hasPreviousPage\`, \`startCursor\`, and \`endCursor\`
+to help navigate through pages.`,
   {
     projectKey: z.string().describe('The unique identifier for the DeepSource project'),
     branchName: z.string().describe('The branch name to get the most recent run from'),
+    first: z
+      .number()
+      .optional()
+      .describe('Number of items to return after the "after" cursor (default: 10)'),
+    after: z.string().optional().describe('Cursor to fetch records after this position'),
+    last: z
+      .number()
+      .optional()
+      .describe('Number of items to return before the "before" cursor (default: 10)'),
+    before: z.string().optional().describe('Cursor to fetch records before this position'),
   },
   handleDeepsourceRecentRunIssues
 );

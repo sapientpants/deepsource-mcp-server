@@ -933,6 +933,109 @@ describe('MCP server implementation', () => {
       expect(calls[0][1].after).toBeUndefined();
       expect(calls[1][1].after).toBe('cursor1');
     });
+
+    it('supports pagination parameters for issues', async () => {
+      // Mock runs response
+      const mockRuns = {
+        items: [
+          {
+            id: 'run1',
+            runUid: '123e4567-e89b-12d3-a456-426614174000',
+            commitOid: 'abc123',
+            branchName: 'main',
+            baseOid: 'def456',
+            status: 'SUCCESS',
+            createdAt: '2024-01-02T00:00:00Z',
+            updatedAt: '2024-01-02T00:10:00Z',
+            finishedAt: '2024-01-02T00:15:00Z',
+            summary: {
+              occurrences: [
+                {
+                  issue: {
+                    shortcode: 'JS-1001',
+                  },
+                  category: 'BUG_RISK',
+                  count: 1,
+                },
+              ],
+            },
+            repository: {
+              id: 'repo1',
+            },
+          },
+        ],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: 'start',
+          endCursor: 'end',
+        },
+        totalCount: 1,
+      };
+
+      // Mock issues response with pagination
+      const mockIssues = {
+        items: [
+          {
+            id: 'issue1',
+            shortcode: 'JS-1001',
+            title: 'Test Issue',
+            category: 'BUG_RISK',
+            severity: 'MAJOR',
+            status: 'OPEN',
+            issue_text: 'This is a test issue',
+            file_path: 'src/index.ts',
+            line_number: 42,
+            tags: ['security'],
+          },
+        ],
+        pageInfo: {
+          hasNextPage: true,
+          hasPreviousPage: true,
+          startCursor: 'issue-start',
+          endCursor: 'issue-end',
+        },
+        totalCount: 50,
+      };
+
+      // Track getIssues call parameters
+      let getIssuesParams: any = null;
+
+      DeepSourceClient.prototype.listRuns = () => Promise.resolve(mockRuns);
+      DeepSourceClient.prototype.getIssues = (projectKey, params) => {
+        getIssuesParams = params;
+        return Promise.resolve(mockIssues);
+      };
+
+      const params: DeepsourceRecentRunIssuesParams = {
+        projectKey: 'test-project',
+        branchName: 'main',
+        first: 25,
+        after: 'cursor123',
+      };
+
+      const result = await handleDeepsourceRecentRunIssues(params);
+      const parsedResult = JSON.parse((result.content[0] as TextContent).text);
+
+      // Verify pagination parameters were passed correctly
+      expect(getIssuesParams).toEqual({
+        first: 25,
+        after: 'cursor123',
+        last: undefined,
+        before: undefined,
+      });
+
+      // Verify pagination info is included in response
+      expect(parsedResult.pageInfo).toEqual(mockIssues.pageInfo);
+      expect(parsedResult.totalCount).toBe(50);
+
+      // Verify pagination help is included
+      expect(parsedResult.pagination_help).toBeDefined();
+      expect(parsedResult.pagination_help.forward_pagination).toContain('first: 25');
+      expect(parsedResult.pagination_help.forward_pagination).toContain('after: "issue-end"');
+      expect(parsedResult.pagination_help.page_status.has_next_page).toBe(true);
+      expect(parsedResult.pagination_help.page_status.has_previous_page).toBe(true);
+    });
   });
 
   describe('dependency_vulnerabilities tool', () => {

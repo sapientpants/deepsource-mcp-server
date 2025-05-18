@@ -192,13 +192,19 @@ The DeepSource MCP Server provides the following tools:
    * Parameters:
      * `runIdentifier` (required) - The runUid (UUID) or commitOid (commit hash) to identify the run
 
-5. `recent_run_issues`: Get issues from the most recent analysis run on a specific branch
+5. `recent_run_issues`: Get issues from the most recent analysis run on a specific branch with pagination support
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * `branchName` (required) - The branch name to get the most recent run from
+     * Pagination parameters:
+       * `first` (optional) - Number of issues to return (defaults to 10)
+       * `after` (optional) - Cursor for forward pagination
+       * `last` (optional) - Number of issues to return before a cursor (default: 10)
+       * `before` (optional) - Cursor for backward pagination
    * Returns:
      * Information about the most recent run on the branch
      * Current issues in the project (note: issues are repository-level, not run-specific)
+     * Pagination information including cursors and page status
      * Metadata about the run and branch
 
 6. `dependency_vulnerabilities`: Get dependency vulnerabilities from a DeepSource project
