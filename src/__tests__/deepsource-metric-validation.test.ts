@@ -1,11 +1,16 @@
-import { DeepSourceClient } from '../deepsource';
+import { DeepSourceClient, DeepSourceProject, MetricHistoryValue } from '../deepsource';
 import { MetricDirection } from '../types/metrics';
 
 describe('DeepSource Validation Utilities', () => {
   describe('validateProjectRepository', () => {
     // Access the private static method
     const validateProjectRepository = (DeepSourceClient as Record<string, unknown>)
-      .validateProjectRepository as Function;
+      .validateProjectRepository as (
+      // eslint-disable-next-line no-unused-vars
+      _project: DeepSourceProject,
+      // eslint-disable-next-line no-unused-vars
+      _projectKey: string
+    ) => void;
 
     it('should throw error when repository is missing', () => {
       const projectWithoutRepo = {
@@ -53,7 +58,10 @@ describe('DeepSource Validation Utilities', () => {
 
   describe('getVcsProvider', () => {
     // Access the private static method
-    const getVcsProvider = (DeepSourceClient as Record<string, unknown>).getVcsProvider as Function;
+    const getVcsProvider = (DeepSourceClient as Record<string, unknown>).getVcsProvider as (
+      // eslint-disable-next-line no-unused-vars
+      _provider: string
+    ) => string;
 
     it('should convert provider string to uppercase', () => {
       expect(getVcsProvider('github')).toBe('GITHUB');
@@ -72,8 +80,10 @@ describe('DeepSource Validation Utilities', () => {
 
   describe('isNotFoundError', () => {
     // Access the private static method
-    const isNotFoundError = (DeepSourceClient as Record<string, unknown>)
-      .isNotFoundError as Function;
+    const isNotFoundError = (DeepSourceClient as Record<string, unknown>).isNotFoundError as (
+      // eslint-disable-next-line no-unused-vars
+      _error: unknown
+    ) => boolean;
 
     it('should identify GraphQL not found errors', () => {
       const notFoundError = new Error('GraphQL error: Resource not found');
@@ -105,7 +115,12 @@ describe('DeepSource Validation Utilities', () => {
   describe('calculateTrendDirection', () => {
     // Access the private static method
     const calculateTrendDirection = (DeepSourceClient as Record<string, unknown>)
-      .calculateTrendDirection as Function;
+      .calculateTrendDirection as (
+      // eslint-disable-next-line no-unused-vars
+      _values: MetricHistoryValue[],
+      // eslint-disable-next-line no-unused-vars
+      _positiveDirection: string | MetricDirection
+    ) => boolean;
 
     it('should return true when not enough data points', () => {
       // One data point isn't enough to determine a trend
