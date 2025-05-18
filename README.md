@@ -192,7 +192,16 @@ The DeepSource MCP Server provides the following tools:
    * Parameters:
      * `runIdentifier` (required) - The runUid (UUID) or commitOid (commit hash) to identify the run
 
-5. `dependency_vulnerabilities`: Get dependency vulnerabilities from a DeepSource project
+5. `recent_run_issues`: Get issues from the most recent analysis run on a specific branch
+   * Parameters:
+     * `projectKey` (required) - The unique identifier for the DeepSource project
+     * `branchName` (required) - The branch name to get the most recent run from
+   * Returns:
+     * Information about the most recent run on the branch
+     * Current issues in the project (note: issues are repository-level, not run-specific)
+     * Metadata about the run and branch
+
+6. `dependency_vulnerabilities`: Get dependency vulnerabilities from a DeepSource project
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * Pagination parameters:
@@ -202,7 +211,7 @@ The DeepSource MCP Server provides the following tools:
        * `before` (optional) - Cursor for backward pagination
        * `last` (optional) - Number of items to return before the 'before' cursor (default: 10)
 
-6. `quality_metrics`: Get quality metrics from a DeepSource project with filtering
+7. `quality_metrics`: Get quality metrics from a DeepSource project with filtering
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * `shortcodeIn` (optional) - Filter metrics by specific shortcodes (e.g., ["LCV", "BCV"])
@@ -213,7 +222,7 @@ The DeepSource MCP Server provides the following tools:
      * Duplicate Code Percentage (DDP)
      * Each metric includes current values, thresholds, and pass/fail status
 
-7. `update_metric_threshold`: Update the threshold for a specific quality metric
+8. `update_metric_threshold`: Update the threshold for a specific quality metric
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * `repositoryId` (required) - The GraphQL repository ID
@@ -222,7 +231,7 @@ The DeepSource MCP Server provides the following tools:
      * `thresholdValue` (optional) - The new threshold value, or null to remove the threshold
    * Example: Set 80% line coverage threshold: metricShortcode="LCV", metricKey="AGGREGATE", thresholdValue=80
 
-8. `update_metric_setting`: Update the settings for a quality metric
+9. `update_metric_setting`: Update the settings for a quality metric
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * `repositoryId` (required) - The GraphQL repository ID
@@ -230,7 +239,7 @@ The DeepSource MCP Server provides the following tools:
      * `isReported` (required) - Whether the metric should be reported
      * `isThresholdEnforced` (required) - Whether the threshold should be enforced (can fail checks)
 
-9. `compliance_report`: Get security compliance reports from a DeepSource project
+10. `compliance_report`: Get security compliance reports from a DeepSource project
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * `reportType` (required) - The type of compliance report to fetch ([OWASP Top 10](https://owasp.org/www-project-top-ten/), [SANS Top 25](https://cwe.mitre.org/top25/), or [MISRA-C](https://www.misra.org.uk/))

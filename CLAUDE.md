@@ -65,11 +65,12 @@ The codebase is structured around two main components:
 1. **MCP Server Integration (src/index.ts)**: 
    - Sets up the Model Context Protocol server
    - Registers and implements tool handlers for DeepSource API integration
-   - Provides nine main tools for AI assistants: 
+   - Provides ten main tools for AI assistants: 
      - `projects` - List all available projects
      - `project_issues` - Get issues with filtering and pagination
      - `project_runs` - List analysis runs with filtering and pagination
      - `run` - Get details for a specific run
+     - `recent_run_issues` - Get issues from the most recent run on a specific branch
      - `dependency_vulnerabilities` - Get dependency vulnerabilities with pagination
      - `quality_metrics` - Get quality metrics with optional filtering
      - `update_metric_threshold` - Update metric thresholds

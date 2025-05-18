@@ -8,7 +8,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { DeepSourceClient, ReportType, ReportStatus } from './deepsource.js';
+import { DeepSourceClient, ReportType, ReportStatus, type DeepSourceRun } from './deepsource.js';
 import {
   MetricShortcode,
   MetricKey,
@@ -255,6 +255,17 @@ export interface DeepsourceRunParams {
 }
 
 /**
+ * Interface for parameters for fetching issues from the most recent run on a branch
+ * @public
+ */
+export interface DeepsourceRecentRunIssuesParams {
+  /** DeepSource project key to fetch issues for */
+  projectKey: string;
+  /** Branch name to get the most recent run from */
+  branchName: string;
+}
+
+/**
  * Interface for parameters used to fetch dependency vulnerabilities from a DeepSource project
  *
  * This interface supports both pagination approaches:
@@ -327,6 +338,100 @@ export async function handleDeepsourceRun({ runIdentifier }: DeepsourceRunParams
           finishedAt: run.finishedAt,
           summary: run.summary,
           repository: run.repository,
+        }),
+      },
+    ],
+  };
+}
+
+/**
+ * Fetches issues from the most recent analysis run on a specific branch
+ * @param params Parameters for fetching issues, including project key and branch name
+ * @returns A response containing the issues from the most recent run on the branch
+ * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
+ * @throws Error if no runs are found for the specified branch
+ * @public
+ */
+export async function handleDeepsourceRecentRunIssues({
+  projectKey,
+  branchName,
+}: DeepsourceRecentRunIssuesParams) {
+  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  /* istanbul ignore if */
+  if (!apiKey) {
+    throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
+  }
+
+  const client = new DeepSourceClient(apiKey);
+
+  // Find the most recent run for the specified branch by paginating through all runs
+  let mostRecentRun: DeepSourceRun | null = null;
+  let cursor: string | undefined = undefined;
+  let hasNextPage = true;
+
+  while (hasNextPage) {
+    const runs = await client.listRuns(projectKey, {
+      first: 50,
+      after: cursor,
+    });
+
+    // Check each run in this page
+    for (const run of runs.items) {
+      if (run.branchName === branchName) {
+        // If this is the first matching run or it's more recent than our current most recent
+        if (!mostRecentRun || new Date(run.createdAt) > new Date(mostRecentRun.createdAt)) {
+          mostRecentRun = run;
+        }
+      }
+    }
+
+    // Update pagination info
+    hasNextPage = runs.pageInfo.hasNextPage;
+    cursor = runs.pageInfo.endCursor;
+  }
+
+  if (!mostRecentRun) {
+    throw new Error(`No runs found for branch '${branchName}' in project '${projectKey}'`);
+  }
+
+  // Now get issues from the project (these are at the repository level, not run-specific)
+  const issues = await client.getIssues(projectKey, {
+    first: 100,
+  });
+
+  return {
+    content: [
+      {
+        type: 'text' as const,
+        text: JSON.stringify({
+          run: {
+            runUid: mostRecentRun.runUid,
+            commitOid: mostRecentRun.commitOid,
+            branchName: mostRecentRun.branchName,
+            status: mostRecentRun.status,
+            createdAt: mostRecentRun.createdAt,
+            summary: mostRecentRun.summary,
+          },
+          issues: issues.items.map((issue) => ({
+            id: issue.id,
+            title: issue.title,
+            shortcode: issue.shortcode,
+            category: issue.category,
+            severity: issue.severity,
+            status: issue.status,
+            issue_text: issue.issue_text,
+            file_path: issue.file_path,
+            line_number: issue.line_number,
+            tags: issue.tags,
+          })),
+          totalCount: issues.totalCount,
+          metadata: {
+            branch: branchName,
+            projectKey: projectKey,
+            runDate: mostRecentRun.createdAt,
+            description: `Issues from the most recent analysis run on branch '${branchName}'`,
+            note: 'Issues are at the repository level; DeepSource API does not provide run-specific issue filtering',
+          },
         }),
       },
     ],
@@ -1105,6 +1210,16 @@ mcpServer.tool(
       .describe('The runUid (UUID) or commitOid (commit hash) to identify the run'),
   },
   handleDeepsourceRun
+);
+
+mcpServer.tool(
+  'recent_run_issues',
+  'Get issues from the most recent analysis run on a specific branch. This is useful for checking what issues were found in the latest analysis.',
+  {
+    projectKey: z.string().describe('The unique identifier for the DeepSource project'),
+    branchName: z.string().describe('The branch name to get the most recent run from'),
+  },
+  handleDeepsourceRecentRunIssues
 );
 
 mcpServer.tool(
