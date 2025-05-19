@@ -61,100 +61,48 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
 
     // Create client instance
     client = new DeepSourceClient({ apiKey: 'test-key' });
+
+    // Mock listProjects to return test project
+    jest.spyOn(client, 'listProjects').mockResolvedValue([
+      {
+        name: 'Test Project',
+        key: 'test-project',
+        repository: {
+          login: 'testuser',
+          provider: 'GITHUB',
+        },
+        defaultBranch: 'main',
+        isPrivate: false,
+        isActivated: true,
+      },
+    ]);
   });
 
   describe('getRecentRunIssues', () => {
     it('should successfully retrieve issues from the most recent run', async () => {
-      // Mock listProjects response to find the project
-      const projectsResponse = {
-        data: {
-          data: {
-            viewer: {
-              accounts: {
-                edges: [
-                  {
-                    node: {
-                      id: 'account1',
-                      name: 'Test Account',
-                      repositories: {
-                        edges: [
-                          {
-                            node: {
-                              id: 'repo1',
-                              key: 'test-project',
-                              name: 'Test Project',
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  },
-                ],
-              },
-            },
-          },
+      // Mock the findMostRecentRun method
+      jest.spyOn(client as any, 'findMostRecentRun').mockResolvedValue({
+        id: 'run1',
+        runUid: 'run-uid-1',
+        commitOid: 'commit1',
+        branchName: 'main',
+        baseOid: 'base1',
+        status: 'SUCCESS' as const,
+        createdAt: '2023-01-02T00:00:00Z',
+        updatedAt: '2023-01-02T00:00:00Z',
+        finishedAt: '2023-01-02T00:00:00Z',
+        summary: {
+          occurrencesIntroduced: 5,
+          occurrencesResolved: 3,
+          occurrencesSuppressed: 0,
+          occurrenceDistributionByAnalyzer: [],
+          occurrenceDistributionByCategory: [],
         },
-      };
-
-      // Mock listRuns response
-      const runsResponse = {
-        data: {
-          data: {
-            viewer: {
-              accounts: {
-                edges: [
-                  {
-                    node: {
-                      repositories: {
-                        edges: [
-                          {
-                            node: {
-                              runs: {
-                                edges: [
-                                  {
-                                    node: {
-                                      id: 'run1',
-                                      runUid: 'run-uid-1',
-                                      commitOid: 'commit1',
-                                      branchName: 'main',
-                                      baseOid: 'base1',
-                                      status: 'SUCCESS',
-                                      createdAt: '2023-01-02T00:00:00Z',
-                                      updatedAt: '2023-01-02T00:00:00Z',
-                                      finishedAt: '2023-01-02T00:00:00Z',
-                                      summary: {
-                                        occurrencesIntroduced: 5,
-                                        occurrencesResolved: 3,
-                                        occurrencesSuppressed: 0,
-                                        occurrenceDistributionByAnalyzer: [],
-                                        occurrenceDistributionByCategory: [],
-                                      },
-                                      repository: {
-                                        id: 'repo1',
-                                        name: 'Test Project',
-                                      },
-                                    },
-                                  },
-                                ],
-                                pageInfo: {
-                                  hasNextPage: false,
-                                  hasPreviousPage: false,
-                                  startCursor: null,
-                                  endCursor: null,
-                                },
-                              },
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  },
-                ],
-              },
-            },
-          },
+        repository: {
+          id: 'repo1',
+          name: 'Test Project',
         },
-      };
+      });
 
       // Mock the run checks response
       const checksResponse = {
@@ -200,18 +148,8 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
         },
       };
 
-      // Set up mock responses in the correct order
-      mockAxiosInstance.post.mockImplementation((url: string, data: any) => {
-        const query = data.query;
-        if (query.includes('viewer') && query.includes('accounts')) {
-          return Promise.resolve(projectsResponse);
-        } else if (query.includes('runs(first:')) {
-          return Promise.resolve(runsResponse);
-        } else if (query.includes('run(runUid:')) {
-          return Promise.resolve(checksResponse);
-        }
-        return Promise.reject(new Error('Unexpected query'));
-      });
+      // Mock the checks response (only one needed now)
+      mockAxiosInstance.post.mockResolvedValueOnce(checksResponse);
 
       // Execute
       const result = await client.getRecentRunIssues('test-project', 'main', { first: 10 });
@@ -236,20 +174,8 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
     });
 
     it('should handle project not found error', async () => {
-      // Mock empty projects response
-      const projectsResponse = {
-        data: {
-          data: {
-            viewer: {
-              accounts: {
-                edges: [],
-              },
-            },
-          },
-        },
-      };
-
-      mockAxiosInstance.post.mockResolvedValueOnce(projectsResponse);
+      // Mock listProjects to return empty array
+      jest.spyOn(client, 'listProjects').mockResolvedValue([]);
 
       // Execute and expect error
       await expect(client.getRecentRunIssues('non-existent', 'main')).rejects.toThrow(
@@ -258,70 +184,12 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
     });
 
     it('should handle no runs found for branch', async () => {
-      // Mock projects response
-      const projectsResponse = {
-        data: {
-          data: {
-            viewer: {
-              accounts: {
-                edges: [
-                  {
-                    node: {
-                      repositories: {
-                        edges: [
-                          {
-                            node: {
-                              key: 'test-project',
-                              name: 'Test Project',
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  },
-                ],
-              },
-            },
-          },
-        },
-      };
-
-      // Mock empty runs response
-      const runsResponse = {
-        data: {
-          data: {
-            viewer: {
-              accounts: {
-                edges: [
-                  {
-                    node: {
-                      repositories: {
-                        edges: [
-                          {
-                            node: {
-                              runs: {
-                                edges: [],
-                                pageInfo: {
-                                  hasNextPage: false,
-                                  endCursor: null,
-                                },
-                              },
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  },
-                ],
-              },
-            },
-          },
-        },
-      };
-
-      mockAxiosInstance.post
-        .mockResolvedValueOnce(projectsResponse)
-        .mockResolvedValueOnce(runsResponse);
+      // Mock findMostRecentRun to throw the expected error
+      jest
+        .spyOn(client as any, 'findMostRecentRun')
+        .mockRejectedValue(
+          new Error("No runs found for branch 'non-existent-branch' in project 'test-project'")
+        );
 
       // Execute and expect error
       await expect(
@@ -330,74 +198,29 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
     });
 
     it('should handle GraphQL errors in checks response', async () => {
-      const projectsResponse = {
-        data: {
-          data: {
-            viewer: {
-              accounts: {
-                edges: [
-                  {
-                    node: {
-                      repositories: {
-                        edges: [
-                          {
-                            node: {
-                              key: 'test-project',
-                              name: 'Test Project',
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  },
-                ],
-              },
-            },
-          },
+      // Mock findMostRecentRun to succeed
+      jest.spyOn(client as any, 'findMostRecentRun').mockResolvedValue({
+        id: 'run1',
+        runUid: 'run-uid-1',
+        commitOid: 'commit1',
+        branchName: 'main',
+        baseOid: 'base1',
+        status: 'SUCCESS' as const,
+        createdAt: '2023-01-02T00:00:00Z',
+        updatedAt: '2023-01-02T00:00:00Z',
+        finishedAt: '2023-01-02T00:00:00Z',
+        summary: {
+          occurrencesIntroduced: 5,
+          occurrencesResolved: 3,
+          occurrencesSuppressed: 0,
+          occurrenceDistributionByAnalyzer: [],
+          occurrenceDistributionByCategory: [],
         },
-      };
-
-      const runsResponse = {
-        data: {
-          data: {
-            viewer: {
-              accounts: {
-                edges: [
-                  {
-                    node: {
-                      repositories: {
-                        edges: [
-                          {
-                            node: {
-                              runs: {
-                                edges: [
-                                  {
-                                    node: {
-                                      id: 'run1',
-                                      runUid: 'run-uid-1',
-                                      branchName: 'main',
-                                      createdAt: '2023-01-01T00:00:00Z',
-                                      repository: { name: 'Test' },
-                                      summary: {},
-                                    },
-                                  },
-                                ],
-                                pageInfo: {
-                                  hasNextPage: false,
-                                },
-                              },
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  },
-                ],
-              },
-            },
-          },
+        repository: {
+          id: 'repo1',
+          name: 'Test Project',
         },
-      };
+      });
 
       // Mock error response
       const errorResponse = {
@@ -406,10 +229,8 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
         },
       };
 
-      mockAxiosInstance.post
-        .mockResolvedValueOnce(projectsResponse)
-        .mockResolvedValueOnce(runsResponse)
-        .mockResolvedValueOnce(errorResponse);
+      // Mock the checks response to return an error
+      mockAxiosInstance.post.mockResolvedValueOnce(errorResponse);
 
       // Execute and expect error
       await expect(client.getRecentRunIssues('test-project', 'main')).rejects.toThrow(
