@@ -27,6 +27,15 @@ class TestableDeepSourceClient extends DeepSourceClient {
     // @ts-expect-error - Accessing private method for testing
     return DeepSourceClient.getReportField(reportType);
   }
+
+  static testIsAxiosErrorWithCriteria(
+    error: unknown,
+    statusCode?: number,
+    errorCode?: string
+  ): boolean {
+    // @ts-expect-error - Accessing private method for testing
+    return DeepSourceClient.isAxiosErrorWithCriteria(error, statusCode, errorCode);
+  }
 }
 
 describe('DeepSource Internal Utilities', () => {
@@ -227,6 +236,90 @@ describe('DeepSource Internal Utilities', () => {
     it('should return the correct field name for other report types', () => {
       const result = TestableDeepSourceClient.testGetReportField('CODE_COVERAGE');
       expect(result).toBe('codeCoverage');
+    });
+  });
+
+  describe('isAxiosErrorWithCriteria', () => {
+    it('should return false for null error', () => {
+      const result = TestableDeepSourceClient.testIsAxiosErrorWithCriteria(null);
+      expect(result).toBe(false);
+    });
+
+    it('should return false for undefined error', () => {
+      const result = TestableDeepSourceClient.testIsAxiosErrorWithCriteria(undefined);
+      expect(result).toBe(false);
+    });
+
+    it('should return false for non-object errors', () => {
+      expect(TestableDeepSourceClient.testIsAxiosErrorWithCriteria('string error')).toBe(false);
+      expect(TestableDeepSourceClient.testIsAxiosErrorWithCriteria(123)).toBe(false);
+      expect(TestableDeepSourceClient.testIsAxiosErrorWithCriteria(true)).toBe(false);
+    });
+
+    it('should return false for empty object', () => {
+      const result = TestableDeepSourceClient.testIsAxiosErrorWithCriteria({});
+      expect(result).toBe(false);
+    });
+
+    it('should return true for axios error with isAxiosError property', () => {
+      const axiosError = {
+        isAxiosError: true,
+        response: {
+          status: 400,
+          data: {},
+        },
+        code: 'ECONNREFUSED',
+      };
+      const result = TestableDeepSourceClient.testIsAxiosErrorWithCriteria(axiosError);
+      expect(result).toBe(true);
+    });
+
+    it('should filter by status code when provided', () => {
+      const axiosError = {
+        isAxiosError: true,
+        response: {
+          status: 404,
+          data: {},
+        },
+      };
+
+      expect(TestableDeepSourceClient.testIsAxiosErrorWithCriteria(axiosError, 404)).toBe(true);
+      expect(TestableDeepSourceClient.testIsAxiosErrorWithCriteria(axiosError, 500)).toBe(false);
+    });
+
+    it('should filter by error code when provided', () => {
+      const axiosError = {
+        isAxiosError: true,
+        code: 'ECONNREFUSED',
+      };
+
+      expect(
+        TestableDeepSourceClient.testIsAxiosErrorWithCriteria(axiosError, undefined, 'ECONNREFUSED')
+      ).toBe(true);
+      expect(
+        TestableDeepSourceClient.testIsAxiosErrorWithCriteria(axiosError, undefined, 'TIMEOUT')
+      ).toBe(false);
+    });
+
+    it('should filter by both status code and error code when provided', () => {
+      const axiosError = {
+        isAxiosError: true,
+        response: {
+          status: 400,
+          data: {},
+        },
+        code: 'ECONNREFUSED',
+      };
+
+      expect(
+        TestableDeepSourceClient.testIsAxiosErrorWithCriteria(axiosError, 400, 'ECONNREFUSED')
+      ).toBe(true);
+      expect(
+        TestableDeepSourceClient.testIsAxiosErrorWithCriteria(axiosError, 400, 'TIMEOUT')
+      ).toBe(false);
+      expect(
+        TestableDeepSourceClient.testIsAxiosErrorWithCriteria(axiosError, 500, 'ECONNREFUSED')
+      ).toBe(false);
     });
   });
 });
