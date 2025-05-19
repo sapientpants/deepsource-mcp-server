@@ -24,13 +24,13 @@ All issues are of type "Lines not covered in tests" - A source line is considere
 - [x] **Line 1324**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
 - [x] **Line 1322**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
 - [x] **Line 1320**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
-- [ ] **Line 613**: Add test coverage for this line
-- [ ] **Line 598**: Add test coverage for this line
-- [ ] **Line 595**: Add test coverage for this line
-- [ ] **Line 590**: Add test coverage for this line
-- [ ] **Line 583**: Add test coverage for this line
-- [ ] **Line 581**: Add test coverage for this line
-- [ ] **Line 574**: Add test coverage for this line
+- [x] **Line 613**: Add test coverage for this line (Fixed: added test for processRunChecksResponse method)
+- [x] **Line 598**: Add test coverage for this line (Fixed: added test for processRunChecksResponse method)
+- [x] **Line 595**: Add test coverage for this line (Fixed: added test for processRunChecksResponse method)
+- [x] **Line 590**: Add test coverage for this line (Fixed: added test for processRunChecksResponse method)
+- [x] **Line 583**: Add test coverage for this line (Fixed: added test for processRunChecksResponse method)
+- [x] **Line 581**: Add test coverage for this line (Fixed: added test for processRunChecksResponse method)
+- [x] **Line 574**: Add test coverage for this line (Fixed: added test for processRunChecksResponse method)
 
 ## Summary
 - **Total issues introduced**: 18
