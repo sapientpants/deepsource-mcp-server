@@ -324,6 +324,37 @@ describe('Logger', () => {
       // mkdirSync should have been called during initialization
       expect(mockMkdirSync).toHaveBeenCalled();
     });
+
+    it('should create directory when it does not exist', async () => {
+      process.env.LOG_FILE = '/tmp/test.log';
+      process.env.LOG_LEVEL = 'DEBUG';
+
+      // Clear the require cache for logger to reset module state
+      jest.resetModules();
+
+      // Mock the fs module to simulate a directory that doesn't exist
+      jest.unstable_mockModule('fs', () => ({
+        appendFileSync: jest.fn(),
+        writeFileSync: jest.fn(),
+        existsSync: jest.fn(() => false), // Directory doesn't exist
+        mkdirSync: jest.fn(), // Will be called to create the directory
+      }));
+
+      // Re-import the modules after mocking
+      const loggerModule = await import('../utils/logger.js');
+      const { Logger } = loggerModule;
+      const { mkdirSync: mockMkdirSync, writeFileSync: mockWriteFileSync } = await import('fs');
+
+      const logger = new Logger('TestContext');
+
+      // Trigger initialization
+      logger.debug('Test message');
+
+      // mkdirSync should have been called to create the directory
+      expect(mockMkdirSync).toHaveBeenCalledWith('/tmp', { recursive: true });
+      // writeFileSync should have been called to create the log file
+      expect(mockWriteFileSync).toHaveBeenCalledWith('/tmp/test.log', '');
+    });
   });
 
   describe('error string fallback', () => {
