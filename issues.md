@@ -8,103 +8,113 @@ Total Issues: 10 (Introduced: 10, Resolved: 12)
 
 ## Todo List for Open Issues
 
-### 1. Use template literals instead of string concatenation (JS-0246)
+### 1. ~~Use template literals instead of string concatenation (JS-0246)~~ ✅ FIXED
 **Category:** ANTI_PATTERN  
 **Severity:** MINOR  
 **File:** `src/utils/logger.ts`  
 **Line:** 85  
 
-**TODO:** Replace string concatenation with template literal in logger.ts:85. Change from using `+` operator to template literal syntax `${variable}`.
+**~~TODO: Replace string concatenation with template literal in logger.ts:85. Change from using `+` operator to template literal syntax `${variable}`.~~**
+**FIXED:** Replaced string concatenation `message + '\n'` with template literal `${message}\n` in commit b012986.
 
 ---
 
-### 2. Add documentation comments for functions and classes (JS-D1001)
+### 2. ~~Add documentation comments for functions and classes (JS-D1001)~~ ✅ FIXED
 **Category:** DOCUMENTATION  
 **Severity:** MINOR  
 **File:** `src/utils/logger.ts`  
 **Line:** 54  
 
-**TODO:** Add JSDoc documentation comment for the function at logger.ts:54. Include parameter descriptions, return type, and function purpose.
+**~~TODO: Add JSDoc documentation comment for the function at logger.ts:54. Include parameter descriptions, return type, and function purpose.~~**
+**FIXED:** Added proper JSDoc documentation for initializeLogFile function with description, @private tag, and @returns annotation in commit 2927a62.
 
 ---
 
-### 3. Use shorthand property syntax for object literals (JS-0240)
+### 3. ~~Use shorthand property syntax for object literals (JS-0240)~~ ✅ FIXED
 **Category:** ANTI_PATTERN  
 **Severity:** MINOR  
 **File:** `src/index.ts`  
 **Line:** 438  
 
-**TODO:** Convert object method definition to shorthand syntax at index.ts:438. Change from `property: function() {}` to `property() {}`.
+**~~TODO: Convert object method definition to shorthand syntax at index.ts:438. Change from `property: function() {}` to `property() {}`.~~**
+**FIXED:** Used shorthand property syntax by replacing `projectKey: projectKey` with just `projectKey` in commit 4d1fb8c.
 
 ---
 
-### 4. Remove unnecessary undefined initialization (JS-0126)
+### 4. ~~Remove unnecessary undefined initialization (JS-0126)~~ ✅ FIXED
 **Category:** ANTI_PATTERN  
 **Severity:** MINOR  
 **File:** `src/deepsource.ts`  
 **Line:** 1253  
 
-**TODO:** Remove explicit `undefined` initialization at deepsource.ts:1253. Variables are automatically initialized to `undefined` when declared without a value.
+**~~TODO: Remove explicit `undefined` initialization at deepsource.ts:1253. Variables are automatically initialized to `undefined` when declared without a value.~~**
+**FIXED:** Removed explicit undefined initialization from `cursor` variable in commit ba12361.
 
 ---
 
-### 5. Reduce cyclomatic complexity (JS-R1005)
+### 5. ~~Reduce cyclomatic complexity (JS-R1005)~~ ✅ FIXED
 **Category:** ANTI_PATTERN  
 **Severity:** MINOR  
 **File:** `src/deepsource.ts`  
 **Line:** 1231  
 
-**TODO:** Refactor function with high cyclomatic complexity at deepsource.ts:1231. Consider breaking it into smaller functions, using lookup tables, or simplifying conditional logic.
+**~~TODO: Refactor function with high cyclomatic complexity at deepsource.ts:1231. Consider breaking it into smaller functions, using lookup tables, or simplifying conditional logic.~~**
+**FIXED:** Extracted helper methods `findMostRecentRun` and `processRunChecksResponse` to reduce complexity of `getRecentRunIssues` method in commit 607c729.
 
 ---
 
-### 6. Remove unused variables (JS-0356) - test file #1
+### 6. ~~Remove unused variables (JS-0356) - test file #1~~ ✅ FIXED
 **Category:** PERFORMANCE  
 **Severity:** MAJOR  
 **File:** `src/__tests__/logger.test.ts`  
 **Line:** 25  
 
-**TODO:** Remove or use the unused variable at logger.test.ts:25. If intentionally unused, prefix with underscore `_`.
+**~~TODO: Remove or use the unused variable at logger.test.ts:25. If intentionally unused, prefix with underscore `_`.~~**
+**FIXED:** Commented out unused variables in commit b012986.
 
 ---
 
-### 7. Remove unused variables (JS-0356) - test file #2
+### 7. ~~Remove unused variables (JS-0356) - test file #2~~ ✅ FIXED
 **Category:** PERFORMANCE  
 **Severity:** MAJOR  
 **File:** `src/__tests__/logger.test.ts`  
 **Line:** 24  
 
-**TODO:** Remove or use the unused variable at logger.test.ts:24. If intentionally unused, prefix with underscore `_`.
+**~~TODO: Remove or use the unused variable at logger.test.ts:24. If intentionally unused, prefix with underscore `_`.~~**
+**FIXED:** Commented out unused variables in commit b012986.
 
 ---
 
-### 8. Remove unused variables (JS-0356) - test file #3
+### 8. ~~Remove unused variables (JS-0356) - test file #3~~ ✅ FIXED
 **Category:** PERFORMANCE  
 **Severity:** MAJOR  
 **File:** `src/__tests__/logger.test.ts`  
 **Line:** 23  
 
-**TODO:** Remove or use the unused variable at logger.test.ts:23. If intentionally unused, prefix with underscore `_`.
+**~~TODO: Remove or use the unused variable at logger.test.ts:23. If intentionally unused, prefix with underscore `_`.~~**
+**FIXED:** Commented out unused variables in commit b012986.
 
 ---
 
-### 9. Remove unused variables (JS-0356) - test file #4
+### 9. ~~Remove unused variables (JS-0356) - test file #4~~ ✅ FIXED
 **Category:** PERFORMANCE  
 **Severity:** MAJOR  
 **File:** `src/__tests__/logger.test.ts`  
 **Line:** 6  
 
-**TODO:** Remove or use the unused variable at logger.test.ts:6. If intentionally unused, prefix with underscore `_`.
+**~~TODO: Remove or use the unused variable at logger.test.ts:6. If intentionally unused, prefix with underscore `_`.~~**
+**FIXED:** Removed unused import by commenting it out in commit b012986.
 
 ---
 
-### 10. Avoid wildcard imports (JS-C1003)
+### 10. ~~Avoid wildcard imports (JS-C1003)~~ ✅ FIXED
 **Category:** ANTI_PATTERN  
 **Severity:** MINOR  
 **File:** `src/__tests__/logger.test.ts`  
 **Line:** 6  
 
-**TODO:** Replace wildcard import with named imports at logger.test.ts:6. Use specific imports like `import { specificFunction } from 'module'` or add skipcq comment if library doesn't support ES modules.
+**~~TODO: Replace wildcard import with named imports at logger.test.ts:6. Use specific imports like `import { specificFunction } from 'module'` or add skipcq comment if library doesn't support ES modules.~~**
+**FIXED:** Commented out the wildcard import as it was not being used directly in commit b012986.
 
 ## Summary by Category
 
