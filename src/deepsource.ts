@@ -1446,9 +1446,9 @@ export class DeepSourceClient {
 
       // Now fetch all occurrences for each check
       const getOccurrencesQuery = `
-        query($runId: UUID!, $checkId: ID!, $first: Int, $after: String) {
-          run(runUid: $runId) {
-            check(id: $checkId) {
+        query($checkId: ID!, $first: Int, $after: String) {
+          node(id: $checkId) {
+            ... on Check {
               id
               occurrences(first: $first, after: $after) {
                 pageInfo {
@@ -1487,7 +1487,6 @@ export class DeepSourceClient {
           const occurrencesResponse = await this.client.post('', {
             query: getOccurrencesQuery.trim(),
             variables: {
-              runId: mostRecentRun.runUid,
               checkId: check.id,
               first: occurrencesPerPage,
               after: occurrencesCursor,
@@ -1501,11 +1500,11 @@ export class DeepSourceClient {
             throw new Error(`GraphQL Errors: ${errorMessage}`);
           }
 
-          // Now we get the check directly from the response
-          const checkData = occurrencesResponse.data.data?.run?.check;
+          // Now we get the check directly from the node
+          const nodeData = occurrencesResponse.data.data?.node;
 
-          if (checkData) {
-            const occurrences = checkData.occurrences?.edges ?? [];
+          if (nodeData) {
+            const occurrences = nodeData.occurrences?.edges ?? [];
 
             for (const { node: occurrence } of occurrences) {
               if (!occurrence || !occurrence.issue) continue;
@@ -1524,7 +1523,7 @@ export class DeepSourceClient {
               });
             }
 
-            const occurrencesPageInfo = checkData.occurrences?.pageInfo;
+            const occurrencesPageInfo = nodeData.occurrences?.pageInfo;
             hasMoreOccurrences = occurrencesPageInfo?.hasNextPage || false;
             occurrencesCursor = occurrencesPageInfo?.endCursor;
           } else {

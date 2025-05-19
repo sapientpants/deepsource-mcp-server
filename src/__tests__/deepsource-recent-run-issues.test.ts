@@ -134,33 +134,31 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
       const occurrencesResponse = {
         data: {
           data: {
-            run: {
-              check: {
-                id: 'check1',
-                occurrences: {
-                  edges: [
-                    {
-                      node: {
-                        id: 'occ1',
-                        issue: {
-                          shortcode: 'JS-0001',
-                          title: 'Test Issue',
-                          category: 'BUG',
-                          severity: 'HIGH',
-                          description: 'Test description',
-                          tags: ['test'],
-                        },
-                        path: 'test.js',
-                        beginLine: 10,
+            node: {
+              id: 'check1',
+              occurrences: {
+                edges: [
+                  {
+                    node: {
+                      id: 'occ1',
+                      issue: {
+                        shortcode: 'JS-0001',
+                        title: 'Test Issue',
+                        category: 'BUG',
+                        severity: 'HIGH',
+                        description: 'Test description',
+                        tags: ['test'],
                       },
+                      path: 'test.js',
+                      beginLine: 10,
                     },
-                  ],
-                  pageInfo: {
-                    hasNextPage: false,
-                    endCursor: null,
                   },
-                  totalCount: 1,
+                ],
+                pageInfo: {
+                  hasNextPage: false,
+                  endCursor: null,
                 },
+                totalCount: 1,
               },
             },
           },

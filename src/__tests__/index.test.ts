@@ -923,7 +923,7 @@ describe('MCP server implementation', () => {
       // The new implementation handles pagination internally, so we don't need to verify these calls
     });
 
-    it('supports pagination parameters for issues', async () => {
+    it('retrieves all issues without pagination parameters', async () => {
       // Mock runs response
       const mockRuns = {
         items: [
@@ -987,11 +987,11 @@ describe('MCP server implementation', () => {
         totalCount: 50,
       };
 
-      // Track getRecentRunIssues call parameters
-      let getRecentRunIssuesParams: PaginationParams | null = null;
+      // Mock to verify getRecentRunIssues is called correctly
+      let getRecentRunIssuesCalledWith: { projectKey: string; branchName: string } | null = null;
 
-      DeepSourceClient.prototype.getRecentRunIssues = (projectKey, branchName, params) => {
-        getRecentRunIssuesParams = params;
+      DeepSourceClient.prototype.getRecentRunIssues = (projectKey, branchName) => {
+        getRecentRunIssuesCalledWith = { projectKey, branchName };
         return Promise.resolve({
           ...mockIssues,
           run: mockRuns.items[0],
@@ -1001,8 +1001,6 @@ describe('MCP server implementation', () => {
       const params: DeepsourceRecentRunIssuesParams = {
         projectKey: 'test-project',
         branchName: 'main',
-        first: 25,
-        after: 'cursor123',
       };
 
       const result = await handleDeepsourceRecentRunIssues(params);
@@ -1011,24 +1009,23 @@ describe('MCP server implementation', () => {
         unknown
       >;
 
-      // Verify pagination parameters were passed correctly
-      expect(getRecentRunIssuesParams).toEqual({
-        first: 25,
-        after: 'cursor123',
-        last: undefined,
-        before: undefined,
+      // Verify method was called with correct parameters
+      expect(getRecentRunIssuesCalledWith).toEqual({
+        projectKey: 'test-project',
+        branchName: 'main',
       });
 
-      // Verify pagination info is included in response
-      expect(parsedResult.pageInfo).toEqual(mockIssues.pageInfo);
+      // Verify response includes all issues
       expect(parsedResult.totalCount).toBe(50);
-
-      // Verify pagination help is included
-      expect(parsedResult.pagination_help).toBeDefined();
-      expect(parsedResult.pagination_help.forward_pagination).toContain('first: 25');
-      expect(parsedResult.pagination_help.forward_pagination).toContain('after: "issue-end"');
-      expect(parsedResult.pagination_help.page_status.has_next_page).toBe(true);
-      expect(parsedResult.pagination_help.page_status.has_previous_page).toBe(true);
+      expect(parsedResult.pageInfo).toEqual(mockIssues.pageInfo);
+      expect(parsedResult.metadata).toEqual({
+        branch: 'main',
+        projectKey: 'test-project',
+        runDate: '2024-01-02T00:00:00Z',
+        description: "All issues from the most recent analysis run on branch 'main'",
+        note: 'These are all run-specific issues from the checks performed during the analysis',
+        totalIssues: 50,
+      });
     });
   });
 
