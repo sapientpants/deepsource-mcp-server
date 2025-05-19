@@ -1351,6 +1351,199 @@ export class DeepSourceClient {
   }
 
   /**
+   * Validates that a project exists
+   * @private
+   */
+  private async validateProject(projectKey: string): Promise<void> {
+    const projects = await this.listProjects();
+    const project = projects.find((p) => p.key === projectKey);
+
+    if (!project) {
+      this.logger.error(`Project with key ${projectKey} not found`);
+      throw new Error(`Project with key ${projectKey} not found`);
+    }
+  }
+
+  /**
+   * GraphQL query to get checks for a run
+   * @private
+   */
+  private static getChecksQuery = `
+    query($runId: UUID!, $first: Int, $after: String) {
+      run(runUid: $runId) {
+        checks(first: $first, after: $after) {
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+          edges {
+            node {
+              id
+              analyzer {
+                shortcode
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  /**
+   * GraphQL query to get occurrences for a check
+   * @private
+   */
+  private static getOccurrencesQuery = `
+    query($checkId: ID!, $first: Int, $after: String) {
+      node(id: $checkId) {
+        ... on Check {
+          id
+          occurrences(first: $first, after: $after) {
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+            totalCount
+            edges {
+              node {
+                id
+                issue {
+                  shortcode
+                  title
+                  category
+                  severity
+                  description
+                  tags
+                }
+                path
+                beginLine
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  /**
+   * Fetches all checks for a run
+   * @private
+   */
+  private async fetchAllChecks(
+    runId: string
+  ): Promise<Array<{ id: string; analyzerShortcode: string }>> {
+    const allChecks: Array<{ id: string; analyzerShortcode: string }> = [];
+    const checksPerPage = 50;
+    let checksCursor: string | undefined;
+    let hasMoreChecks = true;
+
+    while (hasMoreChecks) {
+      const checksResponse = await this.client.post('', {
+        query: DeepSourceClient.getChecksQuery.trim(),
+        variables: {
+          runId,
+          first: checksPerPage,
+          after: checksCursor,
+        },
+      });
+
+      if (checksResponse.data.errors) {
+        const errorMessage = DeepSourceClient.extractErrorMessages(checksResponse.data.errors);
+        throw new Error(`GraphQL Errors: ${errorMessage}`);
+      }
+
+      const checks = checksResponse.data.data?.run?.checks?.edges ?? [];
+      for (const { node: check } of checks) {
+        allChecks.push({
+          id: check.id,
+          analyzerShortcode: check.analyzer?.shortcode || 'unknown',
+        });
+      }
+
+      const checksPageInfo = checksResponse.data.data?.run?.checks?.pageInfo;
+      hasMoreChecks = checksPageInfo?.hasNextPage || false;
+      checksCursor = checksPageInfo?.endCursor;
+    }
+
+    return allChecks;
+  }
+
+  /**
+   * Creates a DeepSourceIssue from an occurrence node
+   * @private
+   */
+  private static createIssueFromOccurrence(
+    occurrence: Record<string, unknown>
+  ): DeepSourceIssue | null {
+    if (!occurrence || !occurrence.issue) return null;
+
+    const issue = occurrence.issue as Record<string, unknown>;
+
+    return {
+      id: (occurrence.id as string) ?? 'unknown',
+      shortcode: (issue.shortcode as string) ?? '',
+      title: (issue.title as string) ?? 'Untitled Issue',
+      category: (issue.category as string) ?? 'UNKNOWN',
+      severity: (issue.severity as string) ?? 'UNKNOWN',
+      status: 'OPEN',
+      issue_text: (issue.description as string) ?? '',
+      file_path: (occurrence.path as string) ?? 'N/A',
+      line_number: (occurrence.beginLine as number) ?? 0,
+      tags: (issue.tags as string[]) ?? [],
+    };
+  }
+
+  /**
+   * Fetches all occurrences for a single check
+   * @private
+   */
+  private async fetchOccurrencesForCheck(checkId: string): Promise<DeepSourceIssue[]> {
+    const issues: DeepSourceIssue[] = [];
+    const occurrencesPerPage = 100;
+    let occurrencesCursor: string | undefined;
+    let hasMoreOccurrences = true;
+
+    while (hasMoreOccurrences) {
+      const occurrencesResponse = await this.client.post('', {
+        query: DeepSourceClient.getOccurrencesQuery.trim(),
+        variables: {
+          checkId,
+          first: occurrencesPerPage,
+          after: occurrencesCursor,
+        },
+      });
+
+      if (occurrencesResponse.data.errors) {
+        const errorMessage = DeepSourceClient.extractErrorMessages(occurrencesResponse.data.errors);
+        throw new Error(`GraphQL Errors: ${errorMessage}`);
+      }
+
+      const nodeData = occurrencesResponse.data.data?.node;
+
+      if (nodeData) {
+        const occurrences = nodeData.occurrences?.edges ?? [];
+
+        for (const { node: occurrence } of occurrences) {
+          const issue = DeepSourceClient.createIssueFromOccurrence(
+            occurrence as Record<string, unknown>
+          );
+          if (issue) {
+            issues.push(issue);
+          }
+        }
+
+        const occurrencesPageInfo = nodeData.occurrences?.pageInfo;
+        hasMoreOccurrences = occurrencesPageInfo?.hasNextPage || false;
+        occurrencesCursor = occurrencesPageInfo?.endCursor;
+      } else {
+        hasMoreOccurrences = false;
+      }
+    }
+
+    return issues;
+  }
+
+  /**
    * Fetches all issues from the most recent analysis run on a specific branch
    * This method automatically pages through all issues and returns them in a single response
    * @param projectKey - The unique identifier for the DeepSource project
@@ -1369,168 +1562,22 @@ export class DeepSourceClient {
         `getRecentRunIssues called for project: ${projectKey}, branch: ${branchName}`
       );
 
-      // Find the most recent run for the specified branch
-      const projects = await this.listProjects();
-      const project = projects.find((p) => p.key === projectKey);
-
-      if (!project) {
-        this.logger.error(`Project with key ${projectKey} not found`);
-        throw new Error(`Project with key ${projectKey} not found`);
-      }
+      // Validate project exists
+      await this.validateProject(projectKey);
 
       // Get runs for the project and find the most recent one for the branch
       const mostRecentRun = await this.findMostRecentRun(projectKey, branchName);
-
       this.logger.debug(`Found most recent run: ${mostRecentRun.runUid} for branch: ${branchName}`);
 
-      // Fetch all issues from the run by paging through checks
-      const allIssues: DeepSourceIssue[] = [];
-      const checksPerPage = 50; // Fetch checks in batches
-
-      // First, get all checks for the run
-      const getChecksQuery = `
-        query($runId: UUID!, $first: Int, $after: String) {
-          run(runUid: $runId) {
-            checks(first: $first, after: $after) {
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-              edges {
-                node {
-                  id
-                  analyzer {
-                    shortcode
-                  }
-                }
-              }
-            }
-          }
-        }
-      `;
-
-      let checksCursor: string | undefined;
-      let hasMoreChecks = true;
-      const allChecks: Array<{ id: string; analyzerShortcode: string }> = [];
-
-      // Get all checks first
-      while (hasMoreChecks) {
-        const checksResponse = await this.client.post('', {
-          query: getChecksQuery.trim(),
-          variables: {
-            runId: mostRecentRun.runUid,
-            first: checksPerPage,
-            after: checksCursor,
-          },
-        });
-
-        if (checksResponse.data.errors) {
-          const errorMessage = DeepSourceClient.extractErrorMessages(checksResponse.data.errors);
-          throw new Error(`GraphQL Errors: ${errorMessage}`);
-        }
-
-        const checks = checksResponse.data.data?.run?.checks?.edges ?? [];
-        for (const { node: check } of checks) {
-          allChecks.push({
-            id: check.id,
-            analyzerShortcode: check.analyzer?.shortcode || 'unknown',
-          });
-        }
-
-        const checksPageInfo = checksResponse.data.data?.run?.checks?.pageInfo;
-        hasMoreChecks = checksPageInfo?.hasNextPage || false;
-        checksCursor = checksPageInfo?.endCursor;
-      }
-
+      // Fetch all checks for the run
+      const allChecks = await this.fetchAllChecks(mostRecentRun.runUid);
       this.logger.debug(`Found ${allChecks.length} checks for run ${mostRecentRun.runUid}`);
 
-      // Now fetch all occurrences for each check
-      const getOccurrencesQuery = `
-        query($checkId: ID!, $first: Int, $after: String) {
-          node(id: $checkId) {
-            ... on Check {
-              id
-              occurrences(first: $first, after: $after) {
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-                totalCount
-                edges {
-                  node {
-                    id
-                    issue {
-                      shortcode
-                      title
-                      category
-                      severity
-                      description
-                      tags
-                    }
-                    path
-                    beginLine
-                  }
-                }
-              }
-            }
-          }
-        }
-      `;
-
-      const occurrencesPerPage = 100; // Fetch occurrences in larger batches
-
+      // Fetch all issues from all checks
+      const allIssues: DeepSourceIssue[] = [];
       for (const check of allChecks) {
-        let occurrencesCursor: string | undefined;
-        let hasMoreOccurrences = true;
-
-        while (hasMoreOccurrences) {
-          const occurrencesResponse = await this.client.post('', {
-            query: getOccurrencesQuery.trim(),
-            variables: {
-              checkId: check.id,
-              first: occurrencesPerPage,
-              after: occurrencesCursor,
-            },
-          });
-
-          if (occurrencesResponse.data.errors) {
-            const errorMessage = DeepSourceClient.extractErrorMessages(
-              occurrencesResponse.data.errors
-            );
-            throw new Error(`GraphQL Errors: ${errorMessage}`);
-          }
-
-          // Now we get the check directly from the node
-          const nodeData = occurrencesResponse.data.data?.node;
-
-          if (nodeData) {
-            const occurrences = nodeData.occurrences?.edges ?? [];
-
-            for (const { node: occurrence } of occurrences) {
-              if (!occurrence || !occurrence.issue) continue;
-
-              allIssues.push({
-                id: occurrence.id ?? 'unknown',
-                shortcode: occurrence.issue.shortcode ?? '',
-                title: occurrence.issue.title ?? 'Untitled Issue',
-                category: occurrence.issue.category ?? 'UNKNOWN',
-                severity: occurrence.issue.severity ?? 'UNKNOWN',
-                status: 'OPEN',
-                issue_text: occurrence.issue.description ?? '',
-                file_path: occurrence.path ?? 'N/A',
-                line_number: occurrence.beginLine ?? 0,
-                tags: occurrence.issue.tags ?? [],
-              });
-            }
-
-            const occurrencesPageInfo = nodeData.occurrences?.pageInfo;
-            hasMoreOccurrences = occurrencesPageInfo?.hasNextPage || false;
-            occurrencesCursor = occurrencesPageInfo?.endCursor;
-          } else {
-            // No more occurrences for this check
-            hasMoreOccurrences = false;
-          }
-        }
+        const checkIssues = await this.fetchOccurrencesForCheck(check.id);
+        allIssues.push(...checkIssues);
       }
 
       this.logger.debug(
