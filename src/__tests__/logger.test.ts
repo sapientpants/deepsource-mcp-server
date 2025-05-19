@@ -293,6 +293,37 @@ describe('Logger', () => {
       // Should not throw even when file operations fail
       expect(() => logger.debug('Test message')).not.toThrow();
     });
+
+    it('should handle file initialization errors gracefully', async () => {
+      process.env.LOG_FILE = '/tmp/test.log';
+      process.env.LOG_LEVEL = 'DEBUG';
+
+      // Clear the require cache for logger to reset module state
+      jest.resetModules();
+
+      // Mock the fs module with a mkdirSync that throws an error
+      jest.unstable_mockModule('fs', () => ({
+        appendFileSync: jest.fn(),
+        writeFileSync: jest.fn(),
+        existsSync: jest.fn(() => false),
+        mkdirSync: jest.fn(() => {
+          throw new Error('Permission denied');
+        }),
+      }));
+
+      // Re-import the modules after mocking
+      const loggerModule = await import('../utils/logger.js');
+      const { Logger } = loggerModule;
+      const { mkdirSync: mockMkdirSync } = await import('fs');
+
+      const logger = new Logger('TestContext');
+
+      // Should not throw when log file initialization fails
+      expect(() => logger.debug('Test message')).not.toThrow();
+
+      // mkdirSync should have been called during initialization
+      expect(mockMkdirSync).toHaveBeenCalled();
+    });
   });
 
   describe('error string fallback', () => {

@@ -1,141 +1,45 @@
-# DeepSource Issues - Branch: add-recent-run-issues-tool
+# DeepSource Issues - TODO List
 
-## Run Details
-- Run ID: 54d89a15-a4c7-4974-b965-a9a0978546a4
-- Commit: e790c565a47b43722eb4e4213b3c644fc901fec9
-- Created: 2025-05-19T17:00:53.133596+00:00
-- Status: PENDING
-- Issues Introduced: 9
-- Issues Resolved: 12
+Run ID: 7cd9965c-8dd0-4c7b-8f5d-b5f5769e2470
+Branch: add-recent-run-issues-tool
+Status: FAILURE
+Created: 2025-05-19T17:16:41.528891+00:00
+Total Issues: 18
 
-## Issues to Fix
+## Critical Coverage Issues (TCV-001)
 
-### 1. Function with cyclomatic complexity higher than threshold (JS-R1005) ✅
-- **File**: src/deepsource.ts:1363
-- **Severity**: MINOR
-- **Category**: ANTI_PATTERN
-- **Status**: RESOLVED
+All issues are of type "Lines not covered in tests" - A source line is considered covered when at least one instruction that is assigned to this line has been executed by a test case. These lines were not executed during any of the test cases.
 
-**Resolution**: Refactored the `getRecentRunIssues` method by breaking it down into smaller, focused functions:
-- Created `validateProject` method for project validation logic
-- Extracted GraphQL queries as static properties
-- Created `fetchAllChecks` to handle check pagination
-- Created `createIssueFromOccurrence` to convert occurrence data
-- Created `fetchOccurrencesForCheck` to handle occurrence pagination
-- Simplified the main method to orchestrate sub-methods
+### src/utils/logger.ts
+- [ ] **Line 71**: Add test coverage for this line
+- [ ] **Line 64**: Add test coverage for this line
 
-**Commit**: 6e66308
-
----
-
-### 2. Detected usage of the `any` type (JS-0323) ✅
-- **File**: src/__tests__/logger.test.ts:304
-- **Severity**: CRITICAL
-- **Category**: ANTI_PATTERN
-- **Status**: RESOLVED
-
-**Resolution**: Replaced `any` type with `Record<string, unknown>` for the circular reference object in the test.
-
-**Commit**: bc24015
-
----
-
-### 3. Detected usage of the `any` type (JS-0323) ✅
-- **File**: src/__tests__/deepsource-recent-run-issues.test.ts:261
-- **Severity**: CRITICAL
-- **Category**: ANTI_PATTERN
-- **Status**: RESOLVED
-
-**Resolution**: Replaced `client as any` with type-safe unknown casting.
-
-**Commit**: ee844e4
-
----
-
-### 4. Detected usage of the `any` type (JS-0323) ✅
-- **File**: src/__tests__/deepsource-recent-run-issues.test.ts:220
-- **Severity**: CRITICAL
-- **Category**: ANTI_PATTERN
-- **Status**: RESOLVED
-
-**Resolution**: Replaced `client as any` with type-safe unknown casting.
-
-**Commit**: ee844e4
-
----
-
-### 5. Detected usage of the `any` type (JS-0323) ✅
-- **File**: src/__tests__/deepsource-recent-run-issues.test.ts:207
-- **Severity**: CRITICAL
-- **Category**: ANTI_PATTERN
-- **Status**: RESOLVED
-
-**Resolution**: Replaced `client as any` with type-safe unknown casting.
-
-**Commit**: ee844e4
-
----
-
-### 6. Detected usage of the `any` type (JS-0323) ✅
-- **File**: src/__tests__/deepsource-recent-run-issues.test.ts:84
-- **Severity**: CRITICAL
-- **Category**: ANTI_PATTERN
-- **Status**: RESOLVED
-
-**Resolution**: Replaced `client as any` with type-safe unknown casting.
-
-**Commit**: ee844e4
-
----
-
-### 7. Detected usage of the `any` type (JS-0323) ✅
-- **File**: src/__tests__/deepsource-recent-run-issues.test.ts:46
-- **Severity**: CRITICAL
-- **Category**: ANTI_PATTERN
-- **Status**: RESOLVED
-
-**Resolution**: Replaced `mockAxiosInstance: any` with `Record<string, unknown>`.
-
-**Commit**: ee844e4
-
----
-
-### 8. Found multiple import of the same path (JS-R1000) ✅
-- **File**: src/__tests__/deepsource-recent-run-issues.test.ts:6
-- **Severity**: MINOR
-- **Category**: STYLE
-- **Status**: RESOLVED
-
-**Resolution**: Consolidated imports from '@jest/globals' into a single import statement.
-
-**Commit**: d901378
-
----
-
-### 9. Found multiple import of the same path (JS-R1000) ✅
-- **File**: src/__tests__/deepsource-recent-run-issues.test.ts:5
-- **Severity**: MINOR
-- **Category**: STYLE
-- **Status**: RESOLVED
-
-**Resolution**: Consolidated imports from '@jest/globals' into a single import statement.
-
-**Commit**: d901378
-
----
+### src/deepsource.ts
+- [ ] **Line 1539**: Add test coverage for this line
+- [ ] **Line 1350**: Add test coverage for this line
+- [ ] **Line 1345**: Add test coverage for this line
+- [ ] **Line 1341**: Add test coverage for this line
+- [ ] **Line 1334**: Add test coverage for this line
+- [ ] **Line 1331**: Add test coverage for this line
+- [ ] **Line 1324**: Add test coverage for this line
+- [ ] **Line 1322**: Add test coverage for this line
+- [ ] **Line 1320**: Add test coverage for this line
+- [ ] **Line 613**: Add test coverage for this line
+- [ ] **Line 598**: Add test coverage for this line
+- [ ] **Line 595**: Add test coverage for this line
+- [ ] **Line 590**: Add test coverage for this line
+- [ ] **Line 583**: Add test coverage for this line
+- [ ] **Line 581**: Add test coverage for this line
+- [ ] **Line 574**: Add test coverage for this line
 
 ## Summary
+- **Total issues introduced**: 18
+- **All issues are coverage-related** (TCV-001)
+- **Severity**: CRITICAL
+- **Action required**: Add test cases to cover all the lines mentioned above
 
-This DeepSource run has identified 9 issues to be resolved:
-- 6 critical issues related to `any` type usage - **ALL RESOLVED** ✅
-- 1 minor issue related to high cyclomatic complexity - **RESOLVED** ✅
-- 2 minor style issues for duplicate imports - **ALL RESOLVED** ✅
-
-**All 9 issues have been resolved!** 🎉
-
-## Resolution Summary by Commit
-
-- **6e66308**: Refactored getRecentRunIssues to reduce cyclomatic complexity (1 issue)
-- **bc24015**: Fixed any type in logger.test.ts (1 issue)
-- **ee844e4**: Fixed multiple any types in deepsource-recent-run-issues.test.ts (5 issues)
-- **d901378**: Consolidated duplicate imports (2 issues)
+## Resolution Strategy
+1. Identify the untested code at each line number
+2. Write appropriate unit tests to exercise those code paths
+3. Ensure the tests are meaningful and not just for coverage
+4. Run `pnpm run test:coverage` to verify coverage improvements
