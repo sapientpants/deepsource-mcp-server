@@ -36,6 +36,11 @@ class TestableDeepSourceClient extends DeepSourceClient {
     // @ts-expect-error - Accessing private method for testing
     return DeepSourceClient.isAxiosErrorWithCriteria(error, statusCode, errorCode);
   }
+
+  static testHandleNetworkError(error: unknown): never | false {
+    // @ts-expect-error - Accessing private method for testing
+    return DeepSourceClient.handleNetworkError(error);
+  }
 }
 
 describe('DeepSource Internal Utilities', () => {
@@ -320,6 +325,55 @@ describe('DeepSource Internal Utilities', () => {
       expect(
         TestableDeepSourceClient.testIsAxiosErrorWithCriteria(axiosError, 500, 'ECONNREFUSED')
       ).toBe(false);
+    });
+  });
+
+  describe('handleNetworkError', () => {
+    it('should throw connection error for ECONNREFUSED', () => {
+      const axiosError = {
+        isAxiosError: true,
+        code: 'ECONNREFUSED',
+        message: 'connect ECONNREFUSED',
+      };
+
+      expect(() => TestableDeepSourceClient.testHandleNetworkError(axiosError)).toThrow(
+        'Connection error: Unable to connect to DeepSource API'
+      );
+    });
+
+    it('should throw timeout error for ETIMEDOUT', () => {
+      const axiosError = {
+        isAxiosError: true,
+        code: 'ETIMEDOUT',
+        message: 'connect ETIMEDOUT',
+      };
+
+      expect(() => TestableDeepSourceClient.testHandleNetworkError(axiosError)).toThrow(
+        'Timeout error: DeepSource API request timed out'
+      );
+    });
+
+    it('should return false for non-network errors', () => {
+      const axiosError = {
+        isAxiosError: true,
+        code: 'ENOTFOUND',
+        message: 'connect ENOTFOUND',
+      };
+
+      const result = TestableDeepSourceClient.testHandleNetworkError(axiosError);
+      expect(result).toBe(false);
+    });
+
+    it('should return false for non-axios errors', () => {
+      const regularError = new Error('Regular error');
+
+      const result = TestableDeepSourceClient.testHandleNetworkError(regularError);
+      expect(result).toBe(false);
+    });
+
+    it('should return false for null error', () => {
+      const result = TestableDeepSourceClient.testHandleNetworkError(null);
+      expect(result).toBe(false);
     });
   });
 });
