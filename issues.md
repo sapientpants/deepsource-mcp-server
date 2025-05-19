@@ -18,10 +18,10 @@ All issues are of type "Detected usage of the `any` type" - The `any` type can s
 - [x] **Line 88**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateStatics type)
 
 ### src/__tests__/deepsource-find-most-recent-run.test.ts
-- [ ] **Line 386**: Remove usage of the `any` type
-- [ ] **Line 309**: Remove usage of the `any` type
-- [ ] **Line 276**: Remove usage of the `any` type
-- [ ] **Line 176**: Remove usage of the `any` type
+- [x] **Line 386**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateMethods type)
+- [x] **Line 309**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateMethods type)
+- [x] **Line 276**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateMethods type)
+- [x] **Line 176**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateMethods type)
 
 ## Summary
 - **Total issues introduced**: 9
