@@ -36,10 +36,26 @@ All issues are of type "Lines not covered in tests" - A source line is considere
 - **Total issues introduced**: 18
 - **All issues are coverage-related** (TCV-001)
 - **Severity**: CRITICAL
-- **Action required**: Add test cases to cover all the lines mentioned above
+- **Status**: ✅ All issues resolved!
 
-## Resolution Strategy
-1. Identify the untested code at each line number
-2. Write appropriate unit tests to exercise those code paths
-3. Ensure the tests are meaningful and not just for coverage
-4. Run `pnpm run test:coverage` to verify coverage improvements
+## Resolution Details
+All 18 coverage issues have been resolved by adding comprehensive unit tests:
+
+### src/utils/logger.ts (2 issues resolved)
+- Line 71: Added test for error handling in mkdirSync during log file initialization
+- Line 64: Added test for successful mkdirSync call when directory doesn't exist
+
+### src/deepsource.ts (16 issues resolved)
+- Lines 1320-1350: Added comprehensive tests for the `findMostRecentRun` method including:
+  - Finding the most recent run from multiple runs
+  - Handling pagination across multiple pages
+  - Error handling when no runs are found
+  - Handling edge cases with runs having the same timestamp
+- Lines 574-613: Added comprehensive tests for the `processRunChecksResponse` method including:
+  - Processing responses with complete issue data
+  - Handling empty responses
+  - Handling missing optional fields
+  - Handling null occurrences
+  - Managing pagination across multiple checks
+
+The coverage has been significantly improved and all identified lines now have proper test coverage.
