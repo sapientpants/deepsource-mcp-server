@@ -57,6 +57,11 @@ class TestableDeepSourceClient extends DeepSourceClient {
     // @ts-expect-error - Accessing private method for testing
     return DeepSourceClient.handleGraphQLSpecificError(error);
   }
+
+  static testValidateNumber(value: unknown): number | null {
+    // @ts-expect-error - Accessing private method for testing
+    return DeepSourceClient.validateNumber(value);
+  }
 }
 
 describe('DeepSource Internal Utilities', () => {
@@ -599,6 +604,39 @@ describe('DeepSource Internal Utilities', () => {
       expect(() => TestableDeepSourceClient.testHandleGraphQLError(nonError)).toThrow(
         'Unknown error occurred while communicating with DeepSource API'
       );
+    });
+  });
+
+  describe('validateNumber', () => {
+    it('should return the value when it is a number', () => {
+      expect(TestableDeepSourceClient.testValidateNumber(0)).toBe(0);
+      expect(TestableDeepSourceClient.testValidateNumber(42)).toBe(42);
+      expect(TestableDeepSourceClient.testValidateNumber(-1.5)).toBe(-1.5);
+      expect(TestableDeepSourceClient.testValidateNumber(Infinity)).toBe(Infinity);
+      expect(TestableDeepSourceClient.testValidateNumber(Number.MAX_SAFE_INTEGER)).toBe(
+        Number.MAX_SAFE_INTEGER
+      );
+    });
+
+    it('should return null for non-number values', () => {
+      expect(TestableDeepSourceClient.testValidateNumber('42')).toBeNull();
+      expect(TestableDeepSourceClient.testValidateNumber(null)).toBeNull();
+      expect(TestableDeepSourceClient.testValidateNumber(undefined)).toBeNull();
+      expect(TestableDeepSourceClient.testValidateNumber({})).toBeNull();
+      expect(TestableDeepSourceClient.testValidateNumber([])).toBeNull();
+      expect(TestableDeepSourceClient.testValidateNumber(true)).toBeNull();
+      expect(TestableDeepSourceClient.testValidateNumber(false)).toBeNull();
+      expect(TestableDeepSourceClient.testValidateNumber(new Date())).toBeNull();
+      expect(TestableDeepSourceClient.testValidateNumber(() => 42)).toBeNull();
+      expect(TestableDeepSourceClient.testValidateNumber(Symbol('test'))).toBeNull();
+      expect(TestableDeepSourceClient.testValidateNumber(BigInt(42))).toBeNull();
+    });
+
+    it('should handle NaN as a special case', () => {
+      // NaN is a number type in JavaScript but often needs special handling
+      expect(TestableDeepSourceClient.testValidateNumber(NaN)).toBe(NaN);
+      // Need to use isNaN to check since NaN !== NaN
+      expect(isNaN(TestableDeepSourceClient.testValidateNumber(NaN) as number)).toBe(true);
     });
   });
 });
