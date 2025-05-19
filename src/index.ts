@@ -16,6 +16,10 @@ import {
   // MetricHistoryParams, // Commented out as it's not used in this file
 } from './types/metrics.js';
 import { z } from 'zod';
+import { createLogger } from './utils/logger.js';
+
+// Create logger instance for index.ts
+const logger = createLogger('DeepSourceMCP:index');
 
 // Initialize MCP server
 /**
@@ -255,6 +259,17 @@ export interface DeepsourceRunParams {
 }
 
 /**
+ * Interface for parameters for fetching issues from the most recent run on a branch
+ * @public
+ */
+export interface DeepsourceRecentRunIssuesParams {
+  /** DeepSource project key to fetch issues for */
+  projectKey: string;
+  /** Branch name to get the most recent run from */
+  branchName: string;
+}
+
+/**
  * Interface for parameters used to fetch dependency vulnerabilities from a DeepSource project
  *
  * This interface supports both pagination approaches:
@@ -331,6 +346,103 @@ export async function handleDeepsourceRun({ runIdentifier }: DeepsourceRunParams
       },
     ],
   };
+}
+
+/**
+ * Fetches all issues from the most recent analysis run on a specific branch
+ * @param params Parameters for fetching issues, including project key and branch name
+ * @returns A response containing all issues from the most recent run on the branch
+ * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
+ * @throws Error if no runs are found for the specified branch
+ * @public
+ */
+export async function handleDeepsourceRecentRunIssues({
+  projectKey,
+  branchName,
+}: DeepsourceRecentRunIssuesParams) {
+  try {
+    logger.info('handleDeepsourceRecentRunIssues called', {
+      projectKey,
+      branchName,
+    });
+
+    const apiKey = process.env.DEEPSOURCE_API_KEY;
+    /* istanbul ignore if */
+    if (!apiKey) {
+      logger.error('DEEPSOURCE_API_KEY environment variable is not set');
+      throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
+    }
+
+    const client = new DeepSourceClient(apiKey);
+
+    logger.debug('Calling client.getRecentRunIssues');
+    // Get all issues from the most recent run on the specified branch
+    const result = await client.getRecentRunIssues(projectKey, branchName);
+
+    logger.debug('Got result from client.getRecentRunIssues', {
+      runId: result.run?.id,
+      issuesCount: result.items?.length,
+    });
+
+    const response = {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            run: {
+              runUid: result.run.runUid,
+              commitOid: result.run.commitOid,
+              branchName: result.run.branchName,
+              status: result.run.status,
+              createdAt: result.run.createdAt,
+              summary: result.run.summary,
+            },
+            issues: result.items.map((issue) => ({
+              id: issue.id,
+              title: issue.title,
+              shortcode: issue.shortcode,
+              category: issue.category,
+              severity: issue.severity,
+              status: issue.status,
+              issue_text: issue.issue_text,
+              file_path: issue.file_path,
+              line_number: issue.line_number,
+              tags: issue.tags,
+            })),
+            pageInfo: result.pageInfo,
+            totalCount: result.totalCount,
+            metadata: {
+              branch: branchName,
+              projectKey,
+              runDate: result.run.createdAt,
+              description: `All issues from the most recent analysis run on branch '${branchName}'`,
+              note: 'These are all run-specific issues from the checks performed during the analysis',
+              totalIssues: result.totalCount,
+            },
+          }),
+        },
+      ],
+    };
+
+    logger.debug('Returning response from handleDeepsourceRecentRunIssues', response);
+    return response;
+  } catch (error) {
+    logger.error('Error in handleDeepsourceRecentRunIssues', error);
+    return {
+      isError: true,
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            error: (error as Error).message,
+            details: 'Failed to retrieve recent run issues',
+            projectKey,
+            branchName,
+          }),
+        },
+      ],
+    };
+  }
 }
 
 /**
@@ -1108,6 +1220,18 @@ mcpServer.tool(
 );
 
 mcpServer.tool(
+  'recent_run_issues',
+  `Get all issues from the most recent analysis run on a specific branch.
+This tool retrieves every issue from the latest run, including runs that are still in progress.
+The response includes complete information about all issues found during the analysis.`,
+  {
+    projectKey: z.string().describe('The unique identifier for the DeepSource project'),
+    branchName: z.string().describe('The branch name to get the most recent run from'),
+  },
+  handleDeepsourceRecentRunIssues
+);
+
+mcpServer.tool(
   'dependency_vulnerabilities',
   `Get dependency vulnerabilities from a DeepSource project with support for Relay-style cursor-based pagination.
 For forward pagination, use \`first\` (defaults to 10) with optional \`after\` cursor.
@@ -1298,5 +1422,7 @@ mcpServer.tool(
 /* istanbul ignore if */
 if (process.env.NODE_ENV !== 'test') {
   const transport = new StdioServerTransport();
+  logger.info('Starting MCP server...');
   await mcpServer.connect(transport);
+  logger.info('MCP server started successfully');
 }

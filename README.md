@@ -112,6 +112,35 @@ This would use the `update_metric_threshold` tool:
   "thresholdValue": 80
 }
 ```
+### Environment Variables
+
+The server supports the following environment variables:
+
+* `DEEPSOURCE_API_KEY` (required): Your DeepSource API key for authentication
+* `LOG_FILE` (optional): Path to a file where logs should be written. If not set, no logs will be written
+* `LOG_LEVEL` (optional): Minimum log level to write (DEBUG, INFO, WARN, ERROR). Defaults to DEBUG
+
+Example configuration with logging:
+
+```json
+{
+  "mcpServers": {
+    "deepsource": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "deepsource-mcp-server@1.1.0"
+      ],
+      "env": {
+        "DEEPSOURCE_API_KEY": "your-deepsource-api-key",
+        "LOG_FILE": "/tmp/deepsource-mcp.log",
+        "LOG_LEVEL": "DEBUG"
+      }
+    }
+  }
+}
+```
+
 ### Docker
 
 ```json
@@ -125,10 +154,15 @@ This would use the `update_metric_threshold` tool:
         "--rm",
         "-e",
         "DEEPSOURCE_API_KEY",
+        "-e",
+        "LOG_FILE=/tmp/deepsource-mcp.log",
+        "-v",
+        "/tmp:/tmp",
         "sapientpants/deepsource-mcp-server"
       ],
       "env": {
-        "DEEPSOURCE_API_KEY": "your-deepsource-api-key"
+        "DEEPSOURCE_API_KEY": "your-deepsource-api-key",
+        "LOG_FILE": "/tmp/deepsource-mcp.log"
       }
     }
   }
@@ -192,7 +226,22 @@ The DeepSource MCP Server provides the following tools:
    * Parameters:
      * `runIdentifier` (required) - The runUid (UUID) or commitOid (commit hash) to identify the run
 
-5. `dependency_vulnerabilities`: Get dependency vulnerabilities from a DeepSource project
+5. `recent_run_issues`: Get issues from the most recent analysis run on a specific branch with pagination support
+   * Parameters:
+     * `projectKey` (required) - The unique identifier for the DeepSource project
+     * `branchName` (required) - The branch name to get the most recent run from
+     * Pagination parameters:
+       * `first` (optional) - Number of issues to return (defaults to 10)
+       * `after` (optional) - Cursor for forward pagination
+       * `last` (optional) - Number of issues to return before a cursor (default: 10)
+       * `before` (optional) - Cursor for backward pagination
+   * Returns:
+     * Information about the most recent run on the branch
+     * Current issues in the project (note: issues are repository-level, not run-specific)
+     * Pagination information including cursors and page status
+     * Metadata about the run and branch
+
+6. `dependency_vulnerabilities`: Get dependency vulnerabilities from a DeepSource project
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * Pagination parameters:
@@ -202,7 +251,7 @@ The DeepSource MCP Server provides the following tools:
        * `before` (optional) - Cursor for backward pagination
        * `last` (optional) - Number of items to return before the 'before' cursor (default: 10)
 
-6. `quality_metrics`: Get quality metrics from a DeepSource project with filtering
+7. `quality_metrics`: Get quality metrics from a DeepSource project with filtering
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * `shortcodeIn` (optional) - Filter metrics by specific shortcodes (e.g., ["LCV", "BCV"])
@@ -213,7 +262,7 @@ The DeepSource MCP Server provides the following tools:
      * Duplicate Code Percentage (DDP)
      * Each metric includes current values, thresholds, and pass/fail status
 
-7. `update_metric_threshold`: Update the threshold for a specific quality metric
+8. `update_metric_threshold`: Update the threshold for a specific quality metric
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * `repositoryId` (required) - The GraphQL repository ID
@@ -222,7 +271,7 @@ The DeepSource MCP Server provides the following tools:
      * `thresholdValue` (optional) - The new threshold value, or null to remove the threshold
    * Example: Set 80% line coverage threshold: metricShortcode="LCV", metricKey="AGGREGATE", thresholdValue=80
 
-8. `update_metric_setting`: Update the settings for a quality metric
+9. `update_metric_setting`: Update the settings for a quality metric
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * `repositoryId` (required) - The GraphQL repository ID
@@ -230,7 +279,7 @@ The DeepSource MCP Server provides the following tools:
      * `isReported` (required) - Whether the metric should be reported
      * `isThresholdEnforced` (required) - Whether the threshold should be enforced (can fail checks)
 
-9. `compliance_report`: Get security compliance reports from a DeepSource project
+10. `compliance_report`: Get security compliance reports from a DeepSource project
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * `reportType` (required) - The type of compliance report to fetch ([OWASP Top 10](https://owasp.org/www-project-top-ten/), [SANS Top 25](https://cwe.mitre.org/top25/), or [MISRA-C](https://www.misra.org.uk/))
@@ -289,6 +338,44 @@ pnpm run build
 * `pnpm run test` - Run tests
 * `pnpm run lint` - Run ESLint
 * `pnpm run format` - Format code with Prettier
+
+## Troubleshooting
+
+### Enable Debug Logging
+
+If you're experiencing issues, enable debug logging to see detailed information:
+
+1. Set the `LOG_FILE` environment variable to a file path where logs should be written
+2. Set `LOG_LEVEL` to `DEBUG` (this is the default)
+3. Check the log file for detailed error information
+
+Example configuration:
+```json
+{
+  "mcpServers": {
+    "deepsource": {
+      "command": "npx",
+      "args": ["-y", "deepsource-mcp-server@1.1.0"],
+      "env": {
+        "DEEPSOURCE_API_KEY": "your-api-key",
+        "LOG_FILE": "/tmp/deepsource-mcp.log",
+        "LOG_LEVEL": "DEBUG"
+      }
+    }
+  }
+}
+```
+
+Then check the log file:
+```bash
+tail -f /tmp/deepsource-mcp.log
+```
+
+### Common Issues
+
+1. **Authentication Error**: Ensure your `DEEPSOURCE_API_KEY` is correct and has the necessary permissions
+2. **No logs appearing**: Verify that the `LOG_FILE` path is writable and the parent directory exists
+3. **Tool errors**: Check the log file for detailed error messages and stack traces
 
 ## License
 

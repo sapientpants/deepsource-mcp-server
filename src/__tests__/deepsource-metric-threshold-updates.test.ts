@@ -25,5 +25,3 @@ describe('DeepSourceClient Metric Threshold Updates', () => {
     expect(MetricKey.RUST).toBe('RUST');
   });
 });
-
-// TODO: Add integration tests for metric history and threshold updates once mocking is fixed

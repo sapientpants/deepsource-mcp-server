@@ -667,6 +667,23 @@ describe('DeepSourceClient Metrics History', () => {
         })
       ).rejects.toThrow('Missing required parameter: metricKey');
     });
+
+    it('should throw error when metric item data is not found', async () => {
+      // Set environment variable to trigger missing metric item error
+      process.env.MISSING_METRIC_ITEM_TEST = 'true';
+
+      // Call the method and expect it to throw
+      await expect(
+        client.getMetricHistory({
+          projectKey: PROJECT_KEY,
+          metricShortcode: MetricShortcode.LCV,
+          metricKey: MetricKey.AGGREGATE,
+        })
+      ).rejects.toThrow('Metric item data is missing or invalid in response');
+
+      // Clean up environment variable
+      delete process.env.MISSING_METRIC_ITEM_TEST;
+    });
   });
 
   describe('Test Environment Paths', () => {
@@ -680,6 +697,7 @@ describe('DeepSourceClient Metrics History', () => {
       delete process.env.ERROR_TEST;
       delete process.env.NOT_FOUND_TEST;
       delete process.env.NEGATIVE_TREND_TEST;
+      delete process.env.MISSING_METRIC_ITEM_TEST;
     });
 
     it('should generate test data for Line Coverage metrics', async () => {

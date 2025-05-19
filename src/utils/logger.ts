@@ -1,8 +1,17 @@
 /**
  * @fileoverview Simple logging service for the application.
  * This provides a centralized place for all logging functionality.
- * In the future, this could be replaced with a more robust logging library.
+ *
+ * Configuration:
+ * - LOG_LEVEL: Sets the minimum log level (DEBUG, INFO, WARN, ERROR). Defaults to DEBUG.
+ * - LOG_FILE: Path to the log file. If not set, no logs will be written.
+ *
+ * Note: Since MCP servers use stdout for protocol communication, logs are written
+ * to a file instead of stdout/stderr to avoid interference.
  */
+
+import { writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
+import { dirname } from 'path';
 
 /**
  * Log levels for the application
@@ -29,13 +38,68 @@ const LOG_LEVELS_PRIORITY: Record<LogLevel, number> = {
 };
 
 /**
+ * Get the log file path from environment
+ * @returns {string | null} The log file path or null if not configured
+ * @private
+ */
+function getLogFilePath(): string | null {
+  return process.env.LOG_FILE || null;
+}
+
+let logFileInitialized = false;
+
+/**
+ * Initialize the log file if needed by creating the directory and file
+ * Only initializes once per process to avoid redundant file operations
+ * @private
+ * @returns {void}
+ */
+function initializeLogFile(): void {
+  const logFile = getLogFilePath();
+  if (logFile && !logFileInitialized) {
+    try {
+      // Create directory if it doesn't exist
+      const dir = dirname(logFile);
+      if (!existsSync(dir)) {
+        mkdirSync(dir, { recursive: true });
+      }
+      // Create or truncate the log file
+      writeFileSync(logFile, '');
+      logFileInitialized = true;
+    } catch {
+      // Fail silently if we can't create the log file
+      logFileInitialized = true; // Don't retry
+    }
+  }
+}
+
+/**
+ * Write a log message to file
+ * @param message The formatted log message to write
+ * @private
+ */
+function writeToLogFile(message: string): void {
+  const logFile = getLogFilePath();
+  if (logFile) {
+    try {
+      if (!logFileInitialized) {
+        initializeLogFile();
+      }
+      appendFileSync(logFile, `${message}\n`);
+    } catch {
+      // Fail silently if we can't write to the log file
+    }
+  }
+}
+
+/**
  * Check if a log level should be displayed based on the environment configuration
  * @param level The log level to check
  * @returns {boolean} True if the log level should be displayed
  * @private
  */
 function shouldLog(level: LogLevel): boolean {
-  const configuredLevel = (process.env.LOG_LEVEL || 'INFO') as LogLevel;
+  const configuredLevel = (process.env.LOG_LEVEL || 'DEBUG') as LogLevel;
   return LOG_LEVELS_PRIORITY[level] >= LOG_LEVELS_PRIORITY[configuredLevel];
 }
 
@@ -73,9 +137,13 @@ export class Logger {
    * @param data Optional data to include in the log
    */
   debug(message: string, data?: unknown): void {
-    if (shouldLog(LogLevel.DEBUG)) {
+    if (shouldLog(LogLevel.DEBUG) && getLogFilePath()) {
       const formattedMessage = formatLogMessage(LogLevel.DEBUG, message, this.context);
-      console.debug(formattedMessage, data !== undefined ? data : '');
+      const fullMessage =
+        data !== undefined
+          ? `${formattedMessage} ${JSON.stringify(data, null, 2)}`
+          : formattedMessage;
+      writeToLogFile(fullMessage);
     }
   }
 
@@ -85,9 +153,13 @@ export class Logger {
    * @param data Optional data to include in the log
    */
   info(message: string, data?: unknown): void {
-    if (shouldLog(LogLevel.INFO)) {
+    if (shouldLog(LogLevel.INFO) && getLogFilePath()) {
       const formattedMessage = formatLogMessage(LogLevel.INFO, message, this.context);
-      console.info(formattedMessage, data !== undefined ? data : '');
+      const fullMessage =
+        data !== undefined
+          ? `${formattedMessage} ${JSON.stringify(data, null, 2)}`
+          : formattedMessage;
+      writeToLogFile(fullMessage);
     }
   }
 
@@ -97,9 +169,13 @@ export class Logger {
    * @param data Optional data to include in the log
    */
   warn(message: string, data?: unknown): void {
-    if (shouldLog(LogLevel.WARN)) {
+    if (shouldLog(LogLevel.WARN) && getLogFilePath()) {
       const formattedMessage = formatLogMessage(LogLevel.WARN, message, this.context);
-      console.warn(formattedMessage, data !== undefined ? data : '');
+      const fullMessage =
+        data !== undefined
+          ? `${formattedMessage} ${JSON.stringify(data, null, 2)}`
+          : formattedMessage;
+      writeToLogFile(fullMessage);
     }
   }
 
@@ -112,7 +188,7 @@ export class Logger {
    *        - Other values will be converted to strings
    */
   error(message: string, error?: unknown): void {
-    if (shouldLog(LogLevel.ERROR)) {
+    if (shouldLog(LogLevel.ERROR) && getLogFilePath()) {
       const formattedMessage = formatLogMessage(LogLevel.ERROR, message, this.context);
 
       // Format the error for better debugging
@@ -130,7 +206,8 @@ export class Logger {
         }
       }
 
-      console.error(formattedMessage, errorOutput || '');
+      const fullMessage = errorOutput ? `${formattedMessage} ${errorOutput}` : formattedMessage;
+      writeToLogFile(fullMessage);
     }
   }
 }

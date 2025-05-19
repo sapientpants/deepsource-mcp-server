@@ -1,7 +1,9 @@
 import { DeepSourceClient } from '../deepsource';
 
 // Create a mock implementation for tests
-const mockCreateHistoryResponse = (historyValues: any[]) => {
+const mockCreateHistoryResponse = (
+  historyValues: Array<{ timestamp: string; value: number | null }>
+) => {
   // Calculate percent change between first and last values with valid values
   let firstValidValueIndex = -1;
   let lastValidValueIndex = -1;
@@ -56,7 +58,11 @@ describe('DeepSource Metric Response Utilities', () => {
   describe('createMetricHistoryResponse', () => {
     beforeAll(() => {
       // Mock implementation
-      (DeepSourceClient as any).createMetricHistoryResponse = mockCreateHistoryResponse;
+      (
+        DeepSourceClient as unknown as {
+          createMetricHistoryResponse: typeof mockCreateHistoryResponse;
+        }
+      ).createMetricHistoryResponse = mockCreateHistoryResponse;
     });
 
     it('should create a properly structured history response', () => {

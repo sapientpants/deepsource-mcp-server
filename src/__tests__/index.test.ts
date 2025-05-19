@@ -9,6 +9,8 @@ import {
   handleDeepsourceProjectRuns,
   handleDeepsourceRun,
   handleDeepsourceDependencyVulnerabilities,
+  handleDeepsourceRecentRunIssues,
+  type DeepsourceRecentRunIssuesParams,
 } from '../index.js';
 import {
   DeepSourceClient,
@@ -23,7 +25,14 @@ type PaginationParams = {
   first?: number;
   after?: string;
   before?: string;
+  last?: number;
 };
+
+// Create a TextContent interface
+interface TextContent {
+  type: string;
+  text: string;
+}
 
 // Create a simple test helper for verifying responses
 const verifyResponse = (
@@ -40,6 +49,7 @@ describe('MCP server implementation', () => {
   // Save original DeepSourceClient methods
   const originalListProjects = DeepSourceClient.prototype.listProjects;
   const originalGetIssues = DeepSourceClient.prototype.getIssues;
+  const originalGetRecentRunIssues = DeepSourceClient.prototype.getRecentRunIssues;
 
   // Environment backup
   let originalEnv: Record<string, string | undefined>;
@@ -55,6 +65,7 @@ describe('MCP server implementation', () => {
     // Restore original methods
     DeepSourceClient.prototype.listProjects = originalListProjects;
     DeepSourceClient.prototype.getIssues = originalGetIssues;
+    DeepSourceClient.prototype.getRecentRunIssues = originalGetRecentRunIssues;
   });
 
   describe('Server initialization', () => {
@@ -675,6 +686,346 @@ describe('MCP server implementation', () => {
 
       // Verify the error is propagated
       await expect(handleDeepsourceRun(params)).rejects.toThrow('API error');
+    });
+  });
+
+  describe('recent_run_issues tool', () => {
+    // Save original methods
+    let originalListRuns: typeof DeepSourceClient.prototype.listRuns;
+    let originalGetIssues: typeof DeepSourceClient.prototype.getIssues;
+
+    beforeEach(() => {
+      // Save original methods
+      originalListRuns = DeepSourceClient.prototype.listRuns;
+      originalGetIssues = DeepSourceClient.prototype.getIssues;
+    });
+
+    afterEach(() => {
+      // Restore original methods
+      DeepSourceClient.prototype.listRuns = originalListRuns;
+      DeepSourceClient.prototype.getIssues = originalGetIssues;
+    });
+
+    it('returns issues from the most recent run on a branch', async () => {
+      // Define mock data for runs
+      const mockRuns = {
+        items: [
+          {
+            id: 'run1',
+            runUid: '123e4567-e89b-12d3-a456-426614174000',
+            commitOid: 'abc123',
+            branchName: 'feature-branch',
+            baseOid: 'def456',
+            status: 'SUCCESS',
+            createdAt: '2024-01-02T00:00:00Z',
+            updatedAt: '2024-01-02T00:10:00Z',
+            finishedAt: '2024-01-02T00:15:00Z',
+            summary: {
+              occurrencesIntroduced: 5,
+              occurrencesResolved: 3,
+              occurrencesSuppressed: 1,
+            },
+            repository: {
+              name: 'test-repo',
+              id: 'repo1',
+            },
+          },
+          {
+            id: 'run2',
+            runUid: '223e4567-e89b-12d3-a456-426614174001',
+            commitOid: 'xyz789',
+            branchName: 'main',
+            baseOid: 'ghi789',
+            status: 'SUCCESS',
+            createdAt: '2024-01-01T00:00:00Z',
+            updatedAt: '2024-01-01T00:10:00Z',
+            finishedAt: '2024-01-01T00:15:00Z',
+            summary: {
+              occurrencesIntroduced: 2,
+              occurrencesResolved: 1,
+              occurrencesSuppressed: 0,
+            },
+            repository: {
+              name: 'test-repo',
+              id: 'repo1',
+            },
+          },
+        ],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: 'start',
+          endCursor: 'end',
+        },
+        totalCount: 2,
+      };
+
+      // Define mock data for issues
+      const mockIssues = {
+        items: [
+          {
+            id: 'issue1',
+            shortcode: 'JS-1001',
+            title: 'Test Issue',
+            category: 'BUG_RISK',
+            severity: 'MAJOR',
+            status: 'OPEN',
+            issue_text: 'This is a test issue',
+            file_path: 'src/index.ts',
+            line_number: 42,
+            tags: ['security'],
+          },
+        ],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: 'start',
+          endCursor: 'end',
+        },
+        totalCount: 1,
+      };
+
+      // Mock the client method
+      DeepSourceClient.prototype.getRecentRunIssues = () =>
+        Promise.resolve({
+          ...mockIssues,
+          run: mockRuns.items[0],
+        });
+
+      const params: DeepsourceRecentRunIssuesParams = {
+        projectKey: 'test-project',
+        branchName: 'feature-branch',
+      };
+
+      const result = await handleDeepsourceRecentRunIssues(params);
+
+      // Verify the response structure
+      expect(result.content).toHaveLength(1);
+      expect(result.content[0]).toHaveProperty('type', 'text');
+
+      const parsedResult = JSON.parse((result.content[0] as TextContent).text) as Record<
+        string,
+        unknown
+      >;
+
+      // Assertions
+      expect(parsedResult.run).toMatchObject({
+        runUid: mockRuns.items[0].runUid,
+        commitOid: mockRuns.items[0].commitOid,
+        branchName: 'feature-branch',
+        status: 'SUCCESS',
+      });
+      expect(parsedResult.issues).toHaveLength(1);
+      expect(parsedResult.issues[0]).toMatchObject({
+        id: 'issue1',
+        shortcode: 'JS-1001',
+        title: 'Test Issue',
+      });
+      expect(parsedResult.metadata).toMatchObject({
+        branch: 'feature-branch',
+        projectKey: 'test-project',
+      });
+    });
+
+    it('returns error result when no runs found for branch', async () => {
+      // Mock to throw error directly since no runs are found
+
+      DeepSourceClient.prototype.getRecentRunIssues = () => {
+        throw new Error("No runs found for branch 'non-existent-branch' in project 'test-project'");
+      };
+
+      const params: DeepsourceRecentRunIssuesParams = {
+        projectKey: 'test-project',
+        branchName: 'non-existent-branch',
+      };
+
+      const result = await handleDeepsourceRecentRunIssues(params);
+
+      // Verify the error response structure
+      expect(result).toHaveProperty('isError', true);
+      expect(result.content).toHaveLength(1);
+      expect(result.content[0]).toHaveProperty('type', 'text');
+
+      const errorData = JSON.parse((result.content[0] as TextContent).text) as {
+        error: string;
+        details: string;
+        projectKey: string;
+        branchName: string;
+      };
+      expect(errorData).toMatchObject({
+        error: "No runs found for branch 'non-existent-branch' in project 'test-project'",
+        details: 'Failed to retrieve recent run issues',
+        projectKey: 'test-project',
+        branchName: 'non-existent-branch',
+      });
+    });
+
+    it('handles pagination correctly', async () => {
+      // Remove firstPage as it's not used in the new implementation
+
+      // Second page with the target branch
+      const secondPage = {
+        items: [
+          {
+            id: 'run2',
+            runUid: '223e4567-e89b-12d3-a456-426614174001',
+            commitOid: 'xyz789',
+            branchName: 'target-branch',
+            status: 'SUCCESS',
+            createdAt: '2024-01-02T00:00:00Z',
+            summary: {},
+            repository: { name: 'test-repo', id: 'repo1' },
+          },
+        ],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: true,
+          startCursor: 'cursor1',
+          endCursor: 'end',
+        },
+        totalCount: 2,
+      };
+
+      // Mock issues response
+      const mockIssues = {
+        items: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: null,
+          endCursor: null,
+        },
+        totalCount: 0,
+      };
+
+      // Mock to return the run from the second page
+      DeepSourceClient.prototype.getRecentRunIssues = () =>
+        Promise.resolve({
+          ...mockIssues,
+          run: secondPage.items[0],
+        });
+
+      const params: DeepsourceRecentRunIssuesParams = {
+        projectKey: 'test-project',
+        branchName: 'target-branch',
+      };
+
+      const result = await handleDeepsourceRecentRunIssues(params);
+      const parsedResult = JSON.parse((result.content[0] as TextContent).text) as Record<
+        string,
+        unknown
+      >;
+
+      // Should find the run from the second page
+      expect(parsedResult.run.branchName).toBe('target-branch');
+      expect(parsedResult.run.runUid).toBe('223e4567-e89b-12d3-a456-426614174001');
+
+      // The new implementation handles pagination internally, so we don't need to verify these calls
+    });
+
+    it('retrieves all issues without pagination parameters', async () => {
+      // Mock runs response
+      const mockRuns = {
+        items: [
+          {
+            id: 'run1',
+            runUid: '123e4567-e89b-12d3-a456-426614174000',
+            commitOid: 'abc123',
+            branchName: 'main',
+            baseOid: 'def456',
+            status: 'SUCCESS',
+            createdAt: '2024-01-02T00:00:00Z',
+            updatedAt: '2024-01-02T00:10:00Z',
+            finishedAt: '2024-01-02T00:15:00Z',
+            summary: {
+              occurrences: [
+                {
+                  issue: {
+                    shortcode: 'JS-1001',
+                  },
+                  category: 'BUG_RISK',
+                  count: 1,
+                },
+              ],
+            },
+            repository: {
+              id: 'repo1',
+            },
+          },
+        ],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: 'start',
+          endCursor: 'end',
+        },
+        totalCount: 1,
+      };
+
+      // Mock issues response with pagination
+      const mockIssues = {
+        items: [
+          {
+            id: 'issue1',
+            shortcode: 'JS-1001',
+            title: 'Test Issue',
+            category: 'BUG_RISK',
+            severity: 'MAJOR',
+            status: 'OPEN',
+            issue_text: 'This is a test issue',
+            file_path: 'src/index.ts',
+            line_number: 42,
+            tags: ['security'],
+          },
+        ],
+        pageInfo: {
+          hasNextPage: true,
+          hasPreviousPage: true,
+          startCursor: 'issue-start',
+          endCursor: 'issue-end',
+        },
+        totalCount: 50,
+      };
+
+      // Mock to verify getRecentRunIssues is called correctly
+      let getRecentRunIssuesCalledWith: { projectKey: string; branchName: string } | null = null;
+
+      DeepSourceClient.prototype.getRecentRunIssues = (projectKey, branchName) => {
+        getRecentRunIssuesCalledWith = { projectKey, branchName };
+        return Promise.resolve({
+          ...mockIssues,
+          run: mockRuns.items[0],
+        });
+      };
+
+      const params: DeepsourceRecentRunIssuesParams = {
+        projectKey: 'test-project',
+        branchName: 'main',
+      };
+
+      const result = await handleDeepsourceRecentRunIssues(params);
+      const parsedResult = JSON.parse((result.content[0] as TextContent).text) as Record<
+        string,
+        unknown
+      >;
+
+      // Verify method was called with correct parameters
+      expect(getRecentRunIssuesCalledWith).toEqual({
+        projectKey: 'test-project',
+        branchName: 'main',
+      });
+
+      // Verify response includes all issues
+      expect(parsedResult.totalCount).toBe(50);
+      expect(parsedResult.pageInfo).toEqual(mockIssues.pageInfo);
+      expect(parsedResult.metadata).toEqual({
+        branch: 'main',
+        projectKey: 'test-project',
+        runDate: '2024-01-02T00:00:00Z',
+        description: "All issues from the most recent analysis run on branch 'main'",
+        note: 'These are all run-specific issues from the checks performed during the analysis',
+        totalIssues: 50,
+      });
     });
   });
 

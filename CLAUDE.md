@@ -8,6 +8,23 @@ This repository is a Model Context Protocol (MCP) server that integrates with De
 
 ## Common Commands
 
+## Environment Variables
+
+The server uses the following environment variables:
+
+- `DEEPSOURCE_API_KEY` (required): Your DeepSource API key for authentication
+- `LOG_FILE` (optional): File path for log output. If not set, no logs will be written
+- `LOG_LEVEL` (optional): Minimum log level (DEBUG, INFO, WARN, ERROR). Defaults to DEBUG
+
+Example:
+```bash
+export DEEPSOURCE_API_KEY="your-api-key"
+export LOG_FILE="/tmp/deepsource-mcp.log"
+export LOG_LEVEL="DEBUG"
+```
+
+## Development Commands
+
 ```bash
 # Install dependencies
 pnpm install
@@ -65,11 +82,12 @@ The codebase is structured around two main components:
 1. **MCP Server Integration (src/index.ts)**: 
    - Sets up the Model Context Protocol server
    - Registers and implements tool handlers for DeepSource API integration
-   - Provides nine main tools for AI assistants: 
+   - Provides ten main tools for AI assistants: 
      - `projects` - List all available projects
      - `project_issues` - Get issues with filtering and pagination
      - `project_runs` - List analysis runs with filtering and pagination
      - `run` - Get details for a specific run
+     - `recent_run_issues` - Get issues from the most recent run on a specific branch with pagination
      - `dependency_vulnerabilities` - Get dependency vulnerabilities with pagination
      - `quality_metrics` - Get quality metrics with optional filtering
      - `update_metric_threshold` - Update metric thresholds

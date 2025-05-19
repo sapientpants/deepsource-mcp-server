@@ -1,11 +1,16 @@
-import { DeepSourceClient } from '../deepsource';
+import { DeepSourceClient, MetricHistoryParams, MetricHistoryValue } from '../deepsource';
 import { MetricDirection, MetricKey, MetricShortcode } from '../types/metrics';
 
 describe('DeepSource Historical Data Processing', () => {
   describe('processHistoricalData', () => {
     // We need to access the private static method
     const processHistoricalData = (DeepSourceClient as Record<string, unknown>)
-      .processHistoricalData as Function;
+      .processHistoricalData as (
+      // eslint-disable-next-line no-unused-vars
+      _data: Record<string, unknown>,
+      // eslint-disable-next-line no-unused-vars
+      _params: MetricHistoryParams
+    ) => MetricHistoryValue[];
 
     it('should process historical data from GraphQL response', () => {
       // Sample GraphQL response data
@@ -259,12 +264,195 @@ describe('DeepSource Historical Data Processing', () => {
       expect(result[1].createdAt).toBe('2023-01-15T12:00:00Z');
       expect(result[2].createdAt).toBe('2023-02-01T12:00:00Z');
     });
+
+    it('should throw error when metric item data is not found', () => {
+      const sampleData = {
+        repository: {
+          metrics: [
+            {
+              shortcode: 'LCV',
+              name: 'Line Coverage',
+              positiveDirection: 'UPWARD',
+              unit: '%',
+              items: [
+                {
+                  id: 'metric1',
+                  key: 'PYTHON', // Different key than requested
+                  threshold: 80,
+                  values: {
+                    edges: [],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const params = {
+        projectKey: 'test-project',
+        metricShortcode: MetricShortcode.LCV,
+        metricKey: MetricKey.AGGREGATE, // Requesting AGGREGATE but only PYTHON exists
+      };
+
+      // Should throw error when metric item with requested key is not found
+      expect(() => processHistoricalData(sampleData, params)).toThrow(
+        'Metric item data not found or invalid in response'
+      );
+    });
+
+    it('should throw error when metric item has invalid values structure', () => {
+      const sampleData = {
+        repository: {
+          metrics: [
+            {
+              shortcode: 'LCV',
+              name: 'Line Coverage',
+              positiveDirection: 'UPWARD',
+              unit: '%',
+              items: [
+                {
+                  id: 'metric1',
+                  key: 'AGGREGATE',
+                  threshold: 80,
+                  values: null, // Invalid values structure
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const params = {
+        projectKey: 'test-project',
+        metricShortcode: MetricShortcode.LCV,
+        metricKey: MetricKey.AGGREGATE,
+      };
+
+      // Should throw error when values structure is invalid
+      expect(() => processHistoricalData(sampleData, params)).toThrow(
+        'Metric item data not found or invalid in response'
+      );
+    });
+
+    it('should throw error when metric item has missing edges', () => {
+      const sampleData = {
+        repository: {
+          metrics: [
+            {
+              shortcode: 'LCV',
+              name: 'Line Coverage',
+              positiveDirection: 'UPWARD',
+              unit: '%',
+              items: [
+                {
+                  id: 'metric1',
+                  key: 'AGGREGATE',
+                  threshold: 80,
+                  values: {
+                    // Missing edges property
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const params = {
+        projectKey: 'test-project',
+        metricShortcode: MetricShortcode.LCV,
+        metricKey: MetricKey.AGGREGATE,
+      };
+
+      // Should throw error when edges are missing
+      expect(() => processHistoricalData(sampleData, params)).toThrow(
+        'Metric item data not found or invalid in response'
+      );
+    });
+
+    it('should throw error when metric with requested shortcode is not found', () => {
+      const sampleData = {
+        repository: {
+          metrics: [
+            {
+              shortcode: 'BCV', // Different shortcode
+              name: 'Branch Coverage',
+              positiveDirection: 'UPWARD',
+              unit: '%',
+              items: [
+                {
+                  id: 'metric1',
+                  key: 'AGGREGATE',
+                  threshold: 80,
+                  values: {
+                    edges: [],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const params = {
+        projectKey: 'test-project',
+        metricShortcode: MetricShortcode.LCV, // Requesting LCV but only BCV exists
+        metricKey: MetricKey.AGGREGATE,
+      };
+
+      // Should throw error when metric with requested shortcode is not found
+      expect(() => processHistoricalData(sampleData, params)).toThrow(
+        'Metric with shortcode LCV not found in response'
+      );
+    });
+
+    it('should throw error when repository data is not found', () => {
+      const sampleData = {
+        // Missing repository property
+      };
+
+      const params = {
+        projectKey: 'test-project',
+        metricShortcode: MetricShortcode.LCV,
+        metricKey: MetricKey.AGGREGATE,
+      };
+
+      // Should throw error when repository is missing
+      expect(() => processHistoricalData(sampleData, params)).toThrow(
+        'Repository or metrics data not found in response'
+      );
+    });
+
+    it('should throw error when metrics data is not found', () => {
+      const sampleData = {
+        repository: {
+          // Missing metrics property
+        },
+      };
+
+      const params = {
+        projectKey: 'test-project',
+        metricShortcode: MetricShortcode.LCV,
+        metricKey: MetricKey.AGGREGATE,
+      };
+
+      // Should throw error when metrics is missing
+      expect(() => processHistoricalData(sampleData, params)).toThrow(
+        'Repository or metrics data not found in response'
+      );
+    });
   });
 
   describe('calculateTrendDirection', () => {
     // We need to access the private static method
     const calculateTrendDirection = (DeepSourceClient as Record<string, unknown>)
-      .calculateTrendDirection as Function;
+      .calculateTrendDirection as (
+      // eslint-disable-next-line no-unused-vars
+      _values: MetricHistoryValue[],
+      // eslint-disable-next-line no-unused-vars
+      _positiveDirection: string | MetricDirection
+    ) => boolean;
 
     it('should return true when not enough data points', () => {
       // One data point isn't enough to determine a trend
