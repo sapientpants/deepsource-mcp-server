@@ -455,6 +455,15 @@ export interface PaginatedResponse<T> {
 }
 
 /**
+ * Response structure for recent run issues
+ * @public
+ */
+export interface RecentRunIssuesResponse extends PaginatedResponse<DeepSourceIssue> {
+  /** The most recent run for the branch */
+  run: DeepSourceRun;
+}
+
+/**
  * Client for interacting with the DeepSource GraphQL API
  * Provides methods for querying projects, issues, analysis runs, and dependency vulnerabilities
  * Supports both legacy and Relay-style cursor-based pagination
@@ -1205,6 +1214,172 @@ export class DeepSourceClient {
       ) {
         return null;
       }
+      return DeepSourceClient.handleGraphQLError(error);
+    }
+  }
+
+  /**
+   * Fetches issues from the most recent analysis run on a specific branch
+   * @param projectKey - The unique identifier for the DeepSource project
+   * @param branchName - The branch name to get the most recent run from
+   * @param params - Optional pagination parameters
+   * @returns Promise that resolves to issues from the most recent run with pagination info
+   * @throws {Error} When no runs are found for the specified branch
+   * @throws {Error} When DeepSource API returns errors
+   * @throws {Error} When network, authentication or permission issues occur
+   */
+  async getRecentRunIssues(
+    projectKey: string,
+    branchName: string,
+    params: PaginationParams = {}
+  ): Promise<RecentRunIssuesResponse> {
+    try {
+      // Find the most recent run for the specified branch
+      const projects = await this.listProjects();
+      const project = projects.find((p) => p.key === projectKey);
+
+      if (!project) {
+        throw new Error(`Project with key ${projectKey} not found`);
+      }
+
+      // Get runs for the project and find the most recent one for the branch
+      let mostRecentRun: DeepSourceRun | null = null;
+      let cursor: string | undefined = undefined;
+      let hasNextPage = true;
+
+      while (hasNextPage) {
+        const runs = await this.listRuns(projectKey, {
+          first: 50,
+          after: cursor,
+        });
+
+        // Check each run in this page
+        for (const run of runs.items) {
+          if (run.branchName === branchName) {
+            // If this is the first matching run or it's more recent than our current most recent
+            if (!mostRecentRun || new Date(run.createdAt) > new Date(mostRecentRun.createdAt)) {
+              mostRecentRun = run;
+            }
+          }
+        }
+
+        // Update pagination info
+        hasNextPage = runs.pageInfo.hasNextPage;
+        cursor = runs.pageInfo.endCursor;
+      }
+
+      if (!mostRecentRun) {
+        throw new Error(`No runs found for branch '${branchName}' in project '${projectKey}'`);
+      }
+
+      // Normalize pagination parameters
+      const normalizedParams = DeepSourceClient.normalizePaginationParams(params);
+
+      // Now fetch the checks and occurrences from this specific run
+      const checksQuery = `
+        query($runId: ID!, $first: Int, $after: String, $before: String, $last: Int) {
+          run: analysisRun(id: $runId) {
+            checks {
+              edges {
+                node {
+                  id
+                  analyzer {
+                    shortcode
+                  }
+                  occurrences(first: $first, after: $after, before: $before, last: $last) {
+                    pageInfo {
+                      hasNextPage
+                      hasPreviousPage
+                      startCursor
+                      endCursor
+                    }
+                    totalCount
+                    edges {
+                      node {
+                        id
+                        issue {
+                          shortcode
+                          title
+                          category
+                          severity
+                          description
+                          tags
+                        }
+                        path
+                        beginLine
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      `;
+
+      const response = await this.client.post('', {
+        query: checksQuery.trim(),
+        variables: {
+          runId: mostRecentRun.id,
+          first: normalizedParams.first,
+          after: normalizedParams.after,
+          before: normalizedParams.before,
+          last: normalizedParams.last,
+        },
+      });
+
+      if (response.data.errors) {
+        const errorMessage = DeepSourceClient.extractErrorMessages(response.data.errors);
+        throw new Error(`GraphQL Errors: ${errorMessage}`);
+      }
+
+      // Process the occurrences from all checks
+      const issues: DeepSourceIssue[] = [];
+      let pageInfo = {
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: undefined as string | undefined,
+        endCursor: undefined as string | undefined,
+      };
+      let totalCount = 0;
+
+      const checks = response.data.data?.run?.checks?.edges ?? [];
+      for (const { node: check } of checks) {
+        const occurrences = check.occurrences?.edges ?? [];
+        const occurrencesPageInfo = check.occurrences?.pageInfo;
+        const occurrencesTotalCount = check.occurrences?.totalCount ?? 0;
+
+        // Aggregate page info (using the first check's pagination info for simplicity)
+        if (occurrencesPageInfo) {
+          pageInfo = occurrencesPageInfo;
+          totalCount += occurrencesTotalCount;
+        }
+
+        for (const { node: occurrence } of occurrences) {
+          if (!occurrence || !occurrence.issue) continue;
+
+          issues.push({
+            id: occurrence.id ?? 'unknown',
+            shortcode: occurrence.issue.shortcode ?? '',
+            title: occurrence.issue.title ?? 'Untitled Issue',
+            category: occurrence.issue.category ?? 'UNKNOWN',
+            severity: occurrence.issue.severity ?? 'UNKNOWN',
+            status: 'OPEN',
+            issue_text: occurrence.issue.description ?? '',
+            file_path: occurrence.path ?? 'N/A',
+            line_number: occurrence.beginLine ?? 0,
+            tags: occurrence.issue.tags ?? [],
+          });
+        }
+      }
+
+      return {
+        items: issues,
+        pageInfo,
+        totalCount,
+        run: mostRecentRun,
+      };
+    } catch (error) {
       return DeepSourceClient.handleGraphQLError(error);
     }
   }

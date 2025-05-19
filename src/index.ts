@@ -8,7 +8,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { DeepSourceClient, ReportType, ReportStatus, type DeepSourceRun } from './deepsource.js';
+import { DeepSourceClient, ReportType, ReportStatus } from './deepsource.js';
 import {
   MetricShortcode,
   MetricKey,
@@ -376,38 +376,8 @@ export async function handleDeepsourceRecentRunIssues({
 
   const client = new DeepSourceClient(apiKey);
 
-  // Find the most recent run for the specified branch by paginating through all runs
-  let mostRecentRun: DeepSourceRun | null = null;
-  let cursor: string | undefined = undefined;
-  let hasNextPage = true;
-
-  while (hasNextPage) {
-    const runs = await client.listRuns(projectKey, {
-      first: 50,
-      after: cursor,
-    });
-
-    // Check each run in this page
-    for (const run of runs.items) {
-      if (run.branchName === branchName) {
-        // If this is the first matching run or it's more recent than our current most recent
-        if (!mostRecentRun || new Date(run.createdAt) > new Date(mostRecentRun.createdAt)) {
-          mostRecentRun = run;
-        }
-      }
-    }
-
-    // Update pagination info
-    hasNextPage = runs.pageInfo.hasNextPage;
-    cursor = runs.pageInfo.endCursor;
-  }
-
-  if (!mostRecentRun) {
-    throw new Error(`No runs found for branch '${branchName}' in project '${projectKey}'`);
-  }
-
-  // Now get issues from the project (these are at the repository level, not run-specific)
-  const issues = await client.getIssues(projectKey, {
+  // Get issues from the most recent run on the specified branch
+  const result = await client.getRecentRunIssues(projectKey, branchName, {
     first,
     after,
     last,
@@ -420,14 +390,14 @@ export async function handleDeepsourceRecentRunIssues({
         type: 'text' as const,
         text: JSON.stringify({
           run: {
-            runUid: mostRecentRun.runUid,
-            commitOid: mostRecentRun.commitOid,
-            branchName: mostRecentRun.branchName,
-            status: mostRecentRun.status,
-            createdAt: mostRecentRun.createdAt,
-            summary: mostRecentRun.summary,
+            runUid: result.run.runUid,
+            commitOid: result.run.commitOid,
+            branchName: result.run.branchName,
+            status: result.run.status,
+            createdAt: result.run.createdAt,
+            summary: result.run.summary,
           },
-          issues: issues.items.map((issue) => ({
+          issues: result.items.map((issue) => ({
             id: issue.id,
             title: issue.title,
             shortcode: issue.shortcode,
@@ -439,23 +409,23 @@ export async function handleDeepsourceRecentRunIssues({
             line_number: issue.line_number,
             tags: issue.tags,
           })),
-          pageInfo: issues.pageInfo,
-          totalCount: issues.totalCount,
+          pageInfo: result.pageInfo,
+          totalCount: result.totalCount,
           metadata: {
             branch: branchName,
             projectKey: projectKey,
-            runDate: mostRecentRun.createdAt,
+            runDate: result.run.createdAt,
             description: `Issues from the most recent analysis run on branch '${branchName}'`,
-            note: 'Issues are at the repository level; DeepSource API does not provide run-specific issue filtering',
+            note: 'These are run-specific issues from the checks performed during the analysis',
           },
           // Add pagination help information
           pagination_help: {
             description: 'This API uses Relay-style cursor-based pagination',
-            forward_pagination: `To get the next page, use 'first: ${first || 10}, after: "${issues.pageInfo.endCursor || 'cursor_value'}"'`,
-            backward_pagination: `To get the previous page, use 'last: ${last || 10}, before: "${issues.pageInfo.startCursor || 'cursor_value'}"'`,
+            forward_pagination: `To get the next page, use 'first: ${first || 10}, after: "${result.pageInfo.endCursor || 'cursor_value'}"'`,
+            backward_pagination: `To get the previous page, use 'last: ${last || 10}, before: "${result.pageInfo.startCursor || 'cursor_value'}"'`,
             page_status: {
-              has_next_page: issues.pageInfo.hasNextPage,
-              has_previous_page: issues.pageInfo.hasPreviousPage,
+              has_next_page: result.pageInfo.hasNextPage,
+              has_previous_page: result.pageInfo.hasPreviousPage,
             },
           },
         }),

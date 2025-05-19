@@ -1,133 +1,142 @@
 # DeepSource Issues - Latest Run on `add-recent-run-issues-tool` branch
 
-Run Date: 2025-05-18 20:51:32 UTC  
+Run Date: 2025-05-18T21:06:49.711287+00:00  
 Run Status: FAILURE  
-Total Issues: 4 introduced, 12 resolved  
-Commit Analyzed: 1c647f030c29b6c6ce3cc48908f2c49c4311ff96 (current commit)
+Total Issues: 4 introduced, 13 resolved  
+Commit Analyzed: e8ffe3452751186c7e9e68622ec22b7449801760
 
-## Summary
+## Summary by Category
 
-This shows the latest DeepSource analysis results. We've successfully resolved 12 issues since the last run. The 4 "new" issues appear to be false positives or a sync issue with DeepSource, as our code shows the fixes are already applied.
+- **ANTI_PATTERN**: 2 issues (JS-0323 - Detected usage of the `any` type)
+- **COVERAGE**: 54 issues (TCV-001 - Lines not covered in tests)
+- **DOCUMENTATION**: 1 issue (JS-0099 - Found warning comments in code)
+- **ANTI_PATTERN**: 6 issues (JS-0296 - Use of a banned type detected)
+
+Total Issues: 63 (4 introduced, 13 resolved from previous run)
 
 ---
 
-## Potential False Positives (Need Verification)
+## Critical Priority Issues
 
-### 1. Detected usage of the `any` type (JS-0323)
+### 1. Detected usage of the `any` type (JS-0323) ⚠️ PRIORITY: HIGH
 **Severity:** CRITICAL  
 **Category:** ANTI_PATTERN  
-**Status:** FALSE POSITIVE
+**Status:** OPEN
 
-**Reported Locations:**
-- `src/__tests__/deepsource-metrics-response.test.ts:59`
-- `src/__tests__/deepsource-metrics-response.test.ts:4`
+**Locations:**
+1. `src/__tests__/deepsource-metrics-response.test.ts:59`
+   - TODO: Replace `any` type with proper type annotation
+   - LOCATION: line 59
+   
+2. `src/__tests__/deepsource-metrics-response.test.ts:4`
+   - TODO: Replace `any` type with proper type annotation (check imports or type declarations)
+   - LOCATION: line 4
 
-**VERIFIED:** These lines do NOT contain `any` types in the current code. Line 4 has a proper typed function parameter, and line 59 is just a `beforeAll(() => {` statement. These appear to be false positives or DeepSource analyzing cached/old data.
-
----
-
-### 2. Found warning comments in code (JS-0099)
-**Severity:** MINOR  
-**Category:** DOCUMENTATION  
-**Status:** FALSE POSITIVE
-
-**Reported Location:**
-- `src/__tests__/deepsource-metric-threshold-updates.test.ts:29`
-
-**VERIFIED:** This line is past the end of the file (file only has 28 lines). The TODO comment was previously removed. This appears to be a false positive.
+**Action Required:** Audit these test files and replace all `any` types with proper TypeScript types like `unknown`, `never`, or specific types.
 
 ---
 
-### 3. Use of a banned type detected (JS-0296)
-**Severity:** MAJOR  
-**Category:** ANTI_PATTERN  
-**Status:** NEEDS VERIFICATION
-
-**Reported Locations:**
-- `src/__tests__/deepsource-report-utils.test.ts` - multiple lines
-- `src/__tests__/deepsource-metric-validation.test.ts` - multiple lines  
-- `src/__tests__/deepsource-historical-data-processing.test.ts` - multiple lines
-
-**NOTE:** These were previously fixed to use specific function signatures instead of `Function` type. Need to verify if these are false positives.
-
----
-
-## Actual Issues
-
-### 4. Lines not covered in tests (TCV-001)
+### 2. Lines not covered in tests (TCV-001) ⚠️ PRIORITY: CRITICAL
 **Severity:** CRITICAL  
 **Category:** COVERAGE  
-**Status:** IN PROGRESS
+**Status:** OPEN
 
-**Description:** The following lines are not covered by any test cases and need test coverage added.
+**Description:** Multiple lines in `src/deepsource.ts` are not covered by any test cases. This significantly impacts code quality and maintainability.
 
-**Progress:** Added tests for processHistoricalData error handling (lines 2691, and potentially related lines)
+**Todo List for Test Coverage:**
 
-**Files and Line Numbers:**
-1. ~~`src/deepsource.ts:2686`~~ ✅ FIXED - Added test for missing metric item data
-2. `src/deepsource.ts:2677`
-3. `src/deepsource.ts:2668`
-4. `src/deepsource.ts:2733`
-5. `src/deepsource.ts:2727`
-6. `src/deepsource.ts:2639`
-7. `src/deepsource.ts:2633`
-8. `src/deepsource.ts:2622`
-9. `src/deepsource.ts:2590`
-10. `src/deepsource.ts:2563`
-11. `src/deepsource.ts:2556`
-12. `src/deepsource.ts:2550`
-13. `src/deepsource.ts:2546`
-14. `src/deepsource.ts:2543`
-15. `src/deepsource.ts:2538`
-16. `src/deepsource.ts:2535`
-17. `src/deepsource.ts:2341`
-18. `src/deepsource.ts:2324`
-19. `src/deepsource.ts:2299`
-20. `src/deepsource.ts:2296`
-21. `src/deepsource.ts:2264`
-22. `src/deepsource.ts:2139`
-23. `src/deepsource.ts:2097`
-24. `src/deepsource.ts:2061`
-25. `src/deepsource.ts:2025`
-26. `src/deepsource.ts:1975`
-27. `src/deepsource.ts:1859`
-28. `src/deepsource.ts:1747`
-29. `src/deepsource.ts:1720`
-30. `src/deepsource.ts:1712`
-31. `src/deepsource.ts:1706`
-32. `src/deepsource.ts:1700`
-33. `src/deepsource.ts:1676`
-34. `src/deepsource.ts:1642`
-35. `src/deepsource.ts:1632`
-36. `src/deepsource.ts:1629`
-37. `src/deepsource.ts:1619`
-38. `src/deepsource.ts:1592`
-39. `src/deepsource.ts:1583`
-40. `src/deepsource.ts:1575`
-41. `src/deepsource.ts:2881`
-42. `src/deepsource.ts:612`
-43. `src/deepsource.ts:604`
-44. `src/deepsource.ts:555`
-45. `src/deepsource.ts:717`
-46. `src/deepsource.ts:713`
-47. `src/deepsource.ts:709`
-48. `src/deepsource.ts:638`
-49. `src/deepsource.ts:630`
-50. `src/deepsource.ts:816`
-51. `src/deepsource.ts:1419`
-52. `src/deepsource.ts:727`
+1. **Method: getRecentRunIssues** (Lines 2535-2633)
+   - TODO: Add test for successful API response with issues
+   - TODO: Add test for empty issues response
+   - TODO: Add test for pagination parameters
+   - TODO: Add test for error handling in API call
+   - LOCATIONS: Lines 2535, 2538, 2543, 2546, 2550, 2556, 2563, 2590, 2622, 2633
 
-**NOTE:** Line 2691 is covered by our new test
+2. **Method: getRecentRunIssues error handling** (Lines 2639-2733)
+   - TODO: Add test for handling GraphQL errors
+   - TODO: Add test for handling network errors
+   - TODO: Add test for handling malformed response data
+   - LOCATIONS: Lines 2639, 2668, 2677, 2686, 2727, 2733
 
-**TODO:** Add comprehensive test coverage for all these lines. This is the main legitimate issue that needs to be addressed.
+3. **Data processing functions** (Lines 816-2881)
+   - TODO: Add tests for edge cases in data transformation
+   - TODO: Add tests for null/undefined handling
+   - TODO: Add tests for type conversions
+   - LOCATIONS: Lines 816, 1419, 1575, 1583, 1592, 1619, 1629, 1632, 1642, 1676, 1700, 1706, 1712, 1720, 1747, 1859, 1975, 2025, 2061, 2097, 2139, 2264, 2296, 2299, 2324, 2341, 2881
+
+4. **Utility functions** (Lines 555-727)
+   - TODO: Add tests for helper methods
+   - TODO: Add tests for validation functions
+   - TODO: Add tests for conversion utilities
+   - LOCATIONS: Lines 555, 604, 612, 630, 638, 709, 713, 717, 727
+
+**Total Lines Needing Coverage:** 54 lines
 
 ---
 
-## Summary of Action Items
+### 3. Use of a banned type detected (JS-0296) ⚠️ PRIORITY: MEDIUM
+**Severity:** MAJOR  
+**Category:** ANTI_PATTERN  
+**Status:** OPEN
 
-1. **Report False Positives**: The `any` type and TODO comment issues appear to be false positives, as the code shows these are already fixed
-2. **Verify Banned Types**: Check if the Function type issues are also false positives
-3. **Add Test Coverage**: This is the primary real issue - add tests for 52 uncovered lines in `src/deepsource.ts`
-4. **Sync with DeepSource**: May need to trigger a rescan or clear cache in DeepSource to get accurate results
+**Description:** The `Function` type is used in several test files, which is considered a banned type due to lack of type safety.
 
-Total Actual Issues: 52 test coverage issues (the other issues appear to be false positives or sync issues)
+**Locations and TODOs:**
+
+1. `src/__tests__/deepsource-report-utils.test.ts`
+   - Line 11: TODO: Replace `Function` type with specific function signature
+   - Line 146: TODO: Replace `Function` type with specific function signature  
+   - Line 196: TODO: Replace `Function` type with specific function signature
+
+2. `src/__tests__/deepsource-metric-validation.test.ts`
+   - Line 8: TODO: Replace `Function` type with specific function signature
+   - Line 56: TODO: Replace `Function` type with specific function signature
+   - Line 76: TODO: Replace `Function` type with specific function signature
+   - Line 108: TODO: Replace `Function` type with specific function signature
+
+3. `src/__tests__/deepsource-historical-data-processing.test.ts`
+   - Line 8: TODO: Replace `Function` type with specific function signature
+   - Line 267: TODO: Replace `Function` type with specific function signature
+
+**Action Required:** Replace all `Function` types with proper function signatures like `() => void`, `(param: type) => returnType`, etc.
+
+---
+
+### 4. Found warning comments in code (JS-0099) ⚠️ PRIORITY: LOW
+**Severity:** MINOR  
+**Category:** DOCUMENTATION  
+**Status:** OPEN
+
+**Location:**
+- `src/__tests__/deepsource-metric-threshold-updates.test.ts:29`
+  - TODO: Review and either implement or remove the TODO comment
+  - NOTE: Line 29 appears to be beyond the file length - this may be a false positive
+
+---
+
+## Action Plan
+
+1. **Immediate Priority (Critical Issues):**
+   - [ ] Fix all `any` type usage in test files (2 occurrences)
+   - [ ] Add comprehensive test coverage for the 54 uncovered lines
+
+2. **High Priority:**
+   - [ ] Replace all `Function` types with specific function signatures (9 occurrences)
+
+3. **Low Priority:**
+   - [ ] Review and resolve the TODO comment issue (verify if it's a false positive)
+
+4. **Follow-up Actions:**
+   - [ ] Re-run DeepSource analysis after fixes
+   - [ ] Verify all issues are resolved
+   - [ ] Update this document with resolution status
+
+## Summary Statistics
+
+- **Total Issues:** 63
+- **Critical Issues:** 56 (2 `any` types + 54 test coverage)
+- **Major Issues:** 6 (banned `Function` types)
+- **Minor Issues:** 1 (TODO comment)
+- **Files Affected:** 5
+
+This represents a comprehensive list of all issues found in the latest DeepSource run on the `add-recent-run-issues-tool` branch.

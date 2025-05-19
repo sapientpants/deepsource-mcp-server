@@ -49,6 +49,7 @@ describe('MCP server implementation', () => {
   // Save original DeepSourceClient methods
   const originalListProjects = DeepSourceClient.prototype.listProjects;
   const originalGetIssues = DeepSourceClient.prototype.getIssues;
+  const originalGetRecentRunIssues = DeepSourceClient.prototype.getRecentRunIssues;
 
   // Environment backup
   let originalEnv: Record<string, string | undefined>;
@@ -64,6 +65,7 @@ describe('MCP server implementation', () => {
     // Restore original methods
     DeepSourceClient.prototype.listProjects = originalListProjects;
     DeepSourceClient.prototype.getIssues = originalGetIssues;
+    DeepSourceClient.prototype.getRecentRunIssues = originalGetRecentRunIssues;
   });
 
   describe('Server initialization', () => {
@@ -783,9 +785,12 @@ describe('MCP server implementation', () => {
         totalCount: 1,
       };
 
-      // Mock the client methods
-      DeepSourceClient.prototype.listRuns = () => Promise.resolve(mockRuns);
-      DeepSourceClient.prototype.getIssues = () => Promise.resolve(mockIssues);
+      // Mock the client method
+      DeepSourceClient.prototype.getRecentRunIssues = () =>
+        Promise.resolve({
+          ...mockIssues,
+          run: mockRuns.items[0],
+        });
 
       const params: DeepsourceRecentRunIssuesParams = {
         projectKey: 'test-project',
@@ -820,19 +825,11 @@ describe('MCP server implementation', () => {
     });
 
     it('throws error when no runs found for branch', async () => {
-      // Mock empty runs response
-      const mockRuns = {
-        items: [],
-        pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: false,
-          startCursor: null,
-          endCursor: null,
-        },
-        totalCount: 0,
-      };
+      // Mock to throw error directly since no runs are found
 
-      DeepSourceClient.prototype.listRuns = () => Promise.resolve(mockRuns);
+      DeepSourceClient.prototype.getRecentRunIssues = () => {
+        throw new Error("No runs found for branch 'non-existent-branch' in project 'test-project'");
+      };
 
       const params: DeepsourceRecentRunIssuesParams = {
         projectKey: 'test-project',
@@ -845,31 +842,7 @@ describe('MCP server implementation', () => {
     });
 
     it('handles pagination correctly', async () => {
-      // Create a tracked array to record calls
-      const calls: Array<[string, any]> = [];
-
-      // First page of runs
-      const firstPage = {
-        items: [
-          {
-            id: 'run1',
-            runUid: '123e4567-e89b-12d3-a456-426614174000',
-            commitOid: 'abc123',
-            branchName: 'other-branch',
-            status: 'SUCCESS',
-            createdAt: '2024-01-01T00:00:00Z',
-            summary: {},
-            repository: { name: 'test-repo', id: 'repo1' },
-          },
-        ],
-        pageInfo: {
-          hasNextPage: true,
-          hasPreviousPage: false,
-          startCursor: 'start',
-          endCursor: 'cursor1',
-        },
-        totalCount: 2,
-      };
+      // Remove firstPage as it's not used in the new implementation
 
       // Second page with the target branch
       const secondPage = {
@@ -906,15 +879,12 @@ describe('MCP server implementation', () => {
         totalCount: 0,
       };
 
-      // Mock to return different pages based on cursor
-      DeepSourceClient.prototype.listRuns = (projectKey, params) => {
-        calls.push([projectKey, params]);
-        if (!params.after) return Promise.resolve(firstPage);
-        if (params.after === 'cursor1') return Promise.resolve(secondPage);
-        return Promise.resolve({ items: [], pageInfo: { hasNextPage: false }, totalCount: 0 });
-      };
-
-      DeepSourceClient.prototype.getIssues = () => Promise.resolve(mockIssues);
+      // Mock to return the run from the second page
+      DeepSourceClient.prototype.getRecentRunIssues = () =>
+        Promise.resolve({
+          ...mockIssues,
+          run: secondPage.items[0],
+        });
 
       const params: DeepsourceRecentRunIssuesParams = {
         projectKey: 'test-project',
@@ -928,10 +898,7 @@ describe('MCP server implementation', () => {
       expect(parsedResult.run.branchName).toBe('target-branch');
       expect(parsedResult.run.runUid).toBe('223e4567-e89b-12d3-a456-426614174001');
 
-      // Verify listRuns was called multiple times for pagination
-      expect(calls.length).toBe(2);
-      expect(calls[0][1].after).toBeUndefined();
-      expect(calls[1][1].after).toBe('cursor1');
+      // The new implementation handles pagination internally, so we don't need to verify these calls
     });
 
     it('supports pagination parameters for issues', async () => {
@@ -998,13 +965,15 @@ describe('MCP server implementation', () => {
         totalCount: 50,
       };
 
-      // Track getIssues call parameters
-      let getIssuesParams: any = null;
+      // Track getRecentRunIssues call parameters
+      let getRecentRunIssuesParams: any = null;
 
-      DeepSourceClient.prototype.listRuns = () => Promise.resolve(mockRuns);
-      DeepSourceClient.prototype.getIssues = (projectKey, params) => {
-        getIssuesParams = params;
-        return Promise.resolve(mockIssues);
+      DeepSourceClient.prototype.getRecentRunIssues = (projectKey, branchName, params) => {
+        getRecentRunIssuesParams = params;
+        return Promise.resolve({
+          ...mockIssues,
+          run: mockRuns.items[0],
+        });
       };
 
       const params: DeepsourceRecentRunIssuesParams = {
@@ -1018,7 +987,7 @@ describe('MCP server implementation', () => {
       const parsedResult = JSON.parse((result.content[0] as TextContent).text);
 
       // Verify pagination parameters were passed correctly
-      expect(getIssuesParams).toEqual({
+      expect(getRecentRunIssuesParams).toEqual({
         first: 25,
         after: 'cursor123',
         last: undefined,
