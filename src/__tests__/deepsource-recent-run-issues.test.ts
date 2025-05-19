@@ -328,5 +328,81 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
         'GraphQL Errors: GraphQL Error in occurrences'
       );
     });
+
+    it('should handle missing node data in occurrences response', async () => {
+      // Mock findMostRecentRun to succeed
+      jest
+        .spyOn(client as unknown as { findMostRecentRun: jest.Mock }, 'findMostRecentRun')
+        .mockResolvedValue({
+          id: 'run1',
+          runUid: 'run-uid-1',
+          commitOid: 'commit1',
+          branchName: 'main',
+          baseOid: 'base1',
+          status: 'SUCCESS' as const,
+          createdAt: '2023-01-02T00:00:00Z',
+          updatedAt: '2023-01-02T00:00:00Z',
+          finishedAt: '2023-01-02T00:00:00Z',
+          summary: {
+            occurrencesIntroduced: 5,
+            occurrencesResolved: 3,
+            occurrencesSuppressed: 0,
+            occurrenceDistributionByAnalyzer: [],
+            occurrenceDistributionByCategory: [],
+          },
+          repository: {
+            id: 'repo1',
+            name: 'Test Project',
+          },
+        });
+
+      // Mock the initial checks fetch response
+      const checksListResponse = {
+        data: {
+          data: {
+            run: {
+              checks: {
+                edges: [
+                  {
+                    node: {
+                      id: 'check1',
+                      analyzer: {
+                        shortcode: 'javascript',
+                      },
+                    },
+                  },
+                ],
+                pageInfo: {
+                  hasNextPage: false,
+                  endCursor: null,
+                },
+              },
+            },
+          },
+        },
+      };
+
+      // Mock empty occurrences response with no node data
+      const emptyOccurrencesResponse = {
+        data: {
+          data: {
+            node: null,
+          },
+        },
+      };
+
+      // Mock the responses
+      mockAxiosInstance.post.mockResolvedValueOnce(checksListResponse);
+      mockAxiosInstance.post.mockResolvedValueOnce(emptyOccurrencesResponse);
+
+      // Execute
+      const result = await client.getRecentRunIssues('test-project', 'main');
+
+      // Verify - should return empty issues when node is null
+      expect(result.items).toHaveLength(0);
+      expect(result.run.runUid).toBe('run-uid-1');
+      expect(result.pageInfo.hasNextPage).toBe(false);
+      expect(result.totalCount).toBe(0);
+    });
   });
 });
