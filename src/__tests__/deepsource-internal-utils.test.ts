@@ -1,4 +1,5 @@
 import { DeepSourceClient } from '../deepsource';
+import { jest } from '@jest/globals';
 
 // Import types from metrics.ts
 import { MetricDirection } from '../types/metrics';
@@ -45,6 +46,16 @@ class TestableDeepSourceClient extends DeepSourceClient {
   static testHandleHttpStatusError(error: unknown): never | false {
     // @ts-expect-error - Accessing private method for testing
     return DeepSourceClient.handleHttpStatusError(error);
+  }
+
+  static testHandleGraphQLError(error: unknown): never {
+    // @ts-expect-error - Accessing private method for testing
+    return DeepSourceClient.handleGraphQLError(error);
+  }
+
+  static testHandleGraphQLSpecificError(error: unknown): never | false {
+    // @ts-expect-error - Accessing private method for testing
+    return DeepSourceClient.handleGraphQLSpecificError(error);
   }
 }
 
@@ -481,6 +492,113 @@ describe('DeepSource Internal Utilities', () => {
 
       const result = TestableDeepSourceClient.testHandleHttpStatusError(regularError);
       expect(result).toBe(false);
+    });
+  });
+
+  describe('handleGraphQLError', () => {
+    // Mock implementations for sub-handlers to simulate different behaviors
+    let originalGraphQLHandler: any;
+    let originalNetworkHandler: any;
+    let originalHttpStatusHandler: any;
+
+    beforeEach(() => {
+      // Store original handlers
+      // @ts-expect-error - Accessing private static method for testing
+      originalGraphQLHandler = DeepSourceClient.handleGraphQLSpecificError;
+      // @ts-expect-error - Accessing private static method for testing
+      originalNetworkHandler = DeepSourceClient.handleNetworkError;
+      // @ts-expect-error - Accessing private static method for testing
+      originalHttpStatusHandler = DeepSourceClient.handleHttpStatusError;
+    });
+
+    afterEach(() => {
+      // Restore original handlers
+      // @ts-expect-error - Accessing private static method for testing
+      DeepSourceClient.handleGraphQLSpecificError = originalGraphQLHandler;
+      // @ts-expect-error - Accessing private static method for testing
+      DeepSourceClient.handleNetworkError = originalNetworkHandler;
+      // @ts-expect-error - Accessing private static method for testing
+      DeepSourceClient.handleHttpStatusError = originalHttpStatusHandler;
+    });
+
+    it('should throw error for GraphQL specific error', () => {
+      // Create a situation where GraphQL handler returns true instead of throwing
+      // This would trigger the unreachable code at line 811
+      // @ts-expect-error - Accessing private static method for testing
+      DeepSourceClient.handleGraphQLSpecificError = jest.fn().mockReturnValue(true);
+
+      const error = new Error('Test GraphQL error');
+
+      expect(() => TestableDeepSourceClient.testHandleGraphQLError(error)).toThrow(
+        'Unreachable code - handleGraphQLSpecificError should have thrown'
+      );
+    });
+
+    it('should throw error for network error', () => {
+      // Create a situation where GraphQL handler returns false (no error handled)
+      // but Network handler returns true instead of throwing
+      // This would trigger the unreachable code at line 815
+      // @ts-expect-error - Accessing private static method for testing
+      DeepSourceClient.handleGraphQLSpecificError = jest.fn().mockReturnValue(false);
+      // @ts-expect-error - Accessing private static method for testing
+      DeepSourceClient.handleNetworkError = jest.fn().mockReturnValue(true);
+
+      const error = new Error('Test network error');
+
+      expect(() => TestableDeepSourceClient.testHandleGraphQLError(error)).toThrow(
+        'Unreachable code - handleNetworkError should have thrown'
+      );
+    });
+
+    it('should throw error for HTTP status error', () => {
+      // Create a situation where GraphQL and Network handlers return false
+      // but HTTP Status handler returns true instead of throwing
+      // This would trigger the unreachable code at line 819
+      // @ts-expect-error - Accessing private static method for testing
+      DeepSourceClient.handleGraphQLSpecificError = jest.fn().mockReturnValue(false);
+      // @ts-expect-error - Accessing private static method for testing
+      DeepSourceClient.handleNetworkError = jest.fn().mockReturnValue(false);
+      // @ts-expect-error - Accessing private static method for testing
+      DeepSourceClient.handleHttpStatusError = jest.fn().mockReturnValue(true);
+
+      const error = new Error('Test HTTP status error');
+
+      expect(() => TestableDeepSourceClient.testHandleGraphQLError(error)).toThrow(
+        'Unreachable code - handleHttpStatusError should have thrown'
+      );
+    });
+
+    it('should throw classified error for standard Error objects', () => {
+      // All handlers return false, but the error is a standard Error
+      // @ts-expect-error - Accessing private static method for testing
+      DeepSourceClient.handleGraphQLSpecificError = jest.fn().mockReturnValue(false);
+      // @ts-expect-error - Accessing private static method for testing
+      DeepSourceClient.handleNetworkError = jest.fn().mockReturnValue(false);
+      // @ts-expect-error - Accessing private static method for testing
+      DeepSourceClient.handleHttpStatusError = jest.fn().mockReturnValue(false);
+
+      const error = new Error('Standard Error');
+
+      expect(() => TestableDeepSourceClient.testHandleGraphQLError(error)).toThrow(
+        'DeepSource API error: Standard Error'
+      );
+    });
+
+    it('should throw generic error for non-Error objects', () => {
+      // All handlers return false, and the "error" is not an Error object
+      // This would trigger line 829
+      // @ts-expect-error - Accessing private static method for testing
+      DeepSourceClient.handleGraphQLSpecificError = jest.fn().mockReturnValue(false);
+      // @ts-expect-error - Accessing private static method for testing
+      DeepSourceClient.handleNetworkError = jest.fn().mockReturnValue(false);
+      // @ts-expect-error - Accessing private static method for testing
+      DeepSourceClient.handleHttpStatusError = jest.fn().mockReturnValue(false);
+
+      const nonError = {}; // A non-Error object without a message property
+
+      expect(() => TestableDeepSourceClient.testHandleGraphQLError(nonError)).toThrow(
+        'Unknown error occurred while communicating with DeepSource API'
+      );
     });
   });
 });
