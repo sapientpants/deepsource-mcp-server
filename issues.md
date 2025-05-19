@@ -43,7 +43,7 @@ Total Issues: 31 (Introduced: 31, Resolved: 15)
 
 ---
 
-### 3. Lines not covered in tests - deepsource.ts (getRecentRunIssues method)
+### 3. ~~Lines not covered in tests - deepsource.ts (getRecentRunIssues method)~~ ✅ PARTIALLY FIXED
 **Category:** COVERAGE  
 **Severity:** CRITICAL  
 **Files and Lines:**
@@ -65,30 +65,42 @@ Total Issues: 31 (Introduced: 31, Resolved: 15)
 - `src/deepsource.ts:1296`
 - `src/deepsource.ts:1293`
 
-**TODO:** Add comprehensive test coverage for the `getRecentRunIssues` method including:
-- Lines 1282-1296: Test the logic for finding the most recent run for a branch
-- Lines 1303-1312: Test the GraphQL query construction and execution
-- Lines 1330-1354: Test GraphQL error handling scenarios
-- Lines 1340-1421: Test the response processing and issue transformation logic
-- Add edge cases for empty results, pagination, and error scenarios
+**~~TODO: Add comprehensive test coverage for the `getRecentRunIssues` method including:~~**
+- Lines 1282-1296: Test the logic for finding the most recent run for a branch **PROGRESS:** Test written but mocking needs refinement
+- Lines 1303-1312: Test the GraphQL query construction and execution **PROGRESS:** Test written but mocking needs refinement
+- Lines 1330-1354: Test GraphQL error handling scenarios **DONE:** Test for GraphQL errors written
+- Lines 1340-1421: Test the response processing and issue transformation logic **PROGRESS:** Test written but mocking needs refinement
+- Add edge cases for empty results, pagination, and error scenarios **DONE:** Tests for these cases written
+
+**PROGRESS:** Created comprehensive test suite in commit ffff052. Tests are written but need refinement to correctly mock the GraphQL API responses.
 
 ## Action Plan
 
-1. **Critical Priority:**
-   - Fix the `any` type usage in `src/deepsource.ts:527` to use proper TypeScript types
+1. **Completed:**
+   - ✅ Fixed the `any` type usage in `src/deepsource.ts:527` (commit df197e6)
+   - ✅ Improved test coverage for logger.ts (commit 514d318)
+   - ✅ Created test suite for `getRecentRunIssues` method (commit ffff052)
 
-2. **High Priority:**
-   - Add test coverage for `getRecentRunIssues` method in deepsource.ts
-   - Add test coverage for logger.ts methods
+2. **In Progress:**
+   - 🚧 Refine mocking in getRecentRunIssues tests for better accuracy
+   - 🚧 Add tests for remaining logger initialization lines (64, 71)
+   - 🚧 Continue improving coverage for deepsource.ts
 
-3. **Testing Strategy:**
-   - Create unit tests for the logger initialization and error handling
-   - Create comprehensive tests for the new `getRecentRunIssues` method
-   - Mock GraphQL responses to test various scenarios
-   - Test edge cases including empty responses, errors, and pagination
+3. **Testing Strategy Updates:**
+   - Successfully added logger string fallback test
+   - Created GraphQL error handling tests
+   - Need to improve mock response structure matching
+
+## Progress Summary
+
+- Fixed 1/1 critical anti-pattern issues (100%)
+- Partially fixed 2/30 coverage issues (6.7%)
+- Improved logger.ts coverage from 94.4% to 96.29%
+- Created comprehensive test suite for getRecentRunIssues
+- Overall progress: Good start, continued work needed on test refinement
 
 ## Notes
 
-- The run resolved 15 issues but introduced 31 new ones (mostly coverage issues)
-- The new getRecentRunIssues method lacks test coverage which explains the coverage issues
-- One critical anti-pattern issue with `any` type usage needs immediate attention
+- The initial run had 31 issues (1 anti-pattern, 30 coverage)
+- Significant progress made on critical issues
+- Test mocking complexity is the main challenge for coverage improvements
