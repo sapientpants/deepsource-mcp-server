@@ -1,69 +1,124 @@
 # DeepSource Issues Todo List
 
-## Branch: add-recent-run-issues-tool
-**Run Date:** 2025-05-19T17:46:41.811701+00:00  
-**Status:** RESOLVED  
-**Total Issues:** 1 (resolved)
-
----
-
-## Critical Issues
-
-### JS-0323: Detected usage of the `any` type
-
+## Active Issues Summary
+**Total Active Issues:** 50  
+**Issue Type:** TCV-001 (Lines not covered in tests)  
 **Severity:** CRITICAL  
-**Category:** ANTI_PATTERN
-
-#### Occurrences:
-- [x] **File:** `src/__tests__/deepsource-find-most-recent-run.test.ts`
-  - **Line:** 46
-  - **Description:** The `any` type is used, which disables TypeScript's type checking and creates potential safety holes and bugs.
-  - **Recommendation:** Replace the `any` type with more specific types like `unknown`, `never`, or properly typed interfaces.
-  - **Fix Applied:** Replaced `Promise<any>` with `Promise<Record<string, unknown>>` in the type definition for `findMostRecentRun` method.
-
-#### Issue Description:
-The `any` type can sometimes leak into your codebase. TypeScript compiler skips the type checking of the `any` typed variables, so it creates a potential safety hole, and source of bugs in your codebase. We recommend using `unknown` or `never` type variable.
-
-In TypeScript, every type is assignable to `any`. This makes `any` a top type (also known as a universal supertype) of the type system. The `any` type is essentially an escape hatch from the type system. As developers, this gives us a ton of freedom: TypeScript lets us perform any operation we want on values of type `any` without having to perform any checking beforehand.
-
-#### Bad Practice Example:
-```typescript
-const age: any = 'seventeen';
-const ages: any[] = ['seventeen'];
-const ages: Array<any> = ['seventeen'];
-function greet(): any {}
-function greet(): any[] {}
-function greet(): Array<any> {}
-function greet(): Array<Array<any>> {}
-function greet(param: Array<any>): string {}
-function greet(param: Array<any>): Array<any> {}
-```
-
-#### Recommended Practice:
-```typescript
-const age: number = 17;
-const ages: number[] = [17];
-const ages: Array<number> = [17];
-function greet(): string {}
-function greet(): string[] {}
-function greet(): Array<string> {}
-function greet(): Array<Array<string>> {}
-function greet(param: Array<string>): string {}
-function greet(param: Array<string>): Array<string> {}
-```
+**Category:** COVERAGE  
 
 ---
 
-## Summary
+## Test Coverage Issues - TCV-001
 
-- **Issues Introduced:** 1
-- **Issues Resolved:** 16 (15 previously + 1 just fixed)
-- **Issues Suppressed:** 0
-- **All Critical Issues:** RESOLVED ✅
+### Issue Description
+A source line is considered covered when at least one instruction that is assigned to this line has been executed by a test case. These lines were not executed during any of the test cases.
 
-## Distribution by Analyzer
-- JavaScript: 1 issue introduced
-- Test Coverage: 0 issues introduced
+### Detailed Todo List
 
-## Distribution by Category
-- ANTI_PATTERN: 1 issue introduced
+#### File: `src/deepsource.ts`
+
+The following lines need test coverage:
+
+1. ~~**Line 657** - Add test case for this line~~ ✅ RESOLVED (commit: 0df1f72)
+2. ~~**Line 706** - Add test case for this line~~ ✅ RESOLVED (commit: a50c4ec)
+3. ~~**Line 714** - Add test case for this line~~ ✅ RESOLVED (commit: a50c4ec - covered by ETIMEDOUT test)
+4. ~~**Line 732** - Add test case for this line~~ ✅ RESOLVED (commit: dcd0e33)
+5. ~~**Line 740** - Add test case for this line~~ ✅ RESOLVED (commit: dcd0e33)
+6. ~~**Line 811** - Add test case for this line~~ ✅ RESOLVED (commit: 5af1da8)
+7. ~~**Line 815** - Add test case for this line~~ ✅ RESOLVED (commit: 5af1da8)
+8. ~~**Line 819** - Add test case for this line~~ ✅ RESOLVED (commit: 5af1da8)
+9. ~~**Line 829** - Add test case for this line~~ ✅ RESOLVED (commit: 5af1da8)
+10. ~~**Line 918** - Add test case for this line~~ ✅ RESOLVED (commit: 2d7fff8)
+11. ~~**Line 1810** - Add test case for this line~~ ✅ RESOLVED (commit: 39c21fa)
+12. ~~**Line 1966** - Add test case for this line~~ ✅ RESOLVED (commit: 7809c2c)
+13. ~~**Line 1974** - Add test case for this line~~ ✅ RESOLVED (commit: 7809c2c)
+14. ~~**Line 1983** - Add test case for this line~~ ✅ RESOLVED (commit: 7809c2c)
+15. ~~**Line 2010** - Add test case for this line~~ ✅ RESOLVED
+16. ~~**Line 2020** - Add test case for this line~~ ✅ RESOLVED
+17. ~~**Line 2023** - Add test case for this line~~ ✅ RESOLVED
+18. ~~**Line 2033** - Add test case for this line~~ ✅ RESOLVED
+19. **Line 2067** - Add test case for this line
+20. **Line 2091** - Add test case for this line
+21. **Line 2097** - Add test case for this line
+22. **Line 2103** - Add test case for this line
+23. **Line 2111** - Add test case for this line
+24. **Line 2138** - Add test case for this line
+25. **Line 2250** - Add test case for this line
+26. **Line 2366** - Add test case for this line
+27. **Line 2416** - Add test case for this line
+28. **Line 2452** - Add test case for this line
+29. **Line 2488** - Add test case for this line
+30. **Line 2530** - Add test case for this line
+31. **Line 2655** - Add test case for this line
+32. **Line 2687** - Add test case for this line
+33. **Line 2690** - Add test case for this line
+34. **Line 2715** - Add test case for this line
+35. **Line 2732** - Add test case for this line
+36. **Line 2931** - Add test case for this line
+37. **Line 2934** - Add test case for this line
+38. **Line 2939** - Add test case for this line
+39. **Line 2942** - Add test case for this line
+40. **Line 2946** - Add test case for this line
+41. **Line 2952** - Add test case for this line
+42. **Line 2959** - Add test case for this line
+43. **Line 2986** - Add test case for this line
+44. **Line 3018** - Add test case for this line
+45. **Line 3029** - Add test case for this line
+46. **Line 3035** - Add test case for this line
+47. **Line 3123** - Add test case for this line
+48. **Line 3129** - Add test case for this line
+49. **Line 3277** - Add test case for this line
+
+---
+
+## Action Plan
+
+### 1. Analyze uncovered lines
+- Review each uncovered line to understand what functionality needs testing
+- Identify logical groups of related functionality that can be tested together
+
+### 2. Create test cases
+- Write test cases that exercise each uncovered line
+- Ensure tests cover both success and failure paths
+- Pay special attention to edge cases and error conditions
+
+### 3. Priority order
+- Start with the most critical functionality (auth, error handling, core business logic)
+- Then move to utility functions and edge cases
+
+### Test Categories to Focus On
+Based on the line numbers, these appear to be gaps in:
+- Error handling and edge cases
+- Specific method branches that weren't exercised
+- Fallback/default behaviors
+- Exception catches
+
+### Notes
+- All issues are in the same file: `src/deepsource.ts`
+- These are all test coverage issues (no code quality issues)
+- Achieving 100% coverage will require comprehensive test cases
+- Some lines might be defensive code or error handlers that are difficult to trigger naturally
+
+---
+
+## Progress Tracking
+
+- [x] Review all 49 uncovered lines
+- [x] Group related functionality
+- [x] Write test plan for each group
+- [x] Implement test cases (14/49 completed)
+- [ ] Verify coverage improvement
+- [ ] Run DeepSource analysis to confirm issues resolved
+
+### Progress Summary
+- Issues fixed: 18/49 (36.7%)
+- Methods covered:
+  - ✅ isAxiosErrorWithCriteria (line 657)
+  - ✅ handleNetworkError (lines 706, 714)
+  - ✅ handleHttpStatusError (lines 732, 740)
+  - ✅ handleGraphQLError (lines 811, 815, 819, 829)
+  - ✅ normalizePaginationParams (line 918)
+  - ✅ validateNumber (line 1810)
+  - ✅ processVulnerabilityEdge (lines 1966, 1974, 1983)
+  - ✅ iterateVulnerabilities (lines 2010, 2020, 2023, 2033)
+- Remaining: 31 lines to cover
