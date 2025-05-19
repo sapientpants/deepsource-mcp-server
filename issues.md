@@ -11,7 +11,7 @@ Total Issues: 18
 All issues are of type "Lines not covered in tests" - A source line is considered covered when at least one instruction that is assigned to this line has been executed by a test case. These lines were not executed during any of the test cases.
 
 ### src/utils/logger.ts
-- [ ] **Line 71**: Add test coverage for this line
+- [x] **Line 71**: Add test coverage for this line (Fixed: added test for mkdirSync error handling in initialization)
 - [ ] **Line 64**: Add test coverage for this line
 
 ### src/deepsource.ts
