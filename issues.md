@@ -12,7 +12,7 @@ All issues are of type "Lines not covered in tests" - A source line is considere
 
 ### src/utils/logger.ts
 - [x] **Line 71**: Add test coverage for this line (Fixed: added test for mkdirSync error handling in initialization)
-- [ ] **Line 64**: Add test coverage for this line
+- [x] **Line 64**: Add test coverage for this line (Fixed: added test for mkdirSync successful call when directory doesn't exist)
 
 ### src/deepsource.ts
 - [ ] **Line 1539**: Add test coverage for this line
