@@ -43,7 +43,7 @@ const { DeepSourceClient } = await import('../deepsource.js');
 // Type definition for accessing private instance methods
 type DeepSourceClientWithPrivateMethods = InstanceType<typeof DeepSourceClient> & {
   // eslint-disable-next-line no-unused-vars
-  findMostRecentRun: (projectKey: string, branchName: string) => Promise<any>;
+  findMostRecentRun: (projectKey: string, branchName: string) => Promise<Record<string, unknown>>;
 };
 
 describe('DeepSourceClient - findMostRecentRun', () => {
