@@ -26,18 +26,20 @@ Total Issues: 31 (Introduced: 31, Resolved: 15)
 
 ## Coverage Issues (TCV-001) - Lines Not Covered in Tests
 
-### 2. Lines not covered in tests - logger.ts 
+### 2. ~~Lines not covered in tests - logger.ts~~ ✅ PARTIALLY FIXED
 **Category:** COVERAGE  
 **Severity:** CRITICAL  
 **Files and Lines:**
-- `src/utils/logger.ts:204`
-- `src/utils/logger.ts:71`
-- `src/utils/logger.ts:64`
+- ~~`src/utils/logger.ts:204`~~ ✅ FIXED
+- `src/utils/logger.ts:71` ⚠️ PENDING
+- `src/utils/logger.ts:64` ⚠️ PENDING
 
-**TODO:** Add test coverage for the following Logger methods:
-- Line 64: Test initialization logic in `initializeLogFile` method
-- Line 71: Test error handling in `initializeLogFile` catch block
-- Line 204: Test the main `log` method behavior
+**~~TODO: Add test coverage for the following Logger methods:~~**
+- ~~Line 204: Test the main `log` method behavior~~ **FIXED:** Added test for JSON.stringify fallback in commit 514d318
+- Line 64: Test initialization logic in `initializeLogFile` method **PENDING:** Complex module initialization flow needs different approach
+- Line 71: Test error handling in `initializeLogFile` catch block **PENDING:** Complex module initialization flow needs different approach
+
+**PROGRESS:** Improved logger coverage from 94.4% to 96.29%. Two lines remain uncovered due to module initialization complexity.
 
 ---
 
