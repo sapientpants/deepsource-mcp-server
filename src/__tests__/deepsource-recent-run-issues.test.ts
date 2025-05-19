@@ -43,7 +43,7 @@ const { DeepSourceClient } = await import('../deepsource.js');
 
 describe('DeepSourceClient - getRecentRunIssues', () => {
   let client: InstanceType<typeof DeepSourceClient>;
-  let mockAxiosInstance: any;
+  let mockAxiosInstance: Record<string, unknown>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -81,28 +81,30 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
   describe('getRecentRunIssues', () => {
     it('should successfully retrieve issues from the most recent run', async () => {
       // Mock the findMostRecentRun method
-      jest.spyOn(client as any, 'findMostRecentRun').mockResolvedValue({
-        id: 'run1',
-        runUid: 'run-uid-1',
-        commitOid: 'commit1',
-        branchName: 'main',
-        baseOid: 'base1',
-        status: 'SUCCESS' as const,
-        createdAt: '2023-01-02T00:00:00Z',
-        updatedAt: '2023-01-02T00:00:00Z',
-        finishedAt: '2023-01-02T00:00:00Z',
-        summary: {
-          occurrencesIntroduced: 5,
-          occurrencesResolved: 3,
-          occurrencesSuppressed: 0,
-          occurrenceDistributionByAnalyzer: [],
-          occurrenceDistributionByCategory: [],
-        },
-        repository: {
-          id: 'repo1',
-          name: 'Test Project',
-        },
-      });
+      jest
+        .spyOn(client as unknown as { findMostRecentRun: jest.Mock }, 'findMostRecentRun')
+        .mockResolvedValue({
+          id: 'run1',
+          runUid: 'run-uid-1',
+          commitOid: 'commit1',
+          branchName: 'main',
+          baseOid: 'base1',
+          status: 'SUCCESS' as const,
+          createdAt: '2023-01-02T00:00:00Z',
+          updatedAt: '2023-01-02T00:00:00Z',
+          finishedAt: '2023-01-02T00:00:00Z',
+          summary: {
+            occurrencesIntroduced: 5,
+            occurrencesResolved: 3,
+            occurrencesSuppressed: 0,
+            occurrenceDistributionByAnalyzer: [],
+            occurrenceDistributionByCategory: [],
+          },
+          repository: {
+            id: 'repo1',
+            name: 'Test Project',
+          },
+        });
 
       // Mock the initial checks fetch response
       const checksListResponse = {
@@ -204,7 +206,7 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
     it('should handle no runs found for branch', async () => {
       // Mock findMostRecentRun to throw the expected error
       jest
-        .spyOn(client as any, 'findMostRecentRun')
+        .spyOn(client as unknown as { findMostRecentRun: jest.Mock }, 'findMostRecentRun')
         .mockRejectedValue(
           new Error("No runs found for branch 'non-existent-branch' in project 'test-project'")
         );
@@ -217,28 +219,30 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
 
     it('should handle GraphQL errors in checks fetch', async () => {
       // Mock findMostRecentRun to succeed
-      jest.spyOn(client as any, 'findMostRecentRun').mockResolvedValue({
-        id: 'run1',
-        runUid: 'run-uid-1',
-        commitOid: 'commit1',
-        branchName: 'main',
-        baseOid: 'base1',
-        status: 'SUCCESS' as const,
-        createdAt: '2023-01-02T00:00:00Z',
-        updatedAt: '2023-01-02T00:00:00Z',
-        finishedAt: '2023-01-02T00:00:00Z',
-        summary: {
-          occurrencesIntroduced: 5,
-          occurrencesResolved: 3,
-          occurrencesSuppressed: 0,
-          occurrenceDistributionByAnalyzer: [],
-          occurrenceDistributionByCategory: [],
-        },
-        repository: {
-          id: 'repo1',
-          name: 'Test Project',
-        },
-      });
+      jest
+        .spyOn(client as unknown as { findMostRecentRun: jest.Mock }, 'findMostRecentRun')
+        .mockResolvedValue({
+          id: 'run1',
+          runUid: 'run-uid-1',
+          commitOid: 'commit1',
+          branchName: 'main',
+          baseOid: 'base1',
+          status: 'SUCCESS' as const,
+          createdAt: '2023-01-02T00:00:00Z',
+          updatedAt: '2023-01-02T00:00:00Z',
+          finishedAt: '2023-01-02T00:00:00Z',
+          summary: {
+            occurrencesIntroduced: 5,
+            occurrencesResolved: 3,
+            occurrencesSuppressed: 0,
+            occurrenceDistributionByAnalyzer: [],
+            occurrenceDistributionByCategory: [],
+          },
+          repository: {
+            id: 'repo1',
+            name: 'Test Project',
+          },
+        });
 
       // Mock error response
       const errorResponse = {
@@ -258,28 +262,30 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
 
     it('should handle GraphQL errors in occurrences fetch', async () => {
       // Mock findMostRecentRun to succeed
-      jest.spyOn(client as any, 'findMostRecentRun').mockResolvedValue({
-        id: 'run1',
-        runUid: 'run-uid-1',
-        commitOid: 'commit1',
-        branchName: 'main',
-        baseOid: 'base1',
-        status: 'SUCCESS' as const,
-        createdAt: '2023-01-02T00:00:00Z',
-        updatedAt: '2023-01-02T00:00:00Z',
-        finishedAt: '2023-01-02T00:00:00Z',
-        summary: {
-          occurrencesIntroduced: 5,
-          occurrencesResolved: 3,
-          occurrencesSuppressed: 0,
-          occurrenceDistributionByAnalyzer: [],
-          occurrenceDistributionByCategory: [],
-        },
-        repository: {
-          id: 'repo1',
-          name: 'Test Project',
-        },
-      });
+      jest
+        .spyOn(client as unknown as { findMostRecentRun: jest.Mock }, 'findMostRecentRun')
+        .mockResolvedValue({
+          id: 'run1',
+          runUid: 'run-uid-1',
+          commitOid: 'commit1',
+          branchName: 'main',
+          baseOid: 'base1',
+          status: 'SUCCESS' as const,
+          createdAt: '2023-01-02T00:00:00Z',
+          updatedAt: '2023-01-02T00:00:00Z',
+          finishedAt: '2023-01-02T00:00:00Z',
+          summary: {
+            occurrencesIntroduced: 5,
+            occurrencesResolved: 3,
+            occurrencesSuppressed: 0,
+            occurrenceDistributionByAnalyzer: [],
+            occurrenceDistributionByCategory: [],
+          },
+          repository: {
+            id: 'repo1',
+            name: 'Test Project',
+          },
+        });
 
       // Mock the initial checks fetch response
       const checksListResponse = {
