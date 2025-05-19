@@ -11,11 +11,11 @@ Total Issues: 9
 All issues are of type "Detected usage of the `any` type" - The `any` type can sometimes leak into your codebase. TypeScript compiler skips the type checking of the `any` typed variables, so it creates a potential safety hole, and source of bugs in your codebase. We recommend using `unknown` or `never` type variable.
 
 ### src/__tests__/deepsource-process-run-checks.test.ts
-- [ ] **Line 314**: Remove usage of the `any` type
-- [ ] **Line 234**: Remove usage of the `any` type
-- [ ] **Line 177**: Remove usage of the `any` type
-- [ ] **Line 136**: Remove usage of the `any` type
-- [ ] **Line 88**: Remove usage of the `any` type
+- [x] **Line 314**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateStatics type)
+- [x] **Line 234**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateStatics type)
+- [x] **Line 177**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateStatics type)
+- [x] **Line 136**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateStatics type)
+- [x] **Line 88**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateStatics type)
 
 ### src/__tests__/deepsource-find-most-recent-run.test.ts
 - [ ] **Line 386**: Remove usage of the `any` type
