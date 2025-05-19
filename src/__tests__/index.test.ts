@@ -824,7 +824,7 @@ describe('MCP server implementation', () => {
       });
     });
 
-    it('throws error when no runs found for branch', async () => {
+    it('returns error result when no runs found for branch', async () => {
       // Mock to throw error directly since no runs are found
 
       DeepSourceClient.prototype.getRecentRunIssues = () => {
@@ -836,9 +836,20 @@ describe('MCP server implementation', () => {
         branchName: 'non-existent-branch',
       };
 
-      await expect(handleDeepsourceRecentRunIssues(params)).rejects.toThrow(
-        "No runs found for branch 'non-existent-branch' in project 'test-project'"
-      );
+      const result = await handleDeepsourceRecentRunIssues(params);
+
+      // Verify the error response structure
+      expect(result).toHaveProperty('isError', true);
+      expect(result.content).toHaveLength(1);
+      expect(result.content[0]).toHaveProperty('type', 'text');
+
+      const errorData = JSON.parse((result.content[0] as TextContent).text);
+      expect(errorData).toMatchObject({
+        error: "No runs found for branch 'non-existent-branch' in project 'test-project'",
+        details: 'Failed to retrieve recent run issues',
+        projectKey: 'test-project',
+        branchName: 'non-existent-branch',
+      });
     });
 
     it('handles pagination correctly', async () => {

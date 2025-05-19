@@ -8,6 +8,23 @@ This repository is a Model Context Protocol (MCP) server that integrates with De
 
 ## Common Commands
 
+## Environment Variables
+
+The server uses the following environment variables:
+
+- `DEEPSOURCE_API_KEY` (required): Your DeepSource API key for authentication
+- `LOG_FILE` (optional): File path for log output. If not set, no logs will be written
+- `LOG_LEVEL` (optional): Minimum log level (DEBUG, INFO, WARN, ERROR). Defaults to DEBUG
+
+Example:
+```bash
+export DEEPSOURCE_API_KEY="your-api-key"
+export LOG_FILE="/tmp/deepsource-mcp.log"
+export LOG_LEVEL="DEBUG"
+```
+
+## Development Commands
+
 ```bash
 # Install dependencies
 pnpm install

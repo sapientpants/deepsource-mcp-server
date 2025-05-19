@@ -1234,11 +1234,17 @@ export class DeepSourceClient {
     params: PaginationParams = {}
   ): Promise<RecentRunIssuesResponse> {
     try {
+      this.logger.info(
+        `getRecentRunIssues called for project: ${projectKey}, branch: ${branchName}`,
+        params
+      );
+
       // Find the most recent run for the specified branch
       const projects = await this.listProjects();
       const project = projects.find((p) => p.key === projectKey);
 
       if (!project) {
+        this.logger.error(`Project with key ${projectKey} not found`);
         throw new Error(`Project with key ${projectKey} not found`);
       }
 
@@ -1269,16 +1275,19 @@ export class DeepSourceClient {
       }
 
       if (!mostRecentRun) {
+        this.logger.error(`No runs found for branch '${branchName}' in project '${projectKey}'`);
         throw new Error(`No runs found for branch '${branchName}' in project '${projectKey}'`);
       }
+
+      this.logger.debug(`Found most recent run: ${mostRecentRun.runUid} for branch: ${branchName}`);
 
       // Normalize pagination parameters
       const normalizedParams = DeepSourceClient.normalizePaginationParams(params);
 
       // Now fetch the checks and occurrences from this specific run
       const checksQuery = `
-        query($runId: ID!, $first: Int, $after: String, $before: String, $last: Int) {
-          run: analysisRun(id: $runId) {
+        query($runId: UUID!, $first: Int, $after: String, $before: String, $last: Int) {
+          run(runUid: $runId) {
             checks {
               edges {
                 node {
@@ -1320,7 +1329,7 @@ export class DeepSourceClient {
       const response = await this.client.post('', {
         query: checksQuery.trim(),
         variables: {
-          runId: mostRecentRun.id,
+          runId: mostRecentRun.runUid,
           first: normalizedParams.first,
           after: normalizedParams.after,
           before: normalizedParams.before,

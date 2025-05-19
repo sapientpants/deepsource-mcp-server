@@ -112,6 +112,35 @@ This would use the `update_metric_threshold` tool:
   "thresholdValue": 80
 }
 ```
+### Environment Variables
+
+The server supports the following environment variables:
+
+* `DEEPSOURCE_API_KEY` (required): Your DeepSource API key for authentication
+* `LOG_FILE` (optional): Path to a file where logs should be written. If not set, no logs will be written
+* `LOG_LEVEL` (optional): Minimum log level to write (DEBUG, INFO, WARN, ERROR). Defaults to DEBUG
+
+Example configuration with logging:
+
+```json
+{
+  "mcpServers": {
+    "deepsource": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "deepsource-mcp-server@1.1.0"
+      ],
+      "env": {
+        "DEEPSOURCE_API_KEY": "your-deepsource-api-key",
+        "LOG_FILE": "/tmp/deepsource-mcp.log",
+        "LOG_LEVEL": "DEBUG"
+      }
+    }
+  }
+}
+```
+
 ### Docker
 
 ```json
@@ -125,10 +154,15 @@ This would use the `update_metric_threshold` tool:
         "--rm",
         "-e",
         "DEEPSOURCE_API_KEY",
+        "-e",
+        "LOG_FILE=/tmp/deepsource-mcp.log",
+        "-v",
+        "/tmp:/tmp",
         "sapientpants/deepsource-mcp-server"
       ],
       "env": {
-        "DEEPSOURCE_API_KEY": "your-deepsource-api-key"
+        "DEEPSOURCE_API_KEY": "your-deepsource-api-key",
+        "LOG_FILE": "/tmp/deepsource-mcp.log"
       }
     }
   }
@@ -304,6 +338,44 @@ pnpm run build
 * `pnpm run test` - Run tests
 * `pnpm run lint` - Run ESLint
 * `pnpm run format` - Format code with Prettier
+
+## Troubleshooting
+
+### Enable Debug Logging
+
+If you're experiencing issues, enable debug logging to see detailed information:
+
+1. Set the `LOG_FILE` environment variable to a file path where logs should be written
+2. Set `LOG_LEVEL` to `DEBUG` (this is the default)
+3. Check the log file for detailed error information
+
+Example configuration:
+```json
+{
+  "mcpServers": {
+    "deepsource": {
+      "command": "npx",
+      "args": ["-y", "deepsource-mcp-server@1.1.0"],
+      "env": {
+        "DEEPSOURCE_API_KEY": "your-api-key",
+        "LOG_FILE": "/tmp/deepsource-mcp.log",
+        "LOG_LEVEL": "DEBUG"
+      }
+    }
+  }
+}
+```
+
+Then check the log file:
+```bash
+tail -f /tmp/deepsource-mcp.log
+```
+
+### Common Issues
+
+1. **Authentication Error**: Ensure your `DEEPSOURCE_API_KEY` is correct and has the necessary permissions
+2. **No logs appearing**: Verify that the `LOG_FILE` path is writable and the parent directory exists
+3. **Tool errors**: Check the log file for detailed error messages and stack traces
 
 ## License
 

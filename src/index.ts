@@ -16,6 +16,10 @@ import {
   // MetricHistoryParams, // Commented out as it's not used in this file
 } from './types/metrics.js';
 import { z } from 'zod';
+import { createLogger } from './utils/logger.js';
+
+// Create logger instance for index.ts
+const logger = createLogger('DeepSourceMCP:index');
 
 // Initialize MCP server
 /**
@@ -368,70 +372,108 @@ export async function handleDeepsourceRecentRunIssues({
   last,
   before,
 }: DeepsourceRecentRunIssuesParams) {
-  const apiKey = process.env.DEEPSOURCE_API_KEY;
-  /* istanbul ignore if */
-  if (!apiKey) {
-    throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
-  }
+  try {
+    logger.info('handleDeepsourceRecentRunIssues called', {
+      projectKey,
+      branchName,
+      first,
+      after,
+      last,
+      before,
+    });
 
-  const client = new DeepSourceClient(apiKey);
+    const apiKey = process.env.DEEPSOURCE_API_KEY;
+    /* istanbul ignore if */
+    if (!apiKey) {
+      logger.error('DEEPSOURCE_API_KEY environment variable is not set');
+      throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
+    }
 
-  // Get issues from the most recent run on the specified branch
-  const result = await client.getRecentRunIssues(projectKey, branchName, {
-    first,
-    after,
-    last,
-    before,
-  });
+    const client = new DeepSourceClient(apiKey);
 
-  return {
-    content: [
-      {
-        type: 'text' as const,
-        text: JSON.stringify({
-          run: {
-            runUid: result.run.runUid,
-            commitOid: result.run.commitOid,
-            branchName: result.run.branchName,
-            status: result.run.status,
-            createdAt: result.run.createdAt,
-            summary: result.run.summary,
-          },
-          issues: result.items.map((issue) => ({
-            id: issue.id,
-            title: issue.title,
-            shortcode: issue.shortcode,
-            category: issue.category,
-            severity: issue.severity,
-            status: issue.status,
-            issue_text: issue.issue_text,
-            file_path: issue.file_path,
-            line_number: issue.line_number,
-            tags: issue.tags,
-          })),
-          pageInfo: result.pageInfo,
-          totalCount: result.totalCount,
-          metadata: {
-            branch: branchName,
-            projectKey: projectKey,
-            runDate: result.run.createdAt,
-            description: `Issues from the most recent analysis run on branch '${branchName}'`,
-            note: 'These are run-specific issues from the checks performed during the analysis',
-          },
-          // Add pagination help information
-          pagination_help: {
-            description: 'This API uses Relay-style cursor-based pagination',
-            forward_pagination: `To get the next page, use 'first: ${first || 10}, after: "${result.pageInfo.endCursor || 'cursor_value'}"'`,
-            backward_pagination: `To get the previous page, use 'last: ${last || 10}, before: "${result.pageInfo.startCursor || 'cursor_value'}"'`,
-            page_status: {
-              has_next_page: result.pageInfo.hasNextPage,
-              has_previous_page: result.pageInfo.hasPreviousPage,
+    logger.debug('Calling client.getRecentRunIssues');
+    // Get issues from the most recent run on the specified branch
+    const result = await client.getRecentRunIssues(projectKey, branchName, {
+      first,
+      after,
+      last,
+      before,
+    });
+
+    logger.debug('Got result from client.getRecentRunIssues', {
+      runId: result.run?.id,
+      issuesCount: result.items?.length,
+      hasNextPage: result.pageInfo?.hasNextPage,
+    });
+
+    const response = {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            run: {
+              runUid: result.run.runUid,
+              commitOid: result.run.commitOid,
+              branchName: result.run.branchName,
+              status: result.run.status,
+              createdAt: result.run.createdAt,
+              summary: result.run.summary,
             },
-          },
-        }),
-      },
-    ],
-  };
+            issues: result.items.map((issue) => ({
+              id: issue.id,
+              title: issue.title,
+              shortcode: issue.shortcode,
+              category: issue.category,
+              severity: issue.severity,
+              status: issue.status,
+              issue_text: issue.issue_text,
+              file_path: issue.file_path,
+              line_number: issue.line_number,
+              tags: issue.tags,
+            })),
+            pageInfo: result.pageInfo,
+            totalCount: result.totalCount,
+            metadata: {
+              branch: branchName,
+              projectKey: projectKey,
+              runDate: result.run.createdAt,
+              description: `Issues from the most recent analysis run on branch '${branchName}'`,
+              note: 'These are run-specific issues from the checks performed during the analysis',
+            },
+            // Add pagination help information
+            pagination_help: {
+              description: 'This API uses Relay-style cursor-based pagination',
+              forward_pagination: `To get the next page, use 'first: ${first || 10}, after: "${result.pageInfo.endCursor || 'cursor_value'}"'`,
+              backward_pagination: `To get the previous page, use 'last: ${last || 10}, before: "${result.pageInfo.startCursor || 'cursor_value'}"'`,
+              page_status: {
+                has_next_page: result.pageInfo.hasNextPage,
+                has_previous_page: result.pageInfo.hasPreviousPage,
+              },
+            },
+          }),
+        },
+      ],
+    };
+
+    logger.debug('Returning response from handleDeepsourceRecentRunIssues', response);
+    return response;
+  } catch (error) {
+    logger.error('Error in handleDeepsourceRecentRunIssues', error);
+    return {
+      isError: true,
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            error: (error as Error).message,
+            details: 'Failed to retrieve recent run issues',
+            projectKey,
+            branchName,
+          }),
+        },
+      ],
+    };
+  }
 }
 
 /**
@@ -1423,5 +1465,7 @@ mcpServer.tool(
 /* istanbul ignore if */
 if (process.env.NODE_ENV !== 'test') {
   const transport = new StdioServerTransport();
+  logger.info('Starting MCP server...');
   await mcpServer.connect(transport);
+  logger.info('MCP server started successfully');
 }

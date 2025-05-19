@@ -1,18 +1,16 @@
-# DeepSource Issues - Latest Run on `add-recent-run-issues-tool` branch
+# DeepSource Issues - Latest Analysis
 
-Run Date: 2025-05-18T21:06:49.711287+00:00  
-Run Status: FAILURE  
-Total Issues: 4 introduced, 13 resolved  
-Commit Analyzed: e8ffe3452751186c7e9e68622ec22b7449801760
+Project: deepsource-mcp-server
+
+Since the recent_run_issues tool has an error, issues retrieved using project_issues tool.
 
 ## Summary by Category
 
-- **ANTI_PATTERN**: 2 issues (JS-0323 - Detected usage of the `any` type)
+- **ANTI_PATTERN**: 8 issues (2 JS-0323 any type, 6 JS-0296 banned types)
 - **COVERAGE**: 54 issues (TCV-001 - Lines not covered in tests)
 - **DOCUMENTATION**: 1 issue (JS-0099 - Found warning comments in code)
-- **ANTI_PATTERN**: 6 issues (JS-0296 - Use of a banned type detected)
 
-Total Issues: 63 (4 introduced, 13 resolved from previous run)
+Total Issues: 63
 
 ---
 
@@ -26,11 +24,11 @@ Total Issues: 63 (4 introduced, 13 resolved from previous run)
 **Locations:**
 1. `src/__tests__/deepsource-metrics-response.test.ts:59`
    - TODO: Replace `any` type with proper type annotation
-   - LOCATION: line 59
+   - LOCATION: Line 59
    
 2. `src/__tests__/deepsource-metrics-response.test.ts:4`
    - TODO: Replace `any` type with proper type annotation (check imports or type declarations)
-   - LOCATION: line 4
+   - LOCATION: Line 4
 
 **Action Required:** Audit these test files and replace all `any` types with proper TypeScript types like `unknown`, `never`, or specific types.
 
@@ -45,26 +43,20 @@ Total Issues: 63 (4 introduced, 13 resolved from previous run)
 
 **Todo List for Test Coverage:**
 
-1. **Method: getRecentRunIssues** (Lines 2535-2633)
+1. **Method: getRecentRunIssues** (Lines various)
    - TODO: Add test for successful API response with issues
    - TODO: Add test for empty issues response
    - TODO: Add test for pagination parameters
    - TODO: Add test for error handling in API call
-   - LOCATIONS: Lines 2535, 2538, 2543, 2546, 2550, 2556, 2563, 2590, 2622, 2633
+   - LOCATIONS: Lines 2535, 2538, 2543, 2546, 2550, 2556, 2563, 2590, 2622, 2633, 2639, 2668, 2677, 2686, 2727, 2733
 
-2. **Method: getRecentRunIssues error handling** (Lines 2639-2733)
-   - TODO: Add test for handling GraphQL errors
-   - TODO: Add test for handling network errors
-   - TODO: Add test for handling malformed response data
-   - LOCATIONS: Lines 2639, 2668, 2677, 2686, 2727, 2733
-
-3. **Data processing functions** (Lines 816-2881)
+2. **Data processing functions** 
    - TODO: Add tests for edge cases in data transformation
    - TODO: Add tests for null/undefined handling
    - TODO: Add tests for type conversions
    - LOCATIONS: Lines 816, 1419, 1575, 1583, 1592, 1619, 1629, 1632, 1642, 1676, 1700, 1706, 1712, 1720, 1747, 1859, 1975, 2025, 2061, 2097, 2139, 2264, 2296, 2299, 2324, 2341, 2881
 
-4. **Utility functions** (Lines 555-727)
+3. **Utility functions** 
    - TODO: Add tests for helper methods
    - TODO: Add tests for validation functions
    - TODO: Add tests for conversion utilities
@@ -110,7 +102,6 @@ Total Issues: 63 (4 introduced, 13 resolved from previous run)
 **Location:**
 - `src/__tests__/deepsource-metric-threshold-updates.test.ts:29`
   - TODO: Review and either implement or remove the TODO comment
-  - NOTE: Line 29 appears to be beyond the file length - this may be a false positive
 
 ---
 
@@ -124,7 +115,7 @@ Total Issues: 63 (4 introduced, 13 resolved from previous run)
    - [ ] Replace all `Function` types with specific function signatures (9 occurrences)
 
 3. **Low Priority:**
-   - [ ] Review and resolve the TODO comment issue (verify if it's a false positive)
+   - [ ] Review and resolve the TODO comment issue
 
 4. **Follow-up Actions:**
    - [ ] Re-run DeepSource analysis after fixes
@@ -139,4 +130,11 @@ Total Issues: 63 (4 introduced, 13 resolved from previous run)
 - **Minor Issues:** 1 (TODO comment)
 - **Files Affected:** 5
 
-This represents a comprehensive list of all issues found in the latest DeepSource run on the `add-recent-run-issues-tool` branch.
+## Note on Tool Error
+
+The `recent_run_issues` tool is returning an undefined error. This may be due to:
+1. No runs available on the specified branch
+2. An issue with the API implementation
+3. A permissions or authentication problem
+
+This should be investigated separately as it's preventing access to branch-specific run issues.
