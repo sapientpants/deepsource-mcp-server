@@ -1250,7 +1250,7 @@ export class DeepSourceClient {
 
       // Get runs for the project and find the most recent one for the branch
       let mostRecentRun: DeepSourceRun | null = null;
-      let cursor: string | undefined = undefined;
+      let cursor: string | undefined;
       let hasNextPage = true;
 
       while (hasNextPage) {
