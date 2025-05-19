@@ -41,6 +41,11 @@ class TestableDeepSourceClient extends DeepSourceClient {
     // @ts-expect-error - Accessing private method for testing
     return DeepSourceClient.handleNetworkError(error);
   }
+
+  static testHandleHttpStatusError(error: unknown): never | false {
+    // @ts-expect-error - Accessing private method for testing
+    return DeepSourceClient.handleHttpStatusError(error);
+  }
 }
 
 describe('DeepSource Internal Utilities', () => {
@@ -373,6 +378,108 @@ describe('DeepSource Internal Utilities', () => {
 
     it('should return false for null error', () => {
       const result = TestableDeepSourceClient.testHandleNetworkError(null);
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('handleHttpStatusError', () => {
+    it('should throw authentication error for 401', () => {
+      const axiosError = {
+        isAxiosError: true,
+        response: {
+          status: 401,
+          data: {},
+        },
+      };
+
+      expect(() => TestableDeepSourceClient.testHandleHttpStatusError(axiosError)).toThrow(
+        'Authentication error: Invalid or expired API key'
+      );
+    });
+
+    it('should throw rate limit error for 429', () => {
+      const axiosError = {
+        isAxiosError: true,
+        response: {
+          status: 429,
+          data: {},
+        },
+      };
+
+      expect(() => TestableDeepSourceClient.testHandleHttpStatusError(axiosError)).toThrow(
+        'Rate limit exceeded: Too many requests to DeepSource API'
+      );
+    });
+
+    it('should throw not found error for 404', () => {
+      const axiosError = {
+        isAxiosError: true,
+        response: {
+          status: 404,
+          data: {},
+        },
+      };
+
+      expect(() => TestableDeepSourceClient.testHandleHttpStatusError(axiosError)).toThrow(
+        'Not found (404): The requested resource was not found'
+      );
+    });
+
+    it('should throw server error for 500+', () => {
+      const axiosError = {
+        isAxiosError: true,
+        response: {
+          status: 500,
+          data: {},
+        },
+      };
+
+      expect(() => TestableDeepSourceClient.testHandleHttpStatusError(axiosError)).toThrow(
+        'Server error (500): DeepSource API server error'
+      );
+
+      const error503 = {
+        isAxiosError: true,
+        response: {
+          status: 503,
+          data: {},
+        },
+      };
+
+      expect(() => TestableDeepSourceClient.testHandleHttpStatusError(error503)).toThrow(
+        'Server error (503): DeepSource API server error'
+      );
+    });
+
+    it('should throw client error for 400-499 range', () => {
+      const axiosError = {
+        isAxiosError: true,
+        response: {
+          status: 403,
+          data: {},
+          statusText: 'Forbidden',
+        },
+      };
+
+      expect(() => TestableDeepSourceClient.testHandleHttpStatusError(axiosError)).toThrow(
+        'Client error (403): Forbidden'
+      );
+    });
+
+    it('should return false for non-http-status errors', () => {
+      const axiosError = {
+        isAxiosError: true,
+        code: 'ENOTFOUND',
+      };
+
+      const result = TestableDeepSourceClient.testHandleHttpStatusError(axiosError);
+      expect(result).toBe(false);
+    });
+
+    it('should return false for non-axios errors', () => {
+      const regularError = new Error('Regular error');
+
+      const result = TestableDeepSourceClient.testHandleHttpStatusError(regularError);
       expect(result).toBe(false);
     });
   });
