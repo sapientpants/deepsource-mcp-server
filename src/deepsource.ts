@@ -524,7 +524,44 @@ export class DeepSourceClient {
    * Process issues from the GraphQL response
    * @private
    */
-  private static processRunChecksResponse(response: any): {
+  private static processRunChecksResponse(response: {
+    data: {
+      data?: {
+        run?: {
+          checks?: {
+            edges?: Array<{
+              node: {
+                occurrences?: {
+                  pageInfo?: {
+                    hasNextPage: boolean;
+                    hasPreviousPage: boolean;
+                    startCursor: string | undefined;
+                    endCursor: string | undefined;
+                  };
+                  totalCount?: number;
+                  edges?: Array<{
+                    node?: {
+                      id?: string;
+                      issue?: {
+                        shortcode?: string;
+                        title?: string;
+                        category?: string;
+                        severity?: string;
+                        description?: string;
+                        tags?: string[];
+                      };
+                      path?: string;
+                      beginLine?: number;
+                    };
+                  }>;
+                };
+              };
+            }>;
+          };
+        };
+      };
+    };
+  }): {
     issues: DeepSourceIssue[];
     pageInfo: {
       hasNextPage: boolean;
