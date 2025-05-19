@@ -1,61 +1,40 @@
 # DeepSource Issues - TODO List
 
-Run ID: 7cd9965c-8dd0-4c7b-8f5d-b5f5769e2470
+Run ID: fbc65da7-a938-4d4d-b643-401ba1eb190d
 Branch: add-recent-run-issues-tool
 Status: FAILURE
-Created: 2025-05-19T17:16:41.528891+00:00
-Total Issues: 18
+Created: 2025-05-19T17:37:09.793273+00:00
+Total Issues: 9
 
-## Critical Coverage Issues (TCV-001)
+## Anti-Pattern Issues (JS-0323)
 
-All issues are of type "Lines not covered in tests" - A source line is considered covered when at least one instruction that is assigned to this line has been executed by a test case. These lines were not executed during any of the test cases.
+All issues are of type "Detected usage of the `any` type" - The `any` type can sometimes leak into your codebase. TypeScript compiler skips the type checking of the `any` typed variables, so it creates a potential safety hole, and source of bugs in your codebase. We recommend using `unknown` or `never` type variable.
 
-### src/utils/logger.ts
-- [x] **Line 71**: Add test coverage for this line (Fixed: added test for mkdirSync error handling in initialization)
-- [x] **Line 64**: Add test coverage for this line (Fixed: added test for mkdirSync successful call when directory doesn't exist)
+### src/__tests__/deepsource-process-run-checks.test.ts
+- [ ] **Line 314**: Remove usage of the `any` type
+- [ ] **Line 234**: Remove usage of the `any` type
+- [ ] **Line 177**: Remove usage of the `any` type
+- [ ] **Line 136**: Remove usage of the `any` type
+- [ ] **Line 88**: Remove usage of the `any` type
 
-### src/deepsource.ts
-- [x] **Line 1539**: Add test coverage for this line (Fixed: added test for null node data in occurrences response)
-- [x] **Line 1350**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
-- [x] **Line 1345**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
-- [x] **Line 1341**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
-- [x] **Line 1334**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
-- [x] **Line 1331**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
-- [x] **Line 1324**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
-- [x] **Line 1322**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
-- [x] **Line 1320**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
-- [x] **Line 613**: Add test coverage for this line (Fixed: added test for processRunChecksResponse method)
-- [x] **Line 598**: Add test coverage for this line (Fixed: added test for processRunChecksResponse method)
-- [x] **Line 595**: Add test coverage for this line (Fixed: added test for processRunChecksResponse method)
-- [x] **Line 590**: Add test coverage for this line (Fixed: added test for processRunChecksResponse method)
-- [x] **Line 583**: Add test coverage for this line (Fixed: added test for processRunChecksResponse method)
-- [x] **Line 581**: Add test coverage for this line (Fixed: added test for processRunChecksResponse method)
-- [x] **Line 574**: Add test coverage for this line (Fixed: added test for processRunChecksResponse method)
+### src/__tests__/deepsource-find-most-recent-run.test.ts
+- [ ] **Line 386**: Remove usage of the `any` type
+- [ ] **Line 309**: Remove usage of the `any` type
+- [ ] **Line 276**: Remove usage of the `any` type
+- [ ] **Line 176**: Remove usage of the `any` type
 
 ## Summary
-- **Total issues introduced**: 18
-- **All issues are coverage-related** (TCV-001)
+- **Total issues introduced**: 9
+- **All issues are anti-pattern related** (JS-0323)
 - **Severity**: CRITICAL
-- **Status**: ✅ All issues resolved!
+- **Action required**: Replace all `any` types with more specific types
 
-## Resolution Details
-All 18 coverage issues have been resolved by adding comprehensive unit tests:
-
-### src/utils/logger.ts (2 issues resolved)
-- Line 71: Added test for error handling in mkdirSync during log file initialization
-- Line 64: Added test for successful mkdirSync call when directory doesn't exist
-
-### src/deepsource.ts (16 issues resolved)
-- Lines 1320-1350: Added comprehensive tests for the `findMostRecentRun` method including:
-  - Finding the most recent run from multiple runs
-  - Handling pagination across multiple pages
-  - Error handling when no runs are found
-  - Handling edge cases with runs having the same timestamp
-- Lines 574-613: Added comprehensive tests for the `processRunChecksResponse` method including:
-  - Processing responses with complete issue data
-  - Handling empty responses
-  - Handling missing optional fields
-  - Handling null occurrences
-  - Managing pagination across multiple checks
-
-The coverage has been significantly improved and all identified lines now have proper test coverage.
+## Resolution Strategy
+1. Identify each `any` type usage at the specified line numbers
+2. Replace with appropriate specific types:
+   - Use `unknown` for truly unknown types
+   - Use type assertions with proper types like `Record<string, unknown>`
+   - Use proper interfaces or types where the structure is known
+3. Ensure tests still pass after replacing `any` types
+4. Run `pnpm run lint` to verify no type errors
+5. Run `pnpm run test` to ensure all tests still pass

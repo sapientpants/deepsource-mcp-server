@@ -23,6 +23,11 @@ jest.unstable_mockModule('../utils/logger.js', () => ({
 // Import DeepSourceClient after mocking
 const { DeepSourceClient } = await import('../deepsource.js');
 
+// Type definition for accessing private static methods
+type DeepSourceClientWithPrivateStatics = typeof DeepSourceClient & {
+  processRunChecksResponse: (typeof DeepSourceClient)['processRunChecksResponse'];
+};
+
 describe('DeepSourceClient - processRunChecksResponse', () => {
   describe('processRunChecksResponse', () => {
     it('should process a response with issues correctly', () => {
@@ -85,7 +90,9 @@ describe('DeepSourceClient - processRunChecksResponse', () => {
       };
 
       // Call the static method directly
-      const result = (DeepSourceClient as any).processRunChecksResponse(mockResponse);
+      const result = (
+        DeepSourceClient as DeepSourceClientWithPrivateStatics
+      ).processRunChecksResponse(mockResponse);
 
       // Verify the response structure
       expect(result.issues).toHaveLength(2);
@@ -133,7 +140,9 @@ describe('DeepSourceClient - processRunChecksResponse', () => {
         },
       };
 
-      const result = (DeepSourceClient as any).processRunChecksResponse(mockResponse);
+      const result = (
+        DeepSourceClient as DeepSourceClientWithPrivateStatics
+      ).processRunChecksResponse(mockResponse);
 
       expect(result.issues).toHaveLength(0);
       expect(result.totalCount).toBe(0);
@@ -174,7 +183,9 @@ describe('DeepSourceClient - processRunChecksResponse', () => {
         },
       };
 
-      const result = (DeepSourceClient as any).processRunChecksResponse(mockResponse);
+      const result = (
+        DeepSourceClient as DeepSourceClientWithPrivateStatics
+      ).processRunChecksResponse(mockResponse);
 
       expect(result.issues).toHaveLength(1);
       expect(result.issues[0]).toEqual({
@@ -231,7 +242,9 @@ describe('DeepSourceClient - processRunChecksResponse', () => {
         },
       };
 
-      const result = (DeepSourceClient as any).processRunChecksResponse(mockResponse);
+      const result = (
+        DeepSourceClient as DeepSourceClientWithPrivateStatics
+      ).processRunChecksResponse(mockResponse);
 
       expect(result.issues).toHaveLength(0);
       expect(result.totalCount).toBe(0);
@@ -311,7 +324,9 @@ describe('DeepSourceClient - processRunChecksResponse', () => {
         },
       };
 
-      const result = (DeepSourceClient as any).processRunChecksResponse(mockResponse);
+      const result = (
+        DeepSourceClient as DeepSourceClientWithPrivateStatics
+      ).processRunChecksResponse(mockResponse);
 
       expect(result.issues).toHaveLength(2);
       // The pagination info is taken from the last check's occurrences that has page info
