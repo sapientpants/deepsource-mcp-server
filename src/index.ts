@@ -435,7 +435,7 @@ export async function handleDeepsourceRecentRunIssues({
             totalCount: result.totalCount,
             metadata: {
               branch: branchName,
-              projectKey: projectKey,
+              projectKey,
               runDate: result.run.createdAt,
               description: `Issues from the most recent analysis run on branch '${branchName}'`,
               note: 'These are run-specific issues from the checks performed during the analysis',
