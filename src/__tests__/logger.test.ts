@@ -301,7 +301,7 @@ describe('Logger', () => {
       const logger = new Logger('TestContext');
 
       // Create a circular reference object that will fail JSON.stringify
-      const circular: any = {};
+      const circular: Record<string, unknown> = {};
       circular.ref = circular;
 
       // Mock JSON.stringify to throw
