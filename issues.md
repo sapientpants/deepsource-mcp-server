@@ -16,14 +16,14 @@ All issues are of type "Lines not covered in tests" - A source line is considere
 
 ### src/deepsource.ts
 - [x] **Line 1539**: Add test coverage for this line (Fixed: added test for null node data in occurrences response)
-- [ ] **Line 1350**: Add test coverage for this line
-- [ ] **Line 1345**: Add test coverage for this line
-- [ ] **Line 1341**: Add test coverage for this line
-- [ ] **Line 1334**: Add test coverage for this line
-- [ ] **Line 1331**: Add test coverage for this line
-- [ ] **Line 1324**: Add test coverage for this line
-- [ ] **Line 1322**: Add test coverage for this line
-- [ ] **Line 1320**: Add test coverage for this line
+- [x] **Line 1350**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
+- [x] **Line 1345**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
+- [x] **Line 1341**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
+- [x] **Line 1334**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
+- [x] **Line 1331**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
+- [x] **Line 1324**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
+- [x] **Line 1322**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
+- [x] **Line 1320**: Add test coverage for this line (Fixed: added test for findMostRecentRun method)
 - [ ] **Line 613**: Add test coverage for this line
 - [ ] **Line 598**: Add test coverage for this line
 - [ ] **Line 595**: Add test coverage for this line
