@@ -521,6 +521,62 @@ export class DeepSourceClient {
   }
 
   /**
+   * Process issues from the GraphQL response
+   * @private
+   */
+  private static processRunChecksResponse(response: any): {
+    issues: DeepSourceIssue[];
+    pageInfo: {
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+      startCursor: string | undefined;
+      endCursor: string | undefined;
+    };
+    totalCount: number;
+  } {
+    const issues: DeepSourceIssue[] = [];
+    let pageInfo = {
+      hasNextPage: false,
+      hasPreviousPage: false,
+      startCursor: undefined as string | undefined,
+      endCursor: undefined as string | undefined,
+    };
+    let totalCount = 0;
+
+    const checks = response.data.data?.run?.checks?.edges ?? [];
+    for (const { node: check } of checks) {
+      const occurrences = check.occurrences?.edges ?? [];
+      const occurrencesPageInfo = check.occurrences?.pageInfo;
+      const occurrencesTotalCount = check.occurrences?.totalCount ?? 0;
+
+      // Aggregate page info (using the first check's pagination info for simplicity)
+      if (occurrencesPageInfo) {
+        pageInfo = occurrencesPageInfo;
+        totalCount += occurrencesTotalCount;
+      }
+
+      for (const { node: occurrence } of occurrences) {
+        if (!occurrence || !occurrence.issue) continue;
+
+        issues.push({
+          id: occurrence.id ?? 'unknown',
+          shortcode: occurrence.issue.shortcode ?? '',
+          title: occurrence.issue.title ?? 'Untitled Issue',
+          category: occurrence.issue.category ?? 'UNKNOWN',
+          severity: occurrence.issue.severity ?? 'UNKNOWN',
+          status: 'OPEN',
+          issue_text: occurrence.issue.description ?? '',
+          file_path: occurrence.path ?? 'N/A',
+          line_number: occurrence.beginLine ?? 0,
+          tags: occurrence.issue.tags ?? [],
+        });
+      }
+    }
+
+    return { issues, pageInfo, totalCount };
+  }
+
+  /**
    * Type guard to check if an unknown error is an Error object
    * @param error The error to check
    * @returns True if the error is an Error instance
@@ -1219,6 +1275,44 @@ export class DeepSourceClient {
   }
 
   /**
+   * Find the most recent run for a specific branch
+   * @private
+   */
+  private async findMostRecentRun(projectKey: string, branchName: string): Promise<DeepSourceRun> {
+    let mostRecentRun: DeepSourceRun | null = null;
+    let cursor: string | undefined;
+    let hasNextPage = true;
+
+    while (hasNextPage) {
+      const runs = await this.listRuns(projectKey, {
+        first: 50,
+        after: cursor,
+      });
+
+      // Check each run in this page
+      for (const run of runs.items) {
+        if (run.branchName === branchName) {
+          // If this is the first matching run or it's more recent than our current most recent
+          if (!mostRecentRun || new Date(run.createdAt) > new Date(mostRecentRun.createdAt)) {
+            mostRecentRun = run;
+          }
+        }
+      }
+
+      // Update pagination info
+      hasNextPage = runs.pageInfo.hasNextPage;
+      cursor = runs.pageInfo.endCursor;
+    }
+
+    if (!mostRecentRun) {
+      this.logger.error(`No runs found for branch '${branchName}' in project '${projectKey}'`);
+      throw new Error(`No runs found for branch '${branchName}' in project '${projectKey}'`);
+    }
+
+    return mostRecentRun;
+  }
+
+  /**
    * Fetches issues from the most recent analysis run on a specific branch
    * @param projectKey - The unique identifier for the DeepSource project
    * @param branchName - The branch name to get the most recent run from
@@ -1249,35 +1343,7 @@ export class DeepSourceClient {
       }
 
       // Get runs for the project and find the most recent one for the branch
-      let mostRecentRun: DeepSourceRun | null = null;
-      let cursor: string | undefined;
-      let hasNextPage = true;
-
-      while (hasNextPage) {
-        const runs = await this.listRuns(projectKey, {
-          first: 50,
-          after: cursor,
-        });
-
-        // Check each run in this page
-        for (const run of runs.items) {
-          if (run.branchName === branchName) {
-            // If this is the first matching run or it's more recent than our current most recent
-            if (!mostRecentRun || new Date(run.createdAt) > new Date(mostRecentRun.createdAt)) {
-              mostRecentRun = run;
-            }
-          }
-        }
-
-        // Update pagination info
-        hasNextPage = runs.pageInfo.hasNextPage;
-        cursor = runs.pageInfo.endCursor;
-      }
-
-      if (!mostRecentRun) {
-        this.logger.error(`No runs found for branch '${branchName}' in project '${projectKey}'`);
-        throw new Error(`No runs found for branch '${branchName}' in project '${projectKey}'`);
-      }
+      const mostRecentRun = await this.findMostRecentRun(projectKey, branchName);
 
       this.logger.debug(`Found most recent run: ${mostRecentRun.runUid} for branch: ${branchName}`);
 
@@ -1343,44 +1409,7 @@ export class DeepSourceClient {
       }
 
       // Process the occurrences from all checks
-      const issues: DeepSourceIssue[] = [];
-      let pageInfo = {
-        hasNextPage: false,
-        hasPreviousPage: false,
-        startCursor: undefined as string | undefined,
-        endCursor: undefined as string | undefined,
-      };
-      let totalCount = 0;
-
-      const checks = response.data.data?.run?.checks?.edges ?? [];
-      for (const { node: check } of checks) {
-        const occurrences = check.occurrences?.edges ?? [];
-        const occurrencesPageInfo = check.occurrences?.pageInfo;
-        const occurrencesTotalCount = check.occurrences?.totalCount ?? 0;
-
-        // Aggregate page info (using the first check's pagination info for simplicity)
-        if (occurrencesPageInfo) {
-          pageInfo = occurrencesPageInfo;
-          totalCount += occurrencesTotalCount;
-        }
-
-        for (const { node: occurrence } of occurrences) {
-          if (!occurrence || !occurrence.issue) continue;
-
-          issues.push({
-            id: occurrence.id ?? 'unknown',
-            shortcode: occurrence.issue.shortcode ?? '',
-            title: occurrence.issue.title ?? 'Untitled Issue',
-            category: occurrence.issue.category ?? 'UNKNOWN',
-            severity: occurrence.issue.severity ?? 'UNKNOWN',
-            status: 'OPEN',
-            issue_text: occurrence.issue.description ?? '',
-            file_path: occurrence.path ?? 'N/A',
-            line_number: occurrence.beginLine ?? 0,
-            tags: occurrence.issue.tags ?? [],
-          });
-        }
-      }
+      const { issues, pageInfo, totalCount } = DeepSourceClient.processRunChecksResponse(response);
 
       return {
         items: issues,
