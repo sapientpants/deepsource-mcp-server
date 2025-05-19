@@ -1,41 +1,69 @@
-# DeepSource Issues - TODO List
+# DeepSource Issues Todo List
 
-Run ID: fbc65da7-a938-4d4d-b643-401ba1eb190d
-Branch: add-recent-run-issues-tool
-Status: FAILURE
-Created: 2025-05-19T17:37:09.793273+00:00
-Total Issues: 9
+## Branch: add-recent-run-issues-tool
+**Run Date:** 2025-05-19T17:46:41.811701+00:00  
+**Status:** RESOLVED  
+**Total Issues:** 1 (resolved)
 
-## Anti-Pattern Issues (JS-0323)
+---
 
-All issues are of type "Detected usage of the `any` type" - The `any` type can sometimes leak into your codebase. TypeScript compiler skips the type checking of the `any` typed variables, so it creates a potential safety hole, and source of bugs in your codebase. We recommend using `unknown` or `never` type variable.
+## Critical Issues
 
-### src/__tests__/deepsource-process-run-checks.test.ts
-- [x] **Line 314**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateStatics type)
-- [x] **Line 234**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateStatics type)
-- [x] **Line 177**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateStatics type)
-- [x] **Line 136**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateStatics type)
-- [x] **Line 88**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateStatics type)
+### JS-0323: Detected usage of the `any` type
 
-### src/__tests__/deepsource-find-most-recent-run.test.ts
-- [x] **Line 386**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateMethods type)
-- [x] **Line 309**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateMethods type)
-- [x] **Line 276**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateMethods type)
-- [x] **Line 176**: Remove usage of the `any` type (Fixed: replaced with DeepSourceClientWithPrivateMethods type)
+**Severity:** CRITICAL  
+**Category:** ANTI_PATTERN
+
+#### Occurrences:
+- [x] **File:** `src/__tests__/deepsource-find-most-recent-run.test.ts`
+  - **Line:** 46
+  - **Description:** The `any` type is used, which disables TypeScript's type checking and creates potential safety holes and bugs.
+  - **Recommendation:** Replace the `any` type with more specific types like `unknown`, `never`, or properly typed interfaces.
+  - **Fix Applied:** Replaced `Promise<any>` with `Promise<Record<string, unknown>>` in the type definition for `findMostRecentRun` method.
+
+#### Issue Description:
+The `any` type can sometimes leak into your codebase. TypeScript compiler skips the type checking of the `any` typed variables, so it creates a potential safety hole, and source of bugs in your codebase. We recommend using `unknown` or `never` type variable.
+
+In TypeScript, every type is assignable to `any`. This makes `any` a top type (also known as a universal supertype) of the type system. The `any` type is essentially an escape hatch from the type system. As developers, this gives us a ton of freedom: TypeScript lets us perform any operation we want on values of type `any` without having to perform any checking beforehand.
+
+#### Bad Practice Example:
+```typescript
+const age: any = 'seventeen';
+const ages: any[] = ['seventeen'];
+const ages: Array<any> = ['seventeen'];
+function greet(): any {}
+function greet(): any[] {}
+function greet(): Array<any> {}
+function greet(): Array<Array<any>> {}
+function greet(param: Array<any>): string {}
+function greet(param: Array<any>): Array<any> {}
+```
+
+#### Recommended Practice:
+```typescript
+const age: number = 17;
+const ages: number[] = [17];
+const ages: Array<number> = [17];
+function greet(): string {}
+function greet(): string[] {}
+function greet(): Array<string> {}
+function greet(): Array<Array<string>> {}
+function greet(param: Array<string>): string {}
+function greet(param: Array<string>): Array<string> {}
+```
+
+---
 
 ## Summary
-- **Total issues introduced**: 9
-- **All issues are anti-pattern related** (JS-0323)
-- **Severity**: CRITICAL
-- **Status**: ✅ All issues resolved!
 
-## Resolution Details
-All 9 `any` type issues have been resolved by creating proper type definitions:
+- **Issues Introduced:** 1
+- **Issues Resolved:** 16 (15 previously + 1 just fixed)
+- **Issues Suppressed:** 0
+- **All Critical Issues:** RESOLVED ✅
 
-### src/__tests__/deepsource-process-run-checks.test.ts (5 issues resolved)
-- Lines 314, 234, 177, 136, 88: Created `DeepSourceClientWithPrivateStatics` type to properly access the private static method `processRunChecksResponse`
+## Distribution by Analyzer
+- JavaScript: 1 issue introduced
+- Test Coverage: 0 issues introduced
 
-### src/__tests__/deepsource-find-most-recent-run.test.ts (4 issues resolved)
-- Lines 386, 309, 276, 176: Created `DeepSourceClientWithPrivateMethods` type to properly access the private instance method `findMostRecentRun`
-
-All tests continue to pass with the proper type assertions, eliminating the need for `any` type and improving type safety.
+## Distribution by Category
+- ANTI_PATTERN: 1 issue introduced
