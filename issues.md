@@ -15,7 +15,7 @@ All issues are of type "Lines not covered in tests" - A source line is considere
 - [x] **Line 64**: Add test coverage for this line (Fixed: added test for mkdirSync successful call when directory doesn't exist)
 
 ### src/deepsource.ts
-- [ ] **Line 1539**: Add test coverage for this line
+- [x] **Line 1539**: Add test coverage for this line (Fixed: added test for null node data in occurrences response)
 - [ ] **Line 1350**: Add test coverage for this line
 - [ ] **Line 1345**: Add test coverage for this line
 - [ ] **Line 1341**: Add test coverage for this line
