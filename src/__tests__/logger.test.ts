@@ -14,15 +14,15 @@ jest.unstable_mockModule('fs', () => ({
 }));
 
 // Now import the mocked fs and Logger module
-const { appendFileSync } = await import('fs');
+const { appendFileSync, writeFileSync, existsSync, mkdirSync } = await import('fs');
 const loggerModule = await import('../utils/logger.js');
 const { Logger, createLogger, defaultLogger } = loggerModule;
 
 // Type the mocks
 const mockAppendFileSync = appendFileSync as jest.MockedFunction<typeof appendFileSync>;
-// const _mockWriteFileSync = writeFileSync as jest.MockedFunction<typeof writeFileSync>;
-// const _mockExistsSync = existsSync as jest.MockedFunction<typeof existsSync>;
-// const _mockMkdirSync = mkdirSync as jest.MockedFunction<typeof mkdirSync>;
+const mockWriteFileSync = writeFileSync as jest.MockedFunction<typeof writeFileSync>;
+const mockExistsSync = existsSync as jest.MockedFunction<typeof existsSync>;
+const mockMkdirSync = mkdirSync as jest.MockedFunction<typeof mkdirSync>;
 
 describe('Logger', () => {
   // Environment backup
@@ -258,6 +258,93 @@ describe('Logger', () => {
       expect(mockAppendFileSync).toHaveBeenCalled();
       const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
       expect(logMessage).toContain('[CustomContext]');
+    });
+  });
+
+  describe('log file initialization', () => {
+    beforeEach(() => {
+      // In each test, we need to reset the module-level initialization state
+      // Since we can't directly access it, we'll work around by ensuring
+      // the first write triggers initialization
+      jest.clearAllMocks();
+      jest.resetModules();
+    });
+
+    it('should initialize log file on first write when directory does not exist', async () => {
+      // Set up environment
+      process.env.LOG_LEVEL = 'DEBUG';
+      process.env.LOG_FILE = '/tmp/test.log';
+
+      // Mock file system calls - directory doesn't exist
+      mockExistsSync.mockImplementation((path) => {
+        return path !== '/tmp'; // Directory doesn't exist
+      });
+      mockMkdirSync.mockImplementation(() => undefined);
+      mockWriteFileSync.mockImplementation(() => undefined);
+      mockAppendFileSync.mockImplementation(() => undefined);
+
+      // Create a fresh logger instance to trigger initialization
+      const { Logger: FreshLogger } = await import('../utils/logger.js');
+      const logger = new FreshLogger('TestContext');
+
+      // First write should trigger initialization
+      logger.debug('Test message');
+
+      // Check initialization was performed
+      expect(mockExistsSync).toHaveBeenCalledWith('/tmp');
+      expect(mockMkdirSync).toHaveBeenCalledWith('/tmp', { recursive: true });
+      expect(mockWriteFileSync).toHaveBeenCalledWith('/tmp/test.log', '');
+      expect(mockAppendFileSync).toHaveBeenCalledWith('/tmp/test.log', expect.any(String));
+    });
+
+    it('should handle initialization errors gracefully', async () => {
+      // Set up environment
+      process.env.LOG_LEVEL = 'DEBUG';
+      process.env.LOG_FILE = '/tmp/test.log';
+
+      // Mock file system calls - directory doesn't exist and mkdir throws
+      mockExistsSync.mockReturnValue(false);
+      mockMkdirSync.mockImplementation(() => {
+        throw new Error('Permission denied');
+      });
+      mockAppendFileSync.mockImplementation(() => undefined);
+
+      // Create a fresh logger instance
+      const { Logger: FreshLogger } = await import('../utils/logger.js');
+      const logger = new FreshLogger('TestContext');
+
+      // Should not throw even when initialization fails
+      expect(() => logger.debug('Test message')).not.toThrow();
+
+      // Verify error was caught and logging continued
+      expect(mockMkdirSync).toHaveBeenCalledWith('/tmp', { recursive: true });
+      expect(mockAppendFileSync).toHaveBeenCalledWith('/tmp/test.log', expect.any(String));
+    });
+  });
+
+  describe('error string fallback', () => {
+    it('should use String() fallback when JSON.stringify throws', () => {
+      process.env.LOG_LEVEL = 'ERROR';
+      const logger = new Logger('TestContext');
+
+      // Create a circular reference object that will fail JSON.stringify
+      const circular: any = {};
+      circular.ref = circular;
+
+      // Mock JSON.stringify to throw
+      const originalStringify = JSON.stringify;
+      JSON.stringify = jest.fn().mockImplementation(() => {
+        throw new Error('Circular reference');
+      });
+
+      logger.error('Error with circular ref', circular);
+
+      expect(mockAppendFileSync).toHaveBeenCalled();
+      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      expect(logMessage).toContain('[object Object]'); // This is what String() would produce
+
+      // Restore JSON.stringify
+      JSON.stringify = originalStringify;
     });
   });
 });

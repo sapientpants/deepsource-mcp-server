@@ -1,133 +1,92 @@
 # DeepSource Issues - Latest Analysis Run on `add-recent-run-issues-tool` Branch
 
-Analysis Run Date: 2025-05-19T11:10:37.707356+00:00  
-Run UID: cc924ad7-eaf2-4566-9576-3b041a08c622  
-Commit: f290d6d2baa675c8d8d3ef365df57f3c557f74e8  
-Status: PENDING  
-Total Issues: 10 (Introduced: 10, Resolved: 12)
-
-## Todo List for Open Issues
-
-### 1. ~~Use template literals instead of string concatenation (JS-0246)~~ ✅ FIXED
-**Category:** ANTI_PATTERN  
-**Severity:** MINOR  
-**File:** `src/utils/logger.ts`  
-**Line:** 85  
-
-**~~TODO: Replace string concatenation with template literal in logger.ts:85. Change from using `+` operator to template literal syntax `${variable}`.~~**
-**FIXED:** Replaced string concatenation `message + '\n'` with template literal `${message}\n` in commit b012986.
-
----
-
-### 2. ~~Add documentation comments for functions and classes (JS-D1001)~~ ✅ FIXED
-**Category:** DOCUMENTATION  
-**Severity:** MINOR  
-**File:** `src/utils/logger.ts`  
-**Line:** 54  
-
-**~~TODO: Add JSDoc documentation comment for the function at logger.ts:54. Include parameter descriptions, return type, and function purpose.~~**
-**FIXED:** Added proper JSDoc documentation for initializeLogFile function with description, @private tag, and @returns annotation in commit 2927a62.
-
----
-
-### 3. ~~Use shorthand property syntax for object literals (JS-0240)~~ ✅ FIXED
-**Category:** ANTI_PATTERN  
-**Severity:** MINOR  
-**File:** `src/index.ts`  
-**Line:** 438  
-
-**~~TODO: Convert object method definition to shorthand syntax at index.ts:438. Change from `property: function() {}` to `property() {}`.~~**
-**FIXED:** Used shorthand property syntax by replacing `projectKey: projectKey` with just `projectKey` in commit 4d1fb8c.
-
----
-
-### 4. ~~Remove unnecessary undefined initialization (JS-0126)~~ ✅ FIXED
-**Category:** ANTI_PATTERN  
-**Severity:** MINOR  
-**File:** `src/deepsource.ts`  
-**Line:** 1253  
-
-**~~TODO: Remove explicit `undefined` initialization at deepsource.ts:1253. Variables are automatically initialized to `undefined` when declared without a value.~~**
-**FIXED:** Removed explicit undefined initialization from `cursor` variable in commit ba12361.
-
----
-
-### 5. ~~Reduce cyclomatic complexity (JS-R1005)~~ ✅ FIXED
-**Category:** ANTI_PATTERN  
-**Severity:** MINOR  
-**File:** `src/deepsource.ts`  
-**Line:** 1231  
-
-**~~TODO: Refactor function with high cyclomatic complexity at deepsource.ts:1231. Consider breaking it into smaller functions, using lookup tables, or simplifying conditional logic.~~**
-**FIXED:** Extracted helper methods `findMostRecentRun` and `processRunChecksResponse` to reduce complexity of `getRecentRunIssues` method in commit 607c729.
-
----
-
-### 6. ~~Remove unused variables (JS-0356) - test file #1~~ ✅ FIXED
-**Category:** PERFORMANCE  
-**Severity:** MAJOR  
-**File:** `src/__tests__/logger.test.ts`  
-**Line:** 25  
-
-**~~TODO: Remove or use the unused variable at logger.test.ts:25. If intentionally unused, prefix with underscore `_`.~~**
-**FIXED:** Commented out unused variables in commit b012986.
-
----
-
-### 7. ~~Remove unused variables (JS-0356) - test file #2~~ ✅ FIXED
-**Category:** PERFORMANCE  
-**Severity:** MAJOR  
-**File:** `src/__tests__/logger.test.ts`  
-**Line:** 24  
-
-**~~TODO: Remove or use the unused variable at logger.test.ts:24. If intentionally unused, prefix with underscore `_`.~~**
-**FIXED:** Commented out unused variables in commit b012986.
-
----
-
-### 8. ~~Remove unused variables (JS-0356) - test file #3~~ ✅ FIXED
-**Category:** PERFORMANCE  
-**Severity:** MAJOR  
-**File:** `src/__tests__/logger.test.ts`  
-**Line:** 23  
-
-**~~TODO: Remove or use the unused variable at logger.test.ts:23. If intentionally unused, prefix with underscore `_`.~~**
-**FIXED:** Commented out unused variables in commit b012986.
-
----
-
-### 9. ~~Remove unused variables (JS-0356) - test file #4~~ ✅ FIXED
-**Category:** PERFORMANCE  
-**Severity:** MAJOR  
-**File:** `src/__tests__/logger.test.ts`  
-**Line:** 6  
-
-**~~TODO: Remove or use the unused variable at logger.test.ts:6. If intentionally unused, prefix with underscore `_`.~~**
-**FIXED:** Removed unused import by commenting it out in commit b012986.
-
----
-
-### 10. ~~Avoid wildcard imports (JS-C1003)~~ ✅ FIXED
-**Category:** ANTI_PATTERN  
-**Severity:** MINOR  
-**File:** `src/__tests__/logger.test.ts`  
-**Line:** 6  
-
-**~~TODO: Replace wildcard import with named imports at logger.test.ts:6. Use specific imports like `import { specificFunction } from 'module'` or add skipcq comment if library doesn't support ES modules.~~**
-**FIXED:** Commented out the wildcard import as it was not being used directly in commit b012986.
+Analysis Run Date: 2025-05-19T11:30:44.027723+00:00  
+Run UID: ab6ec5a1-8b06-4f98-b81a-885dbdbac986  
+Commit: 715199e90ac816e8e9a7d61a9dcda80106b63fca  
+Status: FAILURE  
+Total Issues: 31 (Introduced: 31, Resolved: 15)
 
 ## Summary by Category
 
-- **ANTI_PATTERN:** 5 issues (JS-0240, JS-0246, JS-0126, JS-R1005, JS-C1003)
-- **PERFORMANCE:** 4 issues (all JS-0356 - unused variables)
-- **DOCUMENTATION:** 1 issue (JS-D1001)
+- **ANTI_PATTERN:** 1 issue (JS-0323 - any type usage)
+- **COVERAGE:** 30 issues (TCV-001 - Lines not covered in tests)
 
-## Action Items
+## Todo List for Open Issues
 
-1. Fix all 4 unused variable issues in logger test file
-2. Improve documentation for functions
-3. Refactor complex function with high cyclomatic complexity
-4. Update code style to use modern ES6+ syntax features
-5. Replace wildcard imports with named imports
+### 1. ~~Detected usage of the `any` type (JS-0323)~~ ✅ FIXED
+**Category:** ANTI_PATTERN  
+**Severity:** CRITICAL  
+**File:** `src/deepsource.ts`  
+**Line:** 527  
 
-Note: Most issues are minor code style improvements. The major performance issues are all related to unused variables in test files, which should be straightforward to fix.
+**~~TODO: Replace `any` type with proper type annotation. The `response` parameter in `processRunChecksResponse` method should have a specific type instead of `any`.~~**
+**FIXED:** Replaced `any` type with detailed GraphQL response type structure in commit df197e6.
+
+---
+
+## Coverage Issues (TCV-001) - Lines Not Covered in Tests
+
+### 2. Lines not covered in tests - logger.ts 
+**Category:** COVERAGE  
+**Severity:** CRITICAL  
+**Files and Lines:**
+- `src/utils/logger.ts:204`
+- `src/utils/logger.ts:71`
+- `src/utils/logger.ts:64`
+
+**TODO:** Add test coverage for the following Logger methods:
+- Line 64: Test initialization logic in `initializeLogFile` method
+- Line 71: Test error handling in `initializeLogFile` catch block
+- Line 204: Test the main `log` method behavior
+
+---
+
+### 3. Lines not covered in tests - deepsource.ts (getRecentRunIssues method)
+**Category:** COVERAGE  
+**Severity:** CRITICAL  
+**Files and Lines:**
+- `src/deepsource.ts:1421`
+- `src/deepsource.ts:1414`
+- `src/deepsource.ts:1412`
+- `src/deepsource.ts:1406`
+- `src/deepsource.ts:1395`
+- `src/deepsource.ts:1354`
+- `src/deepsource.ts:1351`
+- `src/deepsource.ts:1348`
+- `src/deepsource.ts:1346`
+- `src/deepsource.ts:1340`
+- `src/deepsource.ts:1337`
+- `src/deepsource.ts:1330`
+- `src/deepsource.ts:1312`
+- `src/deepsource.ts:1307`
+- `src/deepsource.ts:1303`
+- `src/deepsource.ts:1296`
+- `src/deepsource.ts:1293`
+
+**TODO:** Add comprehensive test coverage for the `getRecentRunIssues` method including:
+- Lines 1282-1296: Test the logic for finding the most recent run for a branch
+- Lines 1303-1312: Test the GraphQL query construction and execution
+- Lines 1330-1354: Test GraphQL error handling scenarios
+- Lines 1340-1421: Test the response processing and issue transformation logic
+- Add edge cases for empty results, pagination, and error scenarios
+
+## Action Plan
+
+1. **Critical Priority:**
+   - Fix the `any` type usage in `src/deepsource.ts:527` to use proper TypeScript types
+
+2. **High Priority:**
+   - Add test coverage for `getRecentRunIssues` method in deepsource.ts
+   - Add test coverage for logger.ts methods
+
+3. **Testing Strategy:**
+   - Create unit tests for the logger initialization and error handling
+   - Create comprehensive tests for the new `getRecentRunIssues` method
+   - Mock GraphQL responses to test various scenarios
+   - Test edge cases including empty responses, errors, and pagination
+
+## Notes
+
+- The run resolved 15 issues but introduced 31 new ones (mostly coverage issues)
+- The new getRecentRunIssues method lacks test coverage which explains the coverage issues
+- One critical anti-pattern issue with `any` type usage needs immediate attention
