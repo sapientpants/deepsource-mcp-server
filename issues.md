@@ -1,153 +1,123 @@
-# DeepSource Issues - Latest Analysis
+# DeepSource Issues - Latest Analysis Run on `add-recent-run-issues-tool` Branch
 
-Project: deepsource-mcp-server
-Branch: add-recent-run-issues-tool  
-Run Date: 2025-05-18T21:06:49.711287+00:00
-Commit: e8ffe3452751186c7e9e68622ec22b7449801760
-Status: FAILURE
+Analysis Run Date: 2025-05-19T11:10:37.707356+00:00  
+Run UID: cc924ad7-eaf2-4566-9576-3b041a08c622  
+Commit: f290d6d2baa675c8d8d3ef365df57f3c557f74e8  
+Status: PENDING  
+Total Issues: 10 (Introduced: 10, Resolved: 12)
+
+## Todo List for Open Issues
+
+### 1. Use template literals instead of string concatenation (JS-0246)
+**Category:** ANTI_PATTERN  
+**Severity:** MINOR  
+**File:** `src/utils/logger.ts`  
+**Line:** 85  
+
+**TODO:** Replace string concatenation with template literal in logger.ts:85. Change from using `+` operator to template literal syntax `${variable}`.
+
+---
+
+### 2. Add documentation comments for functions and classes (JS-D1001)
+**Category:** DOCUMENTATION  
+**Severity:** MINOR  
+**File:** `src/utils/logger.ts`  
+**Line:** 54  
+
+**TODO:** Add JSDoc documentation comment for the function at logger.ts:54. Include parameter descriptions, return type, and function purpose.
+
+---
+
+### 3. Use shorthand property syntax for object literals (JS-0240)
+**Category:** ANTI_PATTERN  
+**Severity:** MINOR  
+**File:** `src/index.ts`  
+**Line:** 438  
+
+**TODO:** Convert object method definition to shorthand syntax at index.ts:438. Change from `property: function() {}` to `property() {}`.
+
+---
+
+### 4. Remove unnecessary undefined initialization (JS-0126)
+**Category:** ANTI_PATTERN  
+**Severity:** MINOR  
+**File:** `src/deepsource.ts`  
+**Line:** 1253  
+
+**TODO:** Remove explicit `undefined` initialization at deepsource.ts:1253. Variables are automatically initialized to `undefined` when declared without a value.
+
+---
+
+### 5. Reduce cyclomatic complexity (JS-R1005)
+**Category:** ANTI_PATTERN  
+**Severity:** MINOR  
+**File:** `src/deepsource.ts`  
+**Line:** 1231  
+
+**TODO:** Refactor function with high cyclomatic complexity at deepsource.ts:1231. Consider breaking it into smaller functions, using lookup tables, or simplifying conditional logic.
+
+---
+
+### 6. Remove unused variables (JS-0356) - test file #1
+**Category:** PERFORMANCE  
+**Severity:** MAJOR  
+**File:** `src/__tests__/logger.test.ts`  
+**Line:** 25  
+
+**TODO:** Remove or use the unused variable at logger.test.ts:25. If intentionally unused, prefix with underscore `_`.
+
+---
+
+### 7. Remove unused variables (JS-0356) - test file #2
+**Category:** PERFORMANCE  
+**Severity:** MAJOR  
+**File:** `src/__tests__/logger.test.ts`  
+**Line:** 24  
+
+**TODO:** Remove or use the unused variable at logger.test.ts:24. If intentionally unused, prefix with underscore `_`.
+
+---
+
+### 8. Remove unused variables (JS-0356) - test file #3
+**Category:** PERFORMANCE  
+**Severity:** MAJOR  
+**File:** `src/__tests__/logger.test.ts`  
+**Line:** 23  
+
+**TODO:** Remove or use the unused variable at logger.test.ts:23. If intentionally unused, prefix with underscore `_`.
+
+---
+
+### 9. Remove unused variables (JS-0356) - test file #4
+**Category:** PERFORMANCE  
+**Severity:** MAJOR  
+**File:** `src/__tests__/logger.test.ts`  
+**Line:** 6  
+
+**TODO:** Remove or use the unused variable at logger.test.ts:6. If intentionally unused, prefix with underscore `_`.
+
+---
+
+### 10. Avoid wildcard imports (JS-C1003)
+**Category:** ANTI_PATTERN  
+**Severity:** MINOR  
+**File:** `src/__tests__/logger.test.ts`  
+**Line:** 6  
+
+**TODO:** Replace wildcard import with named imports at logger.test.ts:6. Use specific imports like `import { specificFunction } from 'module'` or add skipcq comment if library doesn't support ES modules.
 
 ## Summary by Category
 
-- **ANTI_PATTERN**: 4 issues (2 JS-0323 any type, 1 JS-0240 shorthand property, 1 JS-0126 undefined initialization)
-- **COVERAGE**: 54 issues (TCV-001 - Lines not covered in tests)
-- **DOCUMENTATION**: 1 issue (JS-0099 - Found warning comments in code)
+- **ANTI_PATTERN:** 5 issues (JS-0240, JS-0246, JS-0126, JS-R1005, JS-C1003)
+- **PERFORMANCE:** 4 issues (all JS-0356 - unused variables)
+- **DOCUMENTATION:** 1 issue (JS-D1001)
 
-Total Issues: 4 (from latest run)
+## Action Items
 
-## Latest Run Summary
+1. Fix all 4 unused variable issues in logger test file
+2. Improve documentation for functions
+3. Refactor complex function with high cyclomatic complexity
+4. Update code style to use modern ES6+ syntax features
+5. Replace wildcard imports with named imports
 
-The most recent analysis run introduced 4 new issues and resolved 13 issues:
-- **Occurrences Introduced**: 4
-- **Occurrences Resolved**: 13
-- **New Javascript Issues**: 4
-- **All new issues are of ANTI_PATTERN category**
-
----
-
-## Critical Priority Issues (Latest Run)
-
-### 1. Detected usage of the `any` type (JS-0323) ⚠️ CRITICAL ✅ FIXED
-**Severity:** CRITICAL  
-**Category:** ANTI_PATTERN  
-**Status:** RESOLVED
-
-**~~New Occurrences:~~**
-1. ~~`src/__tests__/index.test.ts:1002`~~
-   - ~~TODO: Replace `any` type with proper type annotation like `unknown`, `never`, or specific type~~
-   - ~~LOCATION: Line 1002~~
-   - **FIXED:** Replaced with `PaginationParams | null`
-
-2. ~~`src/__tests__/index.test.ts:849`~~
-   - ~~TODO: Replace `any` type with proper type annotation like `unknown`, `never`, or specific type~~
-   - ~~LOCATION: Line 849~~
-   - **FIXED:** Added explicit type annotations for JSON.parse results
-
-**Action Completed:** All `any` types have been replaced with proper TypeScript types. Used `Record<string, unknown>` for general objects and specific interfaces for known structures.
-
----
-
-### 2. Use shorthand property syntax for object literals (JS-0240) ⚠️ MINOR
-**Severity:** MINOR  
-**Category:** ANTI_PATTERN  
-**Status:** OPEN
-
-**Location:**
-- `src/index.ts:446`
-  - TODO: Use ES6 shorthand property syntax for object methods
-  - Current: `{ bar: function () { return 1 } }`
-  - Should be: `{ bar() { return 1 } }`
-  - LOCATION: Line 446
-
-**Action Required:** Update object method definitions to use ES6 shorthand syntax.
-
----
-
-### 3. Variables should not be initialized to `undefined` (JS-0126) ⚠️ MINOR
-**Severity:** MINOR  
-**Category:** ANTI_PATTERN  
-**Status:** OPEN
-
-**Location:**
-- `src/index.ts:381`
-  - TODO: Remove unnecessary initialization to `undefined`
-  - Current: `var foo = undefined;` or `let bar = undefined;`
-  - Should be: `var foo;` or `let bar;`
-  - LOCATION: Line 381
-
-**Action Required:** Remove explicit `undefined` initialization for variables that don't need it.
-
----
-
-## Action Plan (Latest Issues)
-
-1. **Critical Priority:**
-   - [x] ~~Fix 2 `any` type usage in `src/__tests__/index.test.ts` (lines 849, 1002)~~ ✅ COMPLETED
-
-2. **Low Priority:**
-   - [ ] Update object method to use ES6 shorthand syntax in `src/index.ts:446`
-   - [ ] Remove unnecessary `undefined` initialization in `src/index.ts:381`
-
-3. **Follow-up Actions:**
-   - [ ] Re-run DeepSource analysis after fixes
-   - [ ] Verify all new issues are resolved
-   - [ ] Note: Previous run resolved 13 issues!
-
-## Additional Coverage and Documentation Issues
-
-### Lines not covered in tests (TCV-001) ⚠️ CRITICAL
-The following issues are still present from previous analysis:
-
-**Multiple lines in `src/deepsource.ts` are not covered by tests:**
-
-1. **Method: getRecentRunIssues** (various lines)
-   - TODO: Add test for successful API response with issues
-   - TODO: Add test for empty issues response
-   - TODO: Add test for pagination parameters
-   - TODO: Add test for error handling in API call
-   - LOCATIONS: Lines 2535, 2538, 2543, 2546, 2550, 2556, 2563, 2590, 2622, 2633, 2639, 2668, 2677, 2686, 2727, 2733
-
-2. **Data processing functions**
-   - TODO: Add tests for edge cases in data transformation
-   - TODO: Add tests for null/undefined handling
-   - TODO: Add tests for type conversions
-   - LOCATIONS: Lines 816, 1419, 1575, 1583, 1592, 1619, 1629, 1632, 1642, 1676, 1700, 1706, 1712, 1720, 1747, 1859, 1975, 2025, 2061, 2097, 2139, 2264, 2296, 2299, 2324, 2341, 2881
-
-3. **Utility functions**
-   - TODO: Add tests for helper methods
-   - TODO: Add tests for validation functions
-   - TODO: Add tests for conversion utilities
-   - LOCATIONS: Lines 555, 604, 612, 630, 638, 709, 713, 717, 727
-
-### Use of a banned type detected (JS-0296) ⚠️ MAJOR
-**Multiple test files are using the banned `Function` type:**
-
-1. `src/__tests__/deepsource-report-utils.test.ts`
-   - Line 11: TODO: Replace `Function` type with specific function signature
-   - Line 146: TODO: Replace `Function` type with specific function signature
-   - Line 196: TODO: Replace `Function` type with specific function signature
-
-2. `src/__tests__/deepsource-metric-validation.test.ts`
-   - Line 8: TODO: Replace `Function` type with specific function signature
-   - Line 56: TODO: Replace `Function` type with specific function signature
-   - Line 76: TODO: Replace `Function` type with specific function signature
-   - Line 108: TODO: Replace `Function` type with specific function signature
-
-3. `src/__tests__/deepsource-historical-data-processing.test.ts`
-   - Line 8: TODO: Replace `Function` type with specific function signature
-   - Line 267: TODO: Replace `Function` type with specific function signature
-
-### Found warning comments in code (JS-0099) ⚠️ MINOR
-- `src/__tests__/deepsource-metric-threshold-updates.test.ts:29`
-  - TODO: Review and either implement or remove the TODO comment
-
----
-
-## Summary Statistics (Latest Run)
-
-- **New Issues:** 4 (all ANTI_PATTERN category)
-- **Issues Resolved:** 13
-- **Status:** FAILURE (net reduction of 9 issues)
-- **Branch:** add-recent-run-issues-tool
-- **Run Date:** 2025-05-18 21:06:49 UTC
-
-The good news is that this run resolved more issues than it introduced!
+Note: Most issues are minor code style improvements. The major performance issues are all related to unused variables in test files, which should be straightforward to fix.

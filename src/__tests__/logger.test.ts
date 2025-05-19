@@ -3,7 +3,7 @@
  */
 
 import { jest } from '@jest/globals';
-import * as fs from 'fs';
+// import * as fs from 'fs'; - not used directly, only through jest mocks
 
 // Mock the fs module before importing Logger
 jest.unstable_mockModule('fs', () => ({
@@ -14,15 +14,15 @@ jest.unstable_mockModule('fs', () => ({
 }));
 
 // Now import the mocked fs and Logger module
-const { appendFileSync, writeFileSync, existsSync, mkdirSync } = await import('fs');
+const { appendFileSync } = await import('fs');
 const loggerModule = await import('../utils/logger.js');
 const { Logger, createLogger, defaultLogger } = loggerModule;
 
 // Type the mocks
 const mockAppendFileSync = appendFileSync as jest.MockedFunction<typeof appendFileSync>;
-const mockWriteFileSync = writeFileSync as jest.MockedFunction<typeof writeFileSync>;
-const mockExistsSync = existsSync as jest.MockedFunction<typeof existsSync>;
-const mockMkdirSync = mkdirSync as jest.MockedFunction<typeof mkdirSync>;
+// const _mockWriteFileSync = writeFileSync as jest.MockedFunction<typeof writeFileSync>;
+// const _mockExistsSync = existsSync as jest.MockedFunction<typeof existsSync>;
+// const _mockMkdirSync = mkdirSync as jest.MockedFunction<typeof mkdirSync>;
 
 describe('Logger', () => {
   // Environment backup
@@ -34,10 +34,10 @@ describe('Logger', () => {
 
     // Set up common test environment
     process.env.LOG_FILE = '/tmp/test.log';
-    
+
     // Clear all mocks before each test
     jest.clearAllMocks();
-    
+
     // Reset the module-level logFileInitialized variable by reimporting the module
     jest.resetModules();
   });
@@ -241,7 +241,7 @@ describe('Logger', () => {
   describe('default exports', () => {
     it('should export a default logger with DeepSourceMCP context', () => {
       process.env.LOG_LEVEL = 'DEBUG';
-      
+
       defaultLogger.debug('Test message');
 
       expect(mockAppendFileSync).toHaveBeenCalled();
@@ -252,7 +252,7 @@ describe('Logger', () => {
     it('should provide a createLogger helper function', () => {
       process.env.LOG_LEVEL = 'DEBUG';
       const customLogger = createLogger('CustomContext');
-      
+
       customLogger.debug('Test message');
 
       expect(mockAppendFileSync).toHaveBeenCalled();

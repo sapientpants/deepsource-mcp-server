@@ -82,7 +82,7 @@ function writeToLogFile(message: string): void {
       if (!logFileInitialized) {
         initializeLogFile();
       }
-      appendFileSync(logFile, message + '\n');
+      appendFileSync(logFile, `${message}\n`);
     } catch {
       // Fail silently if we can't write to the log file
     }
