@@ -3,51 +3,48 @@
  */
 
 import { jest } from '@jest/globals';
+import * as fs from 'fs';
 
-// We need to mock the console methods before importing the Logger module
-const mockDebug = jest.fn();
-const mockInfo = jest.fn();
-const mockWarn = jest.fn();
-const mockError = jest.fn();
+// Mock the fs module before importing Logger
+jest.unstable_mockModule('fs', () => ({
+  appendFileSync: jest.fn(),
+  writeFileSync: jest.fn(),
+  existsSync: jest.fn(() => true),
+  mkdirSync: jest.fn(),
+}));
 
-// Save original console methods
-const originalConsoleDebug = console.debug;
-const originalConsoleInfo = console.info;
-const originalConsoleWarn = console.warn;
-const originalConsoleError = console.error;
+// Now import the mocked fs and Logger module
+const { appendFileSync, writeFileSync, existsSync, mkdirSync } = await import('fs');
+const loggerModule = await import('../utils/logger.js');
+const { Logger, createLogger, defaultLogger } = loggerModule;
 
-// Apply mocks
-console.debug = mockDebug;
-console.info = mockInfo;
-console.warn = mockWarn;
-console.error = mockError;
-
-// Now import the Logger module
-import { Logger, createLogger, defaultLogger } from '../utils/logger.js';
+// Type the mocks
+const mockAppendFileSync = appendFileSync as jest.MockedFunction<typeof appendFileSync>;
+const mockWriteFileSync = writeFileSync as jest.MockedFunction<typeof writeFileSync>;
+const mockExistsSync = existsSync as jest.MockedFunction<typeof existsSync>;
+const mockMkdirSync = mkdirSync as jest.MockedFunction<typeof mkdirSync>;
 
 describe('Logger', () => {
   // Environment backup
-  let originalEnv;
+  let originalEnv: Record<string, string | undefined>;
 
   beforeEach(() => {
     // Backup environment
     originalEnv = { ...process.env };
 
+    // Set up common test environment
+    process.env.LOG_FILE = '/tmp/test.log';
+    
     // Clear all mocks before each test
     jest.clearAllMocks();
+    
+    // Reset the module-level logFileInitialized variable by reimporting the module
+    jest.resetModules();
   });
 
   afterEach(() => {
     // Restore environment
     process.env = originalEnv;
-  });
-
-  afterAll(() => {
-    // Restore console methods after all tests
-    console.debug = originalConsoleDebug;
-    console.info = originalConsoleInfo;
-    console.warn = originalConsoleWarn;
-    console.error = originalConsoleError;
   });
 
   describe('constructor', () => {
@@ -72,8 +69,8 @@ describe('Logger', () => {
       const logger = new Logger('TestContext');
       logger.debug('Test debug message');
 
-      expect(mockDebug).toHaveBeenCalled();
-      const logMessage = mockDebug.mock.calls[0][0];
+      expect(mockAppendFileSync).toHaveBeenCalled();
+      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
       expect(logMessage).toContain('DEBUG');
       expect(logMessage).toContain('[TestContext]');
       expect(logMessage).toContain('Test debug message');
@@ -85,7 +82,9 @@ describe('Logger', () => {
 
       logger.debug('Test debug message', testData);
 
-      expect(mockDebug).toHaveBeenCalledWith(expect.any(String), testData);
+      expect(mockAppendFileSync).toHaveBeenCalled();
+      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      expect(logMessage).toContain(JSON.stringify(testData, null, 2));
     });
 
     it('should use empty string when no data is provided', () => {
@@ -93,7 +92,18 @@ describe('Logger', () => {
 
       logger.debug('Test debug message');
 
-      expect(mockDebug).toHaveBeenCalledWith(expect.any(String), '');
+      expect(mockAppendFileSync).toHaveBeenCalled();
+      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      expect(logMessage).not.toContain('undefined');
+    });
+
+    it('should not log when LOG_FILE is not set', () => {
+      delete process.env.LOG_FILE;
+      const logger = new Logger('TestContext');
+
+      logger.debug('Test debug message');
+
+      expect(mockAppendFileSync).not.toHaveBeenCalled();
     });
   });
 
@@ -104,8 +114,8 @@ describe('Logger', () => {
 
       logger.info('Test info message');
 
-      expect(mockInfo).toHaveBeenCalled();
-      const logMessage = mockInfo.mock.calls[0][0];
+      expect(mockAppendFileSync).toHaveBeenCalled();
+      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
       expect(logMessage).toContain('INFO');
       expect(logMessage).toContain('[TestContext]');
       expect(logMessage).toContain('Test info message');
@@ -117,7 +127,7 @@ describe('Logger', () => {
 
       logger.info('Test info message');
 
-      expect(mockInfo).toHaveBeenCalled();
+      expect(mockAppendFileSync).toHaveBeenCalled();
     });
 
     it('should not log info messages when LOG_LEVEL is WARN', () => {
@@ -126,7 +136,7 @@ describe('Logger', () => {
 
       logger.info('Test info message');
 
-      expect(mockInfo).not.toHaveBeenCalled();
+      expect(mockAppendFileSync).not.toHaveBeenCalled();
     });
 
     it('should include additional data when provided', () => {
@@ -136,7 +146,9 @@ describe('Logger', () => {
 
       logger.info('Test info message', testData);
 
-      expect(mockInfo).toHaveBeenCalledWith(expect.any(String), testData);
+      expect(mockAppendFileSync).toHaveBeenCalled();
+      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      expect(logMessage).toContain(JSON.stringify(testData, null, 2));
     });
   });
 
@@ -147,8 +159,8 @@ describe('Logger', () => {
 
       logger.warn('Test warn message');
 
-      expect(mockWarn).toHaveBeenCalled();
-      const logMessage = mockWarn.mock.calls[0][0];
+      expect(mockAppendFileSync).toHaveBeenCalled();
+      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
       expect(logMessage).toContain('WARN');
       expect(logMessage).toContain('[TestContext]');
       expect(logMessage).toContain('Test warn message');
@@ -160,7 +172,7 @@ describe('Logger', () => {
 
       logger.warn('Test warn message');
 
-      expect(mockWarn).not.toHaveBeenCalled();
+      expect(mockAppendFileSync).not.toHaveBeenCalled();
     });
 
     it('should include additional data when provided', () => {
@@ -170,7 +182,9 @@ describe('Logger', () => {
 
       logger.warn('Test warn message', testData);
 
-      expect(mockWarn).toHaveBeenCalledWith(expect.any(String), testData);
+      expect(mockAppendFileSync).toHaveBeenCalled();
+      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      expect(logMessage).toContain(JSON.stringify(testData, null, 2));
     });
   });
 
@@ -181,8 +195,8 @@ describe('Logger', () => {
 
       logger.error('Test error message');
 
-      expect(mockError).toHaveBeenCalled();
-      const logMessage = mockError.mock.calls[0][0];
+      expect(mockAppendFileSync).toHaveBeenCalled();
+      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
       expect(logMessage).toContain('ERROR');
       expect(logMessage).toContain('[TestContext]');
       expect(logMessage).toContain('Test error message');
@@ -195,21 +209,21 @@ describe('Logger', () => {
 
       logger.error('Error occurred', testError);
 
-      expect(mockError).toHaveBeenCalled();
-      const errorOutput = mockError.mock.calls[0][1];
-      expect(errorOutput).toContain('Error: Test error');
+      expect(mockAppendFileSync).toHaveBeenCalled();
+      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      expect(logMessage).toContain('Error: Test error');
     });
 
     it('should stringify objects correctly', () => {
       process.env.LOG_LEVEL = 'ERROR';
       const logger = new Logger('TestContext');
-      const testData = { key: 'value', nested: { prop: true } };
+      const testData = { foo: 'bar' };
 
       logger.error('Error with data', testData);
 
-      expect(mockError).toHaveBeenCalled();
-      const errorOutput = mockError.mock.calls[0][1];
-      expect(typeof errorOutput).toBe('string');
+      expect(mockAppendFileSync).toHaveBeenCalled();
+      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      expect(logMessage).toContain(JSON.stringify(testData, null, 2));
     });
 
     it('should use empty string when no error is provided', () => {
@@ -218,28 +232,32 @@ describe('Logger', () => {
 
       logger.error('Test error message');
 
-      expect(mockError).toHaveBeenCalledWith(expect.any(String), '');
+      expect(mockAppendFileSync).toHaveBeenCalled();
+      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      expect(logMessage).not.toContain('undefined');
     });
   });
 
   describe('default exports', () => {
     it('should export a default logger with DeepSourceMCP context', () => {
       process.env.LOG_LEVEL = 'DEBUG';
-
-      // We need to directly use the imported module since we can't fully isolate it
-      expect(defaultLogger).toBeInstanceOf(Logger);
+      
       defaultLogger.debug('Test message');
 
-      expect(mockDebug).toHaveBeenCalled();
+      expect(mockAppendFileSync).toHaveBeenCalled();
+      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      expect(logMessage).toContain('[DeepSourceMCP]');
     });
 
     it('should provide a createLogger helper function', () => {
       process.env.LOG_LEVEL = 'DEBUG';
       const customLogger = createLogger('CustomContext');
-
+      
       customLogger.debug('Test message');
 
-      expect(mockDebug).toHaveBeenCalled();
+      expect(mockAppendFileSync).toHaveBeenCalled();
+      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      expect(logMessage).toContain('[CustomContext]');
     });
   });
 });
