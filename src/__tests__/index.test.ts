@@ -803,7 +803,10 @@ describe('MCP server implementation', () => {
       expect(result.content).toHaveLength(1);
       expect(result.content[0]).toHaveProperty('type', 'text');
 
-      const parsedResult = JSON.parse((result.content[0] as TextContent).text);
+      const parsedResult = JSON.parse((result.content[0] as TextContent).text) as Record<
+        string,
+        unknown
+      >;
 
       // Assertions
       expect(parsedResult.run).toMatchObject({
@@ -843,7 +846,12 @@ describe('MCP server implementation', () => {
       expect(result.content).toHaveLength(1);
       expect(result.content[0]).toHaveProperty('type', 'text');
 
-      const errorData = JSON.parse((result.content[0] as TextContent).text);
+      const errorData = JSON.parse((result.content[0] as TextContent).text) as {
+        error: string;
+        details: string;
+        projectKey: string;
+        branchName: string;
+      };
       expect(errorData).toMatchObject({
         error: "No runs found for branch 'non-existent-branch' in project 'test-project'",
         details: 'Failed to retrieve recent run issues',
@@ -903,7 +911,10 @@ describe('MCP server implementation', () => {
       };
 
       const result = await handleDeepsourceRecentRunIssues(params);
-      const parsedResult = JSON.parse((result.content[0] as TextContent).text);
+      const parsedResult = JSON.parse((result.content[0] as TextContent).text) as Record<
+        string,
+        unknown
+      >;
 
       // Should find the run from the second page
       expect(parsedResult.run.branchName).toBe('target-branch');
@@ -977,7 +988,7 @@ describe('MCP server implementation', () => {
       };
 
       // Track getRecentRunIssues call parameters
-      let getRecentRunIssuesParams: any = null;
+      let getRecentRunIssuesParams: PaginationParams | null = null;
 
       DeepSourceClient.prototype.getRecentRunIssues = (projectKey, branchName, params) => {
         getRecentRunIssuesParams = params;
@@ -995,7 +1006,10 @@ describe('MCP server implementation', () => {
       };
 
       const result = await handleDeepsourceRecentRunIssues(params);
-      const parsedResult = JSON.parse((result.content[0] as TextContent).text);
+      const parsedResult = JSON.parse((result.content[0] as TextContent).text) as Record<
+        string,
+        unknown
+      >;
 
       // Verify pagination parameters were passed correctly
       expect(getRecentRunIssuesParams).toEqual({
