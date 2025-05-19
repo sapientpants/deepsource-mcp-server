@@ -2,8 +2,7 @@
  * @jest-environment node
  */
 
-import { jest } from '@jest/globals';
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { jest, beforeEach, describe, expect, it } from '@jest/globals';
 
 // Mock the logger module
 jest.unstable_mockModule('../utils/logger.js', () => ({
