@@ -46,11 +46,14 @@ function getLogFilePath(): string | null {
   return process.env.LOG_FILE || null;
 }
 
-/**
- * Initialize the log file if needed
- * @private
- */
 let logFileInitialized = false;
+
+/**
+ * Initialize the log file if needed by creating the directory and file
+ * Only initializes once per process to avoid redundant file operations
+ * @private
+ * @returns {void}
+ */
 function initializeLogFile(): void {
   const logFile = getLogFilePath();
   if (logFile && !logFileInitialized) {
