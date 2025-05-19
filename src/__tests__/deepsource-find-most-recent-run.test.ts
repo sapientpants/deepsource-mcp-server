@@ -40,6 +40,12 @@ const mockAxios = axios.default as jest.Mocked<typeof axios.default>;
 // Import DeepSourceClient after mocking
 const { DeepSourceClient } = await import('../deepsource.js');
 
+// Type definition for accessing private instance methods
+type DeepSourceClientWithPrivateMethods = InstanceType<typeof DeepSourceClient> & {
+  // eslint-disable-next-line no-unused-vars
+  findMostRecentRun: (projectKey: string, branchName: string) => Promise<any>;
+};
+
 describe('DeepSourceClient - findMostRecentRun', () => {
   let client: InstanceType<typeof DeepSourceClient>;
   let mockAxiosInstance: Record<string, unknown>;
@@ -173,7 +179,9 @@ describe('DeepSourceClient - findMostRecentRun', () => {
       (mockAxiosInstance.post as jest.Mock).mockResolvedValueOnce(mockResponse);
 
       // Execute the private method using type assertion
-      const findMostRecentRun = (client as any).findMostRecentRun.bind(client);
+      const findMostRecentRun = (
+        client as DeepSourceClientWithPrivateMethods
+      ).findMostRecentRun.bind(client);
       const result = await findMostRecentRun('test-key', 'main');
 
       // Verify the result is the most recent run for the 'main' branch
@@ -273,7 +281,9 @@ describe('DeepSourceClient - findMostRecentRun', () => {
         .mockResolvedValueOnce(secondPageResponse);
 
       // Execute
-      const findMostRecentRun = (client as any).findMostRecentRun.bind(client);
+      const findMostRecentRun = (
+        client as DeepSourceClientWithPrivateMethods
+      ).findMostRecentRun.bind(client);
       const result = await findMostRecentRun('test-key', 'main');
 
       // Verify the result is the most recent run from all pages
@@ -306,7 +316,9 @@ describe('DeepSourceClient - findMostRecentRun', () => {
       (mockAxiosInstance.post as jest.Mock).mockResolvedValueOnce(mockResponse);
 
       // Execute and expect error
-      const findMostRecentRun = (client as any).findMostRecentRun.bind(client);
+      const findMostRecentRun = (
+        client as DeepSourceClientWithPrivateMethods
+      ).findMostRecentRun.bind(client);
       await expect(findMostRecentRun('test-key', 'non-existent')).rejects.toThrow(
         "No runs found for branch 'non-existent' in project 'test-key'"
       );
@@ -383,7 +395,9 @@ describe('DeepSourceClient - findMostRecentRun', () => {
       (mockAxiosInstance.post as jest.Mock).mockResolvedValueOnce(mockResponse);
 
       // Execute
-      const findMostRecentRun = (client as any).findMostRecentRun.bind(client);
+      const findMostRecentRun = (
+        client as DeepSourceClientWithPrivateMethods
+      ).findMostRecentRun.bind(client);
       const result = await findMostRecentRun('test-key', 'main');
 
       // Verify it returns one of the runs with the same timestamp
