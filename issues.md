@@ -27,14 +27,15 @@ All issues are of type "Detected usage of the `any` type" - The `any` type can s
 - **Total issues introduced**: 9
 - **All issues are anti-pattern related** (JS-0323)
 - **Severity**: CRITICAL
-- **Action required**: Replace all `any` types with more specific types
+- **Status**: ✅ All issues resolved!
 
-## Resolution Strategy
-1. Identify each `any` type usage at the specified line numbers
-2. Replace with appropriate specific types:
-   - Use `unknown` for truly unknown types
-   - Use type assertions with proper types like `Record<string, unknown>`
-   - Use proper interfaces or types where the structure is known
-3. Ensure tests still pass after replacing `any` types
-4. Run `pnpm run lint` to verify no type errors
-5. Run `pnpm run test` to ensure all tests still pass
+## Resolution Details
+All 9 `any` type issues have been resolved by creating proper type definitions:
+
+### src/__tests__/deepsource-process-run-checks.test.ts (5 issues resolved)
+- Lines 314, 234, 177, 136, 88: Created `DeepSourceClientWithPrivateStatics` type to properly access the private static method `processRunChecksResponse`
+
+### src/__tests__/deepsource-find-most-recent-run.test.ts (4 issues resolved)
+- Lines 386, 309, 276, 176: Created `DeepSourceClientWithPrivateMethods` type to properly access the private instance method `findMostRecentRun`
+
+All tests continue to pass with the proper type assertions, eliminating the need for `any` type and improving type safety.
