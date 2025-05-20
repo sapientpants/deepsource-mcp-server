@@ -63,8 +63,8 @@ describe.skip('DeepSourceClient Pagination Comprehensive Tests', () => {
 
       // Create pagination help
       const paginationHelp = this.testCreatePaginationHelp(
-        !!pageInfo.hasNextPage,
-        !!pageInfo.hasPreviousPage,
+        Boolean(pageInfo.hasNextPage),
+        Boolean(pageInfo.hasPreviousPage),
         pageInfo.endCursor as string | undefined,
         pageInfo.startCursor as string | undefined
       );
@@ -77,14 +77,18 @@ describe.skip('DeepSourceClient Pagination Comprehensive Tests', () => {
       };
     }
 
-    static testNormalizePaginationInput(params: any) {
+    static testNormalizePaginationInput(params: Record<string, unknown>) {
       // Normalize pagination input parameters
       const normalizedParams = {
         first:
-          params.first !== undefined ? params.first : params.last === undefined ? 10 : undefined,
-        after: params.after,
-        last: params.last,
-        before: params.before,
+          params.first !== undefined
+            ? Number(params.first)
+            : params.last === undefined
+              ? 10
+              : undefined,
+        after: params.after as string | undefined,
+        last: params.last as number | undefined,
+        before: params.before as string | undefined,
       };
 
       // Include offset if provided (for legacy pagination)
@@ -110,15 +114,11 @@ describe.skip('DeepSourceClient Pagination Comprehensive Tests', () => {
         return false;
       }
 
-      // Check valid cursor combinations
-      if (
+      // Return the negation of invalid cursor combinations
+      return !(
         (after !== undefined && first === undefined) ||
         (before !== undefined && last === undefined)
-      ) {
-        return false;
-      }
-
-      return true;
+      );
     }
 
     static testCreatePaginationHelp(
@@ -130,8 +130,8 @@ describe.skip('DeepSourceClient Pagination Comprehensive Tests', () => {
       // Create pagination help for Relay-style pagination
       return {
         description: 'This API uses Relay-style cursor-based pagination',
-        forward_pagination: `To get the next page, use 'first: 10, after: "${endCursor || null}"'`,
-        backward_pagination: `To get the previous page, use 'last: 10, before: "${startCursor || null}"'`,
+        forward_pagination: `To get the next page, use 'first: 10, after: ${endCursor ? `"${endCursor}"` : 'null'}'`,
+        backward_pagination: `To get the previous page, use 'last: 10, before: ${startCursor ? `"${startCursor}"` : 'null'}'`,
         page_status: {
           has_next_page: hasNextPage,
           has_previous_page: hasPreviousPage,
@@ -147,8 +147,12 @@ describe.skip('DeepSourceClient Pagination Comprehensive Tests', () => {
     nock.cleanAll();
 
     // Mock console methods to keep test output clean
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {
+      // Intentionally empty to suppress console warnings during tests
+    });
+    jest.spyOn(console, 'error').mockImplementation(() => {
+      // Intentionally empty to suppress console errors during tests
+    });
   });
 
   afterEach(() => {
