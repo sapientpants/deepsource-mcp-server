@@ -18,7 +18,8 @@ class TestableDeepSourceClient extends DeepSourceClient {
   }
 
   // Direct test method for line 2452
-  async testNoneTypeErrorHandler(): Promise<unknown[]> {
+  // This method doesn't use instance properties or methods, so it's defined as static
+  static async testNoneTypeErrorHandler(): Promise<unknown[]> {
     try {
       // Force an error that contains 'NoneType'
       throw new Error('NoneType object has no attribute get');
@@ -37,11 +38,10 @@ class TestableDeepSourceClient extends DeepSourceClient {
 
 describe('DeepSourceClient NoneType error handling (line 2452)', () => {
   it('should return empty array when NoneType error occurs', async () => {
-    // Create test client
-    const client = new TestableDeepSourceClient('test-api-key');
+    // Since the method is now static, we don't need to create an instance
 
-    // Test directly
-    const result = await client.testNoneTypeErrorHandler();
+    // Test directly using the static method
+    const result = await TestableDeepSourceClient.testNoneTypeErrorHandler();
     expect(result).toEqual([]);
   });
 

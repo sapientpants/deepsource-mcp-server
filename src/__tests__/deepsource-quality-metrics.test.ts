@@ -388,7 +388,8 @@ describe('DeepSourceClient Quality Metrics', () => {
         }
 
         // Create a method that directly executes the error handler code in line 2452
-        async testGetQualityMetricsWithNoneTypeError(): Promise<unknown[]> {
+        // This method doesn't use instance properties or methods, so it's defined as static
+        static async testGetQualityMetricsWithNoneTypeError(): Promise<unknown[]> {
           try {
             // Force an error
             throw new Error('NoneType object has no attribute get');
@@ -406,11 +407,9 @@ describe('DeepSourceClient Quality Metrics', () => {
         }
       }
 
-      // Create a testable client instance
-      const testableClient = new TestableDeepSourceClient(API_KEY);
-
+      // Since the method is now static, we don't need to create an instance
       // Execute the test method that directly runs the code in line 2452
-      const result = await testableClient.testGetQualityMetricsWithNoneTypeError();
+      const result = await TestableDeepSourceClient.testGetQualityMetricsWithNoneTypeError();
 
       // Verify an empty array is returned as expected
       expect(result).toEqual([]);

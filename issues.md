@@ -76,14 +76,19 @@ Having empty functions hurts readability and is considered a code smell. There's
 **Severity:** MINOR  
 **Category:** ANTI_PATTERN  
 **Affected Files:**
-- src/__tests__/deepsource-quality-metrics.test.ts (line 391)
-- src/__tests__/deepsource-nonetype-error.test.ts (line 21)
+- ✅ src/__tests__/deepsource-quality-metrics.test.ts (line 391)
+- ✅ src/__tests__/deepsource-nonetype-error.test.ts (line 21)
+
+✅ **RESOLVED**
 
 If a class method does not use `this`, it can be made into a static function.
 
-**Todo:**
-- [ ] Convert methods that don't use `this` to static methods
-- [ ] Update any instance references to static calls (MyClass.staticMethod())
+**Completed fixes:**
+- [x] Converted methods that don't use `this` to static methods:
+  - `testGetQualityMetricsWithNoneTypeError` in deepsource-quality-metrics.test.ts
+  - `testNoneTypeErrorHandler` in deepsource-nonetype-error.test.ts
+- [x] Updated instance method references to use static calls
+- [x] Added comments explaining the reason for using static methods
 
 ### 5. JS-0356: Unused variables in TypeScript code (2 issues)
 **Severity:** MAJOR  
