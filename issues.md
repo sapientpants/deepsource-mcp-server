@@ -119,6 +119,6 @@ const result = await TestableDeepSourceClient.testNoneTypeErrorHandler();
 
 - [x] Issue 1: Lines not covered in tests (line 68) - Resolved in commit 6d55a15 with a test that properly executes the testProcessRegularMetricHistory method
 - [x] Issue 2: Lines not covered in tests (line 55) - Resolved in commit ccca0eb with a test that properly executes the testValidateAndGetMetricInfo method
-- [ ] Issue 3: Useless template literal (line 164) - Replace with regular string literal
-- [ ] Issue 4: Useless template literal (line 149) - Replace with regular string literal
+- [x] Issue 3: Useless template literal (line 164) - Resolved in commit 91c2850 by replacing template literal with regular string literal
+- [x] Issue 4: Useless template literal (line 149) - Resolved in commit 91c2850 by replacing template literal with regular string literal
 - [ ] Issue 5: Use const declarations (line 107) - Change let to const
