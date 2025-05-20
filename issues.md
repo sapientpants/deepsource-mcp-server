@@ -100,11 +100,51 @@ While all DeepSource issues have been fixed, here are some proactive improvement
    - ✅ **IMPLEMENTED** - Audit existing static methods to ensure they truly don't need instance context
 
 4. **Documentation Updates**
-   - Add JSDoc comments to all public methods
-   - Document type predicates and validation helpers
+   - ✅ **IMPLEMENTED** - Add JSDoc comments to all public methods
+   - ✅ **IMPLEMENTED** - Document type predicates and validation helpers
    - Update README with latest architectural decisions
 
 ## Implemented Improvements
+
+### 9. JSDoc Documentation Improvements (May 22, 2025)
+
+Added comprehensive JSDoc documentation to key utility functions and type predicates throughout the codebase. These improvements focus on making the code more maintainable and easier to understand for developers.
+
+**Type Predicate Documentation**:
+- Enhanced JSDoc comments for all type predicates in `src/types/discriminated-unions.ts`
+- Added detailed usage examples showing type narrowing patterns
+- Improved parameter and return value descriptions
+- Documented TypeScript-specific concepts like type predicates and discriminated unions
+
+**Branded Type Helpers**:
+- Added comprehensive JSDoc comments for all branded type helpers in `src/types/branded.ts`
+- Included examples showing the type-safety benefits of branded types
+- Documented how these helpers prevent type confusion between different string identifiers
+
+**Validation Helpers**:
+- Enhanced documentation for all validation helper functions in `DeepSourceClient`:
+  - `validateString`, `validateNullableString`, `validateNumber`, `validateArray`
+  - Added detailed examples of usage patterns and error handling
+  - Clarified the purpose of each validation function in the context of API interactions
+
+**Utility Functions**:
+- Documented the `getNestedProperty` utility with comprehensive examples
+- Added detailed explanation of type safety features and error handling
+- Included examples for basic and advanced usage patterns
+
+These documentation improvements have several benefits:
+1. **Better Developer Experience**: Clear explanations and examples make the code easier to understand
+2. **Improved Maintainability**: New developers can quickly understand the purpose of each utility
+3. **Enhanced IDE Support**: Better JSDoc comments provide better IntelliSense and autocompletion
+4. **Clearer Type Safety**: Documentation explicitly describes TypeScript's type safety mechanisms
+5. **Reduced Learning Curve**: Examples demonstrate recommended usage patterns
+
+All updated documentation follows a consistent style with the following sections:
+- Purpose and overview
+- Detailed description with context
+- Usage examples with TypeScript code snippets
+- Parameter and return value descriptions
+- Type parameter explanations where applicable
 
 ### 8. Static Methods Audit and Reorganization (May 22, 2025)
 

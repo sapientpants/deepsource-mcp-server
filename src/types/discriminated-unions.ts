@@ -165,10 +165,24 @@ export type ApiError =
   | OtherError;
 
 /**
- * Type guard to check if an error is a specific type
- * @param error Error to check
- * @param category Category to check for
- * @returns Whether the error is of the specified category
+ * Type guard to check if an API error belongs to a specific error category
+ *
+ * This function performs a runtime check on the error's category discriminant
+ * to determine if it matches the requested category. Use this with type narrowing
+ * to access category-specific properties safely.
+ *
+ * @example
+ * ```typescript
+ * if (isErrorOfCategory(error, ErrorCategory.NOT_FOUND)) {
+ *   // TypeScript knows this is a NotFoundError now
+ *   console.log(error.resource); // Safely access NotFoundError property
+ * }
+ * ```
+ *
+ * @param error - The API error object to check
+ * @param category - The error category to test against
+ * @returns True if the error is of the specified category, false otherwise
+ * @public
  */
 export function isErrorOfCategory(error: ApiError, category: ErrorCategory): boolean {
   return error.category === category;
@@ -212,9 +226,29 @@ export interface ErrorResponse extends ApiResponseBase {
 export type ApiResponse<T> = SuccessResponse<T> | ErrorResponse;
 
 /**
- * Type guard to check if a response was successful
- * @param response API response
- * @returns Whether the response was successful
+ * Type guard to check if an API response was successful
+ *
+ * This function enables safe handling of API responses by distinguishing between
+ * success and error cases in a type-safe manner. It acts as a TypeScript type predicate,
+ * allowing the compiler to narrow the type when used in conditions.
+ *
+ * @example
+ * ```typescript
+ * const response = await fetchData();
+ *
+ * if (isSuccessResponse(response)) {
+ *   // TypeScript knows this is a SuccessResponse<T> now
+ *   console.log(response.data); // Safely access response.data
+ * } else {
+ *   // TypeScript knows this is an ErrorResponse now
+ *   console.error(response.error.message); // Safely access error properties
+ * }
+ * ```
+ *
+ * @param response - The API response to check
+ * @returns Type predicate indicating whether the response is a successful response
+ * @typeParam T - The type of data contained in a successful response
+ * @public
  */
 export function isSuccessResponse<T>(response: ApiResponse<T>): response is SuccessResponse<T> {
   return response.success === true;
@@ -372,6 +406,36 @@ export type RunState =
  * @param status Status to check for
  * @returns Whether the run is in the specified state
  */
+/**
+ * Type guard to check if a run is in a specific state
+ *
+ * This generic type guard determines if a run is in a particular state based on
+ * its status discriminant. It enables type-safe access to state-specific properties
+ * after TypeScript narrows the type.
+ *
+ * @example
+ * ```typescript
+ * // Check if run is successful and access success-specific properties
+ * if (isRunInState<SuccessfulRun>(run, 'SUCCESS')) {
+ *   // TypeScript knows this is a SuccessfulRun now
+ *   console.log(run.finishedAt);
+ *   console.log(run.summary.occurrencesIntroduced);
+ * }
+ *
+ * // Check if run is in progress and access progress-specific properties
+ * if (isRunInState<RunningRun>(run, 'READY')) {
+ *   // TypeScript knows this is a RunningRun now
+ *   console.log(run.progress);
+ *   console.log(run.currentStage);
+ * }
+ * ```
+ *
+ * @param run - The run object to check
+ * @param status - The status to test against
+ * @returns Type predicate indicating whether the run is in the specified state
+ * @typeParam T - The specific run state type to check for (must extend RunState)
+ * @public
+ */
 export function isRunInState<T extends RunState>(
   run: RunState,
   status: AnalysisRunStatus
@@ -520,10 +584,27 @@ export type ComplianceReport =
   | IssuesPreventedReport;
 
 /**
- * Type guard to check if a report is of a specific type
- * @param report Report to check
- * @param type Report type to check for
- * @returns Whether the report is of the specified type
+ * Type guard to check if a compliance report is of a specific type
+ *
+ * This generic type guard determines if a compliance report is of a particular type
+ * based on its type discriminant. It enables type-safe access to report-type-specific
+ * properties after TypeScript narrows the type.
+ *
+ * @example
+ * ```typescript
+ * // Check if report is an OWASP Top 10 report
+ * if (isReportOfType<OwaspTop10Report>(report, ReportType.OWASP_TOP_10)) {
+ *   // TypeScript knows this is an OwaspTop10Report now
+ *   console.log(report.owaspCategories);
+ *   console.log(report.vulnerabilityCount);
+ * }
+ * ```
+ *
+ * @param report - The compliance report to check
+ * @param type - The report type to test against
+ * @returns Type predicate indicating whether the report is of the specified type
+ * @typeParam T - The specific report type to check for (must extend ComplianceReport)
+ * @public
  */
 export function isReportOfType<T extends ComplianceReport>(
   report: ComplianceReport,
@@ -597,10 +678,34 @@ export interface UnknownMetric extends MetricStateBase {
 export type MetricState = PassingMetric | FailingMetric | UnknownMetric;
 
 /**
- * Type guard to check if a metric is in a specific state
- * @param metric Metric to check
- * @param status Status to check for
- * @returns Whether the metric is in the specified state
+ * Type guard to check if a metric is in a specific threshold state
+ *
+ * This generic type guard determines if a quality metric is in a particular threshold
+ * state based on its status discriminant. It enables type-safe access to state-specific
+ * properties after TypeScript narrows the type.
+ *
+ * @example
+ * ```typescript
+ * // Check if metric is passing its threshold
+ * if (isMetricInState<PassingMetric>(metric, MetricThresholdStatus.PASS)) {
+ *   // TypeScript knows this is a PassingMetric now
+ *   console.log(metric.passPercentage);
+ *   console.log(metric.margin);
+ * }
+ *
+ * // Check if metric is failing its threshold
+ * if (isMetricInState<FailingMetric>(metric, MetricThresholdStatus.FAIL)) {
+ *   // TypeScript knows this is a FailingMetric now
+ *   console.log(metric.thresholdDelta);
+ *   console.log(metric.recommendedThreshold);
+ * }
+ * ```
+ *
+ * @param metric - The metric to check
+ * @param status - The threshold status to test against
+ * @returns Type predicate indicating whether the metric is in the specified state
+ * @typeParam T - The specific metric state to check for (must extend MetricState)
+ * @public
  */
 export function isMetricInState<T extends MetricState>(
   metric: MetricState,
