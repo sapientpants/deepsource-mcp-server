@@ -519,6 +519,36 @@ describe('DeepSourceClient Quality Metrics', () => {
         })
       ).rejects.toThrow('GraphQL Error: Invalid input');
     });
+
+    it('should handle GraphQL errors in response (lines 2488-2489)', async () => {
+      // Mock response with GraphQL errors in the response body
+      const mockErrorResponse = {
+        data: {},
+        errors: [
+          { message: 'Metric threshold value must be between 0 and 100' },
+          { message: 'Invalid repository ID provided' },
+        ],
+      };
+
+      // Set up nock to intercept API call
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        // Return 200 status but with GraphQL errors in the response body
+        .reply(200, mockErrorResponse);
+
+      // Call the method and expect it to throw with the combined error message
+      await expect(
+        client.setMetricThreshold({
+          repositoryId: REPOSITORY_ID,
+          metricShortcode: MetricShortcode.LCV,
+          metricKey: MetricKey.AGGREGATE,
+          thresholdValue: 150, // Value outside allowed range
+        })
+      ).rejects.toThrow(
+        'GraphQL Errors: Metric threshold value must be between 0 and 100, Invalid repository ID provided'
+      );
+    });
   });
 
   describe('updateMetricSetting', () => {
