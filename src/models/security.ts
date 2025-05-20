@@ -5,6 +5,7 @@
 
 import { PaginationParams, PaginatedResponse } from '../utils/pagination/types.js';
 
+/* eslint-disable no-unused-vars */
 /**
  * Available report types in DeepSource
  * This enum combines both compliance-specific and general report types
@@ -33,6 +34,7 @@ export enum ReportStatus {
   FAILING = 'FAILING',
   NOOP = 'NOOP',
 }
+/* eslint-enable no-unused-vars */
 
 /**
  * Trend information for reports

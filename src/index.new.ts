@@ -27,11 +27,19 @@ export const mcpServer = new McpServer({
   version: '1.0.3',
 });
 
-// Register the projects tool
+// Register the projects tool - we need to fix the handler to match CallToolResult format
 mcpServer.tool(
   'projects',
   'List all available DeepSource projects. Returns a list of project objects with "key" and "name" properties.',
-  handleProjects
+  // eslint-disable-next-line no-unused-vars
+  async (_extra) => {
+    const result = await handleProjects();
+    return {
+      content: result.content,
+      structuredContent: {},
+      isError: result.isError,
+    };
+  }
 );
 
 // Only start the server if not in test mode

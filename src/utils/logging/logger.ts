@@ -13,6 +13,7 @@
 import { writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
 import { dirname } from 'path';
 
+/* eslint-disable no-unused-vars */
 /**
  * Log levels for the application
  * @enum {string}
@@ -24,6 +25,7 @@ export enum LogLevel {
   WARN = 'WARN',
   ERROR = 'ERROR',
 }
+/* eslint-enable no-unused-vars */
 
 /**
  * Environment-aware logging configuration

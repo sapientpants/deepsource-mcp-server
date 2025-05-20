@@ -3,6 +3,7 @@
  * This module defines interfaces for DeepSource quality metrics.
  */
 
+/* eslint-disable no-unused-vars */
 /**
  * Shortcodes for the different types of metrics that DeepSource supports
  * @public
@@ -70,6 +71,12 @@ export enum MetricDirection {
   /** Lower values are better (e.g., duplicate code percentage) */
   DOWNWARD = 'DOWNWARD',
 }
+/* eslint-enable no-unused-vars */
+
+/**
+ * Settings for a specific metric
+ * @public
+ */
 
 /**
  * Settings for a specific metric
