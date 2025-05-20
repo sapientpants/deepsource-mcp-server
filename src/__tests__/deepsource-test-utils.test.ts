@@ -90,4 +90,32 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
       }
     });
   });
+
+  describe('testNoneTypeErrorHandler', () => {
+    it('should handle NoneType errors correctly', async () => {
+      // Original methods
+      const originalIsError = TestableDeepSourceClient.testIsError;
+      const originalIsErrorWithMessage = TestableDeepSourceClient.testIsErrorWithMessage;
+
+      try {
+        // Mock methods to control flow
+        TestableDeepSourceClient.testIsError = jest.fn().mockReturnValue(true);
+        TestableDeepSourceClient.testIsErrorWithMessage = jest.fn().mockReturnValue(true);
+
+        // Test NoneType error path
+        let result = await TestableDeepSourceClient.testNoneTypeErrorHandler();
+        expect(result).toEqual([]);
+
+        // Test throw error path by making isErrorWithMessage return false
+        TestableDeepSourceClient.testIsErrorWithMessage = jest.fn().mockReturnValue(false);
+
+        // Should throw an error when NoneType is not in the message
+        await expect(TestableDeepSourceClient.testNoneTypeErrorHandler()).rejects.toThrow();
+      } finally {
+        // Restore original methods
+        TestableDeepSourceClient.testIsError = originalIsError;
+        TestableDeepSourceClient.testIsErrorWithMessage = originalIsErrorWithMessage;
+      }
+    });
+  });
 });
