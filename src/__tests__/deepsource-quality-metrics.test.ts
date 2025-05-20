@@ -312,6 +312,64 @@ describe('DeepSourceClient Quality Metrics', () => {
         'GraphQL Error: Unauthorized access'
       );
     });
+
+    it('should handle GraphQL errors in response (line 2416)', async () => {
+      // Mock projects response
+      const mockProjectsResponse = {
+        data: {
+          viewer: {
+            email: 'test@example.com',
+            accounts: {
+              edges: [
+                {
+                  node: {
+                    login: 'testorg',
+                    repositories: {
+                      edges: [
+                        {
+                          node: {
+                            name: 'Test Project',
+                            defaultBranch: 'main',
+                            dsn: PROJECT_KEY,
+                            isPrivate: false,
+                            isActivated: true,
+                            vcsProvider: 'github',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      // Mock error response with GraphQL errors in the response body
+      const mockErrorResponse = {
+        data: null,
+        errors: [
+          { message: 'Field "metrics" of type "Repository" must have selection of subfields' },
+          { message: 'Cannot query field "invalid" on type "Repository"' },
+        ],
+      };
+
+      // Set up nock to intercept API calls
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockProjectsResponse)
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        // Return 200 status but with GraphQL errors in the response body
+        .reply(200, mockErrorResponse);
+
+      // Call the method and expect it to throw with the combined error message
+      await expect(client.getQualityMetrics(PROJECT_KEY)).rejects.toThrow(
+        'GraphQL Errors: Field "metrics" of type "Repository" must have selection of subfields, Cannot query field "invalid" on type "Repository"'
+      );
+    });
   });
 
   describe('setMetricThreshold', () => {
