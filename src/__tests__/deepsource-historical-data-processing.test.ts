@@ -12,21 +12,25 @@ describe('DeepSourceClient Historical Data Processing', () => {
 
   // Subclass DeepSourceClient to expose private methods for testing
   class TestableDeepSourceClient extends DeepSourceClient {
-    async testProcessRegularMetricHistory(params: any) {
+    async testProcessRegularMetricHistory(params: { projectKey: string; metricShortcode: MetricShortcode; metricKey: MetricKey; limit?: number }) {
       // @ts-expect-error - accessing private method for testing
       return this.processRegularMetricHistory(params);
     }
 
-    async testFetchHistoricalValues(params: any, project: any, metricItem: any) {
+    async testFetchHistoricalValues(
+      params: { projectKey: string; metricShortcode: MetricShortcode; metricKey: MetricKey; limit?: number },
+      project: { name: string; repository: { login: string; provider: string } },
+      metricItem: { id: string; key: string; threshold?: number }
+    ) {
       // @ts-expect-error - accessing private method for testing
       return this.fetchHistoricalValues(params, project, metricItem);
     }
 
     static testCreateMetricHistoryResponse(
-      params: any,
-      metric: any,
-      metricItem: any,
-      historyValues: any[]
+      params: { projectKey: string; metricShortcode: MetricShortcode; metricKey: MetricKey },
+      metric: { name: string; shortcode: string; positiveDirection: string; unit: string },
+      metricItem: { id: string; key: string; threshold?: number },
+      historyValues: Array<{ value: number; valueDisplay: string; threshold?: number; thresholdStatus?: string; commitOid?: string; createdAt?: string }>
     ) {
       // @ts-expect-error - accessing private method for testing
       return DeepSourceClient.createMetricHistoryResponse(
@@ -37,7 +41,10 @@ describe('DeepSourceClient Historical Data Processing', () => {
       );
     }
 
-    static testCalculateTrendDirection(values: any[], positiveDirection: string | any) {
+    static testCalculateTrendDirection(
+      values: Array<{ value: number; valueDisplay: string; threshold?: number; thresholdStatus?: string; commitOid?: string; createdAt?: string }>,
+      positiveDirection: string
+    ) {
       // @ts-expect-error - accessing private method for testing
       return DeepSourceClient.calculateTrendDirection(values, positiveDirection);
     }
@@ -105,14 +112,14 @@ describe('DeepSourceClient Historical Data Processing', () => {
       };
 
       // Mock the validateAndGetMetricInfo method to return our mock data
-      jest.spyOn(client as any, 'validateAndGetMetricInfo').mockResolvedValue({
+      jest.spyOn(client as unknown as Record<string, unknown>, 'validateAndGetMetricInfo').mockResolvedValue({
         project: mockProject,
         metric: mockMetric,
         metricItem: mockMetricItem,
       });
 
       // Mock the fetchHistoricalValues method to return mock history data
-      jest.spyOn(client as any, 'fetchHistoricalValues').mockResolvedValue(mockHistoryValues);
+      jest.spyOn(client as unknown as Record<string, unknown>, 'fetchHistoricalValues').mockResolvedValue(mockHistoryValues);
 
       // Mock the createMetricHistoryResponse method to return a test response
       const mockResponse = {
@@ -127,7 +134,7 @@ describe('DeepSourceClient Historical Data Processing', () => {
       };
 
       jest
-        .spyOn(DeepSourceClient as any, 'createMetricHistoryResponse')
+        .spyOn(DeepSourceClient as unknown as Record<string, unknown>, 'createMetricHistoryResponse')
         .mockReturnValue(mockResponse);
 
       // Call the method under test
@@ -246,7 +253,7 @@ describe('DeepSourceClient Historical Data Processing', () => {
       ];
 
       const processHistoricalDataSpy = jest
-        .spyOn(DeepSourceClient as any, 'processHistoricalData')
+        .spyOn(DeepSourceClient as unknown as Record<string, unknown>, 'processHistoricalData')
         .mockImplementation(() => mockHistoryValues);
 
       // Setup nock to intercept API call
@@ -387,7 +394,7 @@ describe('DeepSourceClient Historical Data Processing', () => {
 
       // Spy on the processHistoricalData method to verify it's called with the right params
       const processHistoricalDataSpy = jest
-        .spyOn(DeepSourceClient as any, 'processHistoricalData')
+        .spyOn(DeepSourceClient as unknown as Record<string, unknown>, 'processHistoricalData')
         .mockImplementation(() => mockHistoryValues);
 
       // Setup nock to intercept API call

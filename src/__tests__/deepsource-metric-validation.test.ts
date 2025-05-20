@@ -13,7 +13,7 @@ describe('DeepSourceClient Metric Validation', () => {
 
   // Subclass DeepSourceClient to expose private methods for testing
   class TestableDeepSourceClient extends DeepSourceClient {
-    async testValidateAndGetMetricInfo(params: any) {
+    async testValidateAndGetMetricInfo(params: { projectKey: string; metricShortcode: MetricShortcode; metricKey: MetricKey }) {
       // @ts-expect-error - accessing private method for testing
       return this.validateAndGetMetricInfo(params);
     }
@@ -126,7 +126,7 @@ describe('DeepSourceClient Metric Validation', () => {
       ];
 
       // Mock empty metrics response
-      const mockMetrics: any[] = [];
+      const mockMetrics: Array<{ shortcode: string; name: string; items: Array<{ id: string; key: string; threshold?: number }> }> = [];
 
       // Mock the listProjects method to return our mock data (line 2931)
       jest.spyOn(client, 'listProjects').mockResolvedValue(mockProjects);

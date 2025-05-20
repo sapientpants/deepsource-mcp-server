@@ -32,20 +32,21 @@ Function declarations (with the `function` keyword) and variable declarations sh
 **Severity:** CRITICAL  
 **Category:** ANTI_PATTERN  
 **Affected Files:**
-- src/__tests__/deepsource-vulnerability-processing.test.ts (lines 372, 374)
-- src/__tests__/deepsource-metrics-history.test.ts (line 777, multiple occurrences)
-- src/__tests__/deepsource-metric-validation.test.ts (lines 16, 129)
-- src/__tests__/deepsource-internal-utils.test.ts (lines 505, 506, 507)
-- src/__tests__/deepsource-historical-data-processing.test.ts (lines 15, 20, 26, 27, 28, 29, 40, 108, 115, 130, 249, 390)
+- ✅ src/__tests__/deepsource-vulnerability-processing.test.ts (lines 372, 374)
+- ✅ src/__tests__/deepsource-metric-validation.test.ts (lines 16, 129)
+- ✅ src/__tests__/deepsource-internal-utils.test.ts (lines 505, 506, 507)
+- ✅ src/__tests__/deepsource-historical-data-processing.test.ts (lines 15, 20, 26, 27, 28, 29, 40, 108, 115, 130, 249, 390)
+- Other test files to be checked
 
 The `any` type can leak into your codebase. TypeScript compiler skips type checking of `any` typed variables, creating a potential safety hole and source of bugs.
 
 **Todo:**
-- [ ] Replace all `any` types with more specific types
-- [ ] Use `unknown` when the type is truly unknown
-- [ ] Use `Record<string, unknown>` for objects with unknown structure
-- [ ] Create proper type interfaces for test data
-- [ ] Consider using generic types where appropriate
+- [x] Replace all `any` types with more specific types in 4 identified test files
+- [x] Use `unknown` when the type is truly unknown
+- [x] Use `Record<string, unknown>` for objects with unknown structure
+- [x] Create proper type interfaces for test data
+- [x] Consider using generic types where appropriate
+- [ ] Check and update remaining files
 
 ### 3. JS-0321: Empty functions (9 issues)
 **Severity:** MINOR  
@@ -147,7 +148,7 @@ The previous test coverage issues (TCV-001) have been successfully addressed. Al
 
 ## Progress Tracking
 
-- [ ] Fix Critical Issues (0/24 completed)
+- [ ] Fix Critical Issues (8/24 completed)
 - [ ] Fix Major Issues (0/3 completed)
 - [ ] Fix Minor Issues (0/9 completed)
 - [ ] Verify all issues resolved

@@ -502,9 +502,9 @@ describe('DeepSource Internal Utilities', () => {
 
   describe('handleGraphQLError', () => {
     // Mock implementations for sub-handlers to simulate different behaviors
-    let originalGraphQLHandler: any;
-    let originalNetworkHandler: any;
-    let originalHttpStatusHandler: any;
+    let originalGraphQLHandler: (error: unknown, retryCount: number) => never;
+    let originalNetworkHandler: (error: unknown, retryCount: number) => never;
+    let originalHttpStatusHandler: (error: unknown, retryCount: number) => never;
 
     beforeEach(() => {
       // Store original handlers
