@@ -121,7 +121,7 @@ describe.skip('DeepSourceClient Error Handling Comprehensive Tests', () => {
       jest.spyOn(axios, 'create').mockReturnValue({
         post: jest.fn().mockRejectedValue(new Error('Network timeout')),
         request: jest.fn(),
-      } as any);
+      } as Record<string, unknown>);
 
       // Attempt to call an API method
       await expect(client.listProjects()).rejects.toThrow('Network timeout');
@@ -132,7 +132,7 @@ describe.skip('DeepSourceClient Error Handling Comprehensive Tests', () => {
       jest.spyOn(axios, 'create').mockReturnValue({
         post: jest.fn().mockRejectedValue(new Error('Connection refused')),
         request: jest.fn(),
-      } as any);
+      } as Record<string, unknown>);
 
       // Attempt to call an API method
       await expect(client.listProjects()).rejects.toThrow('Connection refused');
@@ -149,7 +149,7 @@ describe.skip('DeepSourceClient Error Handling Comprehensive Tests', () => {
           },
         }),
         request: jest.fn(),
-      } as any);
+      } as Record<string, unknown>);
 
       // Attempt to call an API method
       await expect(client.listProjects()).rejects.toThrow('HTTP 500: Internal Server Error');
@@ -166,7 +166,7 @@ describe.skip('DeepSourceClient Error Handling Comprehensive Tests', () => {
           },
         }),
         request: jest.fn(),
-      } as any);
+      } as Record<string, unknown>);
 
       // Attempt to call an API method
       await expect(client.listProjects()).rejects.toThrow('HTTP 429: Too Many Requests');
@@ -183,7 +183,7 @@ describe.skip('DeepSourceClient Error Handling Comprehensive Tests', () => {
           },
         }),
         request: jest.fn(),
-      } as any);
+      } as Record<string, unknown>);
 
       // Attempt to call an API method
       await expect(client.listProjects()).rejects.toThrow('HTTP 401: Unauthorized');
@@ -205,7 +205,7 @@ describe.skip('DeepSourceClient Error Handling Comprehensive Tests', () => {
           },
         }),
         request: jest.fn(),
-      } as any);
+      } as Record<string, unknown>);
 
       // Attempt to call an API method
       await expect(client.listProjects()).rejects.toThrow(
@@ -227,7 +227,7 @@ describe.skip('DeepSourceClient Error Handling Comprehensive Tests', () => {
           },
         }),
         request: jest.fn(),
-      } as any);
+      } as Record<string, unknown>);
 
       // Attempt to call an API method
       await expect(client.listProjects()).rejects.toThrow(
@@ -253,7 +253,7 @@ describe.skip('DeepSourceClient Error Handling Comprehensive Tests', () => {
           },
         }),
         request: jest.fn(),
-      } as any);
+      } as Record<string, unknown>);
 
       // Attempt to call an API method
       await expect(client.listProjects()).rejects.toThrow(
