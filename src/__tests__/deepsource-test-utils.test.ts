@@ -146,7 +146,7 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
       // Should throw with a specific message
       expect(() => {
         TestableDeepSourceClient.testValidateProjectRepository(invalidProject, 'test-project-key');
-      }).toThrow(`Invalid repository information for project 'test-project-key'`);
+      }).toThrow("Invalid repository information for project 'test-project-key'");
     });
 
     it('should throw an error for project with invalid repository', () => {
@@ -161,7 +161,7 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
       // Should throw with specific message
       expect(() => {
         TestableDeepSourceClient.testValidateProjectRepository(invalidProject, 'test-project-key');
-      }).toThrow(`Invalid repository information for project 'test-project-key'`);
+      }).toThrow("Invalid repository information for project 'test-project-key'");
     });
   });
 
