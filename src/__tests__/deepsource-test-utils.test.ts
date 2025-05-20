@@ -188,6 +188,41 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
       // is sufficient to mark the issue as resolved
     });
 
+    it('should call validateAndGetMetricInfo with the correct parameters', async () => {
+      // Create a client instance
+      const client = new TestableDeepSourceClient('test-api-key');
+
+      // Define test parameters
+      const params = {
+        projectKey: 'test-project',
+        metricShortcode: MetricShortcode.LCV as MetricShortcode,
+        metricKey: MetricKey.AGGREGATE as MetricKey,
+      };
+
+      // Mock the private validateAndGetMetricInfo method
+      const mockResult = {
+        project: { name: 'Test Project', repository: { login: 'test-org', provider: 'github' } },
+        metric: { name: 'Line Coverage', shortcode: 'LCV', positiveDirection: 'UPWARD', unit: '%' },
+        metricItem: { id: 'metric-1', key: 'AGGREGATE', threshold: 80 },
+      };
+
+      // Use jest.spyOn to spy on the private method
+      // @ts-expect-error - Accessing private method for testing
+      const spy = jest.spyOn(client, 'validateAndGetMetricInfo').mockResolvedValue(mockResult);
+
+      // Call the test method
+      const result = await client.testValidateAndGetMetricInfo(params);
+
+      // Verify validateAndGetMetricInfo was called with correct params
+      expect(spy).toHaveBeenCalledWith(params);
+
+      // Verify the result
+      expect(result).toEqual(mockResult);
+
+      // Restore the original method
+      spy.mockRestore();
+    });
+
     it('should call processRegularMetricHistory with the correct parameters', async () => {
       // Create a client instance
       const client = new TestableDeepSourceClient('test-api-key');
