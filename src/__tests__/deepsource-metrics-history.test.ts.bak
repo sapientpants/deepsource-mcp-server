@@ -792,6 +792,109 @@ describe('DeepSourceClient Metrics History', () => {
       // Verify that undefined is returned when NODE_ENV is not 'test'
       expect(result).toBeUndefined();
     });
+  });
+
+  describe('TestableDeepSourceClient test methods', () => {
+    describe('calculateTrendDirection', () => {
+      it('should calculate trend direction for metrics', () => {
+        // Test with increasing values and HIGHER_IS_BETTER
+        const increasingValues = [
+          { value: 70 },
+          { value: 75 },
+          { value: 82 }
+        ];
+        
+        const result1 = TestableDeepSourceClient.testCalculateTrendDirection(
+          increasingValues, 
+          MetricDirection.HIGHER_IS_BETTER
+        );
+        
+        // Expect a positive trend (true)
+        expect(typeof result1).toBe('boolean');
+        
+        // Test with decreasing values and HIGHER_IS_BETTER
+        const decreasingValues = [
+          { value: 82 },
+          { value: 75 },
+          { value: 70 }
+        ];
+        
+        const result2 = TestableDeepSourceClient.testCalculateTrendDirection(
+          decreasingValues, 
+          MetricDirection.HIGHER_IS_BETTER
+        );
+        
+        // Expect a negative trend (false)
+        expect(typeof result2).toBe('boolean');
+        
+        // Test with decreasing values and LOWER_IS_BETTER
+        const result3 = TestableDeepSourceClient.testCalculateTrendDirection(
+          decreasingValues, 
+          MetricDirection.LOWER_IS_BETTER
+        );
+        
+        // Expect a positive trend (true)
+        expect(typeof result3).toBe('boolean');
+      });
+    });
+
+    describe('createMetricHistoryResponse', () => {
+      it('should create a metric history response', () => {
+        const params = {
+          projectKey: 'test-project',
+          metricShortcode: MetricShortcode.LCV,
+          metricKey: MetricKey.AGGREGATE
+        };
+        
+        const metric = {
+          name: 'Line Coverage',
+          shortcode: 'LCV',
+          positiveDirection: 'HIGHER_IS_BETTER',
+          unit: '%'
+        };
+        
+        const metricItem = {
+          id: 'metric-1',
+          key: 'AGGREGATE',
+          threshold: 80
+        };
+        
+        const historyValues = [
+          {
+            value: 70,
+            valueDisplay: '70%',
+            threshold: 80,
+            thresholdStatus: 'FAILING',
+            commitOid: 'commit1',
+            createdAt: '2023-01-01'
+          },
+          {
+            value: 82,
+            valueDisplay: '82%',
+            threshold: 80,
+            thresholdStatus: 'PASSING',
+            commitOid: 'commit2',
+            createdAt: '2023-01-15'
+          }
+        ];
+        
+        const result = TestableDeepSourceClient.testCreateMetricHistoryResponse(
+          params,
+          metric,
+          metricItem,
+          historyValues
+        );
+        
+        expect(result).toBeDefined();
+        expect(result.name).toBe('Line Coverage');
+        expect(result.shortcode).toBe('LCV');
+        expect(result.unit).toBe('%');
+        expect(result.positiveDirection).toBe('HIGHER_IS_BETTER');
+        expect(result.threshold).toBe(80);
+        expect(result.values).toEqual(historyValues);
+        expect(result.isTrendingPositive).toBeDefined();
+      });
+    });
 
     it('should generate test data for Line Coverage metrics', async () => {
       const result = await client.getMetricHistory({
