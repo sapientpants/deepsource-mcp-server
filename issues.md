@@ -49,7 +49,7 @@ The following lines need test coverage:
 28. ~~**Line 2452** - Add test case for this line~~ ✅ RESOLVED (Note: Functionality tested in deepsource-nonetype-error.test.ts but code coverage tool doesn't detect it)
 29. ~~**Line 2488** - Add test case for this line~~ ✅ RESOLVED
 30. ~~**Line 2530** - Add test case for this line~~ ✅ RESOLVED
-31. **Line 2655** - Add test case for this line
+31. ~~**Line 2655** - Add test case for this line~~ ✅ RESOLVED
 32. **Line 2687** - Add test case for this line
 33. **Line 2690** - Add test case for this line
 34. **Line 2715** - Add test case for this line
@@ -111,7 +111,7 @@ Based on the line numbers, these appear to be gaps in:
 - [ ] Run DeepSource analysis to confirm issues resolved
 
 ### Progress Summary
-- Issues fixed: 30/49 (61%)
+- Issues fixed: 31/49 (63%)
 - Methods covered:
   - ✅ isAxiosErrorWithCriteria (line 657)
   - ✅ handleNetworkError (lines 706, 714)
@@ -128,4 +128,5 @@ Based on the line numbers, these appear to be gaps in:
   - ✅ getQualityMetrics NoneType error handler (line 2452)
   - ✅ setMetricThreshold error handling (line 2488)
   - ✅ updateMetricSetting error handling (line 2530)
-- Remaining: 19 lines to cover
+  - ✅ getComplianceReport error handling (line 2655)
+- Remaining: 18 lines to cover
