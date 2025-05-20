@@ -43,7 +43,7 @@ describe('DeepSource Metric Calculator', () => {
 
     it('should handle edge cases', () => {
       // Empty array
-      const emptyValues: any[] = [];
+      const emptyValues: Array<{ value: number }> = [];
 
       const result1 = TestableDeepSourceClient.testCalculateTrendDirection(
         emptyValues,
