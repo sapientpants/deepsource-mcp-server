@@ -502,9 +502,12 @@ describe('DeepSource Internal Utilities', () => {
 
   describe('handleGraphQLError', () => {
     // Mock implementations for sub-handlers to simulate different behaviors
-    let originalGraphQLHandler: (error: unknown, retryCount: number) => never;
-    let originalNetworkHandler: (error: unknown, retryCount: number) => never;
-    let originalHttpStatusHandler: (error: unknown, retryCount: number) => never;
+    // eslint-disable-next-line no-unused-vars
+    let originalGraphQLHandler: (_error: unknown, _retryCount: number) => never;
+    // eslint-disable-next-line no-unused-vars
+    let originalNetworkHandler: (_error: unknown, _retryCount: number) => never;
+    // eslint-disable-next-line no-unused-vars
+    let originalHttpStatusHandler: (_error: unknown, _retryCount: number) => never;
 
     beforeEach(() => {
       // Store original handlers

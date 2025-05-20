@@ -20,13 +20,20 @@
 ### 1. JS-0016: Function declarations in nested blocks
 **Severity:** MAJOR  
 **Category:** BUG_RISK  
-**File:** src/__tests__/deepsource-vulnerability-processing.test.ts (line 445)
+**File:** src/__tests__/deepsource-vulnerability-processing.test.ts (multiple occurrences, originally line 445)
+
+✅ **RESOLVED**
 
 Function declarations (with the `function` keyword) and variable declarations should preferably be in the root of a program or the body of a function. Having nested function declarations inside blocks may have unexpected results at runtime due to hoisting.
 
-**Todo:**
-- [ ] Move the function declaration out of the nested block
-- [ ] Refactor the test to avoid nested function declarations
+**Completed fixes:**
+- [x] Converted all nested function declarations to function expressions
+- [x] Fixed 5 instances of nested generator function declarations:
+  - `maxIterationsTestFunction` (line 445)
+  - `testGenerator` (line 236)
+  - `testNonArrayFunction` (line 412)
+  - `errorHandlingTestFunction` (line 496)
+  - `nullSkippingTestFunction` (line 537)
 
 ### 2. JS-0323: Using the `any` type (24 issues)
 **Severity:** CRITICAL  
@@ -149,6 +156,6 @@ The previous test coverage issues (TCV-001) have been successfully addressed. Al
 ## Progress Tracking
 
 - [ ] Fix Critical Issues (8/24 completed)
-- [ ] Fix Major Issues (0/3 completed)
+- [x] Fix Major Issues (1/3 completed)
 - [ ] Fix Minor Issues (0/9 completed)
 - [ ] Verify all issues resolved

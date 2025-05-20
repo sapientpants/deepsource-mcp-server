@@ -12,13 +12,23 @@ describe('DeepSourceClient Historical Data Processing', () => {
 
   // Subclass DeepSourceClient to expose private methods for testing
   class TestableDeepSourceClient extends DeepSourceClient {
-    async testProcessRegularMetricHistory(params: { projectKey: string; metricShortcode: MetricShortcode; metricKey: MetricKey; limit?: number }) {
+    async testProcessRegularMetricHistory(params: {
+      projectKey: string;
+      metricShortcode: MetricShortcode;
+      metricKey: MetricKey;
+      limit?: number;
+    }) {
       // @ts-expect-error - accessing private method for testing
       return this.processRegularMetricHistory(params);
     }
 
     async testFetchHistoricalValues(
-      params: { projectKey: string; metricShortcode: MetricShortcode; metricKey: MetricKey; limit?: number },
+      params: {
+        projectKey: string;
+        metricShortcode: MetricShortcode;
+        metricKey: MetricKey;
+        limit?: number;
+      },
       project: { name: string; repository: { login: string; provider: string } },
       metricItem: { id: string; key: string; threshold?: number }
     ) {
@@ -30,7 +40,14 @@ describe('DeepSourceClient Historical Data Processing', () => {
       params: { projectKey: string; metricShortcode: MetricShortcode; metricKey: MetricKey },
       metric: { name: string; shortcode: string; positiveDirection: string; unit: string },
       metricItem: { id: string; key: string; threshold?: number },
-      historyValues: Array<{ value: number; valueDisplay: string; threshold?: number; thresholdStatus?: string; commitOid?: string; createdAt?: string }>
+      historyValues: Array<{
+        value: number;
+        valueDisplay: string;
+        threshold?: number;
+        thresholdStatus?: string;
+        commitOid?: string;
+        createdAt?: string;
+      }>
     ) {
       // @ts-expect-error - accessing private method for testing
       return DeepSourceClient.createMetricHistoryResponse(
@@ -42,7 +59,14 @@ describe('DeepSourceClient Historical Data Processing', () => {
     }
 
     static testCalculateTrendDirection(
-      values: Array<{ value: number; valueDisplay: string; threshold?: number; thresholdStatus?: string; commitOid?: string; createdAt?: string }>,
+      values: Array<{
+        value: number;
+        valueDisplay: string;
+        threshold?: number;
+        thresholdStatus?: string;
+        commitOid?: string;
+        createdAt?: string;
+      }>,
       positiveDirection: string
     ) {
       // @ts-expect-error - accessing private method for testing
@@ -112,14 +136,18 @@ describe('DeepSourceClient Historical Data Processing', () => {
       };
 
       // Mock the validateAndGetMetricInfo method to return our mock data
-      jest.spyOn(client as unknown as Record<string, unknown>, 'validateAndGetMetricInfo').mockResolvedValue({
-        project: mockProject,
-        metric: mockMetric,
-        metricItem: mockMetricItem,
-      });
+      jest
+        .spyOn(client as unknown as Record<string, unknown>, 'validateAndGetMetricInfo')
+        .mockResolvedValue({
+          project: mockProject,
+          metric: mockMetric,
+          metricItem: mockMetricItem,
+        });
 
       // Mock the fetchHistoricalValues method to return mock history data
-      jest.spyOn(client as unknown as Record<string, unknown>, 'fetchHistoricalValues').mockResolvedValue(mockHistoryValues);
+      jest
+        .spyOn(client as unknown as Record<string, unknown>, 'fetchHistoricalValues')
+        .mockResolvedValue(mockHistoryValues);
 
       // Mock the createMetricHistoryResponse method to return a test response
       const mockResponse = {
@@ -134,7 +162,10 @@ describe('DeepSourceClient Historical Data Processing', () => {
       };
 
       jest
-        .spyOn(DeepSourceClient as unknown as Record<string, unknown>, 'createMetricHistoryResponse')
+        .spyOn(
+          DeepSourceClient as unknown as Record<string, unknown>,
+          'createMetricHistoryResponse'
+        )
         .mockReturnValue(mockResponse);
 
       // Call the method under test
