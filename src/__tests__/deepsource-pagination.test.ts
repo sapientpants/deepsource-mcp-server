@@ -103,7 +103,47 @@ describe('DeepSource Pagination Utilities', () => {
 
       const result = TestableDeepSourceClient.testNormalizePaginationParams(params);
       expect(result.first).toBe(10);
-      // The implementation might stringify the after parameter, so we don't check its value
+      expect(result.after).toBe('123');
+    });
+
+    it('should handle non-string before parameter', () => {
+      const params = {
+        last: 15,
+        before: 456,
+      };
+
+      const result = TestableDeepSourceClient.testNormalizePaginationParams(params);
+      expect(result.last).toBe(15);
+      expect(result.before).toBe('456');
+      expect(result.first).toBeUndefined();
+    });
+
+    it('should handle mixed cursor scenarios with non-string values', () => {
+      // Both before and after with non-string values
+      const params = {
+        first: 10,
+        after: 123,
+        before: 456,
+      };
+
+      const result = TestableDeepSourceClient.testNormalizePaginationParams(params);
+      // When both before and after are present, before takes precedence
+      expect(result.before).toBe('456');
+      expect(result.last).toBeDefined();
+      expect(result.first).toBeUndefined();
+    });
+
+    it('should handle null or undefined cursor values', () => {
+      const params = {
+        first: 10,
+        after: null,
+        before: undefined,
+      };
+
+      const result = TestableDeepSourceClient.testNormalizePaginationParams(params);
+      expect(result.after).toBe('');
+      expect(result.before).toBeUndefined(); // undefined should not trigger the conversion
+      expect(result.first).toBe(10);
     });
   });
 });

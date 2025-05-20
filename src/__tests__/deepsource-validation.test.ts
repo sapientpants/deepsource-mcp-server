@@ -5,6 +5,29 @@
 import { jest } from '@jest/globals';
 import { DeepSourceClient } from '../deepsource.js';
 
+// Create a test subclass to expose private methods
+class TestableDeepSourceClient extends DeepSourceClient {
+  static testValidateProjectKey(projectKey: string): void {
+    // @ts-expect-error - Accessing private method for testing
+    return DeepSourceClient.validateProjectKey(projectKey);
+  }
+
+  static testIsValidVulnerabilityNode(node: unknown): boolean {
+    // @ts-expect-error - Accessing private method for testing
+    return DeepSourceClient.isValidVulnerabilityNode(node);
+  }
+
+  static testValidateProjectRepository(project: Record<string, unknown>, projectKey: string): void {
+    // @ts-expect-error - Accessing private method for testing
+    return DeepSourceClient.validateProjectRepository(project, projectKey);
+  }
+
+  static testValidateNumber(value: unknown): number | null {
+    // @ts-expect-error - Accessing private method for testing
+    return DeepSourceClient.validateNumber(value);
+  }
+}
+
 // We need to access private methods for testing
 // @ts-expect-error - Accessing private static method for testing
 const isValidVulnerabilityNode = DeepSourceClient['isValidVulnerabilityNode'];
@@ -171,6 +194,98 @@ describe('DeepSourceClient validation methods', () => {
       };
       expect(isValidVulnerabilityNode(validNode)).toBe(true);
       expect(mockWarn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('validateProjectKey', () => {
+    it('should throw an error for null or undefined project keys', () => {
+      expect(() => {
+        // @ts-expect-error - Testing with invalid type
+        TestableDeepSourceClient.testValidateProjectKey(null);
+      }).toThrow('Invalid project key: Project key must be a non-empty string');
+
+      expect(() => {
+        // @ts-expect-error - Testing with invalid type
+        TestableDeepSourceClient.testValidateProjectKey(undefined);
+      }).toThrow('Invalid project key: Project key must be a non-empty string');
+    });
+
+    it('should throw an error for non-string project keys', () => {
+      expect(() => {
+        // @ts-expect-error - Testing with invalid type
+        TestableDeepSourceClient.testValidateProjectKey(123);
+      }).toThrow('Invalid project key: Project key must be a non-empty string');
+
+      expect(() => {
+        // @ts-expect-error - Testing with invalid type
+        TestableDeepSourceClient.testValidateProjectKey({});
+      }).toThrow('Invalid project key: Project key must be a non-empty string');
+
+      expect(() => {
+        // @ts-expect-error - Testing with invalid type
+        TestableDeepSourceClient.testValidateProjectKey(true);
+      }).toThrow('Invalid project key: Project key must be a non-empty string');
+    });
+
+    it('should throw an error for empty string project keys', () => {
+      expect(() => {
+        TestableDeepSourceClient.testValidateProjectKey('');
+      }).toThrow('Invalid project key: Project key must be a non-empty string');
+    });
+
+    it('should not throw for valid project keys', () => {
+      expect(() => {
+        TestableDeepSourceClient.testValidateProjectKey('valid-project-key');
+      }).not.toThrow();
+
+      expect(() => {
+        TestableDeepSourceClient.testValidateProjectKey('12345abcdef');
+      }).not.toThrow();
+    });
+  });
+
+  describe('validateNumber', () => {
+    it('should validate and return number values', () => {
+      expect(TestableDeepSourceClient.testValidateNumber(42)).toBe(42);
+      expect(TestableDeepSourceClient.testValidateNumber(0)).toBe(0);
+      expect(TestableDeepSourceClient.testValidateNumber(-1)).toBe(-1);
+      expect(TestableDeepSourceClient.testValidateNumber(3.14)).toBe(3.14);
+    });
+
+    it('should return null for non-number values', () => {
+      expect(TestableDeepSourceClient.testValidateNumber('42')).toBeNull();
+      expect(TestableDeepSourceClient.testValidateNumber(null)).toBeNull();
+      expect(TestableDeepSourceClient.testValidateNumber(undefined)).toBeNull();
+      expect(TestableDeepSourceClient.testValidateNumber({})).toBeNull();
+      expect(TestableDeepSourceClient.testValidateNumber([])).toBeNull();
+      expect(TestableDeepSourceClient.testValidateNumber(true)).toBeNull();
+    });
+  });
+
+  describe('validateProjectRepository', () => {
+    it('should not throw for valid project data', () => {
+      const project = {
+        name: 'Test Project',
+        repository: {
+          login: 'test-org',
+          provider: 'github',
+        },
+      };
+
+      expect(() => {
+        TestableDeepSourceClient.testValidateProjectRepository(project, 'test-key');
+      }).not.toThrow();
+    });
+
+    it('should throw for invalid project data', () => {
+      const invalidProject = {
+        name: 'Test Project',
+        // Missing repository property
+      };
+
+      expect(() => {
+        TestableDeepSourceClient.testValidateProjectRepository(invalidProject, 'test-key');
+      }).toThrow();
     });
   });
 });

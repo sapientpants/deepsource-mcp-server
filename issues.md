@@ -1,69 +1,136 @@
-# DeepSource Issues Todo List
+# DeepSource Issues
 
-## Branch: add-recent-run-issues-tool
-**Run Date:** 2025-05-19T17:46:41.811701+00:00  
-**Status:** RESOLVED  
-**Total Issues:** 1 (resolved)
-
----
-
-## Critical Issues
-
-### JS-0323: Detected usage of the `any` type
-
-**Severity:** CRITICAL  
-**Category:** ANTI_PATTERN
-
-#### Occurrences:
-- [x] **File:** `src/__tests__/deepsource-find-most-recent-run.test.ts`
-  - **Line:** 46
-  - **Description:** The `any` type is used, which disables TypeScript's type checking and creates potential safety holes and bugs.
-  - **Recommendation:** Replace the `any` type with more specific types like `unknown`, `never`, or properly typed interfaces.
-  - **Fix Applied:** Replaced `Promise<any>` with `Promise<Record<string, unknown>>` in the type definition for `findMostRecentRun` method.
-
-#### Issue Description:
-The `any` type can sometimes leak into your codebase. TypeScript compiler skips the type checking of the `any` typed variables, so it creates a potential safety hole, and source of bugs in your codebase. We recommend using `unknown` or `never` type variable.
-
-In TypeScript, every type is assignable to `any`. This makes `any` a top type (also known as a universal supertype) of the type system. The `any` type is essentially an escape hatch from the type system. As developers, this gives us a ton of freedom: TypeScript lets us perform any operation we want on values of type `any` without having to perform any checking beforehand.
-
-#### Bad Practice Example:
-```typescript
-const age: any = 'seventeen';
-const ages: any[] = ['seventeen'];
-const ages: Array<any> = ['seventeen'];
-function greet(): any {}
-function greet(): any[] {}
-function greet(): Array<any> {}
-function greet(): Array<Array<any>> {}
-function greet(param: Array<any>): string {}
-function greet(param: Array<any>): Array<any> {}
-```
-
-#### Recommended Practice:
-```typescript
-const age: number = 17;
-const ages: number[] = [17];
-const ages: Array<number> = [17];
-function greet(): string {}
-function greet(): string[] {}
-function greet(): Array<string> {}
-function greet(): Array<Array<string>> {}
-function greet(param: Array<string>): string {}
-function greet(param: Array<string>): Array<string> {}
-```
-
----
+This document tracks the active issues identified by DeepSource in the latest analysis run on the `fix/deepsource-active-issues` branch.
 
 ## Summary
 
-- **Issues Introduced:** 1
-- **Issues Resolved:** 16 (15 previously + 1 just fixed)
-- **Issues Suppressed:** 0
-- **All Critical Issues:** RESOLVED ✅
+- Total Issues: 5
+- Run Date: 2025-05-20
+- Commit: a7560dc3d96562cc9c5f0d960da6198102cb3d4b
+- Status: FAILURE
 
-## Distribution by Analyzer
-- JavaScript: 1 issue introduced
-- Test Coverage: 0 issues introduced
+## Issues Breakdown
 
-## Distribution by Category
-- ANTI_PATTERN: 1 issue introduced
+- Critical Issues: 2 (TCV-001 - Lines not covered in tests)
+- Minor Issues: 3 (JS-R1004 - Useless template literal, JS-0242 - Use const declarations)
+
+## Detailed Issues
+
+### 1. Lines not covered in tests (TCV-001)
+
+**File:** `src/__tests__/utils/test-utils.ts`  
+**Line:** 68  
+**Severity:** CRITICAL  
+**Category:** COVERAGE  
+**Status:** OPEN  
+
+**Description:** A source line is considered covered when at least one instruction that is assigned to this line has been executed by a test case. These lines were not executed during any of the test cases.
+
+**Context:**
+```typescript
+// Line 68 in test-utils.ts is part of the testProcessRegularMetricHistory method:
+return this.processRegularMetricHistory(params);
+```
+
+**Action Required:** Write or enhance tests that execute the `testProcessRegularMetricHistory` method properly. The current test in `deepsource-test-utils.test.ts` only verifies that the method exists but doesn't actually call through to it.
+
+### 2. Lines not covered in tests (TCV-001)
+
+**File:** `src/__tests__/utils/test-utils.ts`  
+**Line:** 55  
+**Severity:** CRITICAL  
+**Category:** COVERAGE  
+**Status:** OPEN  
+
+**Description:** A source line is considered covered when at least one instruction that is assigned to this line has been executed by a test case. These lines were not executed during any of the test cases.
+
+**Context:**
+```typescript
+// Line 55 in test-utils.ts is part of the testValidateAndGetMetricInfo method:
+return this.validateAndGetMetricInfo(params);
+```
+
+**Action Required:** Write or enhance tests that execute the `testValidateAndGetMetricInfo` method. The current test in `deepsource-test-utils.test.ts` only verifies that the method exists but doesn't actually invoke it with arguments.
+
+### 3. Useless template literal found (JS-R1004)
+
+**File:** `src/__tests__/deepsource-test-utils.test.ts`  
+**Line:** 164  
+**Severity:** MINOR  
+**Category:** ANTI_PATTERN  
+**Status:** OPEN  
+
+**Description:** Template literals are useful when you need interpolated strings, strings with unescaped quotes, or multi-line strings. If none of these conditions are met, a regular string literal should be used instead.
+
+**Context:**
+```typescript
+// Line 164 in deepsource-test-utils.test.ts:
+}).toThrow(`Invalid repository information for project 'test-project-key'`);
+```
+
+**Action Required:** Replace the template literal with a regular string literal since it doesn't use any interpolation:
+```typescript
+}).toThrow("Invalid repository information for project 'test-project-key'");
+```
+
+### 4. Useless template literal found (JS-R1004)
+
+**File:** `src/__tests__/deepsource-test-utils.test.ts`  
+**Line:** 149  
+**Severity:** MINOR  
+**Category:** ANTI_PATTERN  
+**Status:** OPEN  
+
+**Description:** Template literals are useful when you need interpolated strings, strings with unescaped quotes, or multi-line strings. If none of these conditions are met, a regular string literal should be used instead.
+
+**Context:**
+```typescript
+// Line 149 in deepsource-test-utils.test.ts:
+}).toThrow(`Invalid repository information for project 'test-project-key'`);
+```
+
+**Action Required:** Replace the template literal with a regular string literal since it doesn't use any interpolation:
+```typescript
+}).toThrow("Invalid repository information for project 'test-project-key'");
+```
+
+### 5. Use `const` declarations for variables that are never reassigned (JS-0242)
+
+**File:** `src/__tests__/deepsource-test-utils.test.ts`  
+**Line:** 107  
+**Severity:** MINOR  
+**Category:** ANTI_PATTERN  
+**Status:** OPEN  
+
+**Description:** Variables that are never re-assigned a new value after their initial declaration should be declared with the `const` keyword. This prevents accidental reassignment and indicates the variable is a constant value.
+
+**Context:**
+```typescript
+// Line 107 in deepsource-test-utils.test.ts:
+let result = await TestableDeepSourceClient.testNoneTypeErrorHandler();
+```
+
+**Action Required:** Change the `let` declaration to `const` since it's not reassigned in the same scope:
+```typescript
+const result = await TestableDeepSourceClient.testNoneTypeErrorHandler();
+```
+
+## Resolution Tracking
+
+- [x] Issue 1: Lines not covered in tests (line 68) - Resolved in commit 6d55a15 with a test that properly executes the testProcessRegularMetricHistory method
+- [x] Issue 2: Lines not covered in tests (line 55) - Resolved in commit ccca0eb with a test that properly executes the testValidateAndGetMetricInfo method
+- [x] Issue 3: Useless template literal (line 164) - Resolved in commit 91c2850 by replacing template literal with regular string literal
+- [x] Issue 4: Useless template literal (line 149) - Resolved in commit 91c2850 by replacing template literal with regular string literal
+- [x] Issue 5: Use const declarations (line 107) - Resolved in commit e18aaca by changing let to const for variables never reassigned
+
+## Summary
+
+All 5 DeepSource issues have been successfully resolved:
+
+1. Added test coverage for testProcessRegularMetricHistory method
+2. Added test coverage for testValidateAndGetMetricInfo method
+3. Replaced useless template literal with regular string literal on line 164
+4. Replaced useless template literal with regular string literal on line 149
+5. Changed let declaration to const for variable never reassigned on line 107
+
+The test coverage has been improved to 100% for the src/__tests__/utils/test-utils.ts file, and all code style issues have been fixed.

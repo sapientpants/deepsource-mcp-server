@@ -1,4 +1,5 @@
 import nock from 'nock';
+import { jest } from '@jest/globals';
 import { DeepSourceClient, ReportType } from '../deepsource';
 import { handleDeepsourceComplianceReport } from '../index';
 
@@ -169,6 +170,54 @@ describe('DeepSource Compliance Reports', () => {
       await expect(
         client.getComplianceReport(PROJECT_KEY, ReportType.OWASP_TOP_10)
       ).rejects.toThrow(/GraphQL Errors/);
+    });
+
+    it('should return null when error contains NoneType (line 2655)', async () => {
+      // Create a custom client that will be used for testing
+      const customClient = new DeepSourceClient(API_KEY);
+
+      // Mock the validateProjectKey method to do nothing (avoid needing to mock listProjects)
+      // We're specifically testing the error handling in the getComplianceReport method,
+      // so we bypass this validation step
+      // @ts-expect-error - accessing private method
+      jest.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {
+        // Intentionally empty - validation is not relevant to this error handling test
+      });
+
+      // Mock the client's post method to throw a NoneType error
+      jest.spyOn(customClient['client'], 'post').mockImplementation(() => {
+        throw new Error('NoneType object has no attribute get');
+      });
+
+      // Call the actual getComplianceReport method, which should invoke the catch block with line 2655
+      const result = await customClient.getComplianceReport(PROJECT_KEY, ReportType.OWASP_TOP_10);
+
+      // Assert the expected behavior
+      expect(result).toBeNull();
+    });
+
+    it('should return null when error contains not found message (line 2655)', async () => {
+      // Create a custom client that will be used for testing
+      const customClient = new DeepSourceClient(API_KEY);
+
+      // Mock the validateProjectKey method to do nothing (avoid needing to mock listProjects)
+      // We're specifically testing the error handling in the getComplianceReport method,
+      // so we bypass this validation step
+      // @ts-expect-error - accessing private method
+      jest.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {
+        // Intentionally empty - validation is not relevant to this error handling test
+      });
+
+      // Mock the client's post method to throw a not found error
+      jest.spyOn(customClient['client'], 'post').mockImplementation(() => {
+        throw new Error('Repository not found in database');
+      });
+
+      // Call the actual getComplianceReport method, which should invoke the catch block with line 2655
+      const result = await customClient.getComplianceReport(PROJECT_KEY, ReportType.SANS_TOP_25);
+
+      // Assert the expected behavior
+      expect(result).toBeNull();
     });
   });
 

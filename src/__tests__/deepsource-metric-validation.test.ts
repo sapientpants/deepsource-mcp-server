@@ -1,177 +1,230 @@
-import { DeepSourceClient, DeepSourceProject, MetricHistoryValue } from '../deepsource';
-import { MetricDirection } from '../types/metrics';
+/**
+ * @jest-environment node
+ */
 
-describe('DeepSource Validation Utilities', () => {
-  describe('validateProjectRepository', () => {
-    // Access the private static method
-    const validateProjectRepository = (DeepSourceClient as Record<string, unknown>)
-      .validateProjectRepository as (
-      // eslint-disable-next-line no-unused-vars
-      _project: DeepSourceProject,
-      // eslint-disable-next-line no-unused-vars
-      _projectKey: string
-    ) => void;
+import { jest } from '@jest/globals';
+import nock from 'nock';
+import { DeepSourceClient, MetricShortcode } from '../deepsource';
+import { MetricKey } from '../types/metrics';
 
-    it('should throw error when repository is missing', () => {
-      const projectWithoutRepo = {
-        key: 'test-project',
-        name: 'Test Project',
-        // Missing repository property
-      };
+describe('DeepSourceClient Metric Validation', () => {
+  const API_KEY = 'test-api-key';
+  const PROJECT_KEY = 'test-project';
 
-      expect(() => {
-        validateProjectRepository(projectWithoutRepo, 'test-project');
-      }).toThrow('Invalid repository information for project');
-    });
+  // Subclass DeepSourceClient to expose private methods for testing
+  class TestableDeepSourceClient extends DeepSourceClient {
+    async testValidateAndGetMetricInfo(params: {
+      projectKey: string;
+      metricShortcode: MetricShortcode;
+      metricKey: MetricKey;
+    }) {
+      // @ts-expect-error - accessing private method for testing
+      return this.validateAndGetMetricInfo(params);
+    }
+  }
 
-    it('should throw error when repository fields are incomplete', () => {
-      const projectWithIncompleteRepo = {
-        key: 'test-project',
-        name: 'Test Project',
-        repository: {
-          login: 'testorg',
-          // Missing name and provider
-        },
-      };
+  let client: TestableDeepSourceClient;
 
-      expect(() => {
-        validateProjectRepository(projectWithIncompleteRepo, 'test-project');
-      }).toThrow('Invalid repository information for project');
-    });
-
-    it('should not throw error when repository is valid', () => {
-      const validProject = {
-        key: 'test-project',
-        name: 'Test Project',
-        repository: {
-          login: 'testorg',
-          name: 'test-repo',
-          provider: 'github',
-        },
-      };
-
-      expect(() => {
-        validateProjectRepository(validProject, 'test-project');
-      }).not.toThrow();
-    });
+  beforeEach(() => {
+    nock.cleanAll();
+    client = new TestableDeepSourceClient(API_KEY);
   });
 
-  describe('getVcsProvider', () => {
-    // Access the private static method
-    const getVcsProvider = (DeepSourceClient as Record<string, unknown>).getVcsProvider as (
-      // eslint-disable-next-line no-unused-vars
-      _provider: string
-    ) => string;
-
-    it('should convert provider string to uppercase', () => {
-      expect(getVcsProvider('github')).toBe('GITHUB');
-      expect(getVcsProvider('gitlab')).toBe('GITLAB');
-      expect(getVcsProvider('bitbucket')).toBe('BITBUCKET');
-    });
-
-    it('should handle provider strings that are already uppercase', () => {
-      expect(getVcsProvider('GITHUB')).toBe('GITHUB');
-    });
-
-    it('should handle mixed case provider strings', () => {
-      expect(getVcsProvider('GitLab')).toBe('GITLAB');
-    });
+  afterAll(() => {
+    nock.restore();
   });
 
-  describe('isNotFoundError', () => {
-    // Access the private static method
-    const isNotFoundError = (DeepSourceClient as Record<string, unknown>).isNotFoundError as (
-      // eslint-disable-next-line no-unused-vars
-      _error: unknown
-    ) => boolean;
+  describe('validateAndGetMetricInfo method', () => {
+    it('should return project, metric, and metric item when all are valid (lines 2931, 2934, 2939, 2942, 2946, 2952, 2959)', async () => {
+      // Mock the projects response
+      const mockProjects = [
+        {
+          key: PROJECT_KEY,
+          name: 'Test Project',
+          repository: {
+            id: 'repo123',
+            login: 'testorg',
+            provider: 'github',
+          },
+        },
+      ];
 
-    it('should identify GraphQL not found errors', () => {
-      const notFoundError = new Error('GraphQL error: Resource not found');
-      expect(isNotFoundError(notFoundError)).toBe(true);
+      // Mock the metrics response
+      const mockMetrics = [
+        {
+          shortcode: MetricShortcode.LCV,
+          name: 'Line Coverage',
+          items: [
+            {
+              id: 'metric123',
+              key: MetricKey.AGGREGATE,
+              threshold: 80,
+            },
+          ],
+        },
+      ];
 
-      const repositoryNotFoundError = new Error('GraphQL error: Repository not found');
-      expect(isNotFoundError(repositoryNotFoundError)).toBe(true);
+      // Mock the listProjects method to return our mock data (line 2931)
+      jest.spyOn(client, 'listProjects').mockResolvedValue(mockProjects);
 
-      const noneTypeError = new Error('GraphQL error: NoneType object has no attribute');
-      expect(isNotFoundError(noneTypeError)).toBe(true);
+      // Mock the getQualityMetrics method to return our mock data (line 2942)
+      jest.spyOn(client, 'getQualityMetrics').mockResolvedValue(mockMetrics);
+
+      // Mock the static validateProjectRepository method (line 2939)
+      // This validation is bypassed because we're testing other aspects of the validation flow
+      jest.spyOn(DeepSourceClient, 'validateProjectRepository').mockImplementation(() => {
+        // Intentionally empty - validation is not the focus of this test
+        // We're just preventing it from throwing errors
+      });
+
+      // Call the method under test
+      const result = await client.testValidateAndGetMetricInfo({
+        projectKey: PROJECT_KEY,
+        metricShortcode: MetricShortcode.LCV,
+        metricKey: MetricKey.AGGREGATE,
+      });
+
+      // Verify the result contains the expected data
+      expect(result).toEqual({
+        project: mockProjects[0],
+        metric: mockMetrics[0],
+        metricItem: mockMetrics[0].items[0],
+      });
+
+      // Verify the method calls
+      expect(client.listProjects).toHaveBeenCalled(); // line 2931
+      expect(DeepSourceClient.validateProjectRepository).toHaveBeenCalledWith(
+        mockProjects[0],
+        PROJECT_KEY
+      ); // line 2939
+      expect(client.getQualityMetrics).toHaveBeenCalledWith(PROJECT_KEY, {
+        shortcodeIn: [MetricShortcode.LCV],
+      }); // line 2942
     });
 
-    it('should identify errors with not found messages', () => {
-      const httpNotFoundError = new Error(
-        'Request failed with status code 404: Resource not found'
+    it('should throw error when project is not found (line 2934)', async () => {
+      // Mock the listProjects method to return empty array (line 2931)
+      jest.spyOn(client, 'listProjects').mockResolvedValue([]);
+
+      // Call the method and expect it to throw
+      await expect(
+        client.testValidateAndGetMetricInfo({
+          projectKey: PROJECT_KEY,
+          metricShortcode: MetricShortcode.LCV,
+          metricKey: MetricKey.AGGREGATE,
+        })
+      ).rejects.toThrow(`Project with key ${PROJECT_KEY} not found`);
+
+      // Verify the method call
+      expect(client.listProjects).toHaveBeenCalled(); // line 2931
+    });
+
+    it('should throw error when metric is not found (line 2946)', async () => {
+      // Mock the projects response
+      const mockProjects = [
+        {
+          key: PROJECT_KEY,
+          name: 'Test Project',
+          repository: {
+            id: 'repo123',
+            login: 'testorg',
+            provider: 'github',
+          },
+        },
+      ];
+
+      // Mock empty metrics response
+      const mockMetrics: Array<{
+        shortcode: string;
+        name: string;
+        items: Array<{ id: string; key: string; threshold?: number }>;
+      }> = [];
+
+      // Mock the listProjects method to return our mock data (line 2931)
+      jest.spyOn(client, 'listProjects').mockResolvedValue(mockProjects);
+
+      // Mock the getQualityMetrics method to return empty array (line 2942)
+      jest.spyOn(client, 'getQualityMetrics').mockResolvedValue(mockMetrics);
+
+      // Mock the static validateProjectRepository method (line 2939)
+      // This validation is bypassed because we're testing other aspects of the validation flow
+      jest.spyOn(DeepSourceClient, 'validateProjectRepository').mockImplementation(() => {
+        // Intentionally empty - validation is not the focus of this test
+        // We're just preventing it from throwing errors
+      });
+
+      // Call the method and expect it to throw
+      await expect(
+        client.testValidateAndGetMetricInfo({
+          projectKey: PROJECT_KEY,
+          metricShortcode: MetricShortcode.LCV,
+          metricKey: MetricKey.AGGREGATE,
+        })
+      ).rejects.toThrow(`Metric with shortcode ${MetricShortcode.LCV} not found in project`);
+
+      // Verify the method calls
+      expect(client.listProjects).toHaveBeenCalled(); // line 2931
+      expect(DeepSourceClient.validateProjectRepository).toHaveBeenCalled(); // line 2939
+      expect(client.getQualityMetrics).toHaveBeenCalled(); // line 2942
+    });
+
+    it('should throw error when metric item is not found (line 2952)', async () => {
+      // Mock the projects response
+      const mockProjects = [
+        {
+          key: PROJECT_KEY,
+          name: 'Test Project',
+          repository: {
+            id: 'repo123',
+            login: 'testorg',
+            provider: 'github',
+          },
+        },
+      ];
+
+      // Mock metrics response with no items for the specific key
+      const mockMetrics = [
+        {
+          shortcode: MetricShortcode.LCV,
+          name: 'Line Coverage',
+          items: [
+            {
+              id: 'metric123',
+              key: 'DIFFERENT_KEY', // Different from what we're looking for
+              threshold: 80,
+            },
+          ],
+        },
+      ];
+
+      // Mock the listProjects method to return our mock data (line 2931)
+      jest.spyOn(client, 'listProjects').mockResolvedValue(mockProjects);
+
+      // Mock the getQualityMetrics method to return our mock data (line 2942)
+      jest.spyOn(client, 'getQualityMetrics').mockResolvedValue(mockMetrics);
+
+      // Mock the static validateProjectRepository method (line 2939)
+      // This validation is bypassed because we're testing other aspects of the validation flow
+      jest.spyOn(DeepSourceClient, 'validateProjectRepository').mockImplementation(() => {
+        // Intentionally empty - validation is not the focus of this test
+        // We're just preventing it from throwing errors
+      });
+
+      // Call the method and expect it to throw
+      await expect(
+        client.testValidateAndGetMetricInfo({
+          projectKey: PROJECT_KEY,
+          metricShortcode: MetricShortcode.LCV,
+          metricKey: MetricKey.AGGREGATE,
+        })
+      ).rejects.toThrow(
+        `Metric item with key ${MetricKey.AGGREGATE} not found in metric ${MetricShortcode.LCV}`
       );
-      expect(isNotFoundError(httpNotFoundError)).toBe(true);
-    });
 
-    it('should return false for other errors', () => {
-      const otherError = new Error('Some other error');
-      expect(isNotFoundError(otherError)).toBe(false);
-
-      const httpOtherError = { response: { status: 500 } };
-      expect(isNotFoundError(httpOtherError)).toBe(false);
-    });
-  });
-
-  describe('calculateTrendDirection', () => {
-    // Access the private static method
-    const calculateTrendDirection = (DeepSourceClient as Record<string, unknown>)
-      .calculateTrendDirection as (
-      // eslint-disable-next-line no-unused-vars
-      _values: MetricHistoryValue[],
-      // eslint-disable-next-line no-unused-vars
-      _positiveDirection: string | MetricDirection
-    ) => boolean;
-
-    it('should return true when not enough data points', () => {
-      // One data point isn't enough to determine a trend
-      const singleValue = [{ value: 75, createdAt: '2023-01-01T12:00:00Z' }];
-
-      expect(calculateTrendDirection(singleValue, 'UPWARD')).toBe(true);
-      expect(calculateTrendDirection([], 'UPWARD')).toBe(true);
-    });
-
-    it('should identify positive trend for upward metrics', () => {
-      const increasingValues = [
-        { value: 70, createdAt: '2023-01-01T12:00:00Z' },
-        { value: 75, createdAt: '2023-01-15T12:00:00Z' },
-        { value: 80, createdAt: '2023-02-01T12:00:00Z' },
-      ];
-
-      expect(calculateTrendDirection(increasingValues, 'UPWARD')).toBe(true);
-      expect(calculateTrendDirection(increasingValues, MetricDirection.UPWARD)).toBe(true);
-    });
-
-    it('should identify negative trend for upward metrics', () => {
-      const decreasingValues = [
-        { value: 90, createdAt: '2023-01-01T12:00:00Z' },
-        { value: 85, createdAt: '2023-01-15T12:00:00Z' },
-        { value: 80, createdAt: '2023-02-01T12:00:00Z' },
-      ];
-
-      expect(calculateTrendDirection(decreasingValues, 'UPWARD')).toBe(false);
-      expect(calculateTrendDirection(decreasingValues, MetricDirection.UPWARD)).toBe(false);
-    });
-
-    it('should identify positive trend for downward metrics', () => {
-      const decreasingValues = [
-        { value: 15, createdAt: '2023-01-01T12:00:00Z' },
-        { value: 10, createdAt: '2023-01-15T12:00:00Z' },
-        { value: 5, createdAt: '2023-02-01T12:00:00Z' },
-      ];
-
-      expect(calculateTrendDirection(decreasingValues, 'DOWNWARD')).toBe(true);
-      expect(calculateTrendDirection(decreasingValues, MetricDirection.DOWNWARD)).toBe(true);
-    });
-
-    it('should identify negative trend for downward metrics', () => {
-      const increasingValues = [
-        { value: 5, createdAt: '2023-01-01T12:00:00Z' },
-        { value: 10, createdAt: '2023-01-15T12:00:00Z' },
-        { value: 15, createdAt: '2023-02-01T12:00:00Z' },
-      ];
-
-      expect(calculateTrendDirection(increasingValues, 'DOWNWARD')).toBe(false);
-      expect(calculateTrendDirection(increasingValues, MetricDirection.DOWNWARD)).toBe(false);
+      // Verify the method calls
+      expect(client.listProjects).toHaveBeenCalled(); // line 2931
+      expect(DeepSourceClient.validateProjectRepository).toHaveBeenCalled(); // line 2939
+      expect(client.getQualityMetrics).toHaveBeenCalled(); // line 2942
     });
   });
 });

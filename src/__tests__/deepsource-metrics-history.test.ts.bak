@@ -4,31 +4,18 @@
 
 import { jest } from '@jest/globals';
 import nock from 'nock';
-import { DeepSourceClient, MetricShortcode } from '../deepsource';
-import { MetricDirection, MetricKey } from '../types/metrics';
-import { TestableDeepSourceClient } from './utils/test-utils';
+import { DeepSourceClient, MetricShortcode } from '../deepsource.js';
+import { MetricDirection, MetricKey } from '../types/metrics.js';
+import { TestableDeepSourceClient } from './utils/test-utils.js';
 
 describe('DeepSourceClient Metrics History', () => {
   const API_KEY = 'test-api-key';
   const client = new DeepSourceClient(API_KEY);
   const PROJECT_KEY = 'test-project';
   const REPOSITORY_ID = 'repo123';
-  let originalNodeEnv: string | undefined;
 
   beforeEach(() => {
     nock.cleanAll();
-    // Store original NODE_ENV before each test
-    originalNodeEnv = process.env.NODE_ENV;
-  });
-
-  afterEach(() => {
-    // Restore original NODE_ENV after each test
-    process.env.NODE_ENV = originalNodeEnv;
-    // Clean up any other environment variables that might be set in tests
-    delete process.env.ERROR_TEST;
-    delete process.env.NOT_FOUND_TEST;
-    delete process.env.NEGATIVE_TREND_TEST;
-    delete process.env.MISSING_METRIC_ITEM_TEST;
   });
 
   afterAll(() => {
@@ -524,6 +511,9 @@ describe('DeepSourceClient Metrics History', () => {
       // Verify values are decreasing (which is negative for LCV)
       expect(result?.values[0].value).toBeGreaterThan(result?.values[1].value as number);
       expect(result?.values[1].value).toBeGreaterThan(result?.values[2].value as number);
+
+      // Clean up environment variable
+      delete process.env.NEGATIVE_TREND_TEST;
     });
 
     it('should handle API errors gracefully', async () => {
@@ -579,6 +569,9 @@ describe('DeepSourceClient Metrics History', () => {
           metricKey: MetricKey.AGGREGATE,
         })
       ).rejects.toThrow('GraphQL Error: Unauthorized access');
+
+      // Clean up environment variable
+      delete process.env.ERROR_TEST;
     });
 
     it('should return null when project is not found', async () => {
@@ -612,6 +605,9 @@ describe('DeepSourceClient Metrics History', () => {
 
       // Verify the response
       expect(result).toBeNull();
+
+      // Clean up environment variable
+      delete process.env.NOT_FOUND_TEST;
     });
 
     it('should return null when isNotFoundError is true with "not found" error (line 2715)', async () => {
@@ -619,6 +615,7 @@ describe('DeepSourceClient Metrics History', () => {
       const customClient = new DeepSourceClient(API_KEY);
 
       // Set NODE_ENV to non-test to avoid test environment short-circuit
+      const originalNodeEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'development';
 
       // Mock the validateProjectKey method to do nothing - we only need to bypass the validation
@@ -642,6 +639,9 @@ describe('DeepSourceClient Metrics History', () => {
       // Assert the expected behavior
       expect(result).toBeNull();
 
+      // Restore original NODE_ENV
+      process.env.NODE_ENV = originalNodeEnv;
+
       // Restore mocks
       jest.restoreAllMocks();
     });
@@ -651,6 +651,7 @@ describe('DeepSourceClient Metrics History', () => {
       const customClient = new DeepSourceClient(API_KEY);
 
       // Set NODE_ENV to non-test to avoid test environment short-circuit
+      const originalNodeEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'development';
 
       // Mock the validateProjectKey method to do nothing - we only need to bypass the validation
@@ -673,6 +674,9 @@ describe('DeepSourceClient Metrics History', () => {
 
       // Assert the expected behavior
       expect(result).toBeNull();
+
+      // Restore original NODE_ENV
+      process.env.NODE_ENV = originalNodeEnv;
 
       // Restore mocks
       jest.restoreAllMocks();
@@ -754,10 +758,26 @@ describe('DeepSourceClient Metrics History', () => {
           metricKey: MetricKey.AGGREGATE,
         })
       ).rejects.toThrow('Metric item data is missing or invalid in response');
+
+      // Clean up environment variable
+      delete process.env.MISSING_METRIC_ITEM_TEST;
     });
   });
 
   describe('Test Environment Paths', () => {
+    beforeEach(() => {
+      process.env.NODE_ENV = 'test';
+    });
+
+    afterEach(() => {
+      // Clean up environment variables
+      delete process.env.NODE_ENV;
+      delete process.env.ERROR_TEST;
+      delete process.env.NOT_FOUND_TEST;
+      delete process.env.NEGATIVE_TREND_TEST;
+      delete process.env.MISSING_METRIC_ITEM_TEST;
+    });
+
     it('should return undefined from handleTestEnvironment when NODE_ENV is not test (line 2732)', async () => {
       // Set NODE_ENV to non-test value
       process.env.NODE_ENV = 'development';
@@ -778,33 +798,41 @@ describe('DeepSourceClient Metrics History', () => {
     describe('calculateTrendDirection', () => {
       it('should calculate trend direction for metrics', () => {
         // Test with increasing values and HIGHER_IS_BETTER
-        const increasingValues = [{ value: 70 }, { value: 75 }, { value: 82 }];
-
+        const increasingValues = [
+          { value: 70 },
+          { value: 75 },
+          { value: 82 }
+        ];
+        
         const result1 = TestableDeepSourceClient.testCalculateTrendDirection(
-          increasingValues,
+          increasingValues, 
           MetricDirection.HIGHER_IS_BETTER
         );
-
+        
         // Expect a positive trend (true)
         expect(typeof result1).toBe('boolean');
-
+        
         // Test with decreasing values and HIGHER_IS_BETTER
-        const decreasingValues = [{ value: 82 }, { value: 75 }, { value: 70 }];
-
+        const decreasingValues = [
+          { value: 82 },
+          { value: 75 },
+          { value: 70 }
+        ];
+        
         const result2 = TestableDeepSourceClient.testCalculateTrendDirection(
-          decreasingValues,
+          decreasingValues, 
           MetricDirection.HIGHER_IS_BETTER
         );
-
+        
         // Expect a negative trend (false)
         expect(typeof result2).toBe('boolean');
-
+        
         // Test with decreasing values and LOWER_IS_BETTER
         const result3 = TestableDeepSourceClient.testCalculateTrendDirection(
-          decreasingValues,
+          decreasingValues, 
           MetricDirection.LOWER_IS_BETTER
         );
-
+        
         // Expect a positive trend (true)
         expect(typeof result3).toBe('boolean');
       });
@@ -815,22 +843,22 @@ describe('DeepSourceClient Metrics History', () => {
         const params = {
           projectKey: 'test-project',
           metricShortcode: MetricShortcode.LCV,
-          metricKey: MetricKey.AGGREGATE,
+          metricKey: MetricKey.AGGREGATE
         };
-
+        
         const metric = {
           name: 'Line Coverage',
           shortcode: 'LCV',
           positiveDirection: 'HIGHER_IS_BETTER',
-          unit: '%',
+          unit: '%'
         };
-
+        
         const metricItem = {
           id: 'metric-1',
           key: 'AGGREGATE',
-          threshold: 80,
+          threshold: 80
         };
-
+        
         const historyValues = [
           {
             value: 70,
@@ -838,7 +866,7 @@ describe('DeepSourceClient Metrics History', () => {
             threshold: 80,
             thresholdStatus: 'FAILING',
             commitOid: 'commit1',
-            createdAt: '2023-01-01',
+            createdAt: '2023-01-01'
           },
           {
             value: 82,
@@ -846,22 +874,22 @@ describe('DeepSourceClient Metrics History', () => {
             threshold: 80,
             thresholdStatus: 'PASSING',
             commitOid: 'commit2',
-            createdAt: '2023-01-15',
-          },
+            createdAt: '2023-01-15'
+          }
         ];
-
+        
         const result = TestableDeepSourceClient.testCreateMetricHistoryResponse(
           params,
           metric,
           metricItem,
           historyValues
         );
-
+        
         expect(result).toBeDefined();
         expect(result.name).toBe('Line Coverage');
         expect(result.shortcode).toBe('LCV');
         expect(result.unit).toBe('%');
-        expect(typeof result.positiveDirection).toBe('string');
+        expect(result.positiveDirection).toBe('HIGHER_IS_BETTER');
         expect(result.threshold).toBe(80);
         expect(result.values).toEqual(historyValues);
         expect(result.isTrendingPositive).toBeDefined();
