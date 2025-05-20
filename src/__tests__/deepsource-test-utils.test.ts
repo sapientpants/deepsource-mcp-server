@@ -118,4 +118,49 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
       }
     });
   });
+
+  describe('testValidateProjectRepository', () => {
+    it('should not throw for valid project repositories', () => {
+      // Valid project with repository
+      const validProject = {
+        name: 'Test Project',
+        repository: {
+          login: 'test-org',
+          provider: 'github',
+        },
+      };
+
+      // Should not throw
+      expect(() => {
+        TestableDeepSourceClient.testValidateProjectRepository(validProject, 'test-project-key');
+      }).not.toThrow();
+    });
+
+    it('should throw an error for project without repository', () => {
+      // Invalid project without repository
+      const invalidProject = {
+        name: 'Test Project',
+      };
+
+      // Should throw with a specific message
+      expect(() => {
+        TestableDeepSourceClient.testValidateProjectRepository(invalidProject, 'test-project-key');
+      }).toThrow(`Invalid repository information for project 'test-project-key'`);
+    });
+
+    it('should throw an error for project with invalid repository', () => {
+      // Invalid project with incomplete repository
+      const invalidProject = {
+        name: 'Test Project',
+        repository: {
+          // Missing required fields
+        },
+      };
+
+      // Should throw with specific message
+      expect(() => {
+        TestableDeepSourceClient.testValidateProjectRepository(invalidProject, 'test-project-key');
+      }).toThrow(`Invalid repository information for project 'test-project-key'`);
+    });
+  });
 });
