@@ -104,7 +104,7 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
         TestableDeepSourceClient.testIsErrorWithMessage = jest.fn().mockReturnValue(true);
 
         // Test NoneType error path
-        let result = await TestableDeepSourceClient.testNoneTypeErrorHandler();
+        const result = await TestableDeepSourceClient.testNoneTypeErrorHandler();
         expect(result).toEqual([]);
 
         // Test throw error path by making isErrorWithMessage return false
