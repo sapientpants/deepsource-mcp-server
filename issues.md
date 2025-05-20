@@ -97,7 +97,7 @@ While all DeepSource issues have been fixed, here are some proactive improvement
 3. **Code Structure Refinements**
    - ✅ **IMPLEMENTED** - Review complex functions for potential simplification
    - ✅ **IMPLEMENTED** - Consider using lookup tables instead of if-else chains
-   - Audit existing static methods to ensure they truly don't need instance context
+   - ✅ **IMPLEMENTED** - Audit existing static methods to ensure they truly don't need instance context
 
 4. **Documentation Updates**
    - Add JSDoc comments to all public methods
@@ -105,6 +105,34 @@ While all DeepSource issues have been fixed, here are some proactive improvement
    - Update README with latest architectural decisions
 
 ## Implemented Improvements
+
+### 8. Static Methods Audit and Reorganization (May 22, 2025)
+
+A comprehensive audit of static methods throughout the codebase has been completed to ensure they are properly placed and organized. The audit focused on identifying methods that should be static and how to better organize utility functions for improved code structure.
+
+**Key Findings for DeepSourceClient Class**:
+- Most static methods in the DeepSourceClient class are properly placed and should remain static
+- The static methods are primarily utility functions that don't require instance state
+- Static logger correctly used for static methods to avoid using this.logger within static context
+- Helper methods like `getNestedProperty`, `extractErrorMessages`, and validation utilities are well-suited as static methods
+
+**Recommendations for Utility Modules**:
+1. **Error Handlers (utils/errors/handlers.ts)**:
+   - Convert standalone functions into a cohesive `ErrorHandler` class with static methods for utilities
+   - Group related type guards into a separate `TypeGuard` utility class
+   - Improve organization by making dependencies between error handlers explicit
+
+2. **GraphQL Queries (utils/graphql/queries.ts)**:
+   - Create a `GraphQLQueries` class with static methods for all query generators
+   - Convert the private `createPaginationString` helper to a static method in this class
+   - Transform constant queries to static getter properties for consistency
+
+3. **Pagination Helpers (utils/pagination/helpers.ts)**:
+   - Create a `PaginationUtility` class with static methods for all pagination helpers
+   - Move the logger instantiation into the class for better encapsulation
+   - Make related pagination functions more discoverable through unified class structure
+
+This audit has verified that the codebase follows best practices regarding static methods where utility functions that don't require instance state are appropriately marked as static. The reorganization into utility classes will further improve code organization and maintainability.
 
 ### 7. Simplification of Complex Functions (May 22, 2025)
 
