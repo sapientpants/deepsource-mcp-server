@@ -4,6 +4,48 @@
  */
 
 /**
+ * Helper function to create a pagination string for GraphQL queries
+ * @param paginationVars Pagination variables
+ * @returns Formatted pagination string
+ * @private
+ */
+function createPaginationString(paginationVars: Record<string, unknown>): string {
+  // Define pagination modes with their parameters
+  const paginationModes = [
+    {
+      check: () => Boolean(paginationVars.first),
+      format: () => {
+        let result = `first: ${paginationVars.first}`;
+        if (paginationVars.after) {
+          result += `, after: "${paginationVars.after}"`;
+        }
+        return result;
+      },
+    },
+    {
+      check: () => Boolean(paginationVars.last),
+      format: () => {
+        let result = `last: ${paginationVars.last}`;
+        if (paginationVars.before) {
+          result += `, before: "${paginationVars.before}"`;
+        }
+        return result;
+      },
+    },
+    {
+      check: () => Boolean(paginationVars.offset),
+      format: () => `offset: ${paginationVars.offset}`,
+    },
+  ];
+
+  // Find the first applicable pagination mode
+  const applicableMode = paginationModes.find((mode) => mode.check());
+
+  // Return the formatted string or empty string if no mode applies
+  return applicableMode ? applicableMode.format() : '';
+}
+
+/**
  * Query to fetch the list of projects for the current user
  * @public
  */
@@ -66,21 +108,7 @@ export function createIssuesQuery(
   const filterString =
     filterExpressions.length > 0 ? `, filter: {${filterExpressions.join(', ')}}` : '';
 
-  let paginationString = '';
-
-  if (paginationVars.first) {
-    paginationString += `first: ${paginationVars.first}`;
-    if (paginationVars.after) {
-      paginationString += `, after: "${paginationVars.after}"`;
-    }
-  } else if (paginationVars.last) {
-    paginationString += `last: ${paginationVars.last}`;
-    if (paginationVars.before) {
-      paginationString += `, before: "${paginationVars.before}"`;
-    }
-  } else if (paginationVars.offset) {
-    paginationString += `offset: ${paginationVars.offset}`;
-  }
+  const paginationString = createPaginationString(paginationVars);
 
   return `
 query {
@@ -136,21 +164,7 @@ export function createRunsQuery(
   const filterString =
     filterExpressions.length > 0 ? `, filter: {${filterExpressions.join(', ')}}` : '';
 
-  let paginationString = '';
-
-  if (paginationVars.first) {
-    paginationString += `first: ${paginationVars.first}`;
-    if (paginationVars.after) {
-      paginationString += `, after: "${paginationVars.after}"`;
-    }
-  } else if (paginationVars.last) {
-    paginationString += `last: ${paginationVars.last}`;
-    if (paginationVars.before) {
-      paginationString += `, before: "${paginationVars.before}"`;
-    }
-  } else if (paginationVars.offset) {
-    paginationString += `offset: ${paginationVars.offset}`;
-  }
+  const paginationString = createPaginationString(paginationVars);
 
   return `
 query {
@@ -292,21 +306,7 @@ export function createRunIssuesQuery(
   runId: string,
   paginationVars: Record<string, unknown>
 ): string {
-  let paginationString = '';
-
-  if (paginationVars.first) {
-    paginationString += `first: ${paginationVars.first}`;
-    if (paginationVars.after) {
-      paginationString += `, after: "${paginationVars.after}"`;
-    }
-  } else if (paginationVars.last) {
-    paginationString += `last: ${paginationVars.last}`;
-    if (paginationVars.before) {
-      paginationString += `, before: "${paginationVars.before}"`;
-    }
-  } else if (paginationVars.offset) {
-    paginationString += `offset: ${paginationVars.offset}`;
-  }
+  const paginationString = createPaginationString(paginationVars);
 
   return `
 query {
@@ -357,21 +357,7 @@ export function createVulnerabilitiesQuery(
   projectKey: string,
   paginationVars: Record<string, unknown>
 ): string {
-  let paginationString = '';
-
-  if (paginationVars.first) {
-    paginationString += `first: ${paginationVars.first}`;
-    if (paginationVars.after) {
-      paginationString += `, after: "${paginationVars.after}"`;
-    }
-  } else if (paginationVars.last) {
-    paginationString += `last: ${paginationVars.last}`;
-    if (paginationVars.before) {
-      paginationString += `, before: "${paginationVars.before}"`;
-    }
-  } else if (paginationVars.offset) {
-    paginationString += `offset: ${paginationVars.offset}`;
-  }
+  const paginationString = createPaginationString(paginationVars);
 
   return `
 query {

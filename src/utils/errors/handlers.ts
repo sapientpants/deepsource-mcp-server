@@ -155,23 +155,31 @@ export function handleGraphQLSpecificError(error: unknown): ClassifiedError | nu
  * @public
  */
 export function handleNetworkError(error: unknown): ClassifiedError | null {
-  if (isAxiosErrorWithCriteria(error, undefined, 'ECONNREFUSED')) {
-    return createClassifiedError(
-      'Connection error: Unable to connect to DeepSource API',
-      ErrorCategory.NETWORK,
-      error
-    );
+  if (!isAxiosErrorWithCriteria(error)) {
+    return null;
   }
 
-  if (isAxiosErrorWithCriteria(error, undefined, 'ETIMEDOUT')) {
-    return createClassifiedError(
-      'Timeout error: DeepSource API request timed out',
-      ErrorCategory.TIMEOUT,
-      error
-    );
-  }
+  // Define a lookup table for error codes
+  const errorCodeHandlers: Record<string, () => ClassifiedError> = {
+    ECONNREFUSED: () =>
+      createClassifiedError(
+        'Connection error: Unable to connect to DeepSource API',
+        ErrorCategory.NETWORK,
+        error
+      ),
+    ETIMEDOUT: () =>
+      createClassifiedError(
+        'Timeout error: DeepSource API request timed out',
+        ErrorCategory.TIMEOUT,
+        error
+      ),
+  };
 
-  return null;
+  // Get the error code
+  const errorCode = error.code;
+
+  // Return the appropriate classified error based on the error code
+  return errorCode && errorCodeHandlers[errorCode] ? errorCodeHandlers[errorCode]() : null;
 }
 
 /**
@@ -181,49 +189,57 @@ export function handleNetworkError(error: unknown): ClassifiedError | null {
  * @public
  */
 export function handleHttpStatusError(error: unknown): ClassifiedError | null {
-  if (isAxiosErrorWithCriteria(error, 401)) {
-    return createClassifiedError(
-      'Authentication error: Invalid or expired API key',
-      ErrorCategory.AUTH,
-      error
-    );
+  if (!isAxiosErrorWithCriteria(error)) {
+    return null;
   }
 
-  if (isAxiosErrorWithCriteria(error, 429)) {
-    return createClassifiedError(
-      'Rate limit exceeded: Too many requests to DeepSource API',
-      ErrorCategory.RATE_LIMIT,
-      error
-    );
+  const status = error.response?.status;
+  if (!status) {
+    return null;
   }
 
-  // Handle other common HTTP status codes
-  if (isAxiosErrorWithCriteria(error)) {
-    const status = error.response?.status;
-
-    if (status && status >= 500) {
-      return createClassifiedError(
-        `Server error (${status}): DeepSource API server error`,
-        ErrorCategory.SERVER,
+  // Define a lookup table for specific HTTP status codes
+  const statusHandlers: Record<number, () => ClassifiedError> = {
+    401: () =>
+      createClassifiedError(
+        'Authentication error: Invalid or expired API key',
+        ErrorCategory.AUTH,
         error
-      );
-    }
-
-    if (status === 404) {
-      return createClassifiedError(
+      ),
+    429: () =>
+      createClassifiedError(
+        'Rate limit exceeded: Too many requests to DeepSource API',
+        ErrorCategory.RATE_LIMIT,
+        error
+      ),
+    404: () =>
+      createClassifiedError(
         'Not found (404): The requested resource was not found',
         ErrorCategory.NOT_FOUND,
         error
-      );
-    }
+      ),
+  };
 
-    if (status && status >= 400 && status < 500) {
-      return createClassifiedError(
-        `Client error (${status}): ${error.response?.statusText || 'Bad request'}`,
-        ErrorCategory.CLIENT,
-        error
-      );
-    }
+  // Check for exact status code matches first
+  if (statusHandlers[status]) {
+    return statusHandlers[status]();
+  }
+
+  // Handle status code ranges
+  if (status >= 500) {
+    return createClassifiedError(
+      `Server error (${status}): DeepSource API server error`,
+      ErrorCategory.SERVER,
+      error
+    );
+  }
+
+  if (status >= 400 && status < 500) {
+    return createClassifiedError(
+      `Client error (${status}): ${error.response?.statusText || 'Bad request'}`,
+      ErrorCategory.CLIENT,
+      error
+    );
   }
 
   return null;
