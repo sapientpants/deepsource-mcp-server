@@ -1,136 +1,53 @@
 # DeepSource Issues
 
-This document tracks the active issues identified by DeepSource in the latest analysis run on the `fix/deepsource-active-issues` branch.
+This document tracks the active issues identified by DeepSource in the latest analysis run on the `main` branch.
 
 ## Summary
 
-- Total Issues: 5
+- Total Issues: 0
 - Run Date: 2025-05-20
-- Commit: a7560dc3d96562cc9c5f0d960da6198102cb3d4b
-- Status: FAILURE
+- Commit: 16138a95df3b18e1cb60dd1fac0b7aa9d88db306
+- Status: SUCCESS
 
-## Issues Breakdown
+## Current Status
 
-- Critical Issues: 2 (TCV-001 - Lines not covered in tests)
-- Minor Issues: 3 (JS-R1004 - Useless template literal, JS-0242 - Use const declarations)
+There are currently no issues identified by DeepSource in the latest analysis run on the `main` branch.
 
-## Detailed Issues
+## Previously Resolved Issues
 
-### 1. Lines not covered in tests (TCV-001)
+The following issues were previously identified and resolved in the `fix/deepsource-active-issues` branch:
 
-**File:** `src/__tests__/utils/test-utils.ts`  
-**Line:** 68  
-**Severity:** CRITICAL  
-**Category:** COVERAGE  
-**Status:** OPEN  
+1. **Lines not covered in tests (TCV-001)** - Added test coverage for testProcessRegularMetricHistory method
+2. **Lines not covered in tests (TCV-001)** - Added test coverage for testValidateAndGetMetricInfo method
+3. **Useless template literal (JS-R1004)** - Replaced template literal with regular string literal
+4. **Useless template literal (JS-R1004)** - Replaced template literal with regular string literal
+5. **Use const declarations (JS-0242)** - Changed let to const for variables never reassigned
 
-**Description:** A source line is considered covered when at least one instruction that is assigned to this line has been executed by a test case. These lines were not executed during any of the test cases.
+These fixes have been merged into the main branch, resulting in a clean DeepSource analysis.
 
-**Context:**
-```typescript
-// Line 68 in test-utils.ts is part of the testProcessRegularMetricHistory method:
-return this.processRegularMetricHistory(params);
-```
+## Maintaining Code Quality
 
-**Action Required:** Write or enhance tests that execute the `testProcessRegularMetricHistory` method properly. The current test in `deepsource-test-utils.test.ts` only verifies that the method exists but doesn't actually call through to it.
+To maintain high code quality and prevent new issues, please follow these guidelines:
 
-### 2. Lines not covered in tests (TCV-001)
+1. **Test Coverage**:
+   - Always write comprehensive tests for new code
+   - Ensure all lines, branches, and methods are tested
+   - Run `pnpm run test:coverage` to verify test coverage
 
-**File:** `src/__tests__/utils/test-utils.ts`  
-**Line:** 55  
-**Severity:** CRITICAL  
-**Category:** COVERAGE  
-**Status:** OPEN  
+2. **Code Style**:
+   - Use regular strings instead of template literals when no interpolation is needed
+   - Use `const` for variables that are never reassigned
+   - Use proper TypeScript types instead of `any`
+   - Follow the ESLint rules configured for the project
 
-**Description:** A source line is considered covered when at least one instruction that is assigned to this line has been executed by a test case. These lines were not executed during any of the test cases.
+3. **Pre-Commit Checks**:
+   - Run `pnpm run ci` before committing to check:
+     - Code formatting (`format:check`)
+     - Linting (`lint`)
+     - Type checking (`check-types`)
+     - Building (`build`)
+     - Tests (`test:coverage`)
 
-**Context:**
-```typescript
-// Line 55 in test-utils.ts is part of the testValidateAndGetMetricInfo method:
-return this.validateAndGetMetricInfo(params);
-```
-
-**Action Required:** Write or enhance tests that execute the `testValidateAndGetMetricInfo` method. The current test in `deepsource-test-utils.test.ts` only verifies that the method exists but doesn't actually invoke it with arguments.
-
-### 3. Useless template literal found (JS-R1004)
-
-**File:** `src/__tests__/deepsource-test-utils.test.ts`  
-**Line:** 164  
-**Severity:** MINOR  
-**Category:** ANTI_PATTERN  
-**Status:** OPEN  
-
-**Description:** Template literals are useful when you need interpolated strings, strings with unescaped quotes, or multi-line strings. If none of these conditions are met, a regular string literal should be used instead.
-
-**Context:**
-```typescript
-// Line 164 in deepsource-test-utils.test.ts:
-}).toThrow(`Invalid repository information for project 'test-project-key'`);
-```
-
-**Action Required:** Replace the template literal with a regular string literal since it doesn't use any interpolation:
-```typescript
-}).toThrow("Invalid repository information for project 'test-project-key'");
-```
-
-### 4. Useless template literal found (JS-R1004)
-
-**File:** `src/__tests__/deepsource-test-utils.test.ts`  
-**Line:** 149  
-**Severity:** MINOR  
-**Category:** ANTI_PATTERN  
-**Status:** OPEN  
-
-**Description:** Template literals are useful when you need interpolated strings, strings with unescaped quotes, or multi-line strings. If none of these conditions are met, a regular string literal should be used instead.
-
-**Context:**
-```typescript
-// Line 149 in deepsource-test-utils.test.ts:
-}).toThrow(`Invalid repository information for project 'test-project-key'`);
-```
-
-**Action Required:** Replace the template literal with a regular string literal since it doesn't use any interpolation:
-```typescript
-}).toThrow("Invalid repository information for project 'test-project-key'");
-```
-
-### 5. Use `const` declarations for variables that are never reassigned (JS-0242)
-
-**File:** `src/__tests__/deepsource-test-utils.test.ts`  
-**Line:** 107  
-**Severity:** MINOR  
-**Category:** ANTI_PATTERN  
-**Status:** OPEN  
-
-**Description:** Variables that are never re-assigned a new value after their initial declaration should be declared with the `const` keyword. This prevents accidental reassignment and indicates the variable is a constant value.
-
-**Context:**
-```typescript
-// Line 107 in deepsource-test-utils.test.ts:
-let result = await TestableDeepSourceClient.testNoneTypeErrorHandler();
-```
-
-**Action Required:** Change the `let` declaration to `const` since it's not reassigned in the same scope:
-```typescript
-const result = await TestableDeepSourceClient.testNoneTypeErrorHandler();
-```
-
-## Resolution Tracking
-
-- [x] Issue 1: Lines not covered in tests (line 68) - Resolved in commit 6d55a15 with a test that properly executes the testProcessRegularMetricHistory method
-- [x] Issue 2: Lines not covered in tests (line 55) - Resolved in commit ccca0eb with a test that properly executes the testValidateAndGetMetricInfo method
-- [x] Issue 3: Useless template literal (line 164) - Resolved in commit 91c2850 by replacing template literal with regular string literal
-- [x] Issue 4: Useless template literal (line 149) - Resolved in commit 91c2850 by replacing template literal with regular string literal
-- [x] Issue 5: Use const declarations (line 107) - Resolved in commit e18aaca by changing let to const for variables never reassigned
-
-## Summary
-
-All 5 DeepSource issues have been successfully resolved:
-
-1. Added test coverage for testProcessRegularMetricHistory method
-2. Added test coverage for testValidateAndGetMetricInfo method
-3. Replaced useless template literal with regular string literal on line 164
-4. Replaced useless template literal with regular string literal on line 149
-5. Changed let declaration to const for variable never reassigned on line 107
-
-The test coverage has been improved to 100% for the src/__tests__/utils/test-utils.ts file, and all code style issues have been fixed.
+4. **CI Pipeline**:
+   - Ensure all tests pass in the CI pipeline
+   - Address any DeepSource issues flagged in new pull requests
