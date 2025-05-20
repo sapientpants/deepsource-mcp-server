@@ -36,6 +36,11 @@ describe('DeepSourceClient Historical Data Processing', () => {
         historyValues
       );
     }
+
+    static testCalculateTrendDirection(values: any[], positiveDirection: string | any) {
+      // @ts-expect-error - accessing private method for testing
+      return DeepSourceClient.calculateTrendDirection(values, positiveDirection);
+    }
   }
 
   let client: TestableDeepSourceClient;
@@ -429,7 +434,7 @@ describe('DeepSourceClient Historical Data Processing', () => {
   });
 
   describe('createMetricHistoryResponse method (line 2690)', () => {
-    it('should create a properly formatted metric history response', () => {
+    it('should create response object with trend calculation (lines 3123, 3129)', () => {
       // Setup mock data
       const mockParams = {
         projectKey: 'test-project',
@@ -469,21 +474,14 @@ describe('DeepSourceClient Historical Data Processing', () => {
         },
       ];
 
-      // We need to create a direct implementation of createMetricHistoryResponse
-      // since mocking internal calls isn't working consistently
-      const originalCreateMetricHistoryResponse = DeepSourceClient['createMetricHistoryResponse'];
-      DeepSourceClient['createMetricHistoryResponse'] = jest.fn().mockImplementation(() => ({
-        shortcode: MetricShortcode.LCV,
-        metricKey: MetricKey.AGGREGATE,
-        name: 'Line Coverage',
-        unit: '%',
-        positiveDirection: MetricDirection.UPWARD,
-        threshold: 80,
-        isTrendingPositive: true,
-        values: mockHistoryValues,
-      }));
+      // Calculate the trend using the exposed test method - this verifies line 3123
+      const trendResult = TestableDeepSourceClient.testCalculateTrendDirection(
+        mockHistoryValues,
+        'UPWARD'
+      );
+      expect(trendResult).toBe(true); // Verify trend is calculated correctly
 
-      // Call the method under test
+      // Use the real implementation for the response creation method
       const result = TestableDeepSourceClient.testCreateMetricHistoryResponse(
         mockParams,
         mockMetric,
@@ -491,7 +489,7 @@ describe('DeepSourceClient Historical Data Processing', () => {
         mockHistoryValues
       );
 
-      // Verify the result
+      // Verify the result (line 3129) - this verifies the object structure returned by the method
       expect(result).toEqual({
         shortcode: MetricShortcode.LCV,
         metricKey: MetricKey.AGGREGATE,
@@ -502,12 +500,6 @@ describe('DeepSourceClient Historical Data Processing', () => {
         isTrendingPositive: true,
         values: mockHistoryValues,
       });
-
-      // Verify our mock was called
-      expect(DeepSourceClient['createMetricHistoryResponse']).toHaveBeenCalled();
-
-      // Restore the original method
-      DeepSourceClient['createMetricHistoryResponse'] = originalCreateMetricHistoryResponse;
     });
 
     it('should handle downward trending metrics correctly', () => {

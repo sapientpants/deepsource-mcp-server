@@ -4,6 +4,17 @@
  */
 import { DeepSourceClient, ReportType } from '../deepsource';
 
+// Import jest from @jest/globals
+import { jest } from '@jest/globals';
+
+// Create a testable class to access private methods
+class TestableDeepSourceClient extends DeepSourceClient {
+  static testExtractReportData(response: unknown, reportType: ReportType) {
+    // @ts-expect-error - Accessing private method for testing
+    return DeepSourceClient.extractReportData(response, reportType);
+  }
+}
+
 describe('DeepSource Report Utility Methods', () => {
   describe('extractReportData', () => {
     // We need to access the private static method
@@ -248,6 +259,43 @@ describe('DeepSource Report Utility Methods', () => {
     it('should return "Unknown Report" for an invalid report type', () => {
       const title = getTitleForReportType('INVALID_TYPE' as ReportType);
       expect(title).toBe('Unknown Report');
+    });
+  });
+
+  describe('extractReportData - fieldName handling (line 3277)', () => {
+    it('should return null when getReportField returns falsy value (line 3277)', () => {
+      // Mock getReportField to return a falsy value (null, undefined, empty string)
+      const originalGetReportField = DeepSourceClient['getReportField'];
+
+      // Temporarily override getReportField to return an empty string
+      DeepSourceClient['getReportField'] = jest.fn().mockReturnValue('');
+
+      // Create a response with all required levels of nesting
+      const mockResponse = {
+        data: {
+          data: {
+            repository: {
+              reports: {
+                // Some report data, but fieldName will be empty
+                someReport: { data: 'value' },
+              },
+            },
+          },
+        },
+      };
+
+      // Test the method with a response that would otherwise be valid,
+      // but we've mocked getReportField to return empty string
+      const result = TestableDeepSourceClient.testExtractReportData(
+        mockResponse,
+        ReportType.OWASP_TOP_10
+      );
+
+      // Verify that line 3277 was executed (the method returned null)
+      expect(result).toBeNull();
+
+      // Restore original method
+      DeepSourceClient['getReportField'] = originalGetReportField;
     });
   });
 });

@@ -65,9 +65,9 @@ The following lines need test coverage:
 44. ~~**Line 3018** - Add test case for this line~~ ✅ RESOLVED
 45. ~~**Line 3029** - Add test case for this line~~ ✅ RESOLVED
 46. ~~**Line 3035** - Add test case for this line~~ ✅ RESOLVED
-47. **Line 3123** - Add test case for this line
-48. **Line 3129** - Add test case for this line
-49. **Line 3277** - Add test case for this line
+47. ~~**Line 3123** - Add test case for this line~~ ✅ RESOLVED
+48. ~~**Line 3129** - Add test case for this line~~ ✅ RESOLVED
+49. ~~**Line 3277** - Add test case for this line~~ ✅ RESOLVED
 
 ---
 
@@ -106,12 +106,12 @@ Based on the line numbers, these appear to be gaps in:
 - [x] Review all 49 uncovered lines
 - [x] Group related functionality
 - [x] Write test plan for each group
-- [x] Implement test cases (46/49 completed)
-- [ ] Verify coverage improvement
+- [x] Implement test cases (49/49 completed)
+- [x] Verify coverage improvement
 - [ ] Run DeepSource analysis to confirm issues resolved
 
 ### Progress Summary
-- Issues fixed: 46/49 (94%)
+- Issues fixed: 49/49 (100%)
 - Methods covered:
   - ✅ isAxiosErrorWithCriteria (line 657)
   - ✅ handleNetworkError (lines 706, 714)
@@ -135,4 +135,7 @@ Based on the line numbers, these appear to be gaps in:
   - ✅ handleTestEnvironment non-test mode (line 2732)
   - ✅ validateAndGetMetricInfo (lines 2931, 2934, 2939, 2942, 2946, 2952, 2959)
   - ✅ fetchHistoricalValues GraphQL query and API call (lines 2986, 3018, 3029, 3035)
-- Remaining: 3 lines to cover
+  - ✅ createMetricHistoryResponse trend calculation (line 3123)
+  - ✅ createMetricHistoryResponse return object (line 3129)
+  - ✅ extractReportData fieldName handling (line 3277)
+- Remaining: 0 lines to cover
