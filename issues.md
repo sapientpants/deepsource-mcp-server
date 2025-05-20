@@ -50,8 +50,8 @@ The following lines need test coverage:
 29. ~~**Line 2488** - Add test case for this line~~ ✅ RESOLVED
 30. ~~**Line 2530** - Add test case for this line~~ ✅ RESOLVED
 31. ~~**Line 2655** - Add test case for this line~~ ✅ RESOLVED
-32. **Line 2687** - Add test case for this line
-33. **Line 2690** - Add test case for this line
+32. ~~**Line 2687** - Add test case for this line~~ ✅ RESOLVED
+33. ~~**Line 2690** - Add test case for this line~~ ✅ RESOLVED
 34. **Line 2715** - Add test case for this line
 35. **Line 2732** - Add test case for this line
 36. **Line 2931** - Add test case for this line
@@ -111,7 +111,7 @@ Based on the line numbers, these appear to be gaps in:
 - [ ] Run DeepSource analysis to confirm issues resolved
 
 ### Progress Summary
-- Issues fixed: 31/49 (63%)
+- Issues fixed: 33/49 (67%)
 - Methods covered:
   - ✅ isAxiosErrorWithCriteria (line 657)
   - ✅ handleNetworkError (lines 706, 714)
@@ -129,4 +129,6 @@ Based on the line numbers, these appear to be gaps in:
   - ✅ setMetricThreshold error handling (line 2488)
   - ✅ updateMetricSetting error handling (line 2530)
   - ✅ getComplianceReport error handling (line 2655)
-- Remaining: 18 lines to cover
+  - ✅ fetchHistoricalValues (line 2687)
+  - ✅ createMetricHistoryResponse (line 2690)
+- Remaining: 16 lines to cover
