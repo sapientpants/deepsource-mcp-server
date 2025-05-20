@@ -289,6 +289,147 @@ The DeepSource MCP Server provides the following tools:
      * Trend data showing changes over time
      * Analysis and recommendations for improving security posture
 
+## Architecture
+
+The DeepSource MCP Server is built with modern TypeScript patterns and practices to ensure maintainability, type safety, and robustness.
+
+### Type System
+
+#### Branded Types
+
+We use branded types to ensure type safety for string-based identifiers throughout the codebase. This prevents accidental type confusion between different string identifiers:
+
+```typescript
+// Definition of branded types
+export type ProjectKey = string & { readonly __brand: 'ProjectKey' };
+export type RunId = string & { readonly __brand: 'RunId' };
+
+// Helper functions to safely convert strings to branded types
+export function asProjectKey(value: string): ProjectKey {
+  return value as ProjectKey;
+}
+
+// Type safety in action
+function getProjectDetails(projectKey: ProjectKey) { /* ... */ }
+
+// This works:
+const key = asProjectKey('abc123');
+getProjectDetails(key);
+
+// This produces a TypeScript error:
+const runId = asRunId('xyz789');
+getProjectDetails(runId); // Error: Type 'RunId' is not assignable to type 'ProjectKey'
+```
+
+#### Discriminated Unions
+
+For complex state management, we use discriminated unions to provide strong type safety when dealing with different states:
+
+```typescript
+// Define a union with a discriminant field
+export type RunState =
+  | { status: 'PENDING'; queuePosition?: number; /* pending-specific fields */ }
+  | { status: 'SUCCESS'; finishedAt: string; /* success-specific fields */ }
+  | { status: 'FAILURE'; error?: { message: string }; /* failure-specific fields */ };
+
+// Type guard for safe type narrowing
+function isSuccessRun(run: RunState): run is { status: 'SUCCESS', finishedAt: string, /* ... */ } {
+  return run.status === 'SUCCESS';
+}
+
+// Usage with type narrowing
+function processRun(run: RunState) {
+  if (isSuccessRun(run)) {
+    // TypeScript knows this is a successful run
+    console.log(`Run completed at ${run.finishedAt}`);
+  } else if (run.status === 'PENDING') {
+    // TypeScript knows this is a pending run
+    console.log(`Run is pending, position in queue: ${run.queuePosition}`);
+  }
+}
+```
+
+### Error Handling
+
+We've implemented a sophisticated error handling system that:
+
+1. **Classifies errors** into specific categories (auth, network, timeout, etc.)
+2. **Preserves original error context** while adding useful metadata
+3. **Uses lookup tables** instead of if-else chains for maintainability
+4. **Provides clear, user-friendly error messages**
+
+```typescript
+// Error handling with lookup tables
+const errorCodeHandlers: Record<string, () => ClassifiedError> = {
+  ECONNREFUSED: () => createClassifiedError(
+    'Connection error: Unable to connect to DeepSource API',
+    ErrorCategory.NETWORK,
+    error
+  ),
+  ETIMEDOUT: () => createClassifiedError(
+    'Timeout error: DeepSource API request timed out',
+    ErrorCategory.TIMEOUT,
+    error
+  ),
+};
+
+// Get the handler for this error code
+return errorCode && errorCodeHandlers[errorCode] ? errorCodeHandlers[errorCode]() : null;
+```
+
+### Code Structure
+
+The codebase follows several key structural patterns:
+
+1. **Helper Functions**: Reusable utilities that safely handle complex operations
+   ```typescript
+   // Safely access nested properties in unknown objects
+   function getNestedProperty<T>(obj: unknown, propPath: string[]): T | undefined {
+     let current: unknown = obj;
+     for (const prop of propPath) {
+       if (!current || typeof current !== 'object') return undefined;
+       current = (current as Record<string, unknown>)[prop];
+     }
+     return current as T;
+   }
+   ```
+
+2. **Lookup Tables**: Use of declarative objects instead of imperative if-else chains
+   ```typescript
+   // Strategy pattern with lookup tables
+   const paginationModes = [
+     {
+       check: () => Boolean(params.first),
+       format: () => `first: ${params.first}${params.after ? `, after: "${params.after}"` : ''}`,
+     },
+     {
+       check: () => Boolean(params.last),
+       format: () => `last: ${params.last}${params.before ? `, before: "${params.before}"` : ''}`,
+     },
+   ];
+   const applicableMode = paginationModes.find(mode => mode.check());
+   return applicableMode ? applicableMode.format() : '';
+   ```
+
+3. **Static Utility Methods**: Properly organized static methods that don't require instance context
+
+### Documentation
+
+The codebase maintains comprehensive documentation through:
+
+1. **JSDoc Comments**: Detailed documentation for all public methods, including:
+   - Purpose and overview
+   - Detailed descriptions with context
+   - Usage examples with code snippets
+   - Parameter and return value descriptions
+   - Type parameter explanations
+
+2. **Type Predicates**: Documented type guards that enable safe type narrowing
+
+3. **Examples**: Practical usage examples for complex patterns
+
+For more details, see the [architecture document](./src/ARCHITECTURE.md).
+
 ## Development
 
 1. Clone the repository:

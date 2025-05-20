@@ -102,9 +102,37 @@ While all DeepSource issues have been fixed, here are some proactive improvement
 4. **Documentation Updates**
    - ✅ **IMPLEMENTED** - Add JSDoc comments to all public methods
    - ✅ **IMPLEMENTED** - Document type predicates and validation helpers
-   - Update README with latest architectural decisions
+   - ✅ **IMPLEMENTED** - Update README with latest architectural decisions
 
 ## Implemented Improvements
+
+### 10. README Architecture Documentation (May 22, 2025)
+
+Updated the project README.md with comprehensive documentation about the architectural decisions and patterns used in the codebase. This provides a high-level overview of the design approach and helps new developers understand the codebase structure.
+
+**Architecture Section Components**:
+
+1. **Type System Documentation**:
+   - Detailed explanation of branded types with code examples
+   - Documentation of discriminated unions pattern with usage examples
+   - Illustrations of type safety benefits
+
+2. **Error Handling Documentation**:
+   - Overview of the error classification system
+   - Examples of lookup table approach to error handling
+   - Explanation of error context preservation
+
+3. **Code Structure Documentation**:
+   - Documentation of helper functions for complex operations
+   - Examples of lookup tables and strategy pattern usage
+   - Notes on static utility methods organization
+
+4. **Documentation Approach**:
+   - Overview of JSDoc comment structure
+   - Documentation of type predicates
+   - Examples of usage patterns in documentation
+
+The README now provides a concise but comprehensive overview of the architectural patterns used in the codebase, with practical code examples that demonstrate each pattern. This helps new developers understand the design decisions and promotes consistent implementation of these patterns in future development.
 
 ### 9. JSDoc Documentation Improvements (May 22, 2025)
 
