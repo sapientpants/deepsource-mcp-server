@@ -4,143 +4,108 @@ This document tracks the active issues identified by DeepSource in the latest an
 
 ## Summary
 
-- Total Issues: 0 (25 fixed)
-- Run Date: 2024-05-20
-- Latest Commit: 1a9c230
-- Status: COMPLETED
+- Total Issues: 8 (25 previously fixed)
+- Run Date: 2025-05-20
+- Latest Commit: 9bf8f16
+- Status: FAILURE
 
 ## Current Issues
 
-All issues have been fixed! The test files remain skipped in automated testing as they require additional work to properly integrate with the test suite, but all code quality issues have been addressed.
+There are 8 new active issues detected in the most recent DeepSource run. All of these issues are related to the use of the `any` type in the test files.
 
 ### Issue Types Breakdown
 
 1. **Detected usage of the `any` type (JS-0323)**
-   - Count: 0 (14 fixed)
+   - Count: 8
    - Severity: CRITICAL
    - Category: ANTI_PATTERN
    - Locations: 
-     - `src/__tests__/deepsource-metric-history.test.ts` (4 occurrences) ✅ FIXED
-     - `src/__tests__/deepsource-error-handling-comprehensive.test.ts` (9 occurrences) ✅ FIXED
-     - `src/__tests__/deepsource-pagination-comprehensive.test.ts` (1 occurrence) ✅ FIXED
+     - `src/__tests__/deepsource-error-handling-comprehensive.test.ts` (8 occurrences)
 
-2. **Detected empty functions (JS-0321)**
-   - Count: 0 (6 fixed)
-   - Severity: MINOR
-   - Category: ANTI_PATTERN
-   - Locations:
-     - `src/__tests__/deepsource-metric-history.test.ts` (2 occurrences) ✅ FIXED
-     - `src/__tests__/deepsource-error-handling-comprehensive.test.ts` (2 occurrences) ✅ FIXED
-     - `src/__tests__/deepsource-pagination-comprehensive.test.ts` (2 occurrences) ✅ FIXED
+## Todo List
 
-3. **Found complex boolean return (JS-W1041)**
-   - Count: 0 (2 fixed)
-   - Severity: MAJOR
-   - Category: ANTI_PATTERN
-   - Locations:
-     - `src/__tests__/deepsource-error-handling-comprehensive.test.ts` (1 occurrence) ✅ FIXED
-     - `src/__tests__/deepsource-pagination-comprehensive.test.ts` (1 occurrence) ✅ FIXED
+### File: src/__tests__/deepsource-error-handling-comprehensive.test.ts
 
-4. **Found shorthand type coercions (JS-0066)**
-   - Count: 0 (2 fixed)
-   - Severity: MINOR
-   - Category: ANTI_PATTERN
-   - Locations:
-     - `src/__tests__/deepsource-pagination-comprehensive.test.ts` (2 occurrences) ✅ FIXED
+1. **Line 124**: Replace `any` type with `Record<string, unknown>` or more specific type
+   - Issue: Detected usage of the `any` type (JS-0323)
+   - Description: The `any` type creates a potential safety hole and source of bugs
+   - Recommendation: Use `unknown` or a more specific type like `Record<string, unknown>`
 
-## Detailed Issue List
+2. **Line 135**: Replace `any` type with `Record<string, unknown>` or more specific type
+   - Issue: Detected usage of the `any` type (JS-0323)
+   - Description: The `any` type creates a potential safety hole and source of bugs
+   - Recommendation: Use `unknown` or a more specific type like `Record<string, unknown>`
 
-### Detected usage of the `any` type (JS-0323)
+3. **Line 152**: Replace `any` type with `Record<string, unknown>` or more specific type
+   - Issue: Detected usage of the `any` type (JS-0323)
+   - Description: The `any` type creates a potential safety hole and source of bugs
+   - Recommendation: Use `unknown` or a more specific type like `Record<string, unknown>`
 
-1. **File**: `src/__tests__/deepsource-pagination-comprehensive.test.ts` ✅ FIXED
-   - **Line**: 80
-   - **Description**: Using `any` type in method parameters
-   - **Fix**: Replaced with `Record<string, unknown>` for type safety
+4. **Line 169**: Replace `any` type with `Record<string, unknown>` or more specific type
+   - Issue: Detected usage of the `any` type (JS-0323)
+   - Description: The `any` type creates a potential safety hole and source of bugs
+   - Recommendation: Use `unknown` or a more specific type like `Record<string, unknown>`
 
-2. **File**: `src/__tests__/deepsource-metric-history.test.ts` ✅ FIXED
-   - **Lines**: 24, 245, 327
-   - **Description**: Using `any` type in method parameters and variable declarations
-   - **Fix**: Replaced with `Record<string, unknown>` and proper type assertions
+5. **Line 186**: Replace `any` type with `Record<string, unknown>` or more specific type
+   - Issue: Detected usage of the `any` type (JS-0323)
+   - Description: The `any` type creates a potential safety hole and source of bugs
+   - Recommendation: Use `unknown` or a more specific type like `Record<string, unknown>`
 
-3. **File**: `src/__tests__/deepsource-error-handling-comprehensive.test.ts` ✅ FIXED
-   - **Lines**: 53, 63, 81, 118, 129, 146, 163, 180, 202, 224, 250
-   - **Description**: Using `any` type in method parameters and variable declarations
-   - **Fix**: Replaced with `Record<string, unknown>` and added proper type assertions
+6. **Line 208**: Replace `any` type with `Record<string, unknown>` or more specific type
+   - Issue: Detected usage of the `any` type (JS-0323)
+   - Description: The `any` type creates a potential safety hole and source of bugs
+   - Recommendation: Use `unknown` or a more specific type like `Record<string, unknown>`
 
-### Detected empty functions (JS-0321)
+7. **Line 230**: Replace `any` type with `Record<string, unknown>` or more specific type
+   - Issue: Detected usage of the `any` type (JS-0323)
+   - Description: The `any` type creates a potential safety hole and source of bugs
+   - Recommendation: Use `unknown` or a more specific type like `Record<string, unknown>`
 
-1. **File**: `src/__tests__/deepsource-pagination-comprehensive.test.ts` ✅ FIXED
-   - **Lines**: 150, 151
-   - **Description**: Empty mock function implementations
-   - **Fix**: Added clarifying comments explaining purpose (to suppress console output during tests)
+8. **Line 256**: Replace `any` type with `Record<string, unknown>` or more specific type
+   - Issue: Detected usage of the `any` type (JS-0323)
+   - Description: The `any` type creates a potential safety hole and source of bugs
+   - Recommendation: Use `unknown` or a more specific type like `Record<string, unknown>`
 
-2. **File**: `src/__tests__/deepsource-metric-history.test.ts` ✅ FIXED
-   - **Lines**: 157, 158
-   - **Description**: Empty mock function implementations
-   - **Fix**: Added comments explaining the purpose of empty implementations (suppressing console output)
+## Approach for Fixing Issues
 
-3. **File**: `src/__tests__/deepsource-error-handling-comprehensive.test.ts` ✅ FIXED
-   - **Lines**: 100, 101
-   - **Description**: Empty mock function implementations
-   - **Fix**: Added comments explaining the purpose of empty implementations (suppressing console output)
+The approach to fix these issues will be similar to our previous work:
 
-### Found complex boolean return (JS-W1041)
+1. Examine each occurrence of the `any` type in the code
+2. Determine the actual structure of the data being handled
+3. Replace with `Record<string, unknown>` where appropriate, or create a more specific interface/type
+4. Add proper type assertions as needed
+5. Test to ensure the fixes do not break existing functionality
+6. Commit changes incrementally
 
-1. **File**: `src/__tests__/deepsource-pagination-comprehensive.test.ts` ✅ FIXED
-   - **Line**: 114
-   - **Description**: Using if-return true/false pattern instead of returning condition directly
-   - **Fix**: Simplified to directly return the negation of the condition
+## Previous Fixes (For Reference)
 
-2. **File**: `src/__tests__/deepsource-error-handling-comprehensive.test.ts` ✅ FIXED
-   - **Line**: 53
-   - **Description**: Using if-return true/false pattern instead of returning condition directly
-   - **Fix**: Simplified to directly return the negation of the condition
+### Previously Fixed `any` Type Issues
 
-### Found shorthand type coercions (JS-0066)
+1. Replaced occurrences of `any` with `Record<string, unknown>` for better type safety
+2. Added explicit type assertions to improve type checking
+3. Used proper interface definitions where appropriate
 
-1. **File**: `src/__tests__/deepsource-pagination-comprehensive.test.ts` ✅ FIXED
-   - **Lines**: 66, 67
-   - **Description**: Using shorthand type coercions like `!!` instead of explicit conversions
-   - **Fix**: Replaced with `Boolean()` for proper type conversion
+### Previously Fixed Empty Functions
 
-## Actions Taken
+1. Added comments to explain why functions are empty (suppressing console output during tests)
+2. Made the suppression purpose explicit to future developers
 
-All issues have been successfully addressed by implementing the following fixes:
+### Previously Fixed Complex Boolean Returns
 
-1. **Fixed `any` type usage**:
-   - Replaced occurrences of `any` with `Record<string, unknown>` for better type safety
-   - Added explicit type assertions to improve type checking
-   - Used proper interface definitions where appropriate
+1. Simplified if-return true/false patterns to direct condition returns
+2. Used logical negation to maintain readability where appropriate
 
-2. **Fixed empty functions**:
-   - Added comments to explain why functions are empty (suppressing console output during tests)
-   - Made the suppression purpose explicit to future developers
+### Previously Fixed Shorthand Type Coercions
 
-3. **Fixed complex boolean returns**:
-   - Simplified if-return true/false patterns to direct condition returns
-   - Used logical negation to maintain readability where appropriate
+1. Replaced shorthand coercions with explicit conversions (e.g., `!!x` → `Boolean(x)`)
+2. Made code intention clearer and improved readability
 
-4. **Fixed shorthand type coercions**:
-   - Replaced shorthand coercions with explicit conversions:
-     - `!!x` → `Boolean(x)`
-     - Made code intention clearer and improved readability
+## Next Steps After Fixing Current Issues
 
-## Next Steps
-
-The added test files in this PR effectively improve test coverage from ~93% to ~98% even though they are skipped in automated testing. They serve as reference implementations for future test development.
-
-To fully integrate these test files into the automated test suite, the following steps would be needed:
-
-1. **Fix mocking issues**:
-   - Resolve API mocking issues to properly test network interactions
+1. Run another DeepSource analysis to ensure all issues are resolved
+2. Update this document with results from the new analysis
+3. Consider integrating the comprehensive test files into the automated test suite:
+   - Fix mocking issues for network interactions
    - Set up proper GraphQL response fixtures
-
-2. **Resolve test assertions**:
    - Update expectations to match actual behavior
-   - Fix test failures related to method signatures and return values
-
-3. **Enable tests in CI pipeline**:
    - Remove `.skip` annotations once tests are stable
-   - Ensure tests run reliably in the CI environment
-
-Until these steps are completed, the test files remain as valuable documentation and examples of testing patterns for this codebase.
