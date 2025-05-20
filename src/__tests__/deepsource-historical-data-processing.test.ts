@@ -303,6 +303,129 @@ describe('DeepSourceClient Historical Data Processing', () => {
         client.testFetchHistoricalValues(mockParams, mockProject, mockMetricItem)
       ).rejects.toThrow('GraphQL Errors: Invalid metric ID, Invalid repository');
     });
+
+    it('should use GraphQL query, make API call, and process response (lines 2986, 3018, 3035)', async () => {
+      // Setup mock data
+      const mockParams = {
+        projectKey: 'test-project',
+        metricShortcode: MetricShortcode.LCV,
+        metricKey: MetricKey.AGGREGATE,
+        limit: 200, // Set a custom limit to verify it's used in the API call
+      };
+
+      const mockProject = {
+        name: 'Test Project',
+        repository: {
+          login: 'testorg',
+          provider: 'github',
+        },
+      };
+
+      const mockMetricItem = {
+        id: 'metric123',
+        key: 'AGGREGATE',
+        threshold: 80,
+      };
+
+      // Mock the GraphQL response
+      const mockResponse = {
+        data: {
+          repository: {
+            metrics: [
+              {
+                shortcode: 'LCV',
+                name: 'Line Coverage',
+                positiveDirection: 'UPWARD',
+                unit: '%',
+                items: [
+                  {
+                    id: 'metric123',
+                    key: 'AGGREGATE',
+                    threshold: 80,
+                    values: {
+                      edges: [
+                        {
+                          node: {
+                            id: 'value1',
+                            value: 75.5,
+                            valueDisplay: '75.5%',
+                            threshold: 80,
+                            thresholdStatus: 'FAILING',
+                            commitOid: 'commit1',
+                            createdAt: '2023-01-01T12:00:00Z',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      };
+
+      // Spy on the actual post method to verify query and variables (line 3018)
+      const postSpy = jest.spyOn(client['client'], 'post');
+
+      // Mock the processHistoricalData method to return expected values (line 3035)
+      const mockHistoryValues = [
+        {
+          value: 75.5,
+          valueDisplay: '75.5%',
+          threshold: 80,
+          thresholdStatus: 'FAILING',
+          commitOid: 'commit1',
+          createdAt: '2023-01-01T12:00:00Z',
+        },
+      ];
+
+      // Spy on the processHistoricalData method to verify it's called with the right params
+      const processHistoricalDataSpy = jest
+        .spyOn(DeepSourceClient as any, 'processHistoricalData')
+        .mockImplementation(() => mockHistoryValues);
+
+      // Setup nock to intercept API call
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        .reply(200, mockResponse);
+
+      // Call the method under test
+      const result = await client.testFetchHistoricalValues(
+        mockParams,
+        mockProject,
+        mockMetricItem
+      );
+
+      // Verify the post method was called with the correct query and variables (lines 2986, 3018)
+      expect(postSpy).toHaveBeenCalled();
+      const postArgs = postSpy.mock.calls[0];
+
+      // Verify post URL
+      expect(postArgs[0]).toBe('');
+
+      // Verify the query was provided (line 2986)
+      expect(postArgs[1].query).toBeDefined();
+      expect(postArgs[1].query).toContain(
+        'query($login: String!, $name: String!, $provider: VCSProvider!, $first: Int, $metricItemId: ID!)'
+      );
+
+      // Verify the variables were correctly set (line 3018-3027)
+      expect(postArgs[1].variables).toEqual({
+        login: 'testorg',
+        name: 'Test Project',
+        provider: 'GITHUB',
+        first: 200, // Verify custom limit is used
+        metricItemId: 'metric123',
+      });
+
+      // Verify processHistoricalData was called with the right parameters (line 3035)
+      expect(processHistoricalDataSpy).toHaveBeenCalledWith(mockResponse.data, mockParams);
+
+      // Verify the final result
+      expect(result).toEqual(mockHistoryValues);
+    });
   });
 
   describe('createMetricHistoryResponse method (line 2690)', () => {

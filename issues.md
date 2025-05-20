@@ -61,10 +61,10 @@ The following lines need test coverage:
 40. ~~**Line 2946** - Add test case for this line~~ ✅ RESOLVED
 41. ~~**Line 2952** - Add test case for this line~~ ✅ RESOLVED
 42. ~~**Line 2959** - Add test case for this line~~ ✅ RESOLVED
-43. **Line 2986** - Add test case for this line
-44. **Line 3018** - Add test case for this line
-45. **Line 3029** - Add test case for this line
-46. **Line 3035** - Add test case for this line
+43. ~~**Line 2986** - Add test case for this line~~ ✅ RESOLVED
+44. ~~**Line 3018** - Add test case for this line~~ ✅ RESOLVED
+45. ~~**Line 3029** - Add test case for this line~~ ✅ RESOLVED
+46. ~~**Line 3035** - Add test case for this line~~ ✅ RESOLVED
 47. **Line 3123** - Add test case for this line
 48. **Line 3129** - Add test case for this line
 49. **Line 3277** - Add test case for this line
@@ -106,12 +106,12 @@ Based on the line numbers, these appear to be gaps in:
 - [x] Review all 49 uncovered lines
 - [x] Group related functionality
 - [x] Write test plan for each group
-- [x] Implement test cases (42/49 completed)
+- [x] Implement test cases (46/49 completed)
 - [ ] Verify coverage improvement
 - [ ] Run DeepSource analysis to confirm issues resolved
 
 ### Progress Summary
-- Issues fixed: 42/49 (86%)
+- Issues fixed: 46/49 (94%)
 - Methods covered:
   - ✅ isAxiosErrorWithCriteria (line 657)
   - ✅ handleNetworkError (lines 706, 714)
@@ -134,4 +134,5 @@ Based on the line numbers, these appear to be gaps in:
   - ✅ getMetricHistory error handling (line 2715)
   - ✅ handleTestEnvironment non-test mode (line 2732)
   - ✅ validateAndGetMetricInfo (lines 2931, 2934, 2939, 2942, 2946, 2952, 2959)
-- Remaining: 7 lines to cover
+  - ✅ fetchHistoricalValues GraphQL query and API call (lines 2986, 3018, 3029, 3035)
+- Remaining: 3 lines to cover
