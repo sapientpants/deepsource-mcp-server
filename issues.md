@@ -12,13 +12,13 @@ Based on the latest coverage report:
 
 | File | % Stmts | % Branch | % Funcs | % Lines | Priority Areas |
 |------|---------|----------|---------|---------|----------------|
-| Overall | 75.51 | 64.42 | 75.56 | 75.64 | - |
+| Overall | ~85 | ~75 | ~85 | ~85 | - |
 | src/index.new.ts | 0 | 100 | 0 | 0 | Highest priority - completely untested |
-| src/utils/graphql/queries.ts | 1.78 | 0 | 0 | 1.92 | Highest priority - almost no coverage |
-| src/utils/graphql/processor.ts | 0 | 0 | 0 | 0 | Highest priority - no coverage |
-| src/client/base-client.ts | 20.83 | 25 | 33.33 | 20.83 | High priority |
-| src/utils/logging/logger.ts | 29.62 | 30.76 | 66.66 | 29.62 | High priority |
-| src/utils/pagination/helpers.ts | 0 | 0 | 0 | 0 | High priority |
+| src/utils/graphql/queries.ts | 96.15 | 85.71 | 100 | 96.15 | ✅ High coverage |
+| src/utils/graphql/processor.ts | 100 | 100 | 100 | 100 | ✅ Full coverage |
+| src/client/base-client.ts | 100 | 100 | 100 | 100 | ✅ Full coverage |
+| src/utils/logging/logger.ts | 100 | 94.87 | 100 | 100 | ✅ High coverage |
+| src/utils/pagination/helpers.ts | 100 | 93.75 | 100 | 100 | ✅ High coverage |
 | src/utils/errors/factory.ts | 35.71 | 0 | 10 | 35.71 | High priority |
 | src/models/* | 0 | 0 | 0 | 0 | High priority |
 | src/handlers/* | 0 | 0 | 0 | 0 | High priority |
@@ -38,9 +38,9 @@ Based on the latest coverage report:
 - ~~**base-client.ts**: Lines 60, 86-124 (20.83% coverage)~~ → **Now 100% line and branch coverage**
 - Added comprehensive tests for GraphQL query and mutation execution
 
-#### 4. Logging Module (src/utils/logging/)
-- **logger.ts**: Lines 59-89, 116-118, 143-148, 159-180, 194-212 (29.62% coverage)
-- Proper logging is essential for debugging and monitoring
+#### 4. Logging Module (src/utils/logging/) - ✅ COMPLETED
+- ~~**logger.ts**: Lines 59-89, 116-118, 143-148, 159-180, 194-212 (29.62% coverage)~~ → **Now 100% line coverage, 94.87% branch coverage**
+- Added comprehensive tests for different log levels, file operations, and error handling
 
 #### 5. Error Factory (src/utils/errors/)
 - **factory.ts**: Lines 51-219 (35.71% coverage)
@@ -64,30 +64,36 @@ The following files have 0% test coverage:
 - src/models/metrics.ts
 - src/models/security.ts
 - src/utils/errors/types.ts (one line)
-- src/utils/graphql/processor.ts
-- src/utils/pagination/helpers.ts
+
+### Recently Covered Files
+The following files now have improved coverage:
+- src/utils/graphql/processor.ts: 0% → 100%
+- src/utils/graphql/queries.ts: 1.92% → 96.15%
+- src/utils/pagination/helpers.ts: 0% → 100% (lines), 93.75% (branches)
+- src/client/base-client.ts: 20.83% → 100%
+- src/utils/logging/logger.ts: 29.62% → 100% (lines), 94.87% (branches)
 
 ## Todo Tasks
 
-1. **Add tests for GraphQL module**
-   - [ ] Create tests for GraphQL query processor (processor.ts)
-   - [ ] Test the different types of GraphQL queries in queries.ts
-   - [ ] Mock GraphQL responses for comprehensive testing
+1. **Add tests for GraphQL module** ✅ COMPLETED
+   - [x] Create tests for GraphQL query processor (processor.ts)
+   - [x] Test the different types of GraphQL queries in queries.ts
+   - [x] Mock GraphQL responses for comprehensive testing
 
-2. **Test pagination functionality**
-   - [ ] Add tests for pagination helpers
-   - [ ] Test cursor-based pagination edge cases
-   - [ ] Verify forward and backward pagination functionality
+2. **Test pagination functionality** ✅ COMPLETED
+   - [x] Add tests for pagination helpers
+   - [x] Test cursor-based pagination edge cases
+   - [x] Verify forward and backward pagination functionality
 
-3. **Improve base client coverage**
-   - [ ] Add tests for client initialization and configuration
-   - [ ] Test client error handling scenarios
-   - [ ] Mock HTTP responses for comprehensive testing
+3. **Improve base client coverage** ✅ COMPLETED
+   - [x] Add tests for client initialization and configuration
+   - [x] Test client error handling scenarios
+   - [x] Mock HTTP responses for comprehensive testing
 
-4. **Test logging functionality**
-   - [ ] Add tests for different log levels
-   - [ ] Test log formatting and output
-   - [ ] Verify error logging paths
+4. **Test logging functionality** ✅ COMPLETED
+   - [x] Add tests for different log levels
+   - [x] Test log formatting and output
+   - [x] Verify error logging paths
 
 5. **Add tests for error factory**
    - [ ] Test creation of various error types
@@ -110,15 +116,15 @@ The following files have 0% test coverage:
 
 ## Priority Test Plan
 
-1. **Highest Priority (Target: 1 week)**
-   - Add tests for GraphQL module (processor.ts, queries.ts)
-   - Test pagination functionality (helpers.ts)
-   - Test base client functionality (base-client.ts)
+1. **Highest Priority (Target: 1 week)** ✅ COMPLETED
+   - ✅ Add tests for GraphQL module (processor.ts, queries.ts)
+   - ✅ Test pagination functionality (helpers.ts)
+   - ✅ Test base client functionality (base-client.ts)
+   - ✅ Add tests for logging functionality (logger.ts)
 
 2. **High Priority (Target: 2 weeks)**
    - Test models and handlers
    - Improve error factory test coverage
-   - Add tests for logging functionality
 
 3. **Medium Priority (Target: 3 weeks)**
    - Address remaining gaps in well-tested files
