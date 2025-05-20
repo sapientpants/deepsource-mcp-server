@@ -6,6 +6,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { createLogger } from '../utils/logging/logger.js';
 import { handleApiError } from '../utils/errors/handlers.js';
+import { GraphQLResponse } from '../types/graphql-responses.js';
 
 /**
  * Configuration options for the DeepSource client
@@ -81,7 +82,7 @@ export class BaseDeepSourceClient {
    * @throws {ClassifiedError} When the query fails
    * @protected
    */
-  protected async executeGraphQL<T>(query: string): Promise<T> {
+  protected async executeGraphQL<T>(query: string): Promise<GraphQLResponse<T>> {
     try {
       this.logger.debug('Executing GraphQL query', { query });
       const response = await this.client.post('', { query });
@@ -92,7 +93,7 @@ export class BaseDeepSourceClient {
         throw new Error(`GraphQL Errors: ${JSON.stringify(response.data.errors)}`);
       }
 
-      return response.data as T;
+      return response.data as GraphQLResponse<T>;
     } catch (error) {
       this.logger.error('Error executing GraphQL query', error);
       throw handleApiError(error);

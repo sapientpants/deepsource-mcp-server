@@ -8,6 +8,7 @@ import { DeepSourceProject } from '../models/projects.js';
 import { VIEWER_PROJECTS_QUERY } from '../utils/graphql/queries.js';
 import { isErrorWithMessage } from '../utils/errors/handlers.js';
 import { ProjectKey, asProjectKey } from '../types/branded.js';
+import { GraphQLResponse, ViewerProjectsResponse } from '../types/graphql-responses.js';
 
 /**
  * Client for interacting with DeepSource projects API
@@ -24,34 +25,9 @@ export class ProjectsClient extends BaseDeepSourceClient {
    */
   async listProjects(): Promise<DeepSourceProject[]> {
     try {
-      const response = await this.executeGraphQL<{
-        data?: {
-          viewer?: {
-            email?: string;
-            accounts?: {
-              edges?: Array<{
-                node: {
-                  login: string;
-                  repositories?: {
-                    edges?: Array<{
-                      node: {
-                        name?: string;
-                        defaultBranch?: string;
-                        dsn?: string;
-                        isPrivate?: boolean;
-                        isActivated?: boolean;
-                        vcsProvider?: string;
-                      };
-                    }>;
-                  };
-                };
-              }>;
-            };
-          };
-        };
-      }>(VIEWER_PROJECTS_QUERY);
+      const response = await this.executeGraphQL<ViewerProjectsResponse>(VIEWER_PROJECTS_QUERY);
 
-      const accounts = response.data?.viewer?.accounts?.edges ?? [];
+      const accounts = response.data?.data?.viewer?.accounts?.edges ?? [];
       const allRepos: DeepSourceProject[] = [];
 
       for (const { node: account } of accounts) {
