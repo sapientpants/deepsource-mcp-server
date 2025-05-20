@@ -8,7 +8,7 @@ import { DeepSourceProject } from '../models/projects.js';
 import { VIEWER_PROJECTS_QUERY } from '../utils/graphql/queries.js';
 import { isErrorWithMessage } from '../utils/errors/handlers.js';
 import { ProjectKey, asProjectKey } from '../types/branded.js';
-import { GraphQLResponse, ViewerProjectsResponse } from '../types/graphql-responses.js';
+import { ViewerProjectsResponse } from '../types/graphql-responses.js';
 
 /**
  * Client for interacting with DeepSource projects API
