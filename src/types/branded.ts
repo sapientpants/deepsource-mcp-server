@@ -1,6 +1,6 @@
 /**
  * @fileoverview Branded types for the DeepSource MCP server
- * 
+ *
  * This module defines branded types to enforce type safety for string-based identifiers.
  * Branded types help prevent mixing different string identifiers that share the same primitive type.
  * For example, a ProjectKey and RunId are both strings, but they represent different concepts.

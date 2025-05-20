@@ -5,7 +5,13 @@
 
 import { DeepSourceIssue } from './issues.js';
 import { PaginationParams, PaginatedResponse } from '../utils/pagination/types.js';
-import { AnalyzerShortcode, BranchName, CommitOid, GraphQLNodeId, RunId } from '../types/branded.js';
+import {
+  AnalyzerShortcode,
+  BranchName,
+  CommitOid,
+  GraphQLNodeId,
+  RunId,
+} from '../types/branded.js';
 
 /**
  * Distribution of occurrences by analyzer type
