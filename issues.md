@@ -94,14 +94,16 @@ If a class method does not use `this`, it can be made into a static function.
 **Severity:** MAJOR  
 **Category:** PERFORMANCE  
 **Affected Files:**
-- src/__tests__/deepsource-quality-metrics.test.ts (line 2)
-- src/__tests__/deepsource-nonetype-error.test.ts (line 5)
+- ✅ src/__tests__/deepsource-quality-metrics.test.ts (line 2)
+- ✅ src/__tests__/deepsource-nonetype-error.test.ts (line 5)
+
+✅ **RESOLVED**
 
 Unused variables are generally considered a code smell and should be avoided.
 
-**Todo:**
-- [ ] Remove unused imports or variables
-- [ ] If needed for type definitions, prefix with underscore to indicate intentional non-use
+**Completed fixes:**
+- [x] Removed unused imports of `jest` from both files
+- [x] Added comments indicating that these imports were previously unused
 
 ---
 
@@ -163,6 +165,6 @@ The previous test coverage issues (TCV-001) have been successfully addressed. Al
 ## Progress Tracking
 
 - [ ] Fix Critical Issues (8/24 completed)
-- [x] Fix Major Issues (1/3 completed)
-- [ ] Fix Minor Issues (9/9 completed)
+- [x] Fix Major Issues (3/3 completed)
+- [x] Fix Minor Issues (9/9 completed)
 - [ ] Verify all issues resolved

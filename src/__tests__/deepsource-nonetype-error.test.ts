@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import { jest } from '@jest/globals';
+// Removed unused import: import { jest } from '@jest/globals'
 import { DeepSourceClient } from '../deepsource.js';
 
 // Create a test subclass to expose private methods
