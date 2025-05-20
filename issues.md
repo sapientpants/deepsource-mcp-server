@@ -121,4 +121,16 @@ const result = await TestableDeepSourceClient.testNoneTypeErrorHandler();
 - [x] Issue 2: Lines not covered in tests (line 55) - Resolved in commit ccca0eb with a test that properly executes the testValidateAndGetMetricInfo method
 - [x] Issue 3: Useless template literal (line 164) - Resolved in commit 91c2850 by replacing template literal with regular string literal
 - [x] Issue 4: Useless template literal (line 149) - Resolved in commit 91c2850 by replacing template literal with regular string literal
-- [ ] Issue 5: Use const declarations (line 107) - Change let to const
+- [x] Issue 5: Use const declarations (line 107) - Resolved in commit e18aaca by changing let to const for variables never reassigned
+
+## Summary
+
+All 5 DeepSource issues have been successfully resolved:
+
+1. Added test coverage for testProcessRegularMetricHistory method
+2. Added test coverage for testValidateAndGetMetricInfo method
+3. Replaced useless template literal with regular string literal on line 164
+4. Replaced useless template literal with regular string literal on line 149
+5. Changed let declaration to const for variable never reassigned on line 107
+
+The test coverage has been improved to 100% for the src/__tests__/utils/test-utils.ts file, and all code style issues have been fixed.
