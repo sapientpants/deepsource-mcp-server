@@ -56,7 +56,13 @@ export class ProjectsClient extends BaseDeepSourceClient {
       for (const { node: account } of accounts) {
         const repos = account.repositories?.edges ?? [];
         for (const { node: repo } of repos) {
-          if (!repo.dsn) continue;
+          if (!repo.dsn) {
+            this.logger.debug('Skipping repository due to missing DSN', {
+              repositoryName: repo.name ?? 'Unnamed Repository',
+              accountLogin: account.login,
+            });
+            continue;
+          }
           allRepos.push({
             key: repo.dsn,
             name: repo.name ?? 'Unnamed Repository',
