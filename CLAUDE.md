@@ -816,3 +816,4 @@ Manually verify:
 - Use lookup tables instead of long if-else chains for mapping values.
 - Separate concerns into different functions with single responsibilities.
 - Always maintain high test coverage to prevent TCV-001 (Lines not covered in tests) issues.
+- **Do not change .gitignore unless explicitly asked to do so**
