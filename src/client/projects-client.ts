@@ -7,6 +7,7 @@ import { BaseDeepSourceClient } from './base-client.js';
 import { DeepSourceProject } from '../models/projects.js';
 import { VIEWER_PROJECTS_QUERY } from '../utils/graphql/queries.js';
 import { isErrorWithMessage } from '../utils/errors/handlers.js';
+import { ProjectKey, asProjectKey } from '../types/branded.js';
 
 /**
  * Client for interacting with DeepSource projects API
@@ -64,7 +65,7 @@ export class ProjectsClient extends BaseDeepSourceClient {
             continue;
           }
           allRepos.push({
-            key: repo.dsn,
+            key: asProjectKey(repo.dsn),
             name: repo.name ?? 'Unnamed Repository',
             repository: {
               url: repo.dsn,
@@ -96,7 +97,7 @@ export class ProjectsClient extends BaseDeepSourceClient {
    * @returns Promise that resolves to true if the project exists, false otherwise
    * @public
    */
-  async projectExists(projectKey: string): Promise<boolean> {
+  async projectExists(projectKey: ProjectKey): Promise<boolean> {
     try {
       const projects = await this.listProjects();
       return projects.some((project) => project.key === projectKey);

@@ -5,6 +5,7 @@
 
 import { DeepSourceIssue } from './issues.js';
 import { PaginationParams, PaginatedResponse } from '../utils/pagination/types.js';
+import { AnalyzerShortcode, BranchName, CommitOid, GraphQLNodeId, RunId } from '../types/branded.js';
 
 /**
  * Distribution of occurrences by analyzer type
@@ -12,7 +13,7 @@ import { PaginationParams, PaginatedResponse } from '../utils/pagination/types.j
  */
 export interface OccurrenceDistributionByAnalyzer {
   /** Shortcode of the analyzer */
-  analyzerShortcode: string;
+  analyzerShortcode: AnalyzerShortcode;
   /** Number of issues introduced */
   introduced: number;
 }
@@ -65,15 +66,15 @@ export type AnalysisRunStatus =
  */
 export interface DeepSourceRun {
   /** Internal ID of the run */
-  id: string;
+  id: GraphQLNodeId;
   /** Unique identifier for the run */
-  runUid: string;
+  runUid: RunId;
   /** Commit hash that this run analyzed */
-  commitOid: string;
+  commitOid: CommitOid;
   /** Branch name for the run */
-  branchName: string;
+  branchName: BranchName;
   /** Base commit hash used for comparison */
-  baseOid: string;
+  baseOid: CommitOid;
   /** Current status of the run */
   status: AnalysisRunStatus;
   /** Timestamp when the run was created */
@@ -89,7 +90,7 @@ export interface DeepSourceRun {
     /** Repository name */
     name: string;
     /** Repository ID */
-    id: string;
+    id: GraphQLNodeId;
   };
 }
 
@@ -99,7 +100,7 @@ export interface DeepSourceRun {
  */
 export interface RunFilterParams extends PaginationParams {
   /** Filter runs by analyzer shortcodes (e.g. ["python", "javascript"]) */
-  analyzerIn?: string[];
+  analyzerIn?: AnalyzerShortcode[];
 }
 
 /**
