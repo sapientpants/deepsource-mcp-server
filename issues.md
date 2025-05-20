@@ -1,114 +1,98 @@
 # DeepSource Issues Todo List
 
-## Active Issues Summary
-**Total Active Issues:** 50  
-**Issue Type:** TCV-001 (Lines not covered in tests)  
+## Latest DeepSource Analysis (May 20, 2025)
+
+**Total Issues:** 36  
+**Issues by Severity:**
+- CRITICAL: 24
+- MAJOR: 3
+- MINOR: 9
+
+**Issues by Category:**
+- ANTI_PATTERN: 33
+- BUG_RISK: 1
+- PERFORMANCE: 2
+
+---
+
+## Current Active Issues
+
+### 1. JS-0016: Function declarations in nested blocks
+**Severity:** MAJOR  
+**Category:** BUG_RISK  
+**File:** src/__tests__/deepsource-vulnerability-processing.test.ts (line 445)
+
+Function declarations (with the `function` keyword) and variable declarations should preferably be in the root of a program or the body of a function. Having nested function declarations inside blocks may have unexpected results at runtime due to hoisting.
+
+**Todo:**
+- [ ] Move the function declaration out of the nested block
+- [ ] Refactor the test to avoid nested function declarations
+
+### 2. JS-0323: Using the `any` type (24 issues)
 **Severity:** CRITICAL  
-**Category:** COVERAGE  
+**Category:** ANTI_PATTERN  
+**Affected Files:**
+- src/__tests__/deepsource-vulnerability-processing.test.ts (lines 372, 374)
+- src/__tests__/deepsource-metrics-history.test.ts (line 777, multiple occurrences)
+- src/__tests__/deepsource-metric-validation.test.ts (lines 16, 129)
+- src/__tests__/deepsource-internal-utils.test.ts (lines 505, 506, 507)
+- src/__tests__/deepsource-historical-data-processing.test.ts (lines 15, 20, 26, 27, 28, 29, 40, 108, 115, 130, 249, 390)
+
+The `any` type can leak into your codebase. TypeScript compiler skips type checking of `any` typed variables, creating a potential safety hole and source of bugs.
+
+**Todo:**
+- [ ] Replace all `any` types with more specific types
+- [ ] Use `unknown` when the type is truly unknown
+- [ ] Use `Record<string, unknown>` for objects with unknown structure
+- [ ] Create proper type interfaces for test data
+- [ ] Consider using generic types where appropriate
+
+### 3. JS-0321: Empty functions (9 issues)
+**Severity:** MINOR  
+**Category:** ANTI_PATTERN  
+**Affected Files:**
+- src/__tests__/deepsource-metrics-history.test.ts (lines 621, 654)
+- src/__tests__/deepsource-metric-validation.test.ts (lines 70, 138, 191)
+- src/__tests__/deepsource-compliance-reports.test.ts (lines 181, 201)
+
+Having empty functions hurts readability and is considered a code smell. There's almost always a way to avoid using them.
+
+**Todo:**
+- [ ] Add implementation to empty functions or add comments explaining their purpose
+- [ ] Consider refactoring tests to avoid empty functions
+- [ ] For mock functions, use jest.fn() with appropriate implementation instead of empty functions
+
+### 4. JS-0105: Class methods should utilize `this` (2 issues)
+**Severity:** MINOR  
+**Category:** ANTI_PATTERN  
+**Affected Files:**
+- src/__tests__/deepsource-quality-metrics.test.ts (line 391)
+- src/__tests__/deepsource-nonetype-error.test.ts (line 21)
+
+If a class method does not use `this`, it can be made into a static function.
+
+**Todo:**
+- [ ] Convert methods that don't use `this` to static methods
+- [ ] Update any instance references to static calls (MyClass.staticMethod())
+
+### 5. JS-0356: Unused variables in TypeScript code (2 issues)
+**Severity:** MAJOR  
+**Category:** PERFORMANCE  
+**Affected Files:**
+- src/__tests__/deepsource-quality-metrics.test.ts (line 2)
+- src/__tests__/deepsource-nonetype-error.test.ts (line 5)
+
+Unused variables are generally considered a code smell and should be avoided.
+
+**Todo:**
+- [ ] Remove unused imports or variables
+- [ ] If needed for type definitions, prefix with underscore to indicate intentional non-use
 
 ---
 
-## Test Coverage Issues - TCV-001
+## Test Coverage Issues (Resolved)
 
-### Issue Description
-A source line is considered covered when at least one instruction that is assigned to this line has been executed by a test case. These lines were not executed during any of the test cases.
-
-### Detailed Todo List
-
-#### File: `src/deepsource.ts`
-
-The following lines need test coverage:
-
-1. ~~**Line 657** - Add test case for this line~~ ✅ RESOLVED (commit: 0df1f72)
-2. ~~**Line 706** - Add test case for this line~~ ✅ RESOLVED (commit: a50c4ec)
-3. ~~**Line 714** - Add test case for this line~~ ✅ RESOLVED (commit: a50c4ec - covered by ETIMEDOUT test)
-4. ~~**Line 732** - Add test case for this line~~ ✅ RESOLVED (commit: dcd0e33)
-5. ~~**Line 740** - Add test case for this line~~ ✅ RESOLVED (commit: dcd0e33)
-6. ~~**Line 811** - Add test case for this line~~ ✅ RESOLVED (commit: 5af1da8)
-7. ~~**Line 815** - Add test case for this line~~ ✅ RESOLVED (commit: 5af1da8)
-8. ~~**Line 819** - Add test case for this line~~ ✅ RESOLVED (commit: 5af1da8)
-9. ~~**Line 829** - Add test case for this line~~ ✅ RESOLVED (commit: 5af1da8)
-10. ~~**Line 918** - Add test case for this line~~ ✅ RESOLVED (commit: 2d7fff8)
-11. ~~**Line 1810** - Add test case for this line~~ ✅ RESOLVED (commit: 39c21fa)
-12. ~~**Line 1966** - Add test case for this line~~ ✅ RESOLVED (commit: 7809c2c)
-13. ~~**Line 1974** - Add test case for this line~~ ✅ RESOLVED (commit: 7809c2c)
-14. ~~**Line 1983** - Add test case for this line~~ ✅ RESOLVED (commit: 7809c2c)
-15. ~~**Line 2010** - Add test case for this line~~ ✅ RESOLVED (Note: Functionality tested but code coverage tool doesn't detect it)
-16. ~~**Line 2020** - Add test case for this line~~ ✅ RESOLVED (Note: Functionality tested but code coverage tool doesn't detect it)
-17. ~~**Line 2023** - Add test case for this line~~ ✅ RESOLVED (Note: Functionality tested but code coverage tool doesn't detect it)
-18. ~~**Line 2033** - Add test case for this line~~ ✅ RESOLVED (Note: Functionality tested but code coverage tool doesn't detect it)
-19. ~~**Line 2067** - Add test case for this line~~ ✅ RESOLVED
-20. ~~**Line 2091** - Add test case for this line~~ ✅ RESOLVED
-21. ~~**Line 2097** - Add test case for this line~~ ✅ RESOLVED
-22. ~~**Line 2103** - Add test case for this line~~ ✅ RESOLVED
-23. ~~**Line 2111** - Add test case for this line~~ ✅ RESOLVED
-24. ~~**Line 2138** - Add test case for this line~~ ✅ RESOLVED
-25. ~~**Line 2250** - Add test case for this line~~ ✅ RESOLVED
-26. ~~**Line 2366** - Add test case for this line~~ ✅ RESOLVED (Note: Functionality tested but code coverage tool doesn't detect it)
-27. ~~**Line 2416** - Add test case for this line~~ ✅ RESOLVED
-28. ~~**Line 2452** - Add test case for this line~~ ✅ RESOLVED (Note: Functionality tested in deepsource-nonetype-error.test.ts but code coverage tool doesn't detect it)
-29. ~~**Line 2488** - Add test case for this line~~ ✅ RESOLVED
-30. ~~**Line 2530** - Add test case for this line~~ ✅ RESOLVED
-31. ~~**Line 2655** - Add test case for this line~~ ✅ RESOLVED
-32. ~~**Line 2687** - Add test case for this line~~ ✅ RESOLVED
-33. ~~**Line 2690** - Add test case for this line~~ ✅ RESOLVED
-34. ~~**Line 2715** - Add test case for this line~~ ✅ RESOLVED
-35. ~~**Line 2732** - Add test case for this line~~ ✅ RESOLVED
-36. ~~**Line 2931** - Add test case for this line~~ ✅ RESOLVED
-37. ~~**Line 2934** - Add test case for this line~~ ✅ RESOLVED
-38. ~~**Line 2939** - Add test case for this line~~ ✅ RESOLVED
-39. ~~**Line 2942** - Add test case for this line~~ ✅ RESOLVED
-40. ~~**Line 2946** - Add test case for this line~~ ✅ RESOLVED
-41. ~~**Line 2952** - Add test case for this line~~ ✅ RESOLVED
-42. ~~**Line 2959** - Add test case for this line~~ ✅ RESOLVED
-43. ~~**Line 2986** - Add test case for this line~~ ✅ RESOLVED
-44. ~~**Line 3018** - Add test case for this line~~ ✅ RESOLVED
-45. ~~**Line 3029** - Add test case for this line~~ ✅ RESOLVED
-46. ~~**Line 3035** - Add test case for this line~~ ✅ RESOLVED
-47. ~~**Line 3123** - Add test case for this line~~ ✅ RESOLVED
-48. ~~**Line 3129** - Add test case for this line~~ ✅ RESOLVED
-49. ~~**Line 3277** - Add test case for this line~~ ✅ RESOLVED
-
----
-
-## Action Plan
-
-### 1. Analyze uncovered lines
-- Review each uncovered line to understand what functionality needs testing
-- Identify logical groups of related functionality that can be tested together
-
-### 2. Create test cases
-- Write test cases that exercise each uncovered line
-- Ensure tests cover both success and failure paths
-- Pay special attention to edge cases and error conditions
-
-### 3. Priority order
-- Start with the most critical functionality (auth, error handling, core business logic)
-- Then move to utility functions and edge cases
-
-### Test Categories to Focus On
-Based on the line numbers, these appear to be gaps in:
-- Error handling and edge cases
-- Specific method branches that weren't exercised
-- Fallback/default behaviors
-- Exception catches
-
-### Notes
-- All issues are in the same file: `src/deepsource.ts`
-- These are all test coverage issues (no code quality issues)
-- Achieving 100% coverage will require comprehensive test cases
-- Some lines might be defensive code or error handlers that are difficult to trigger naturally
-
----
-
-## Progress Tracking
-
-- [x] Review all 49 uncovered lines
-- [x] Group related functionality
-- [x] Write test plan for each group
-- [x] Implement test cases (49/49 completed)
-- [x] Verify coverage improvement
-- [ ] Run DeepSource analysis to confirm issues resolved
+The previous test coverage issues (TCV-001) have been successfully addressed. All 49 previously uncovered lines now have adequate test coverage.
 
 ### Progress Summary
 - Issues fixed: 49/49 (100%)
@@ -138,4 +122,32 @@ Based on the line numbers, these appear to be gaps in:
   - ✅ createMetricHistoryResponse trend calculation (line 3123)
   - ✅ createMetricHistoryResponse return object (line 3129)
   - ✅ extractReportData fieldName handling (line 3277)
-- Remaining: 0 lines to cover
+
+---
+
+## Action Plan for Current Issues
+
+### 1. Fix Critical Issues First
+- [ ] Replace all `any` types with proper types in test files
+- [ ] Create interfaces for common test data structures
+
+### 2. Address Major Issues
+- [ ] Fix function declarations in nested blocks
+- [ ] Remove unused variables/imports
+
+### 3. Address Minor Issues
+- [ ] Convert instance methods to static when appropriate
+- [ ] Add implementations or explanatory comments to empty functions
+
+### 4. Verification
+- [ ] Run DeepSource analysis again to confirm issues are resolved
+- [ ] Ensure no new issues are introduced
+
+---
+
+## Progress Tracking
+
+- [ ] Fix Critical Issues (0/24 completed)
+- [ ] Fix Major Issues (0/3 completed)
+- [ ] Fix Minor Issues (0/9 completed)
+- [ ] Verify all issues resolved
