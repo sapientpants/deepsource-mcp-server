@@ -771,6 +771,28 @@ describe('DeepSourceClient Metrics History', () => {
       delete process.env.MISSING_METRIC_ITEM_TEST;
     });
 
+    it('should return undefined from handleTestEnvironment when NODE_ENV is not test (line 2732)', async () => {
+      // Create a class that extends DeepSourceClient to expose private methods for testing
+      class TestableDeepSourceClient extends DeepSourceClient {
+        static async testHandleTestEnvironment(params: any): Promise<any> {
+          return DeepSourceClient['handleTestEnvironment'](params);
+        }
+      }
+
+      // Set NODE_ENV to non-test value
+      process.env.NODE_ENV = 'development';
+
+      // Call the method directly
+      const result = await TestableDeepSourceClient.testHandleTestEnvironment({
+        projectKey: PROJECT_KEY,
+        metricShortcode: MetricShortcode.LCV,
+        metricKey: MetricKey.AGGREGATE,
+      });
+
+      // Verify that undefined is returned when NODE_ENV is not 'test'
+      expect(result).toBeUndefined();
+    });
+
     it('should generate test data for Line Coverage metrics', async () => {
       const result = await client.getMetricHistory({
         projectKey: PROJECT_KEY,
