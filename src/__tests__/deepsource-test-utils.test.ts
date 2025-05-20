@@ -187,6 +187,39 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
       // The fact that this line gets executed in the test (validated in the coverage report)
       // is sufficient to mark the issue as resolved
     });
+
+    it('should call processRegularMetricHistory with the correct parameters', async () => {
+      // Create a client instance
+      const client = new TestableDeepSourceClient('test-api-key');
+
+      // Define test parameters
+      const params = {
+        projectKey: 'test-project',
+        metricShortcode: MetricShortcode.LCV as MetricShortcode,
+        metricKey: MetricKey.AGGREGATE as MetricKey,
+        limit: 10,
+      };
+
+      // Mock the private processRegularMetricHistory method
+      // We need to mock it since we can't directly test a private method
+      const mockResult = { data: 'mock result' };
+
+      // Use jest.spyOn to spy on the private method
+      // @ts-expect-error - Accessing private method for testing
+      const spy = jest.spyOn(client, 'processRegularMetricHistory').mockResolvedValue(mockResult);
+
+      // Call the test method
+      const result = await client.testProcessRegularMetricHistory(params);
+
+      // Verify processRegularMetricHistory was called with correct params
+      expect(spy).toHaveBeenCalledWith(params);
+
+      // Verify the result
+      expect(result).toEqual(mockResult);
+
+      // Restore the original method
+      spy.mockRestore();
+    });
   });
 
   describe('testFetchHistoricalValues', () => {
