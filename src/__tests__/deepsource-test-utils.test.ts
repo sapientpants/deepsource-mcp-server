@@ -51,4 +51,43 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
       }
     });
   });
+
+  describe('testGetQualityMetricsWithNoneTypeError', () => {
+    it('should handle NoneType errors and call handleGraphQLError', async () => {
+      // Let's override the testIsErrorWithMessage method to force different paths
+      const originalIsErrorWithMessage = TestableDeepSourceClient.testIsErrorWithMessage;
+      // Save original handleGraphQLError method
+      // @ts-expect-error Accessing private method for testing
+      const originalHandleGraphQLError = DeepSourceClient.handleGraphQLError;
+
+      try {
+        // First, test the NoneType error path
+        TestableDeepSourceClient.testIsErrorWithMessage = jest.fn().mockReturnValue(true);
+
+        let result = await TestableDeepSourceClient.testGetQualityMetricsWithNoneTypeError();
+        expect(result).toEqual([]); // Should return empty array for NoneType errors
+
+        // Now, test the non-NoneType error path that calls handleGraphQLError
+        TestableDeepSourceClient.testIsErrorWithMessage = jest.fn().mockReturnValue(false);
+
+        // Mock handleGraphQLError
+        // @ts-expect-error Mocking private method for testing
+        DeepSourceClient.handleGraphQLError = jest.fn().mockImplementation(() => {
+          return ['mocked error response'];
+        });
+
+        result = await TestableDeepSourceClient.testGetQualityMetricsWithNoneTypeError();
+
+        // Verify handleGraphQLError was called
+        // @ts-expect-error Accessing mocked method
+        expect(DeepSourceClient.handleGraphQLError).toHaveBeenCalled();
+        expect(result).toEqual(['mocked error response']);
+      } finally {
+        // Restore original methods
+        TestableDeepSourceClient.testIsErrorWithMessage = originalIsErrorWithMessage;
+        // @ts-expect-error Restoring private method
+        DeepSourceClient.handleGraphQLError = originalHandleGraphQLError;
+      }
+    });
+  });
 });
