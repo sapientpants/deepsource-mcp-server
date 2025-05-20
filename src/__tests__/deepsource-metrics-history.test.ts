@@ -1,3 +1,8 @@
+/**
+ * @jest-environment node
+ */
+
+import { jest } from '@jest/globals';
 import nock from 'nock';
 import { DeepSourceClient, MetricShortcode } from '../deepsource';
 import { MetricDirection, MetricKey } from '../types/metrics';
@@ -602,6 +607,72 @@ describe('DeepSourceClient Metrics History', () => {
 
       // Clean up environment variable
       delete process.env.NOT_FOUND_TEST;
+    });
+
+    it('should return null when isNotFoundError is true with "not found" error (line 2715)', async () => {
+      // Create a custom client that will be used for testing
+      const customClient = new DeepSourceClient(API_KEY);
+
+      // Set NODE_ENV to non-test to avoid test environment short-circuit
+      const originalNodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'development';
+
+      // Mock the validateProjectKey method to do nothing
+      jest.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {});
+
+      // Mock the client's post method to throw a "not found" error
+      jest.spyOn(customClient['client'], 'post').mockImplementation(() => {
+        throw new Error('not found: Metric data could not be found');
+      });
+
+      // Call the method that will trigger the catch block with line 2715
+      const result = await customClient.getMetricHistory({
+        projectKey: PROJECT_KEY,
+        metricShortcode: MetricShortcode.LCV,
+        metricKey: MetricKey.AGGREGATE,
+      });
+
+      // Assert the expected behavior
+      expect(result).toBeNull();
+
+      // Restore original NODE_ENV
+      process.env.NODE_ENV = originalNodeEnv;
+
+      // Restore mocks
+      jest.restoreAllMocks();
+    });
+
+    it('should return null when isNotFoundError is true with "NoneType" error (line 2715)', async () => {
+      // Create a custom client that will be used for testing
+      const customClient = new DeepSourceClient(API_KEY);
+
+      // Set NODE_ENV to non-test to avoid test environment short-circuit
+      const originalNodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'development';
+
+      // Mock the validateProjectKey method to do nothing
+      jest.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {});
+
+      // Mock the client's post method to throw a NoneType error
+      jest.spyOn(customClient['client'], 'post').mockImplementation(() => {
+        throw new Error('NoneType object has no attribute get');
+      });
+
+      // Call the method that will trigger the catch block with line 2715
+      const result = await customClient.getMetricHistory({
+        projectKey: PROJECT_KEY,
+        metricShortcode: MetricShortcode.LCV,
+        metricKey: MetricKey.AGGREGATE,
+      });
+
+      // Assert the expected behavior
+      expect(result).toBeNull();
+
+      // Restore original NODE_ENV
+      process.env.NODE_ENV = originalNodeEnv;
+
+      // Restore mocks
+      jest.restoreAllMocks();
     });
 
     it('should validate required parameters', async () => {
