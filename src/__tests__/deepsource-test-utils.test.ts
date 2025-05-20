@@ -4,7 +4,8 @@
 
 import { TestableDeepSourceClient } from './utils/test-utils';
 import { jest } from '@jest/globals';
-import { DeepSourceClient } from '../deepsource';
+import { DeepSourceClient, MetricShortcode } from '../deepsource';
+import { MetricKey } from '../types/metrics';
 
 describe('TestableDeepSourceClient Utility Methods Tests', () => {
   describe('testIterateVulnerabilities', () => {
@@ -161,6 +162,145 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
       expect(() => {
         TestableDeepSourceClient.testValidateProjectRepository(invalidProject, 'test-project-key');
       }).toThrow(`Invalid repository information for project 'test-project-key'`);
+    });
+  });
+
+  describe('testFetchHistoricalValues', () => {
+    it('should fetch historical values for a metric', async () => {
+      // Create instance of TestableDeepSourceClient for testing instance methods
+      const client = new TestableDeepSourceClient('test-api-key');
+
+      // Prepare test data
+      const params = {
+        projectKey: 'test-project',
+        metricShortcode: MetricShortcode.LCV as MetricShortcode,
+        metricKey: MetricKey.AGGREGATE as MetricKey,
+        limit: 10,
+      };
+
+      const project = {
+        name: 'Test Project',
+        repository: {
+          login: 'test-org',
+          provider: 'github',
+        },
+      };
+
+      const metricItem = {
+        id: 'metric-1',
+        key: 'AGGREGATE',
+        threshold: 80,
+      };
+
+      // Mock the client's post method to return mock historical data
+      const mockResponse = {
+        data: {
+          repository: {
+            metrics: [
+              {
+                shortcode: 'LCV',
+                name: 'Line Coverage',
+                positiveDirection: 'UPWARD',
+                unit: '%',
+                items: [
+                  {
+                    id: 'metric-1',
+                    key: 'AGGREGATE',
+                    threshold: 80,
+                    values: {
+                      edges: [
+                        {
+                          node: {
+                            id: 'value1',
+                            value: 75.5,
+                            valueDisplay: '75.5%',
+                            threshold: 80,
+                            thresholdStatus: 'FAILING',
+                            commitOid: 'commit1',
+                            createdAt: '2023-01-01',
+                          },
+                        },
+                        {
+                          node: {
+                            id: 'value2',
+                            value: 85.0,
+                            valueDisplay: '85.0%',
+                            threshold: 80,
+                            thresholdStatus: 'PASSING',
+                            commitOid: 'commit2',
+                            createdAt: '2023-01-15',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      };
+
+      // Mock the axios post method
+      jest.spyOn(client['client'], 'post').mockResolvedValue({ data: mockResponse });
+
+      // Call the test method
+      const result = await client.testFetchHistoricalValues(params, project, metricItem);
+
+      // Verify the response is processed correctly
+      expect(result).toBeDefined();
+      expect(result).toHaveLength(2);
+      expect(result[0].value).toBe(75.5);
+      expect(result[1].value).toBe(85.0);
+      expect(result[0].valueDisplay).toBe('75.5%');
+      expect(result[0].threshold).toBe(80);
+      expect(result[0].thresholdStatus).toBe('FAILING');
+      expect(result[1].thresholdStatus).toBe('PASSING');
+
+      // Restore the original post method
+      jest.restoreAllMocks();
+    });
+
+    it('should handle errors when fetching historical values', async () => {
+      // Create instance of TestableDeepSourceClient for testing instance methods
+      const client = new TestableDeepSourceClient('test-api-key');
+
+      // Prepare test data
+      const params = {
+        projectKey: 'test-project',
+        metricShortcode: MetricShortcode.LCV as MetricShortcode,
+        metricKey: MetricKey.AGGREGATE as MetricKey,
+      };
+
+      const project = {
+        name: 'Test Project',
+        repository: {
+          login: 'test-org',
+          provider: 'github',
+        },
+      };
+
+      const metricItem = {
+        id: 'metric-1',
+        key: 'AGGREGATE',
+        threshold: 80,
+      };
+
+      // Mock the axios post method to throw an error
+      jest.spyOn(client['client'], 'post').mockRejectedValue(new Error('API error'));
+
+      // Mock the handleGraphQLError method to control the error path
+      // @ts-expect-error Mocking private static method
+      jest.spyOn(DeepSourceClient, 'handleGraphQLError').mockImplementation(() => {
+        // This will never return as handleGraphQLError should throw
+        throw new Error('GraphQL error');
+      });
+
+      // Call the test method and expect it to throw
+      await expect(client.testFetchHistoricalValues(params, project, metricItem)).rejects.toThrow();
+
+      // Restore the original methods
+      jest.restoreAllMocks();
     });
   });
 });
