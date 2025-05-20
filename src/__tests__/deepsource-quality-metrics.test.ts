@@ -653,5 +653,35 @@ describe('DeepSourceClient Quality Metrics', () => {
         })
       ).rejects.toThrow('GraphQL Error: Invalid input');
     });
+
+    it('should handle GraphQL errors in response (lines 2530-2531)', async () => {
+      // Mock response with GraphQL errors in the response body
+      const mockErrorResponse = {
+        data: {},
+        errors: [
+          { message: 'Invalid metric shortcode provided' },
+          { message: 'Settings update not allowed for this repository' },
+        ],
+      };
+
+      // Set up nock to intercept API call
+      nock('https://api.deepsource.io')
+        .post('/graphql/')
+        .matchHeader('Authorization', `Bearer ${API_KEY}`)
+        // Return 200 status but with GraphQL errors in the response body
+        .reply(200, mockErrorResponse);
+
+      // Call the method and expect it to throw with the combined error message
+      await expect(
+        client.updateMetricSetting({
+          repositoryId: REPOSITORY_ID,
+          metricShortcode: MetricShortcode.LCV,
+          isReported: true,
+          isThresholdEnforced: true,
+        })
+      ).rejects.toThrow(
+        'GraphQL Errors: Invalid metric shortcode provided, Settings update not allowed for this repository'
+      );
+    });
   });
 });
