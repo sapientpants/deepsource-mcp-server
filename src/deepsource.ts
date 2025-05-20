@@ -1622,7 +1622,9 @@ export class DeepSourceClient {
    * @private
    */
   private static isValidVulnerabilityNode(node: unknown): boolean {
-    // Validate root level fields
+    // Validation logic defined inline
+
+    // Validate root level structure
     if (!node || typeof node !== 'object') {
       DeepSourceClient.logger.warn('Skipping invalid vulnerability node: not an object');
       return false;
@@ -1630,12 +1632,13 @@ export class DeepSourceClient {
 
     const record = node as Record<string, unknown>;
 
+    // Check if id exists and is a string (for backward compatibility with tests)
     if (!('id' in record) || typeof record.id !== 'string') {
       DeepSourceClient.logger.warn('Skipping vulnerability node with missing or invalid ID', node);
       return false;
     }
 
-    // Validate nested objects
+    // Check for package field (for backward compatibility with tests)
     if (!('package' in record) || typeof record.package !== 'object' || record.package === null) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability node with missing or invalid package',
@@ -1644,6 +1647,7 @@ export class DeepSourceClient {
       return false;
     }
 
+    // Check for packageVersion field (for backward compatibility with tests)
     if (
       !('packageVersion' in record) ||
       typeof record.packageVersion !== 'object' ||
@@ -1656,6 +1660,7 @@ export class DeepSourceClient {
       return false;
     }
 
+    // Check for vulnerability field (for backward compatibility with tests)
     if (
       !('vulnerability' in record) ||
       typeof record.vulnerability !== 'object' ||
@@ -1668,11 +1673,12 @@ export class DeepSourceClient {
       return false;
     }
 
+    // Now check the required fields in each nested object
     const packageRecord = record.package as Record<string, unknown>;
     const packageVersionRecord = record.packageVersion as Record<string, unknown>;
     const vulnerabilityRecord = record.vulnerability as Record<string, unknown>;
 
-    // Validate required package fields
+    // Package validations (for backward compatibility with tests)
     if (!('id' in packageRecord) || !('ecosystem' in packageRecord) || !('name' in packageRecord)) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability with incomplete package information',
@@ -1681,7 +1687,7 @@ export class DeepSourceClient {
       return false;
     }
 
-    // Validate required packageVersion fields
+    // PackageVersion validations (for backward compatibility with tests)
     if (!('id' in packageVersionRecord) || !('version' in packageVersionRecord)) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability with incomplete package version information',
@@ -1690,7 +1696,7 @@ export class DeepSourceClient {
       return false;
     }
 
-    // Validate required vulnerability fields
+    // Vulnerability validations (for backward compatibility with tests)
     if (!('id' in vulnerabilityRecord) || !('identifier' in vulnerabilityRecord)) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability with incomplete vulnerability information',
@@ -2037,6 +2043,44 @@ export class DeepSourceClient {
   }
 
   /**
+   * Safely accesses a nested property in an object with type checking
+   *
+   * @param obj The object to access
+   * @param propPath Array of property names to access in sequence
+   * @param validator Optional function to validate the final value
+   * @returns The value at the specified path, or undefined if any part of the path is invalid
+   * @private
+   */
+  private static getNestedProperty<T>(
+    obj: unknown,
+    propPath: string[],
+    // eslint-disable-next-line no-unused-vars
+    validator?: (value: unknown) => boolean
+  ): T | undefined {
+    // Start with the root object
+    let current: unknown = obj;
+
+    // Navigate through the property path
+    for (const prop of propPath) {
+      // Ensure we have an object to access properties from
+      if (!current || typeof current !== 'object') {
+        return undefined;
+      }
+
+      // Get the current property and continue
+      current = (current as Record<string, unknown>)[prop];
+    }
+
+    // Validate the final value if a validator is provided
+    // The validator function uses its parameter to validate the value
+    if (validator && !validator(current)) {
+      return undefined;
+    }
+
+    return current as T;
+  }
+
+  /**
    * Processes GraphQL response and extracts vulnerability occurrences
    * Handles the extraction and validation of vulnerability data from a GraphQL response.
    *
@@ -2062,83 +2106,55 @@ export class DeepSourceClient {
     };
     totalCount: number;
   } {
-    // Extract response data safely with type checking
-    if (!response || typeof response !== 'object') {
-      return {
-        vulnerabilities: [],
-        pageInfo: {
+    // Default values are used directly in the return statement for empty results
+
+    // Safely extract the vulnerability edges using the helper function
+    const vulnEdges =
+      DeepSourceClient.getNestedProperty<unknown[]>(
+        response,
+        ['data', 'data', 'repository', 'dependencyVulnerabilityOccurrences', 'edges'],
+        Array.isArray
+      ) || [];
+
+    // Extract the page info data
+    const pageInfoData = DeepSourceClient.getNestedProperty<Record<string, unknown>>(
+      response,
+      ['data', 'data', 'repository', 'dependencyVulnerabilityOccurrences', 'pageInfo'],
+      (value): value is Record<string, unknown> => value !== null && typeof value === 'object'
+    );
+
+    // Create the page info object with type-safe property access
+    const pageInfo = pageInfoData
+      ? {
+          hasNextPage: Boolean(pageInfoData.hasNextPage),
+          hasPreviousPage: Boolean(pageInfoData.hasPreviousPage),
+          startCursor:
+            typeof pageInfoData.startCursor === 'string' ? pageInfoData.startCursor : undefined,
+          endCursor:
+            typeof pageInfoData.endCursor === 'string' ? pageInfoData.endCursor : undefined,
+        }
+      : {
           hasNextPage: false,
           hasPreviousPage: false,
-        },
-        totalCount: 0,
+        };
+
+    // Safely extract the total count
+    const totalCount = DeepSourceClient.getNestedProperty<number>(
+      response,
+      ['data', 'data', 'repository', 'dependencyVulnerabilityOccurrences', 'totalCount'],
+      (value): value is number => typeof value === 'number'
+    );
+
+    // Early return for empty results to avoid unnecessary processing
+    if (vulnEdges.length === 0) {
+      return {
+        vulnerabilities: [],
+        pageInfo,
+        totalCount: totalCount ?? 0,
       };
     }
 
-    // Create an empty result for early returns
-    const emptyResult = {
-      vulnerabilities: [],
-      pageInfo: {
-        hasNextPage: false,
-        hasPreviousPage: false,
-      },
-      totalCount: 0,
-    };
-
-    const typedResponse = response as Record<string, unknown>;
-    const data = typedResponse.data as Record<string, unknown> | undefined;
-
-    if (!data || typeof data !== 'object') {
-      return emptyResult;
-    }
-
-    const gqlData = data.data as Record<string, unknown> | undefined;
-
-    if (!gqlData || typeof gqlData !== 'object') {
-      return emptyResult;
-    }
-
-    const repository = gqlData.repository as Record<string, unknown> | undefined;
-
-    if (!repository || typeof repository !== 'object') {
-      return emptyResult;
-    }
-
-    const occurrencesData = repository.dependencyVulnerabilityOccurrences as
-      | Record<string, unknown>
-      | undefined;
-
-    if (!occurrencesData || typeof occurrencesData !== 'object') {
-      return emptyResult;
-    }
-
-    // Extract edges, page info, and total count with defaults for missing data
-    const vulnEdges = Array.isArray(occurrencesData.edges) ? occurrencesData.edges : [];
-
-    const pageInfoData = occurrencesData.pageInfo as Record<string, unknown> | undefined;
-    const pageInfo =
-      pageInfoData && typeof pageInfoData === 'object'
-        ? {
-            hasNextPage: Boolean(pageInfoData.hasNextPage),
-            hasPreviousPage: Boolean(pageInfoData.hasPreviousPage),
-            startCursor:
-              typeof pageInfoData.startCursor === 'string' ? pageInfoData.startCursor : undefined,
-            endCursor:
-              typeof pageInfoData.endCursor === 'string' ? pageInfoData.endCursor : undefined,
-          }
-        : {
-            hasNextPage: false,
-            hasPreviousPage: false,
-          };
-
-    const totalCount =
-      typeof occurrencesData.totalCount === 'number' ? occurrencesData.totalCount : 0;
-
-    // Early return for empty results to avoid unnecessary processing
-    if (!vulnEdges.length) {
-      return { vulnerabilities: [], pageInfo, totalCount };
-    }
-
-    // Pre-allocate array with known size for better memory efficiency
+    // Process the vulnerability edges
     const vulnerabilities: VulnerabilityOccurrence[] = [];
 
     // Use the iterator for memory-efficient processing
@@ -2149,7 +2165,7 @@ export class DeepSourceClient {
     return {
       vulnerabilities,
       pageInfo,
-      totalCount,
+      totalCount: totalCount ?? 0,
     };
   }
 
