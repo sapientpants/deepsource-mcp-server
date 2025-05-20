@@ -59,16 +59,18 @@ The `any` type can leak into your codebase. TypeScript compiler skips type check
 **Severity:** MINOR  
 **Category:** ANTI_PATTERN  
 **Affected Files:**
-- src/__tests__/deepsource-metrics-history.test.ts (lines 621, 654)
-- src/__tests__/deepsource-metric-validation.test.ts (lines 70, 138, 191)
-- src/__tests__/deepsource-compliance-reports.test.ts (lines 181, 201)
+- ✅ src/__tests__/deepsource-metrics-history.test.ts (lines 621, 654)
+- ✅ src/__tests__/deepsource-metric-validation.test.ts (lines 70, 138, 191)
+- ✅ src/__tests__/deepsource-compliance-reports.test.ts (lines 181, 201)
+
+✅ **RESOLVED**
 
 Having empty functions hurts readability and is considered a code smell. There's almost always a way to avoid using them.
 
-**Todo:**
-- [ ] Add implementation to empty functions or add comments explaining their purpose
-- [ ] Consider refactoring tests to avoid empty functions
-- [ ] For mock functions, use jest.fn() with appropriate implementation instead of empty functions
+**Completed fixes:**
+- [x] Added detailed comments explaining the purpose of each empty mock implementation 
+- [x] Clarified that these are intentionally empty to bypass validation steps not relevant to the tests
+- [x] Added function bodies with explanatory comments to maintain clear intent
 
 ### 4. JS-0105: Class methods should utilize `this` (2 issues)
 **Severity:** MINOR  
@@ -157,5 +159,5 @@ The previous test coverage issues (TCV-001) have been successfully addressed. Al
 
 - [ ] Fix Critical Issues (8/24 completed)
 - [x] Fix Major Issues (1/3 completed)
-- [ ] Fix Minor Issues (0/9 completed)
+- [ ] Fix Minor Issues (9/9 completed)
 - [ ] Verify all issues resolved

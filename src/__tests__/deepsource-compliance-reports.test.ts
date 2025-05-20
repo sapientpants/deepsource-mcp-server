@@ -177,8 +177,12 @@ describe('DeepSource Compliance Reports', () => {
       const customClient = new DeepSourceClient(API_KEY);
 
       // Mock the validateProjectKey method to do nothing (avoid needing to mock listProjects)
+      // We're specifically testing the error handling in the getComplianceReport method,
+      // so we bypass this validation step
       // @ts-expect-error - accessing private method
-      jest.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {});
+      jest.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {
+        // Intentionally empty - validation is not relevant to this error handling test
+      });
 
       // Mock the client's post method to throw a NoneType error
       jest.spyOn(customClient['client'], 'post').mockImplementation(() => {
@@ -197,8 +201,12 @@ describe('DeepSource Compliance Reports', () => {
       const customClient = new DeepSourceClient(API_KEY);
 
       // Mock the validateProjectKey method to do nothing (avoid needing to mock listProjects)
+      // We're specifically testing the error handling in the getComplianceReport method,
+      // so we bypass this validation step
       // @ts-expect-error - accessing private method
-      jest.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {});
+      jest.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {
+        // Intentionally empty - validation is not relevant to this error handling test
+      });
 
       // Mock the client's post method to throw a not found error
       jest.spyOn(customClient['client'], 'post').mockImplementation(() => {

@@ -617,8 +617,11 @@ describe('DeepSourceClient Metrics History', () => {
       const originalNodeEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'development';
 
-      // Mock the validateProjectKey method to do nothing
-      jest.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {});
+      // Mock the validateProjectKey method to do nothing - we only need to bypass the validation
+      // without actually implementing its logic, as we're testing the error handling in getMetricHistory
+      jest.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {
+        // Intentionally empty - we're just bypassing validation
+      });
 
       // Mock the client's post method to throw a "not found" error
       jest.spyOn(customClient['client'], 'post').mockImplementation(() => {
@@ -650,8 +653,11 @@ describe('DeepSourceClient Metrics History', () => {
       const originalNodeEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'development';
 
-      // Mock the validateProjectKey method to do nothing
-      jest.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {});
+      // Mock the validateProjectKey method to do nothing - we only need to bypass the validation
+      // without actually implementing its logic, as we're testing the error handling in getMetricHistory
+      jest.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {
+        // Intentionally empty - we're just bypassing validation
+      });
 
       // Mock the client's post method to throw a NoneType error
       jest.spyOn(customClient['client'], 'post').mockImplementation(() => {

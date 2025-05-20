@@ -71,7 +71,11 @@ describe('DeepSourceClient Metric Validation', () => {
       jest.spyOn(client, 'getQualityMetrics').mockResolvedValue(mockMetrics);
 
       // Mock the static validateProjectRepository method (line 2939)
-      jest.spyOn(DeepSourceClient, 'validateProjectRepository').mockImplementation(() => {});
+      // This validation is bypassed because we're testing other aspects of the validation flow
+      jest.spyOn(DeepSourceClient, 'validateProjectRepository').mockImplementation(() => {
+        // Intentionally empty - validation is not the focus of this test
+        // We're just preventing it from throwing errors
+      });
 
       // Call the method under test
       const result = await client.testValidateAndGetMetricInfo({
@@ -143,7 +147,11 @@ describe('DeepSourceClient Metric Validation', () => {
       jest.spyOn(client, 'getQualityMetrics').mockResolvedValue(mockMetrics);
 
       // Mock the static validateProjectRepository method (line 2939)
-      jest.spyOn(DeepSourceClient, 'validateProjectRepository').mockImplementation(() => {});
+      // This validation is bypassed because we're testing other aspects of the validation flow
+      jest.spyOn(DeepSourceClient, 'validateProjectRepository').mockImplementation(() => {
+        // Intentionally empty - validation is not the focus of this test
+        // We're just preventing it from throwing errors
+      });
 
       // Call the method and expect it to throw
       await expect(
@@ -196,7 +204,11 @@ describe('DeepSourceClient Metric Validation', () => {
       jest.spyOn(client, 'getQualityMetrics').mockResolvedValue(mockMetrics);
 
       // Mock the static validateProjectRepository method (line 2939)
-      jest.spyOn(DeepSourceClient, 'validateProjectRepository').mockImplementation(() => {});
+      // This validation is bypassed because we're testing other aspects of the validation flow
+      jest.spyOn(DeepSourceClient, 'validateProjectRepository').mockImplementation(() => {
+        // Intentionally empty - validation is not the focus of this test
+        // We're just preventing it from throwing errors
+      });
 
       // Call the method and expect it to throw
       await expect(
