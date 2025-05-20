@@ -21,7 +21,11 @@ describe.skip('DeepSourceClient Metric History Tests', () => {
   // Subclass DeepSourceClient to expose private methods for testing
   class TestableDeepSourceClient extends DeepSourceClient {
     // For instance methods, we can use ts-expect-error to access private methods
-    async testFetchHistoricalValues(params: MetricHistoryParams, project: any, metricItem: any) {
+    async testFetchHistoricalValues(
+      params: MetricHistoryParams,
+      project: Record<string, unknown>,
+      metricItem: Record<string, unknown>
+    ) {
       // @ts-expect-error - accessing private method for testing
       return this.fetchHistoricalValues(params, project, metricItem);
     }
@@ -33,9 +37,12 @@ describe.skip('DeepSourceClient Metric History Tests', () => {
       }
 
       return errors
-        .map((error) =>
-          error && typeof error === 'object' && 'message' in error ? error.message : null
-        )
+        .map((error) => {
+          if (error && typeof error === 'object' && 'message' in error) {
+            return (error as Record<string, unknown>).message as string;
+          }
+          return null;
+        })
         .filter(Boolean)
         .join(', ');
     }
@@ -154,8 +161,12 @@ describe.skip('DeepSourceClient Metric History Tests', () => {
     client = new TestableDeepSourceClient(API_KEY);
 
     // Mock console methods to keep test output clean
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {
+      // Intentionally empty to suppress console warnings during tests
+    });
+    jest.spyOn(console, 'error').mockImplementation(() => {
+      // Intentionally empty to suppress console errors during tests
+    });
   });
 
   afterEach(() => {
@@ -242,7 +253,8 @@ describe.skip('DeepSourceClient Metric History Tests', () => {
 
       // Mock the axios client post method
       const mockPost = jest.fn().mockResolvedValue({ data: mockGraphQLResponse });
-      (client as any).client = { post: mockPost };
+      // Type assertion to access private property
+      (client as unknown as { client: { post: jest.Mock } }).client = { post: mockPost };
 
       // Mock the processHistoricalData static method (line 3035)
       const mockHistoryValues: MetricHistoryValue[] = [
@@ -324,7 +336,8 @@ describe.skip('DeepSourceClient Metric History Tests', () => {
       };
 
       const mockPost = jest.fn().mockResolvedValue({ data: mockErrorResponse });
-      (client as any).client = { post: mockPost };
+      // Type assertion to access private property
+      (client as unknown as { client: { post: jest.Mock } }).client = { post: mockPost };
 
       // We'll mock extractErrorMessages first - this ensures our error is formatted correctly
       const extractErrorSpy = jest
