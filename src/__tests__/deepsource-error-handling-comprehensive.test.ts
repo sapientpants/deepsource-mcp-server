@@ -27,9 +27,12 @@ describe.skip('DeepSourceClient Error Handling Comprehensive Tests', () => {
       }
 
       return errors
-        .map((error) =>
-          error && typeof error === 'object' && 'message' in error ? error.message : null
-        )
+        .map((error) => {
+          if (error && typeof error === 'object' && 'message' in error) {
+            return (error as Record<string, unknown>).message as string;
+          }
+          return null;
+        })
         .filter(Boolean)
         .join(', ');
     }
@@ -49,25 +52,25 @@ describe.skip('DeepSourceClient Error Handling Comprehensive Tests', () => {
         return false;
       }
 
-      // Check valid cursor combinations
-      if (
+      // Return the negation of invalid cursor combinations
+      return !(
         (after !== undefined && first === undefined) ||
         (before !== undefined && last === undefined)
-      ) {
-        return false;
-      }
-
-      return true;
+      );
     }
 
-    static testNormalizePaginationInput(params: any) {
+    static testNormalizePaginationInput(params: Record<string, unknown>) {
       // Normalize pagination input parameters
       const normalizedParams = {
         first:
-          params.first !== undefined ? params.first : params.last === undefined ? 10 : undefined,
-        after: params.after,
-        last: params.last,
-        before: params.before,
+          params.first !== undefined
+            ? Number(params.first)
+            : params.last === undefined
+              ? 10
+              : undefined,
+        after: params.after as string | undefined,
+        last: params.last as number | undefined,
+        before: params.before as string | undefined,
       };
 
       // Include offset if provided (for legacy pagination)
@@ -78,13 +81,12 @@ describe.skip('DeepSourceClient Error Handling Comprehensive Tests', () => {
       return normalizedParams;
     }
 
-    static testValidateProjectRepository(project: any, projectKey: string): void {
-      if (
-        !project ||
-        !project.repository ||
-        !project.repository.login ||
-        !project.repository.provider
-      ) {
+    static testValidateProjectRepository(
+      project: Record<string, unknown> | undefined,
+      projectKey: string
+    ): void {
+      const repository = project?.repository as Record<string, unknown> | undefined;
+      if (!project || !repository || !repository.login || !repository.provider) {
         throw new Error(`Project ${projectKey} not found or missing repository information`);
       }
     }
@@ -97,8 +99,12 @@ describe.skip('DeepSourceClient Error Handling Comprehensive Tests', () => {
     nock.cleanAll();
 
     // Mock console methods to keep test output clean
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {
+      // Intentionally empty to suppress console warnings during tests
+    });
+    jest.spyOn(console, 'error').mockImplementation(() => {
+      // Intentionally empty to suppress console errors during tests
+    });
   });
 
   afterEach(() => {
