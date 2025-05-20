@@ -12,7 +12,7 @@ Based on the latest coverage report:
 
 | File | % Stmts | % Branch | % Funcs | % Lines | Priority Areas |
 |------|---------|----------|---------|---------|----------------|
-| Overall | ~88.5 | ~77.8 | ~92.1 | ~88.5 | - |
+| Overall | ~91.4 | ~79.1 | ~94.4 | ~91.5 | - |
 | src/index.new.ts | 0 | 100 | 0 | 0 | Highest priority - completely untested |
 | src/utils/graphql/queries.ts | 96.15 | 85.71 | 100 | 96.15 | ✅ High coverage |
 | src/utils/graphql/processor.ts | 100 | 100 | 100 | 100 | ✅ Full coverage |
@@ -20,7 +20,7 @@ Based on the latest coverage report:
 | src/utils/logging/logger.ts | 100 | 94.87 | 100 | 100 | ✅ High coverage |
 | src/utils/pagination/helpers.ts | 100 | 93.75 | 100 | 100 | ✅ High coverage |
 | src/utils/errors/factory.ts | 100 | 100 | 100 | 100 | ✅ Full coverage |
-| src/models/* | 0 | 0 | 0 | 0 | High priority |
+| src/models/* | 100 | 100 | 100 | 100 | ✅ Full coverage |
 | src/handlers/* | 0 | 0 | 0 | 0 | High priority |
 
 ### High Priority Coverage Gaps
@@ -61,8 +61,6 @@ The following files have 0% test coverage:
 - src/index.new.ts
 - src/examples/discriminated-unions-usage.ts
 - src/handlers/projects.ts
-- src/models/metrics.ts
-- src/models/security.ts
 - src/utils/errors/types.ts (one line)
 
 ### Recently Covered Files
@@ -73,6 +71,8 @@ The following files now have improved coverage:
 - src/client/base-client.ts: 20.83% → 100%
 - src/utils/logging/logger.ts: 29.62% → 100% (lines), 94.87% (branches)
 - src/utils/errors/factory.ts: 35.71% → 100%
+- src/models/metrics.ts: 0% → 100%
+- src/models/security.ts: 0% → 100%
 
 ## Todo Tasks
 
@@ -101,10 +101,10 @@ The following files now have improved coverage:
    - [x] Verify error handling and propagation
    - [x] Test error message formatting
 
-6. **Test models**
-   - [ ] Add tests for metrics models
-   - [ ] Test security models
-   - [ ] Verify model serialization/deserialization
+6. **Test models** ✅ COMPLETED
+   - [x] Add tests for metrics models
+   - [x] Test security models
+   - [x] Verify model serialization/deserialization
 
 7. **Test handlers**
    - [ ] Add tests for project handlers
@@ -124,7 +124,8 @@ The following files now have improved coverage:
    - ✅ Add tests for logging functionality (logger.ts)
 
 2. **High Priority (Target: 2 weeks)**
-   - Test models and handlers
+   - ✅ Test models
+   - Test handlers
    - ✅ Improve error factory test coverage
 
 3. **Medium Priority (Target: 3 weeks)**
