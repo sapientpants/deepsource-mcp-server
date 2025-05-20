@@ -43,6 +43,7 @@ Function declarations (with the `function` keyword) and variable declarations sh
 - ✅ src/__tests__/deepsource-metric-validation.test.ts (lines 16, 129)
 - ✅ src/__tests__/deepsource-internal-utils.test.ts (lines 505, 506, 507)
 - ✅ src/__tests__/deepsource-historical-data-processing.test.ts (lines 15, 20, 26, 27, 28, 29, 40, 108, 115, 130, 249, 390)
+- ✅ src/__tests__/deepsource-metrics-history.test.ts (line 783)
 - Other test files to be checked
 
 The `any` type can leak into your codebase. TypeScript compiler skips type checking of `any` typed variables, creating a potential safety hole and source of bugs.
@@ -164,7 +165,7 @@ The previous test coverage issues (TCV-001) have been successfully addressed. Al
 
 ## Progress Tracking
 
-- [ ] Fix Critical Issues (8/24 completed)
+- [ ] Fix Critical Issues (10/24 completed)
 - [x] Fix Major Issues (3/3 completed)
 - [x] Fix Minor Issues (9/9 completed)
 - [ ] Verify all issues resolved

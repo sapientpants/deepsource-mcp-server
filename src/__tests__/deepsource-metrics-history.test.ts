@@ -780,7 +780,31 @@ describe('DeepSourceClient Metrics History', () => {
     it('should return undefined from handleTestEnvironment when NODE_ENV is not test (line 2732)', async () => {
       // Create a class that extends DeepSourceClient to expose private methods for testing
       class TestableDeepSourceClient extends DeepSourceClient {
-        static async testHandleTestEnvironment(params: any): Promise<any> {
+        static async testHandleTestEnvironment(params: {
+          projectKey: string;
+          metricShortcode: MetricShortcode;
+          metricKey: MetricKey;
+        }): Promise<
+          | {
+              shortcode: string;
+              metricKey: string;
+              name: string;
+              unit: string;
+              positiveDirection: string;
+              threshold?: number;
+              isTrendingPositive?: boolean;
+              values: Array<{
+                value: number;
+                valueDisplay: string;
+                threshold?: number;
+                thresholdStatus?: string;
+                commitOid?: string;
+                createdAt?: string;
+              }>;
+            }
+          | null
+          | undefined
+        > {
           return DeepSourceClient['handleTestEnvironment'](params);
         }
       }
