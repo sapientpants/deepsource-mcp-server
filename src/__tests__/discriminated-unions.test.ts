@@ -340,31 +340,22 @@ describe('Discriminated Unions', () => {
     it('should handle report-specific properties', () => {
       // Function that processes report based on type
       const getReportSummary = (report: ComplianceReport): string => {
-        let result;
         switch (report.type) {
           case ReportType.OWASP_TOP_10:
-            result = `OWASP compliance: ${report.currentValue}%, issues in ${(report as OwaspTop10Report).categories.length} categories`;
-            break;
+            return `OWASP compliance: ${report.currentValue}%, issues in ${(report as OwaspTop10Report).categories.length} categories`;
           case ReportType.SANS_TOP_25:
-            result = `SANS compliance: ${report.currentValue}%`;
-            break;
+            return `SANS compliance: ${report.currentValue}%`;
           case ReportType.MISRA_C:
-            result = `MISRA-C compliance: ${report.currentValue}%`;
-            break;
-          case ReportType.CODE_COVERAGE:
-            {
-              const codeCoverageReport = report as CodeCoverageReport;
-              result = `Code coverage: ${report.currentValue}% (Line: ${codeCoverageReport.coverage.line}%)`;
-            }
-            break;
+            return `MISRA-C compliance: ${report.currentValue}%`;
+          case ReportType.CODE_COVERAGE: {
+            const codeCoverageReport = report as CodeCoverageReport;
+            return `Code coverage: ${report.currentValue}% (Line: ${codeCoverageReport.coverage.line}%)`;
+          }
           case ReportType.ISSUES_PREVENTED:
-            result = `Issues prevented: ${(report as IssuesPreventedReport).prevented.total}`;
-            break;
+            return `Issues prevented: ${(report as IssuesPreventedReport).prevented.total}`;
           default:
-            result = `Unknown report type: ${report.type}, value: ${report.currentValue}%`;
-            break;
+            return `Unknown report type: ${report.type}, value: ${report.currentValue}%`;
         }
-        return result as string;
       };
 
       const owaspReport: OwaspTop10Report = {
@@ -452,28 +443,20 @@ describe('Discriminated Unions', () => {
     it('should handle metric state specific properties', () => {
       // Function that returns different messages based on metric state
       const getMetricMessage = (metric: MetricState): string => {
-        let result;
         switch (metric.status) {
-          case MetricThresholdStatus.PASSING:
-            {
-              const metricWithMargin = metric as PassingMetric;
-              result = `${metric.name} is passing at ${metric.value}${metric.unit} (exceeds threshold by ${metricWithMargin.margin}${metric.unit})`;
-            }
-            break;
-          case MetricThresholdStatus.FAILING:
-            {
-              const metricWithGap = metric as FailingMetric;
-              result = `${metric.name} is failing at ${metric.value}${metric.unit} (below threshold by ${metricWithGap.gap}${metric.unit})`;
-            }
-            break;
+          case MetricThresholdStatus.PASSING: {
+            const metricWithMargin = metric as PassingMetric;
+            return `${metric.name} is passing at ${metric.value}${metric.unit} (exceeds threshold by ${metricWithMargin.margin}${metric.unit})`;
+          }
+          case MetricThresholdStatus.FAILING: {
+            const metricWithGap = metric as FailingMetric;
+            return `${metric.name} is failing at ${metric.value}${metric.unit} (below threshold by ${metricWithGap.gap}${metric.unit})`;
+          }
           case MetricThresholdStatus.UNKNOWN:
-            result = `${metric.name} has no threshold set, current value is ${metric.value}${metric.unit}`;
-            break;
+            return `${metric.name} has no threshold set, current value is ${metric.value}${metric.unit}`;
           default:
-            result = `${metric.name} has unknown status: ${metric.status}, value: ${metric.value}${metric.unit}`;
-            break;
+            return `${metric.name} has unknown status: ${metric.status}, value: ${metric.value}${metric.unit}`;
         }
-        return result as string;
       };
 
       const passingMetric: PassingMetric = {
