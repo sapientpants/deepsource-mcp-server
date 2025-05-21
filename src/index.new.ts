@@ -8,11 +8,8 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { z } from 'zod';
 import { createLogger } from './utils/logging/logger.js';
 import { handleProjects } from './handlers/projects.js';
-import { ReportType, ReportStatus } from './models/security.js';
-import { MetricShortcode, MetricKey, MetricThresholdStatus } from './models/metrics.js';
 
 // Create logger instance for index.ts
 const logger = createLogger('DeepSourceMCP:index');
