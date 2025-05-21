@@ -3,7 +3,6 @@
  */
 
 import { AxiosError } from 'axios';
-import { jest } from '@jest/globals';
 import { ErrorCategory } from '../utils/errors/categories.js';
 import {
   classifyGraphQLError,
