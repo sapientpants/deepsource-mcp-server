@@ -1,6 +1,5 @@
 import { DeepSourceClient } from '../deepsource.js';
-import { MetricShortcode } from '../types/metrics.js';
-import { MetricKey, MetricThresholdStatus } from '../types/metrics.js';
+import { MetricShortcode, MetricKey, MetricThresholdStatus } from '../types/metrics.js';
 
 /**
  * Interface for parameters for fetching quality metrics
