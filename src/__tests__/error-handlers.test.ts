@@ -423,6 +423,12 @@ describe('Error Handlers', () => {
       expect(handleHttpStatusError(null)).toBeNull();
       expect(handleHttpStatusError(undefined)).toBeNull();
     });
+
+    it('should return null for status codes outside the handled ranges', () => {
+      // Status codes like 300, 301, 302 (redirects) don't fall into the 4xx or 5xx ranges
+      const redirectError = createMockAxiosError(302);
+      expect(handleHttpStatusError(redirectError)).toBeNull();
+    });
   });
 
   describe('handleApiError', () => {
