@@ -29,7 +29,7 @@ const createMockAxiosError = (statusCode?: number, data?: unknown, code?: string
       statusText: `Status ${statusCode}`,
       headers: {},
       config: { headers: {} as Record<string, unknown> },
-      data: data,
+      data,
     };
   }
 
