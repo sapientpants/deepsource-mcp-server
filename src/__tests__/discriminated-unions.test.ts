@@ -347,10 +347,8 @@ describe('Discriminated Unions', () => {
             return `SANS compliance: ${report.currentValue}%`;
           case ReportType.MISRA_C:
             return `MISRA-C compliance: ${report.currentValue}%`;
-          case ReportType.CODE_COVERAGE: {
-            const codeCoverageReport = report as CodeCoverageReport;
-            return `Code coverage: ${report.currentValue}% (Line: ${codeCoverageReport.coverage.line}%)`;
-          }
+          case ReportType.CODE_COVERAGE:
+            return `Code coverage: ${report.currentValue}% (Line: ${(report as CodeCoverageReport).coverage.line}%)`;
           case ReportType.ISSUES_PREVENTED:
             return `Issues prevented: ${(report as IssuesPreventedReport).prevented.total}`;
           default:
@@ -444,14 +442,10 @@ describe('Discriminated Unions', () => {
       // Function that returns different messages based on metric state
       const getMetricMessage = (metric: MetricState): string => {
         switch (metric.status) {
-          case MetricThresholdStatus.PASSING: {
-            const metricWithMargin = metric as PassingMetric;
-            return `${metric.name} is passing at ${metric.value}${metric.unit} (exceeds threshold by ${metricWithMargin.margin}${metric.unit})`;
-          }
-          case MetricThresholdStatus.FAILING: {
-            const metricWithGap = metric as FailingMetric;
-            return `${metric.name} is failing at ${metric.value}${metric.unit} (below threshold by ${metricWithGap.gap}${metric.unit})`;
-          }
+          case MetricThresholdStatus.PASSING:
+            return `${metric.name} is passing at ${metric.value}${metric.unit} (exceeds threshold by ${(metric as PassingMetric).margin}${metric.unit})`;
+          case MetricThresholdStatus.FAILING:
+            return `${metric.name} is failing at ${metric.value}${metric.unit} (below threshold by ${(metric as FailingMetric).gap}${metric.unit})`;
           case MetricThresholdStatus.UNKNOWN:
             return `${metric.name} has no threshold set, current value is ${metric.value}${metric.unit}`;
           default:
