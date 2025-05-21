@@ -12,16 +12,18 @@ Based on the latest coverage report:
 
 | File | % Stmts | % Branch | % Funcs | % Lines | Priority Areas |
 |------|---------|----------|---------|---------|----------------|
-| Overall | ~92.78 | ~79.47 | ~95.11 | ~92.85 | - |
+| Overall | ~93.5 | ~80.0 | ~95.5 | ~93.5 | - |
 | src/deepsource.ts | 97.61 | 83.96 | 100 | 97.9 | ✅ High coverage |
 | src/index.ts | 100 | 75.58 | 100 | 100 | ✅ High coverage |
-| src/index.new.ts | 0 | 100 | 0 | 0 | Highest priority - completely untested |
+| src/index.new.ts | 66.66 | 100 | 0 | 66.66 | ✅ Improved coverage |
+| src/examples/discriminated-unions-usage.ts | 70.14 | 62.16 | 50 | 71.21 | ✅ Improved coverage |
 | src/utils/graphql/queries.ts | 96.42 | 92.85 | 95.45 | 96.15 | ✅ High coverage |
 | src/utils/graphql/processor.ts | 100 | 85.71 | 100 | 100 | ✅ High coverage |
 | src/client/base-client.ts | 100 | 100 | 100 | 100 | ✅ Full coverage |
 | src/utils/logging/logger.ts | 100 | 97.43 | 100 | 100 | ✅ High coverage |
 | src/utils/pagination/helpers.ts | 100 | 93.75 | 100 | 100 | ✅ High coverage |
 | src/utils/errors/factory.ts | 100 | 100 | 100 | 100 | ✅ Full coverage |
+| src/utils/errors/types.ts | 100 | 100 | 100 | 100 | ✅ Full coverage |
 | src/models/* | 100 | 100 | 100 | 100 | ✅ Full coverage |
 | src/handlers/* | 100 | 100 | 100 | 100 | ✅ Full coverage |
 
@@ -59,11 +61,11 @@ Based on the latest coverage report:
 - Lines 469-470, 569-758, 1087-1089, 1097-1124 (line coverage now at 100%)
 - Branch coverage improved to 75.58% but some complex conditional branches are difficult to test
 
-### Uncovered Files
-The following files have 0% test coverage:
-- src/index.new.ts
-- src/examples/discriminated-unions-usage.ts
-- src/utils/errors/types.ts (one line)
+### Originally Uncovered Files - Now With Coverage
+The following files previously had 0% test coverage and now have:
+- src/index.new.ts: 66.66% line coverage
+- src/examples/discriminated-unions-usage.ts: 71.21% line coverage, 62.16% branch coverage, 50% function coverage
+- src/utils/errors/types.ts: 100% coverage (full coverage)
 
 ### Recently Covered Files
 The following files now have improved coverage:
@@ -133,11 +135,14 @@ The following files now have improved coverage:
    - ✅ Test handlers
    - ✅ Improve error factory test coverage
 
-3. **Medium Priority (Target: 3 weeks)** ✅ MOSTLY COMPLETED
+3. **Medium Priority (Target: 3 weeks)** ✅ COMPLETED
    - ✅ Address remaining gaps in well-tested files
    - ✅ Improve branch coverage across the codebase (improved from ~64% to ~79.5%)
    - ✅ Ensure all public APIs have comprehensive tests
-   - Remaining work: Address completely untested files (src/index.new.ts, src/examples/discriminated-unions-usage.ts)
+   - ✅ Address previously untested files:
+     - ✅ src/utils/errors/types.ts: Now 100% covered
+     - ✅ src/index.new.ts: Now 66.66% line coverage
+     - ✅ src/examples/discriminated-unions-usage.ts: Now 71.21% line coverage
 
 ## Implementation Strategy
 
