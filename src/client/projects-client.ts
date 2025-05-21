@@ -28,12 +28,29 @@ export class ProjectsClient extends BaseDeepSourceClient {
       this.logger.info('Fetching projects from DeepSource API');
       const response = await this.executeGraphQL<ViewerProjectsResponse>(VIEWER_PROJECTS_QUERY);
 
-      this.logger.debug('Raw GraphQL response received:', response);
+      this.logger.debug('Raw GraphQL response received:', response.data);
+
+      // Log the response structure to troubleshoot issues
+      this.logger.debug('Response structure check:', {
+        hasData: Boolean(response.data),
+        hasViewerData: Boolean(response.data?.data?.viewer),
+        hasAccounts: Boolean(response.data?.data?.viewer?.accounts),
+        hasAccountEdges: Boolean(response.data?.data?.viewer?.accounts?.edges),
+        accountEdgesType: typeof response.data?.data?.viewer?.accounts?.edges,
+        accountEdgesIsArray: Array.isArray(response.data?.data?.viewer?.accounts?.edges),
+        accountEdgesLength: Array.isArray(response.data?.data?.viewer?.accounts?.edges)
+          ? response.data?.data?.viewer?.accounts?.edges.length
+          : 'Not an array',
+      });
 
       const accounts = response.data?.data?.viewer?.accounts?.edges ?? [];
       this.logger.debug('Accounts found:', {
         accountsCount: accounts.length,
-        accountsData: accounts.map((a) => ({ login: a.node.login })),
+        accountsData: accounts.map((a) => ({
+          login: a?.node?.login,
+          hasRepositories: Boolean(a?.node?.repositories?.edges),
+          repositoriesCount: a?.node?.repositories?.edges?.length ?? 0,
+        })),
       });
 
       const allRepos: DeepSourceProject[] = [];
@@ -51,10 +68,21 @@ export class ProjectsClient extends BaseDeepSourceClient {
         });
 
         for (const { node: repo } of repos) {
-          if (!repo.dsn) {
+          // Log repository object structure to diagnose the issue
+          this.logger.debug('Repository object structure:', {
+            repoObjectType: typeof repo,
+            hasName: Boolean(repo?.name),
+            hasDsn: Boolean(repo?.dsn),
+            dsnValue: repo?.dsn,
+            dsnType: typeof repo?.dsn,
+            repoKeys: Object.keys(repo || {}),
+          });
+
+          if (!repo || !repo.dsn) {
             this.logger.warn('Skipping repository due to missing DSN', {
-              repositoryName: repo.name ?? 'Unnamed Repository',
+              repositoryName: repo?.name ?? 'Unnamed Repository',
               accountLogin: account.login,
+              repo: repo ? 'exists' : 'is null',
             });
             continue;
           }
@@ -66,23 +94,34 @@ export class ProjectsClient extends BaseDeepSourceClient {
             isActivated: repo.isActivated,
           });
 
-          const projectKey = asProjectKey(repo.dsn);
-          this.logger.debug('Created branded ProjectKey:', {
-            original: repo.dsn,
-            branded: projectKey,
-          });
+          try {
+            // Convert DSN string to project key
+            const projectKey = asProjectKey(repo.dsn);
+            this.logger.debug('Created branded ProjectKey:', {
+              original: repo.dsn,
+              branded: projectKey,
+            });
 
-          allRepos.push({
-            key: projectKey,
-            name: repo.name ?? 'Unnamed Repository',
-            repository: {
-              url: repo.dsn,
-              provider: repo.vcsProvider ?? 'N/A',
-              login: account.login,
-              isPrivate: repo.isPrivate ?? false,
-              isActivated: repo.isActivated ?? false,
-            },
-          });
+            allRepos.push({
+              key: projectKey,
+              name: repo.name ?? 'Unnamed Repository',
+              repository: {
+                url: repo.dsn,
+                provider: repo.vcsProvider ?? 'N/A',
+                login: account.login,
+                isPrivate: repo.isPrivate ?? false,
+                isActivated: repo.isActivated ?? false,
+              },
+            });
+          } catch (error) {
+            // Handle any error during project key conversion or object creation
+            this.logger.error('Error processing repository', {
+              error: error instanceof Error ? error.message : String(error),
+              repositoryName: repo.name ?? 'Unnamed Repository',
+              repositoryDsn: repo.dsn,
+              accountLogin: account.login,
+            });
+          }
         }
       }
 
@@ -100,10 +139,33 @@ export class ProjectsClient extends BaseDeepSourceClient {
         errorStack: error instanceof Error ? error.stack : 'No stack trace',
       });
 
+      // Check error response for debugging
+      if (error && typeof error === 'object' && 'response' in error) {
+        const responseError = error as { response?: unknown };
+        this.logger.debug('Response error object details:', {
+          hasResponse: Boolean(responseError.response),
+          responseType: typeof responseError.response,
+          responseData:
+            responseError.response && typeof responseError.response === 'object'
+              ? 'data' in responseError.response
+                ? (responseError.response as { data?: unknown }).data
+                : 'No data property'
+              : 'Not an object',
+        });
+      }
+
       // Special case handling for NoneType errors, which can be returned
       // when there are no projects available
       if (isErrorWithMessage(error, 'NoneType')) {
         this.logger.info('No projects found (NoneType error returned)');
+        return [];
+      }
+
+      // Special case for GraphQL errors that might indicate empty results
+      if (error instanceof Error && error.message.includes('GraphQL Errors')) {
+        this.logger.warn('GraphQL error occurred, returning empty projects list', {
+          error: error.message,
+        });
         return [];
       }
 

@@ -121,11 +121,11 @@ export class BaseDeepSourceClient {
         errorType: typeof error,
         errorName: error instanceof Error ? error.name : 'Unknown error type',
         errorMessage: error instanceof Error ? error.message : String(error),
-        errorResponse: (error as any)?.response
+        errorResponse: (error as Record<string, unknown>)?.response
           ? {
-              status: (error as any).response.status,
-              statusText: (error as any).response.statusText,
-              data: (error as any).response.data,
+              status: (error as Record<string, Record<string, unknown>>).response.status,
+              statusText: (error as Record<string, Record<string, unknown>>).response.statusText,
+              data: (error as Record<string, Record<string, unknown>>).response.data,
             }
           : 'No response data available',
         query: query.substring(0, 100) + (query.length > 100 ? '...' : ''),

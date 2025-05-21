@@ -7,6 +7,7 @@ import { AxiosError } from 'axios';
 import { ErrorCategory } from './categories.js';
 import { ClassifiedError } from './types.js';
 import { createClassifiedError } from './factory.js';
+import { createLogger } from '../logging/logger.js';
 
 /**
  * Error classifier for GraphQL errors
@@ -253,7 +254,7 @@ export function handleHttpStatusError(error: unknown): ClassifiedError | null {
  */
 export function handleApiError(error: unknown): ClassifiedError {
   // Create a logger for error handling
-  const logger = console;
+  const logger = createLogger('ErrorHandler');
 
   logger.debug('Handling API error', {
     errorType: typeof error,
