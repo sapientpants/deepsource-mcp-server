@@ -30,20 +30,24 @@ export class ProjectsClient extends BaseDeepSourceClient {
 
       this.logger.debug('Raw GraphQL response received:', response.data);
 
+      // Extract the data directly from the response structure
+      const responseData = response.data;
+      const viewerData = responseData?.data?.viewer;
+
       // Log the response structure to troubleshoot issues
       this.logger.debug('Response structure check:', {
-        hasData: Boolean(response.data),
-        hasViewerData: Boolean(response.data?.data?.viewer),
-        hasAccounts: Boolean(response.data?.data?.viewer?.accounts),
-        hasAccountEdges: Boolean(response.data?.data?.viewer?.accounts?.edges),
-        accountEdgesType: typeof response.data?.data?.viewer?.accounts?.edges,
-        accountEdgesIsArray: Array.isArray(response.data?.data?.viewer?.accounts?.edges),
-        accountEdgesLength: Array.isArray(response.data?.data?.viewer?.accounts?.edges)
-          ? response.data?.data?.viewer?.accounts?.edges.length
+        hasData: Boolean(responseData),
+        hasViewerData: Boolean(viewerData),
+        hasAccounts: Boolean(viewerData?.accounts),
+        hasAccountEdges: Boolean(viewerData?.accounts?.edges),
+        accountEdgesType: typeof viewerData?.accounts?.edges,
+        accountEdgesIsArray: Array.isArray(viewerData?.accounts?.edges),
+        accountEdgesLength: Array.isArray(viewerData?.accounts?.edges)
+          ? viewerData?.accounts?.edges.length
           : 'Not an array',
       });
 
-      const accounts = response.data?.data?.viewer?.accounts?.edges ?? [];
+      const accounts = viewerData?.accounts?.edges ?? [];
       this.logger.debug('Accounts found:', {
         accountsCount: accounts.length,
         accountsData: accounts.map((a) => ({
@@ -55,19 +59,27 @@ export class ProjectsClient extends BaseDeepSourceClient {
 
       const allRepos: DeepSourceProject[] = [];
 
-      for (const { node: account } of accounts) {
+      for (const accountEdge of accounts) {
+        if (!accountEdge?.node) continue;
+
+        const account = accountEdge.node;
         const repos = account.repositories?.edges ?? [];
+
         this.logger.debug('Repositories for account:', {
           accountLogin: account.login,
           reposCount: repos.length,
           reposData: repos.map((r) => ({
-            name: r.node.name,
-            dsn: r.node.dsn,
-            isActivated: r.node.isActivated,
+            name: r?.node?.name,
+            dsn: r?.node?.dsn,
+            isActivated: r?.node?.isActivated,
           })),
         });
 
-        for (const { node: repo } of repos) {
+        for (const repoEdge of repos) {
+          if (!repoEdge?.node) continue;
+
+          const repo = repoEdge.node;
+
           // Log repository object structure to diagnose the issue
           this.logger.debug('Repository object structure:', {
             repoObjectType: typeof repo,
@@ -81,7 +93,7 @@ export class ProjectsClient extends BaseDeepSourceClient {
           if (!repo || !repo.dsn) {
             this.logger.warn('Skipping repository due to missing DSN', {
               repositoryName: repo?.name ?? 'Unnamed Repository',
-              accountLogin: account.login,
+              accountLogin: account?.login,
               repo: repo ? 'exists' : 'is null',
             });
             continue;
@@ -108,7 +120,7 @@ export class ProjectsClient extends BaseDeepSourceClient {
               repository: {
                 url: repo.dsn,
                 provider: repo.vcsProvider ?? 'N/A',
-                login: account.login,
+                login: account?.login,
                 isPrivate: repo.isPrivate ?? false,
                 isActivated: repo.isActivated ?? false,
               },
@@ -119,7 +131,7 @@ export class ProjectsClient extends BaseDeepSourceClient {
               error: error instanceof Error ? error.message : String(error),
               repositoryName: repo.name ?? 'Unnamed Repository',
               repositoryDsn: repo.dsn,
-              accountLogin: account.login,
+              accountLogin: account?.login,
             });
           }
         }
