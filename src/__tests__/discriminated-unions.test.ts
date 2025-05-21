@@ -2,7 +2,6 @@
  * @jest-environment node
  */
 
-import { jest } from '@jest/globals';
 import { ErrorCategory } from '../utils/errors/categories.js';
 import { MetricThresholdStatus } from '../types/metrics.js';
 import { ReportType } from '../deepsource.js';
