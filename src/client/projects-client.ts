@@ -25,23 +25,55 @@ export class ProjectsClient extends BaseDeepSourceClient {
    */
   async listProjects(): Promise<DeepSourceProject[]> {
     try {
+      this.logger.info('Fetching projects from DeepSource API');
       const response = await this.executeGraphQL<ViewerProjectsResponse>(VIEWER_PROJECTS_QUERY);
 
+      this.logger.debug('Raw GraphQL response received:', response);
+
       const accounts = response.data?.data?.viewer?.accounts?.edges ?? [];
+      this.logger.debug('Accounts found:', {
+        accountsCount: accounts.length,
+        accountsData: accounts.map((a) => ({ login: a.node.login })),
+      });
+
       const allRepos: DeepSourceProject[] = [];
 
       for (const { node: account } of accounts) {
         const repos = account.repositories?.edges ?? [];
+        this.logger.debug('Repositories for account:', {
+          accountLogin: account.login,
+          reposCount: repos.length,
+          reposData: repos.map((r) => ({
+            name: r.node.name,
+            dsn: r.node.dsn,
+            isActivated: r.node.isActivated,
+          })),
+        });
+
         for (const { node: repo } of repos) {
           if (!repo.dsn) {
-            this.logger.debug('Skipping repository due to missing DSN', {
+            this.logger.warn('Skipping repository due to missing DSN', {
               repositoryName: repo.name ?? 'Unnamed Repository',
               accountLogin: account.login,
             });
             continue;
           }
+
+          this.logger.debug('Processing repository:', {
+            name: repo.name,
+            dsn: repo.dsn,
+            vcsProvider: repo.vcsProvider,
+            isActivated: repo.isActivated,
+          });
+
+          const projectKey = asProjectKey(repo.dsn);
+          this.logger.debug('Created branded ProjectKey:', {
+            original: repo.dsn,
+            branded: projectKey,
+          });
+
           allRepos.push({
-            key: asProjectKey(repo.dsn),
+            key: projectKey,
             name: repo.name ?? 'Unnamed Repository',
             repository: {
               url: repo.dsn,
@@ -54,15 +86,28 @@ export class ProjectsClient extends BaseDeepSourceClient {
         }
       }
 
-      this.logger.debug('Retrieved projects', { count: allRepos.length });
+      this.logger.info('Retrieved projects', {
+        count: allRepos.length,
+        projects: allRepos.map((p) => ({ key: p.key, name: p.name })),
+      });
       return allRepos;
     } catch (error) {
+      // Log the full error details
+      this.logger.error('Error in listProjects', {
+        errorType: typeof error,
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : 'No stack trace',
+      });
+
       // Special case handling for NoneType errors, which can be returned
       // when there are no projects available
       if (isErrorWithMessage(error, 'NoneType')) {
         this.logger.info('No projects found (NoneType error returned)');
         return [];
       }
+
+      this.logger.error('Throwing error from listProjects');
       throw error;
     }
   }

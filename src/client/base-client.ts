@@ -84,19 +84,62 @@ export class BaseDeepSourceClient {
    */
   protected async executeGraphQL<T>(query: string): Promise<GraphQLResponse<T>> {
     try {
-      this.logger.debug('Executing GraphQL query', { query });
+      // Log full query for debugging
+      this.logger.debug('Executing GraphQL query', {
+        query,
+        queryLength: query.length,
+        requestHeaders: this.client.defaults.headers,
+      });
+
+      // Execute the query
+      const startTime = Date.now();
       const response = await this.client.post('', { query });
+      const duration = Date.now() - startTime;
+
+      this.logger.debug('GraphQL response received', {
+        status: response.status,
+        statusText: response.statusText,
+        duration: `${duration}ms`,
+        dataSize: JSON.stringify(response.data).length,
+        hasData: Boolean(response.data?.data),
+        hasErrors: Boolean(response.data?.errors),
+      });
 
       // Check for GraphQL errors in the response
       if (response.data.errors) {
-        this.logger.error('GraphQL query returned errors', response.data.errors);
+        this.logger.error('GraphQL query returned errors', {
+          errors: response.data.errors,
+          query: query.substring(0, 100) + (query.length > 100 ? '...' : ''),
+        });
         throw new Error(`GraphQL Errors: ${JSON.stringify(response.data.errors)}`);
       }
 
       return response.data as GraphQLResponse<T>;
     } catch (error) {
-      this.logger.error('Error executing GraphQL query', error);
-      throw handleApiError(error);
+      // Log detailed error information
+      this.logger.error('Error executing GraphQL query', {
+        errorType: typeof error,
+        errorName: error instanceof Error ? error.name : 'Unknown error type',
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorResponse: (error as any)?.response
+          ? {
+              status: (error as any).response.status,
+              statusText: (error as any).response.statusText,
+              data: (error as any).response.data,
+            }
+          : 'No response data available',
+        query: query.substring(0, 100) + (query.length > 100 ? '...' : ''),
+      });
+
+      // Handle the error properly
+      const handledError = handleApiError(error);
+      this.logger.debug('Handled API error', {
+        originalMessage: error instanceof Error ? error.message : String(error),
+        handledMessage: handledError.message,
+        handledName: handledError.name,
+      });
+
+      throw handledError;
     }
   }
 

@@ -18,6 +18,12 @@ const logger = createLogger('ProjectsHandler');
  */
 export async function handleProjects(): Promise<ApiResponse> {
   const apiKey = process.env.DEEPSOURCE_API_KEY;
+  logger.debug('Checking API key', {
+    exists: Boolean(apiKey),
+    length: apiKey ? apiKey.length : 0,
+    prefix: apiKey ? apiKey.substring(0, 5) + '...' : 'N/A',
+  });
+
   if (!apiKey) {
     logger.error('DEEPSOURCE_API_KEY environment variable is not set');
     throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
@@ -30,17 +36,26 @@ export async function handleProjects(): Promise<ApiResponse> {
     logger.debug('Getting projects client');
     const projectsClient = clientFactory.getProjectsClient();
 
-    logger.debug('Fetching projects');
+    logger.info('Fetching projects from client');
     const projects = await projectsClient.listProjects();
 
-    logger.info('Successfully fetched projects', { count: projects.length });
+    logger.info('Successfully fetched projects', {
+      count: projects.length,
+      firstFew: projects.slice(0, 3).map((p) => ({ key: p.key, name: p.name })),
+    });
 
+    // Map projects to the simplified format expected by the MCP tool
     const projectsList = projects.map((project) => ({
       key: project.key,
       name: project.name,
     }));
 
-    logger.debug('Returning projects list', { projectCount: projectsList.length });
+    logger.debug('Returning projects list', {
+      projectCount: projectsList.length,
+      projectsJson:
+        JSON.stringify(projectsList).substring(0, 100) +
+        (JSON.stringify(projectsList).length > 100 ? '...' : ''),
+    });
 
     return {
       content: [
@@ -51,7 +66,12 @@ export async function handleProjects(): Promise<ApiResponse> {
       ],
     };
   } catch (error) {
-    logger.error('Error in handleProjects', error);
+    logger.error('Error in handleProjects', {
+      errorType: typeof error,
+      errorName: error instanceof Error ? error.name : 'Unknown',
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : 'No stack available',
+    });
 
     // Return an error object with details to match test expectations
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

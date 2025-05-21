@@ -252,28 +252,68 @@ export function handleHttpStatusError(error: unknown): ClassifiedError | null {
  * @public
  */
 export function handleApiError(error: unknown): ClassifiedError {
+  // Create a logger for error handling
+  const logger = console;
+
+  logger.debug('Handling API error', {
+    errorType: typeof error,
+    isObject: error !== null && typeof error === 'object',
+    errorKeys: error !== null && typeof error === 'object' ? Object.keys(error) : [],
+  });
+
   // If it's already a classified error, just return it
   if (error && typeof error === 'object' && 'category' in error) {
+    logger.debug('Error is already classified', {
+      category: (error as ClassifiedError).category,
+      message: (error as ClassifiedError).message,
+    });
     return error as ClassifiedError;
   }
 
   // Try handling specific error types in order of specificity
+  logger.debug('Checking for GraphQL-specific errors');
   const graphqlError = handleGraphQLSpecificError(error);
-  if (graphqlError) return graphqlError;
+  if (graphqlError) {
+    logger.debug('Identified as GraphQL error', {
+      category: graphqlError.category,
+      message: graphqlError.message,
+    });
+    return graphqlError;
+  }
 
+  logger.debug('Checking for network errors');
   const networkError = handleNetworkError(error);
-  if (networkError) return networkError;
+  if (networkError) {
+    logger.debug('Identified as network error', {
+      category: networkError.category,
+      message: networkError.message,
+    });
+    return networkError;
+  }
 
+  logger.debug('Checking for HTTP status errors');
   const httpError = handleHttpStatusError(error);
-  if (httpError) return httpError;
+  if (httpError) {
+    logger.debug('Identified as HTTP status error', {
+      category: httpError.category,
+      message: httpError.message,
+    });
+    return httpError;
+  }
 
   // If no specific handler worked, create a generic classified error
   if (isError(error)) {
+    logger.debug('No specific handler matched, creating generic error', {
+      message: error.message,
+    });
     const category = classifyGraphQLError(error);
     return createClassifiedError(`DeepSource API error: ${error.message}`, category, error);
   }
 
   // Last resort for truly unknown errors
+  logger.debug('Handling completely unknown error type', {
+    error: String(error),
+  });
   return createClassifiedError(
     'Unknown error occurred while communicating with DeepSource API',
     ErrorCategory.OTHER,
