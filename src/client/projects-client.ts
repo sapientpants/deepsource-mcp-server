@@ -8,6 +8,11 @@ import { DeepSourceProject } from '../models/projects.js';
 import { VIEWER_PROJECTS_QUERY } from '../utils/graphql/queries.js';
 import { isErrorWithMessage } from '../utils/errors/handlers.js';
 import { ProjectKey, asProjectKey } from '../types/branded.js';
+import {
+  GraphQLEdge,
+  GraphQLAccountNode,
+  GraphQLRepositoryNode,
+} from '../types/graphql-responses.js';
 import { ViewerProjectsResponse } from '../types/graphql-responses.js';
 
 /**
@@ -50,7 +55,7 @@ export class ProjectsClient extends BaseDeepSourceClient {
       const accounts = viewerData?.accounts?.edges ?? [];
       this.logger.debug('Accounts found:', {
         accountsCount: accounts.length,
-        accountsData: accounts.map((a) => ({
+        accountsData: accounts.map((a: GraphQLEdge<GraphQLAccountNode>) => ({
           login: a?.node?.login,
           hasRepositories: Boolean(a?.node?.repositories?.edges),
           repositoriesCount: a?.node?.repositories?.edges?.length ?? 0,
@@ -68,7 +73,7 @@ export class ProjectsClient extends BaseDeepSourceClient {
         this.logger.debug('Repositories for account:', {
           accountLogin: account.login,
           reposCount: repos.length,
-          reposData: repos.map((r) => ({
+          reposData: repos.map((r: GraphQLEdge<GraphQLRepositoryNode>) => ({
             name: r?.node?.name,
             dsn: r?.node?.dsn,
             isActivated: r?.node?.isActivated,
