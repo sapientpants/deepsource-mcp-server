@@ -104,10 +104,9 @@ export function processApiResponse<T>(response: ApiResponse<T>): T | string {
   if (isSuccessResponse(response)) {
     // TypeScript knows this is a SuccessResponse<T>
     return response.data;
-  } else {
-    // TypeScript knows this is an ErrorResponse
-    return handleApiError(response.error);
   }
+  // TypeScript knows this is an ErrorResponse
+  return handleApiError(response.error);
 }
 
 /**
@@ -158,6 +157,14 @@ export function getRunStatusMessage(run: RunState): string {
       return `Run ${run.runId} was skipped. ${
         'skipReason' in run && run.skipReason ? `Reason: ${run.skipReason}.` : ''
       }`;
+
+    // This case should never be reached with proper RunState types,
+    // but is included for exhaustiveness
+    default: {
+      // Using a type assertion for exhaustiveness checking
+      const unknownRun = run as unknown as { runId: string; status: string };
+      return `Run ${unknownRun.runId} has an unknown status: ${unknownRun.status}.`;
+    }
   }
 }
 
@@ -200,6 +207,14 @@ export function getMetricStatusMessage(metric: MetricState): string {
 
     case MetricThresholdStatus.UNKNOWN:
       return `${metric.name} status is unknown. Value: ${metric.value}${metric.unit}.`;
+
+    // This case should never be reached with proper MetricState types,
+    // but is included for exhaustiveness
+    default: {
+      // Using a type assertion for exhaustiveness checking
+      const unknownMetric = metric as unknown as { name: string; status: string };
+      return `${unknownMetric.name} has an unrecognized status: ${unknownMetric.status}.`;
+    }
   }
 }
 
@@ -269,6 +284,18 @@ export function getReportSummary(report: ComplianceReport): string {
       return `Issues prevented: ${preventedReport.prevented.total}. 
         Status: ${preventedReport.status}. 
         Prevention rate: ${preventedReport.preventionRate}%.`;
+    }
+
+    // This case should never be reached with proper ComplianceReport types,
+    // but is included for exhaustiveness
+    default: {
+      // Using a type assertion for exhaustiveness checking
+      const unknownReport = report as unknown as {
+        type: string;
+        status: string;
+        currentValue: number;
+      };
+      return `Unknown report type: ${unknownReport.type}. Status: ${unknownReport.status}, Value: ${unknownReport.currentValue}%.`;
     }
   }
 }
