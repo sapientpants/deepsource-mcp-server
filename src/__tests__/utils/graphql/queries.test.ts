@@ -67,7 +67,7 @@ describe('GraphQL Queries', () => {
       const query = createIssuesQuery(projectKey, paginationVars, filterVars);
 
       // Assert
-      expect(query).toContain(`path: {eq: "src/main.js"}`);
+      expect(query).toContain('path: {eq: "src/main.js"}');
     });
 
     it('should add analyzer filter when provided', () => {
@@ -80,7 +80,7 @@ describe('GraphQL Queries', () => {
       const query = createIssuesQuery(projectKey, paginationVars, filterVars);
 
       // Assert
-      expect(query).toContain(`analyzer: {in: ["javascript", "typescript"]}`);
+      expect(query).toContain('analyzer: {in: ["javascript", "typescript"]}');
     });
 
     it('should add tags filter when provided', () => {
@@ -93,7 +93,7 @@ describe('GraphQL Queries', () => {
       const query = createIssuesQuery(projectKey, paginationVars, filterVars);
 
       // Assert
-      expect(query).toContain(`tags: {overlap: ["security", "bug"]}`);
+      expect(query).toContain('tags: {overlap: ["security", "bug"]}');
     });
 
     it('should add forward pagination when first is provided', () => {
@@ -105,7 +105,7 @@ describe('GraphQL Queries', () => {
       const query = createIssuesQuery(projectKey, paginationVars);
 
       // Assert
-      expect(query).toContain(`issues(first: 10)`);
+      expect(query).toContain('issues(first: 10)');
     });
 
     it('should add forward pagination with cursor when first and after are provided', () => {
@@ -117,7 +117,7 @@ describe('GraphQL Queries', () => {
       const query = createIssuesQuery(projectKey, paginationVars);
 
       // Assert
-      expect(query).toContain(`issues(first: 10, after: "cursor123")`);
+      expect(query).toContain('issues(first: 10, after: "cursor123")');
     });
 
     it('should add backward pagination when last is provided', () => {
@@ -129,7 +129,7 @@ describe('GraphQL Queries', () => {
       const query = createIssuesQuery(projectKey, paginationVars);
 
       // Assert
-      expect(query).toContain(`issues(last: 10)`);
+      expect(query).toContain('issues(last: 10)');
     });
 
     it('should add backward pagination with cursor when last and before are provided', () => {
@@ -141,7 +141,7 @@ describe('GraphQL Queries', () => {
       const query = createIssuesQuery(projectKey, paginationVars);
 
       // Assert
-      expect(query).toContain(`issues(last: 10, before: "cursor456")`);
+      expect(query).toContain('issues(last: 10, before: "cursor456")');
     });
 
     it('should add offset pagination when offset is provided', () => {
@@ -153,7 +153,7 @@ describe('GraphQL Queries', () => {
       const query = createIssuesQuery(projectKey, paginationVars);
 
       // Assert
-      expect(query).toContain(`issues(offset: 20)`);
+      expect(query).toContain('issues(offset: 20)');
     });
 
     it('should handle multiple filters together', () => {
@@ -170,10 +170,10 @@ describe('GraphQL Queries', () => {
       const query = createIssuesQuery(projectKey, paginationVars, filterVars);
 
       // Assert
-      expect(query).toContain(`path: {eq: "src/main.js"}`);
-      expect(query).toContain(`analyzer: {in: ["javascript"]}`);
-      expect(query).toContain(`tags: {overlap: ["security"]}`);
-      expect(query).toContain(`issues(first: 10, filter: {`);
+      expect(query).toContain('path: {eq: "src/main.js"}');
+      expect(query).toContain('analyzer: {in: ["javascript"]}');
+      expect(query).toContain('tags: {overlap: ["security"]}');
+      expect(query).toContain('issues(first: 10, filter: {');
     });
   });
 
@@ -219,7 +219,7 @@ describe('GraphQL Queries', () => {
       const query = createRunsQuery(projectKey, paginationVars, filterVars);
 
       // Assert
-      expect(query).toContain(`analyzer: {in: ["python", "go"]}`);
+      expect(query).toContain('analyzer: {in: ["python", "go"]}');
     });
   });
 
