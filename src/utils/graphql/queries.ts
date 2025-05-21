@@ -427,10 +427,9 @@ query {
  * @public
  */
 export function createQualityMetricsQuery(projectKey: string, shortcodeFilter?: string[]): string {
-  const filterString =
-    shortcodeFilter && shortcodeFilter.length
-      ? `, filter: {shortcode: {in: [${shortcodeFilter.map((s) => `"${s}"`).join(', ')}]}}`
-      : '';
+  const filterString = shortcodeFilter?.length
+    ? `, filter: {shortcode: {in: [${shortcodeFilter.map((s) => `"${s}"`).join(', ')}]}}`
+    : '';
 
   return `
 query {
