@@ -59,13 +59,7 @@ describe('Security Models', () => {
   describe('Type Definitions', () => {
     describe('VulnerabilitySeverity', () => {
       it('should allow valid severity levels', () => {
-        const severities: VulnerabilitySeverity[] = [
-          'NONE',
-          'LOW',
-          'MEDIUM',
-          'HIGH',
-          'CRITICAL',
-        ];
+        const severities: VulnerabilitySeverity[] = ['NONE', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
 
         severities.forEach((severity) => {
           expect(typeof severity).toBe('string');

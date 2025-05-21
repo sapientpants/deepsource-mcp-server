@@ -29,13 +29,13 @@ describe('Error Factory', () => {
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toBe(expectedMessage);
     expect(error.category).toBe(expectedCategory);
-    
+
     if (expectedOriginalError) {
       expect(error.originalError).toBe(expectedOriginalError);
     } else {
       expect(error.originalError).toBeUndefined();
     }
-    
+
     if (expectedMetadata) {
       expect(error.metadata).toEqual(expectedMetadata);
     } else {
@@ -99,7 +99,13 @@ describe('Error Factory', () => {
       it('should use default message when no message is provided', () => {
         const error = createAuthError('', originalError, metadata);
 
-        verifyErrorProperties(error, 'Authentication failed', ErrorCategory.AUTH, originalError, metadata);
+        verifyErrorProperties(
+          error,
+          'Authentication failed',
+          ErrorCategory.AUTH,
+          originalError,
+          metadata
+        );
       });
     });
 
@@ -114,7 +120,13 @@ describe('Error Factory', () => {
       it('should use default message when no message is provided', () => {
         const error = createNetworkError('', originalError, metadata);
 
-        verifyErrorProperties(error, 'Network error occurred', ErrorCategory.NETWORK, originalError, metadata);
+        verifyErrorProperties(
+          error,
+          'Network error occurred',
+          ErrorCategory.NETWORK,
+          originalError,
+          metadata
+        );
       });
     });
 
@@ -129,7 +141,13 @@ describe('Error Factory', () => {
       it('should use default message when no message is provided', () => {
         const error = createServerError('', originalError, metadata);
 
-        verifyErrorProperties(error, 'Server error occurred', ErrorCategory.SERVER, originalError, metadata);
+        verifyErrorProperties(
+          error,
+          'Server error occurred',
+          ErrorCategory.SERVER,
+          originalError,
+          metadata
+        );
       });
     });
 
@@ -144,7 +162,13 @@ describe('Error Factory', () => {
       it('should use default message when no message is provided', () => {
         const error = createClientError('', originalError, metadata);
 
-        verifyErrorProperties(error, 'Client error occurred', ErrorCategory.CLIENT, originalError, metadata);
+        verifyErrorProperties(
+          error,
+          'Client error occurred',
+          ErrorCategory.CLIENT,
+          originalError,
+          metadata
+        );
       });
     });
 
@@ -159,7 +183,13 @@ describe('Error Factory', () => {
       it('should use default message when no message is provided', () => {
         const error = createTimeoutError('', originalError, metadata);
 
-        verifyErrorProperties(error, 'Request timed out', ErrorCategory.TIMEOUT, originalError, metadata);
+        verifyErrorProperties(
+          error,
+          'Request timed out',
+          ErrorCategory.TIMEOUT,
+          originalError,
+          metadata
+        );
       });
     });
 
@@ -174,7 +204,13 @@ describe('Error Factory', () => {
       it('should use default message when no message is provided', () => {
         const error = createRateLimitError('', originalError, metadata);
 
-        verifyErrorProperties(error, 'Rate limit exceeded', ErrorCategory.RATE_LIMIT, originalError, metadata);
+        verifyErrorProperties(
+          error,
+          'Rate limit exceeded',
+          ErrorCategory.RATE_LIMIT,
+          originalError,
+          metadata
+        );
       });
     });
 
@@ -189,7 +225,13 @@ describe('Error Factory', () => {
       it('should use default message when no message is provided', () => {
         const error = createSchemaError('', originalError, metadata);
 
-        verifyErrorProperties(error, 'GraphQL schema error', ErrorCategory.SCHEMA, originalError, metadata);
+        verifyErrorProperties(
+          error,
+          'GraphQL schema error',
+          ErrorCategory.SCHEMA,
+          originalError,
+          metadata
+        );
       });
     });
 
@@ -204,7 +246,13 @@ describe('Error Factory', () => {
       it('should use default message when no message is provided', () => {
         const error = createNotFoundError('', originalError, metadata);
 
-        verifyErrorProperties(error, 'Resource not found', ErrorCategory.NOT_FOUND, originalError, metadata);
+        verifyErrorProperties(
+          error,
+          'Resource not found',
+          ErrorCategory.NOT_FOUND,
+          originalError,
+          metadata
+        );
       });
     });
 
@@ -219,7 +267,13 @@ describe('Error Factory', () => {
       it('should use default message when no message is provided', () => {
         const error = createFormatError('', originalError, metadata);
 
-        verifyErrorProperties(error, 'Data format error', ErrorCategory.FORMAT, originalError, metadata);
+        verifyErrorProperties(
+          error,
+          'Data format error',
+          ErrorCategory.FORMAT,
+          originalError,
+          metadata
+        );
       });
     });
   });
@@ -235,11 +289,11 @@ describe('Error Factory', () => {
       expect(level3Error.message).toBe('High-level error');
       expect(level3Error.category).toBe(ErrorCategory.CLIENT);
       expect(level3Error.metadata).toEqual({ operation: 'getUserData' });
-      
+
       const originalError = level3Error.originalError as ClassifiedError;
       expect(originalError.message).toBe('Mid-level error');
       expect(originalError.category).toBe(ErrorCategory.NETWORK);
-      
+
       const deepestError = originalError.originalError as Error;
       expect(deepestError.message).toBe('Low-level error');
     });

@@ -4,6 +4,7 @@
 
 import { jest } from '@jest/globals';
 import { ProjectKey } from '../../types/branded';
+import type { DeepSourceProject } from '../../models/projects';
 
 // Create mock logger
 const mockLogger = {
@@ -33,9 +34,6 @@ jest.unstable_mockModule('../../client/factory', () => ({
 
 // Import the modules under test AFTER mocking
 const { handleProjects } = await import('../../handlers/projects');
-const { DeepSourceClientFactory } = await import('../../client/factory');
-const { createLogger } = await import('../../utils/logging/logger');
-const { DeepSourceProject } = await import('../../models/projects');
 
 describe('Projects Handler', () => {
   // Environment backup
@@ -106,13 +104,13 @@ describe('Projects Handler', () => {
 
       // Verify factory was created with the API key
       expect(mockFactory).toHaveBeenCalledWith('test-api-key');
-      
+
       // Verify getProjectsClient was called
       expect(mockGetProjectsClient).toHaveBeenCalled();
-      
+
       // Verify listProjects was called
       expect(mockListProjects).toHaveBeenCalled();
-      
+
       // Verify logging behavior
       expect(mockLogger.debug).toHaveBeenCalledWith('Creating client factory');
       expect(mockLogger.debug).toHaveBeenCalledWith('Getting projects client');
@@ -123,7 +121,7 @@ describe('Projects Handler', () => {
       expect(result).toHaveProperty('content');
       expect(result.content).toHaveLength(1);
       expect(result.content[0]).toHaveProperty('type', 'text');
-      
+
       // Parse and verify the content
       const parsedContent = JSON.parse(result.content[0].text);
       expect(parsedContent).toEqual([
@@ -150,7 +148,7 @@ describe('Projects Handler', () => {
       // Verify the response structure
       expect(result).toHaveProperty('content');
       expect(result.content).toHaveLength(1);
-      
+
       // Parse and verify the content is an empty array
       const parsedContent = JSON.parse(result.content[0].text);
       expect(parsedContent).toEqual([]);
@@ -165,15 +163,12 @@ describe('Projects Handler', () => {
       const result = await handleProjects();
 
       // Verify error was logged
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'Error in handleProjects',
-        testError
-      );
+      expect(mockLogger.error).toHaveBeenCalledWith('Error in handleProjects', testError);
 
       // Verify the error response structure
       expect(result).toHaveProperty('isError', true);
       expect(result.content).toHaveLength(1);
-      
+
       // Parse and verify the error content
       const parsedContent = JSON.parse(result.content[0].text);
       expect(parsedContent).toEqual({
@@ -198,7 +193,7 @@ describe('Projects Handler', () => {
       // Verify the error response structure
       expect(result).toHaveProperty('isError', true);
       expect(result.content).toHaveLength(1);
-      
+
       // Parse and verify the error content uses a generic message for non-Error objects
       const parsedContent = JSON.parse(result.content[0].text);
       expect(parsedContent).toEqual({
