@@ -2,7 +2,7 @@
  * This test module tests that index.new.ts can be imported
  */
 
-import { jest, describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 // Create minimal test to verify module can be imported
