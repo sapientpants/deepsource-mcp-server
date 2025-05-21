@@ -8,6 +8,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { z } from 'zod';
 import { createLogger } from './utils/logging/logger.js';
 import { handleProjects } from './handlers/projects.js';
 
@@ -24,18 +25,51 @@ export const mcpServer = new McpServer({
   version: '1.0.3',
 });
 
-// Register the projects tool - we need to fix the handler to match CallToolResult format
-mcpServer.tool(
+// Register the projects tool
+mcpServer.registerTool(
   'projects',
-  'List all available DeepSource projects. Returns a list of project objects with "key" and "name" properties.',
+  {
+    description:
+      'List all available DeepSource projects. Returns a list of project objects with "key" and "name" properties.',
+    outputSchema: {
+      projects: z.array(
+        z.object({
+          key: z.string(),
+          name: z.string(),
+        })
+      ),
+    },
+  },
   // eslint-disable-next-line no-unused-vars
   async (_extra) => {
-    const result = await handleProjects();
-    return {
-      content: result.content,
-      structuredContent: {},
-      isError: result.isError,
-    };
+    try {
+      const result = await handleProjects();
+
+      if (result.isError) {
+        throw new Error(result.content[0].text);
+      }
+
+      // Parse the JSON string to get the project array
+      const projects = JSON.parse(result.content[0].text);
+
+      return {
+        content: result.content,
+        structuredContent: { projects: projects || [] },
+        isError: false,
+      };
+    } catch (error) {
+      logger.error('Error in projects tool handler', error);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: error instanceof Error ? error.message : 'Unknown error occurred',
+          },
+        ],
+        structuredContent: { projects: [] },
+        isError: true,
+      };
+    }
   }
 );
 

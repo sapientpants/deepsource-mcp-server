@@ -35,21 +35,27 @@ export async function handleProjects(): Promise<ApiResponse> {
 
     logger.info('Successfully fetched projects', { count: projects.length });
 
+    const projectsList = projects.map((project) => ({
+      key: project.key,
+      name: project.name,
+    }));
+
+    logger.debug('Returning projects list', { projectCount: projectsList.length });
+
     return {
       content: [
         {
           type: 'text' as const,
-          text: JSON.stringify(
-            projects.map((project) => ({
-              key: project.key,
-              name: project.name,
-            }))
-          ),
+          text: JSON.stringify(projectsList),
         },
       ],
     };
   } catch (error) {
     logger.error('Error in handleProjects', error);
+
+    // Return an error object with details to match test expectations
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.debug('Returning error response', { errorMessage });
 
     return {
       isError: true,
@@ -57,7 +63,7 @@ export async function handleProjects(): Promise<ApiResponse> {
         {
           type: 'text' as const,
           text: JSON.stringify({
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: errorMessage,
             details: 'Failed to retrieve projects',
           }),
         },
