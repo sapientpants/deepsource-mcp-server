@@ -427,7 +427,7 @@ describe('GraphQL Queries', () => {
       const query = createQualityMetricsQuery(projectKey, shortcodeFilter);
 
       // Assert
-      expect(query).toContain(`filter: {shortcode: {in: ["LCV", "DDP"]}}`);
+      expect(query).toContain('filter: {shortcode: {in: ["LCV", "DDP"]}}');
     });
 
     it('should handle empty shortcode filter array', () => {
