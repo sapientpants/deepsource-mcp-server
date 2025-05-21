@@ -211,7 +211,7 @@ describe('Security Models', () => {
         expect(report.status).toBe(ReportStatus.PASSING);
         expect(report.securityIssueStats.length).toBe(2);
         expect(report.securityIssueStats[1].key).toBe('A2:2017');
-        expect(report.trends![0].changePercentage).toBe(3.2);
+        expect(report.trends && report.trends[0].changePercentage).toBe(3.2);
       });
 
       it('should allow optional fields to be undefined', () => {
