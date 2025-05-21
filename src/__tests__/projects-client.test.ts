@@ -93,7 +93,9 @@ describe('ProjectsClient', () => {
 
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      (client as any).executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      (client as unknown as { executeGraphQL: jest.Mock }).executeGraphQL = jest
+        .fn()
+        .mockResolvedValue(mockResponse);
 
       const projects = await client.listProjects();
 
@@ -159,7 +161,9 @@ describe('ProjectsClient', () => {
 
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      (client as any).executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      (client as unknown as { executeGraphQL: jest.Mock }).executeGraphQL = jest
+        .fn()
+        .mockResolvedValue(mockResponse);
 
       const projects = await client.listProjects();
 
@@ -203,7 +207,9 @@ describe('ProjectsClient', () => {
 
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      (client as any).executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      (client as unknown as { executeGraphQL: jest.Mock }).executeGraphQL = jest
+        .fn()
+        .mockResolvedValue(mockResponse);
 
       const projects = await client.listProjects();
 

@@ -322,7 +322,7 @@ describe('Logger Module', () => {
         const logger = new Logger('TestContext');
 
         // Create circular reference that will fail in JSON.stringify
-        const circular: any = { name: 'Circular Object' };
+        const circular: Record<string, unknown> = { name: 'Circular Object' };
         circular.self = circular;
 
         // Mock JSON.stringify to throw an error for circular references

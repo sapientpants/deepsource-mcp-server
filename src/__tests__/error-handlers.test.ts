@@ -18,7 +18,7 @@ import {
 } from '../utils/errors/handlers.js';
 
 // Helper function to create a mock AxiosError
-const createMockAxiosError = (statusCode?: number, data?: any, code?: string): AxiosError => {
+const createMockAxiosError = (statusCode?: number, data?: unknown, code?: string): AxiosError => {
   const error = new Error('Axios error') as AxiosError;
   error.isAxiosError = true;
   error.code = code;
@@ -28,7 +28,7 @@ const createMockAxiosError = (statusCode?: number, data?: any, code?: string): A
       status: statusCode,
       statusText: `Status ${statusCode}`,
       headers: {},
-      config: { headers: {} as any },
+      config: { headers: {} as Record<string, unknown> },
       data: data,
     };
   }
