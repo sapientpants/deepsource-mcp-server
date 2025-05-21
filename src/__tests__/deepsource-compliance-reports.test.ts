@@ -1,7 +1,7 @@
 import nock from 'nock';
 import { jest } from '@jest/globals';
 import { DeepSourceClient, ReportType } from '../deepsource';
-import { handleDeepsourceComplianceReport } from '../index';
+import { handleDeepsourceComplianceReport } from '../handlers';
 
 describe('DeepSource Compliance Reports', () => {
   const API_KEY = 'test-api-key';

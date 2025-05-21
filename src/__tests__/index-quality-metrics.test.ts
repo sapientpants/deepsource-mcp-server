@@ -7,7 +7,7 @@ import {
   handleDeepsourceQualityMetrics,
   handleDeepsourceUpdateMetricThreshold,
   handleDeepsourceUpdateMetricSetting,
-} from '../index';
+} from '../handlers';
 import { MetricShortcode } from '../deepsource';
 import { MetricKey } from '../types/metrics';
 
