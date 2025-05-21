@@ -5,9 +5,13 @@ import { ReportType } from '../../deepsource';
 import {
   handleApiError,
   handleApiErrorWithTypeGuards,
+  processApiResponse,
   getRunStatusMessage,
+  processRun,
   getMetricStatusMessage,
+  processMetric,
   getReportSummary,
+  processReport,
 } from '../../examples/discriminated-unions-usage';
 
 // Not using asAny in this simplified test file (remove eslint error)
@@ -163,6 +167,15 @@ describe('Discriminated Unions Usage Examples', () => {
         'Run run-123 was skipped. Reason: No changes detected.'
       );
     });
+
+    it('should handle unknown status runs', () => {
+      // @ts-expect-error - Testing runtime behavior with invalid input
+      const run = {
+        status: 'UNKNOWN_STATUS',
+        runId: 'run-123',
+      };
+      expect(getRunStatusMessage(run)).toBe('Run run-123 has an unknown status: UNKNOWN_STATUS.');
+    });
   });
 
   describe('getMetricStatusMessage', () => {
@@ -200,6 +213,127 @@ describe('Discriminated Unions Usage Examples', () => {
         unit: '%',
       };
       expect(getMetricStatusMessage(metric)).toBe('Line Coverage status is unknown. Value: 85%.');
+    });
+
+    it('should handle unrecognized status metrics', () => {
+      // @ts-expect-error - Testing runtime behavior with invalid input
+      const metric = {
+        status: 'UNRECOGNIZED_STATUS',
+        name: 'Line Coverage',
+        value: 85,
+        unit: '%',
+      };
+      expect(getMetricStatusMessage(metric)).toBe(
+        'Line Coverage has an unrecognized status: UNRECOGNIZED_STATUS.'
+      );
+    });
+  });
+
+  describe('processApiResponse', () => {
+    it('should return data for successful responses', () => {
+      const successResponse = {
+        success: true,
+        status: 'success',
+        data: { result: 'Test data' },
+        error: undefined,
+      };
+      const result = processApiResponse(successResponse);
+      expect(result).toEqual({ result: 'Test data' });
+    });
+
+    it('should handle error responses', () => {
+      const errorResponse = {
+        success: false,
+        status: 'error',
+        error: {
+          category: ErrorCategory.AUTH,
+          message: 'Invalid API key',
+        },
+      };
+      const result = processApiResponse(errorResponse);
+      expect(result).toBe('Authentication error: Invalid API key. Please check your API key.');
+    });
+  });
+
+  describe('processRun', () => {
+    it('should handle SUCCESS runs', () => {
+      const successfulRun = {
+        status: 'SUCCESS',
+        runId: 'run-123',
+        finishedAt: '2023-01-01T12:00:00Z',
+        summary: { occurrencesIntroduced: 5, occurrencesResolved: 3 },
+      };
+      const result = processRun(successfulRun);
+      expect(result).toContain('Run run-123 completed at');
+      expect(result).toContain('5 issues introduced');
+      expect(result).toContain('3 issues resolved');
+    });
+
+    it('should handle FAILURE runs', () => {
+      const failedRun = {
+        status: 'FAILURE',
+        runId: 'run-123',
+        finishedAt: '2023-01-01T12:00:00Z',
+        error: { message: 'Analysis failed' },
+      };
+      const result = processRun(failedRun);
+      expect(result).toContain('Run run-123 failed at');
+      expect(result).toContain('Error: Analysis failed');
+    });
+
+    it('should fallback to getRunStatusMessage for other run states', () => {
+      const pendingRun = {
+        status: 'PENDING',
+        runId: 'run-123',
+        queuePosition: 5,
+      };
+      const result = processRun(pendingRun);
+      expect(result).toBe('Run run-123 is pending. Queue position: 5.');
+    });
+  });
+
+  describe('processMetric', () => {
+    it('should handle PASSING metrics', () => {
+      const passingMetric = {
+        status: MetricThresholdStatus.PASSING,
+        name: 'Line Coverage',
+        value: 85,
+        unit: '%',
+        threshold: 80,
+        margin: 5,
+      };
+      const result = processMetric(passingMetric);
+      expect(result).toContain('Line Coverage is passing');
+      expect(result).toContain('Value: 85%');
+      expect(result).toContain('Exceeds threshold by 5%');
+    });
+
+    it('should handle FAILING metrics', () => {
+      const failingMetric = {
+        status: MetricThresholdStatus.FAILING,
+        name: 'Line Coverage',
+        value: 75,
+        unit: '%',
+        threshold: 80,
+        gap: 5,
+        recommendations: ['Add more tests', 'Focus on uncovered areas'],
+      };
+      const result = processMetric(failingMetric);
+      expect(result).toContain('Line Coverage is failing');
+      expect(result).toContain('Value: 75%');
+      expect(result).toContain('Falls short by 5%');
+      expect(result).toContain('Recommendations: Add more tests, Focus on uncovered areas');
+    });
+
+    it('should fallback to getMetricStatusMessage for other metric states', () => {
+      const unknownMetric = {
+        status: MetricThresholdStatus.UNKNOWN,
+        name: 'Line Coverage',
+        value: 85,
+        unit: '%',
+      };
+      const result = processMetric(unknownMetric);
+      expect(result).toBe('Line Coverage status is unknown. Value: 85%.');
     });
   });
 
@@ -268,6 +402,64 @@ describe('Discriminated Unions Usage Examples', () => {
       expect(result).toContain('Issues prevented: 120');
       expect(result).toContain('Status: PASSING');
       expect(result).toContain('Prevention rate: 95%');
+    });
+
+    it('should handle unknown report types', () => {
+      const report = {
+        type: 'UNKNOWN_TYPE',
+        status: 'UNKNOWN',
+        currentValue: 50,
+      };
+      const result = getReportSummary(report);
+      expect(result).toContain('Unknown report type: UNKNOWN_TYPE');
+      expect(result).toContain('Status: UNKNOWN');
+      expect(result).toContain('Value: 50%');
+    });
+  });
+
+  describe('processReport', () => {
+    it('should handle OWASP_TOP_10 reports', () => {
+      const owaspReport = {
+        type: ReportType.OWASP_TOP_10,
+        currentValue: 85,
+        status: 'PASSING',
+        categories: [
+          { name: 'A1', issues: { total: 5 } },
+          { name: 'A2', issues: { total: 0 } },
+        ],
+      };
+      const result = processReport(owaspReport);
+      expect(result).toContain('OWASP Top 10 compliance: 85%');
+      expect(result).toContain('Status: PASSING');
+      expect(result).toContain('Issues found in 1 of 2 categories');
+    });
+
+    it('should handle CODE_COVERAGE reports', () => {
+      const coverageReport = {
+        type: ReportType.CODE_COVERAGE,
+        currentValue: 85,
+        status: 'PASSING',
+        coverage: { line: 85, branch: 70, function: 90 },
+      };
+      const result = processReport(coverageReport);
+      expect(result).toContain('Code coverage: 85%');
+      expect(result).toContain('Status: PASSING');
+      expect(result).toContain('Line: 85%');
+      expect(result).toContain('Branch: 70%');
+      expect(result).toContain('Function: 90%');
+    });
+
+    it('should fallback to getReportSummary for other report types', () => {
+      const sansReport = {
+        type: ReportType.SANS_TOP_25,
+        currentValue: 90,
+        status: 'PASSING',
+        categories: [{ name: 'S1', issues: { total: 3 } }],
+      };
+      const result = processReport(sansReport);
+      expect(result).toContain('SANS Top 25 compliance: 90%');
+      expect(result).toContain('Status: PASSING');
+      expect(result).toContain('Issues found in 1 categories');
     });
   });
 });
