@@ -236,6 +236,7 @@ export function processMetric(metric: MetricState): string {
       ${metric.recommendations ? `Recommendations: ${metric.recommendations.join(', ')}.` : ''}`;
   }
 
+  // Default case for other metric states
   return getMetricStatusMessage(metric);
 }
 
@@ -322,5 +323,6 @@ export function processReport(report: ComplianceReport): string {
       Function: ${report.coverage.function}%.`;
   }
 
+  // Default case for other report types
   return getReportSummary(report);
 }
