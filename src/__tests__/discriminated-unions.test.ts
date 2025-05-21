@@ -239,6 +239,8 @@ describe('Discriminated Unions', () => {
             return `Run ${run.runId} was cancelled by ${(run as CancelledRun).cancelledBy || 'unknown'}`;
           case 'SKIPPED':
             return `Run ${run.runId} was skipped: ${(run as SkippedRun).skipReason || 'No reason provided'}`;
+          default:
+            return `Run ${run.runId} has unknown status: ${run.status}`;
         }
       };
 
@@ -358,6 +360,9 @@ describe('Discriminated Unions', () => {
           case ReportType.ISSUES_PREVENTED:
             result = `Issues prevented: ${(report as IssuesPreventedReport).prevented.total}`;
             break;
+          default:
+            result = `Unknown report type: ${report.type}, value: ${report.currentValue}%`;
+            break;
         }
         return result as string;
       };
@@ -463,6 +468,9 @@ describe('Discriminated Unions', () => {
             break;
           case MetricThresholdStatus.UNKNOWN:
             result = `${metric.name} has no threshold set, current value is ${metric.value}${metric.unit}`;
+            break;
+          default:
+            result = `${metric.name} has unknown status: ${metric.status}, value: ${metric.value}${metric.unit}`;
             break;
         }
         return result as string;
