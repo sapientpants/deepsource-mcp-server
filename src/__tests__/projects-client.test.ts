@@ -224,7 +224,9 @@ describe('ProjectsClient', () => {
     it('should handle NoneType errors by returning an empty array', async () => {
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      (client as any).executeGraphQL = jest.fn().mockRejectedValue(new Error('NoneType'));
+      (client as unknown as { executeGraphQL: jest.Mock }).executeGraphQL = jest
+        .fn()
+        .mockRejectedValue(new Error('NoneType'));
 
       const projects = await client.listProjects();
 
@@ -234,7 +236,9 @@ describe('ProjectsClient', () => {
     it('should handle error responses', async () => {
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      (client as any).executeGraphQL = jest.fn().mockRejectedValue(new Error('Server error'));
+      (client as unknown as { executeGraphQL: jest.Mock }).executeGraphQL = jest
+        .fn()
+        .mockRejectedValue(new Error('Server error'));
 
       await expect(client.listProjects()).rejects.toThrow();
     });
