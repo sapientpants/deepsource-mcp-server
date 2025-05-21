@@ -13,12 +13,14 @@ describe('DeepSourceClientFactory', () => {
     it('should throw an error if API key is not provided', () => {
       expect(() => {
         // @ts-expect-error - Testing with empty API key
-        new DeepSourceClientFactory('');
+        const factory = new DeepSourceClientFactory('');
+        return factory; // Return factory to prevent unused variable warning
       }).toThrow('DeepSource API key is required');
 
       expect(() => {
         // @ts-expect-error - Testing with null API key
-        new DeepSourceClientFactory(null);
+        const factory = new DeepSourceClientFactory(null);
+        return factory; // Return factory to prevent unused variable warning
       }).toThrow('DeepSource API key is required');
     });
 
