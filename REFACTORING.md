@@ -60,9 +60,14 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
 - Makes adding new tools easier and less error-prone
 - Improves testability of tool registration logic
 
-### 2. Split deepsource.ts Into Focused Modules
+### 2. Split deepsource.ts Into Focused Modules ⚠️
 
 **Current Issue**: The `src/deepsource.ts` file mixes type definitions, interfaces, enums, and the DeepSourceClient implementation, violating the Single Responsibility Principle.
+
+**Status**: ATTEMPTED - Tried to extract types and utilities but encountered compatibility issues due to:
+- Different interface definitions between deepsource.ts and existing models
+- Complex interdependencies that make extraction difficult
+- Risk of breaking backward compatibility
 
 **Recommendation**: 
 - Move all type definitions to appropriate files in `src/types/`
@@ -91,9 +96,11 @@ src/
 - Reduced file size and complexity
 - Better alignment with the existing architecture
 
-### 3. Implement a Tool Response Builder Pattern
+### 3. Implement a Tool Response Builder Pattern ⚠️
 
 **Current Issue**: Each tool handler has repetitive response building logic with similar error handling patterns.
+
+**Status**: ATTEMPTED - Created a response builder but encountered type compatibility issues with MCP SDK's CallToolResult type expectations. The SDK has specific requirements for the response structure that make a generic builder pattern difficult.
 
 **Recommendation**: 
 Create a ResponseBuilder utility that standardizes response construction and error handling.
