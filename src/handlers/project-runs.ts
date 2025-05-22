@@ -3,11 +3,10 @@
  * This module provides MCP tool handlers for DeepSource project analysis runs.
  */
 
-import { DeepSourceClient } from '../deepsource.js';
+import { DeepSourceClient, DeepSourceRun } from '../deepsource.js';
 import { ApiResponse } from '../models/common.js';
 import { createLogger } from '../utils/logging/logger.js';
 import { RunFilterParams } from '../models/runs.js';
-import { DeepSourceRun } from '../deepsource.js';
 import { AnalyzerShortcode } from '../types/branded.js';
 
 // Logger for the project runs handler
@@ -41,7 +40,7 @@ export async function handleDeepsourceProjectRuns({
   logger.debug('Checking API key', {
     exists: Boolean(apiKey),
     length: apiKey ? apiKey.length : 0,
-    prefix: apiKey ? apiKey.substring(0, 5) + '...' : 'N/A',
+    prefix: apiKey ? `${apiKey.substring(0, 5)}...` : 'N/A',
   });
 
   if (!apiKey) {
