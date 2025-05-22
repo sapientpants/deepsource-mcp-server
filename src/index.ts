@@ -24,6 +24,7 @@ import {
 } from './handlers/index.js';
 import { MetricShortcode, ReportType } from './deepsource.js';
 import { MetricKey } from './types/metrics.js';
+import { AnalyzerShortcode } from './types/branded.js';
 
 // Create logger instance for index.ts
 const logger = createLogger('DeepSourceMCP:index');
@@ -706,10 +707,10 @@ mcpServer.registerTool(
         hasAnalyzerInFilter: Boolean(params.analyzerIn),
       });
 
-      // Call the project runs handler with type coercion for analyzerIn
+      // Call the project runs handler with proper type assertion for analyzerIn
       const result = await handleDeepsourceProjectRuns({
         ...params,
-        analyzerIn: params.analyzerIn as any, // Using 'any' here as we know it will be properly validated in the handler
+        analyzerIn: params.analyzerIn as AnalyzerShortcode[],
       });
       logger.debug('handleDeepsourceProjectRuns result received', {
         contentLength: result.content?.[0]?.text?.length || 0,
