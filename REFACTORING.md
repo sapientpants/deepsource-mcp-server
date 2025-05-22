@@ -158,9 +158,11 @@ class ToolResponseBuilder<T> {
 - Reduced boilerplate code in handlers
 - Easier to add new response features
 
-### 4. Reduce GraphQL Query Processing Complexity
+### 4. Reduce GraphQL Query Processing Complexity ✅
 
 **Current Issue**: The `processRunChecksResponse` method in `deepsource.ts` has deeply nested object access with complex optional chaining.
+
+**Status**: COMPLETE - Created RunChecksProcessor with Zod schema validation for type-safe GraphQL response processing. Simplified the complex processRunChecksResponse method to a single line that delegates to the processor.
 
 **Recommendation**: 
 - Implement a GraphQL response processor using a schema validation approach
