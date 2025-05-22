@@ -12,8 +12,8 @@ import {
   GraphQLEdge,
   GraphQLAccountNode,
   GraphQLRepositoryNode,
+  ViewerProjectsResponse,
 } from '../types/graphql-responses.js';
-import { ViewerProjectsResponse } from '../types/graphql-responses.js';
 
 /**
  * Client for interacting with DeepSource projects API
