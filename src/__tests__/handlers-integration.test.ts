@@ -135,6 +135,49 @@ describe('Handler Integration Tests', () => {
       expect(vuln.risk_assessment.fixed_version_available).toBe(false);
     });
 
+    it('should handle vulnerability with no package name and no fixed versions', async () => {
+      const mockVulnerabilities = {
+        items: [
+          {
+            id: 'vuln-no-package',
+            vulnerability: {
+              summary: 'Critical vulnerability',
+              identifier: 'CVE-2023-9999',
+              severity: 'CRITICAL',
+              cvssV3BaseScore: 9.8,
+              cvssV2BaseScore: null,
+              fixedVersions: [], // No fixed versions
+              details: 'No fix available yet',
+              aliases: [],
+              referenceUrls: [],
+            },
+            package: {
+              name: null, // No package name
+            },
+            packageVersion: {
+              version: '1.0.0',
+            },
+          },
+        ],
+        pageInfo: null,
+        totalCount: 1,
+      };
+
+      mockClient.getDependencyVulnerabilities.mockResolvedValue(mockVulnerabilities);
+
+      const result = await handleDeepsourceDependencyVulnerabilities({
+        projectKey: 'test-project',
+      });
+
+      const parsedContent = JSON.parse(result.content[0].text);
+      const vuln = parsedContent.vulnerabilities[0];
+
+      // This should trigger the fallback case in getRemediationAdvice (line 226)
+      expect(vuln.risk_assessment.remediation_advice).toBe(
+        'Review the vulnerability details and take appropriate mitigation measures based on your application context.'
+      );
+    });
+
     it('should handle API errors gracefully', async () => {
       mockClient.getDependencyVulnerabilities.mockRejectedValue(new Error('API Error'));
 
