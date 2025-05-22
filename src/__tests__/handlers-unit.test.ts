@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 
 describe('Handler Functions Unit Tests', () => {
-  let originalEnv: any;
+  let originalEnv: typeof process.env;
 
   beforeEach(() => {
     originalEnv = process.env;
