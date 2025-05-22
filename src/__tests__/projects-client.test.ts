@@ -257,7 +257,7 @@ describe('ProjectsClient', () => {
     it('should handle errors with response property', async () => {
       const client = new ProjectsClient(API_KEY);
       const errorWithResponse = new Error('API Error');
-      (errorWithResponse as any).response = {
+      (errorWithResponse as Record<string, unknown>).response = {
         data: { errors: [{ message: 'Forbidden' }] },
       };
 
