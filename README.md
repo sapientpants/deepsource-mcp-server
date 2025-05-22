@@ -12,12 +12,14 @@ A Model Context Protocol (MCP) server that integrates with DeepSource to provide
 
 ## Overview
 
-The DeepSource MCP Server enables AI assistants to interact with DeepSource's code quality analysis capabilities through the Model Context Protocol. This integration allows AI assistants to:
+The DeepSource MCP Server enables AI assistants like Claude to interact with DeepSource's code quality analysis capabilities through the Model Context Protocol. This integration allows AI assistants to:
 
 * Retrieve code metrics and analysis results
 * Access and filter issues
-* Check quality status
+* Check quality status and set thresholds
 * Analyze project quality over time
+* Access security compliance reports
+* Monitor dependency vulnerabilities
 
 ## Features
 
@@ -29,15 +31,18 @@ The DeepSource MCP Server enables AI assistants to interact with DeepSource's co
 * **TypeScript/Node.js**: Built with TypeScript for type safety and modern JavaScript features
 * **Cross-Platform**: Works on Linux, macOS, and Windows
 * **Robust Error Handling**: Comprehensive error handling for network, authentication, and parsing issues
+* **Pagination Support**: Implements Relay-style cursor-based pagination for efficient data access
 
 ## Usage with Claude Desktop
 
 1. Edit `claude_desktop_config.json`:
    - Open Claude Desktop
    - Go to `Settings` -> `Developer` -> `Edit Config`
-   - Add the one of the configurations below to the `mcpServers` section
+   - Add one of the configurations below to the `mcpServers` section
 
 2. Restart Claude Desktop to apply the changes
+
+3. Once connected, you can query DeepSource data directly through Claude
 
 ### Example Queries
 
@@ -112,6 +117,7 @@ This would use the `update_metric_threshold` tool:
   "thresholdValue": 80
 }
 ```
+
 ### Environment Variables
 
 The server supports the following environment variables:
@@ -120,7 +126,9 @@ The server supports the following environment variables:
 * `LOG_FILE` (optional): Path to a file where logs should be written. If not set, no logs will be written
 * `LOG_LEVEL` (optional): Minimum log level to write (DEBUG, INFO, WARN, ERROR). Defaults to DEBUG
 
-Example configuration with logging:
+### Configuration Options
+
+#### NPX (Recommended)
 
 ```json
 {
@@ -129,7 +137,7 @@ Example configuration with logging:
       "command": "npx",
       "args": [
         "-y",
-        "deepsource-mcp-server@1.1.0"
+        "deepsource-mcp-server@latest"
       ],
       "env": {
         "DEEPSOURCE_API_KEY": "your-deepsource-api-key",
@@ -141,7 +149,7 @@ Example configuration with logging:
 }
 ```
 
-### Docker
+#### Docker
 
 ```json
 {
@@ -169,19 +177,20 @@ Example configuration with logging:
 }
 ```
 
-### NPX
+#### Local Development
 
 ```json
 {
   "mcpServers": {
     "deepsource": {
-      "command": "npx",
+      "command": "node",
       "args": [
-        "-y",
-        "deepsource-mcp-server@1.1.0"
+        "/path/to/deepsource-mcp-server/dist/index.js"
       ],
       "env": {
-        "DEEPSOURCE_API_KEY": "your-deepsource-api-key"
+        "DEEPSOURCE_API_KEY": "your-deepsource-api-key",
+        "LOG_FILE": "/tmp/deepsource-mcp.log",
+        "LOG_LEVEL": "DEBUG"
       }
     }
   }
@@ -200,11 +209,10 @@ The DeepSource MCP Server provides the following tools:
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * Pagination parameters:
-       * `offset` (optional) - Number of items to skip for pagination
-       * `first` (optional) - Number of items to return (defaults to 10)
-       * `after` (optional) - Cursor for forward pagination
-       * `before` (optional) - Cursor for backward pagination
-       * `last` (optional) - Number of items to return before the 'before' cursor (default: 10)
+       * `first` (optional) - Number of items to return after the "after" cursor (default: 10)
+       * `after` (optional) - Cursor to fetch records after this position
+       * `last` (optional) - Number of items to return before the "before" cursor (default: 10)
+       * `before` (optional) - Cursor to fetch records before this position
      * Filtering parameters:
        * `path` (optional) - Filter issues by specific file path
        * `analyzerIn` (optional) - Filter issues by specific analyzers (e.g., ["python", "javascript"])
@@ -213,54 +221,37 @@ The DeepSource MCP Server provides the following tools:
 3. `project_runs`: List analysis runs for a DeepSource project with filtering
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
-     * Pagination parameters:
-       * `offset` (optional) - Number of items to skip for pagination
-       * `first` (optional) - Number of items to return (defaults to 10)
-       * `after` (optional) - Cursor for forward pagination
-       * `before` (optional) - Cursor for backward pagination
-       * `last` (optional) - Number of items to return before the 'before' cursor (default: 10)
+     * Pagination parameters (same as above)
      * Filtering parameters:
        * `analyzerIn` (optional) - Filter runs by specific analyzers (e.g., ["python", "javascript"])
 
 4. `run`: Get a specific analysis run by its runUid or commitOid
    * Parameters:
-     * `runIdentifier` (required) - The runUid (UUID) or commitOid (commit hash) to identify the run
+     * `runIdentifier` (required) - The runUid (UUID) or commitOid (commit hash)
 
-5. `recent_run_issues`: Get issues from the most recent analysis run on a specific branch with pagination support
+5. `recent_run_issues`: Get issues from the most recent analysis run on a specific branch
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * `branchName` (required) - The branch name to get the most recent run from
-     * Pagination parameters:
-       * `first` (optional) - Number of issues to return (defaults to 10)
-       * `after` (optional) - Cursor for forward pagination
-       * `last` (optional) - Number of issues to return before a cursor (default: 10)
-       * `before` (optional) - Cursor for backward pagination
-   * Returns:
-     * Information about the most recent run on the branch
-     * Current issues in the project (note: issues are repository-level, not run-specific)
-     * Pagination information including cursors and page status
-     * Metadata about the run and branch
+     * Pagination parameters (same as above)
 
 6. `dependency_vulnerabilities`: Get dependency vulnerabilities from a DeepSource project
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
-     * Pagination parameters:
-       * `offset` (optional) - Number of items to skip for pagination
-       * `first` (optional) - Number of items to return (defaults to 10)
-       * `after` (optional) - Cursor for forward pagination
-       * `before` (optional) - Cursor for backward pagination
-       * `last` (optional) - Number of items to return before the 'before' cursor (default: 10)
+     * Pagination parameters (same as above)
 
 7. `quality_metrics`: Get quality metrics from a DeepSource project with filtering
    * Parameters:
      * `projectKey` (required) - The unique identifier for the DeepSource project
      * `shortcodeIn` (optional) - Filter metrics by specific shortcodes (e.g., ["LCV", "BCV"])
-   * Returns metrics such as:
+   * Available metrics:
      * Line Coverage (LCV)
      * Branch Coverage (BCV)
      * Documentation Coverage (DCV)
      * Duplicate Code Percentage (DDP)
-     * Each metric includes current values, thresholds, and pass/fail status
+     * Statement Coverage (SCV)
+     * Total Coverage (TCV)
+     * Code Maturity (CMP)
 
 8. `update_metric_threshold`: Update the threshold for a specific quality metric
    * Parameters:
@@ -269,7 +260,6 @@ The DeepSource MCP Server provides the following tools:
      * `metricShortcode` (required) - The shortcode of the metric to update
      * `metricKey` (required) - The language or context key for the metric
      * `thresholdValue` (optional) - The new threshold value, or null to remove the threshold
-   * Example: Set 80% line coverage threshold: metricShortcode="LCV", metricKey="AGGREGATE", thresholdValue=80
 
 9. `update_metric_setting`: Update the settings for a quality metric
    * Parameters:
@@ -277,19 +267,82 @@ The DeepSource MCP Server provides the following tools:
      * `repositoryId` (required) - The GraphQL repository ID
      * `metricShortcode` (required) - The shortcode of the metric to update
      * `isReported` (required) - Whether the metric should be reported
-     * `isThresholdEnforced` (required) - Whether the threshold should be enforced (can fail checks)
+     * `isThresholdEnforced` (required) - Whether the threshold should be enforced
 
 10. `compliance_report`: Get security compliance reports from a DeepSource project
-   * Parameters:
-     * `projectKey` (required) - The unique identifier for the DeepSource project
-     * `reportType` (required) - The type of compliance report to fetch ([OWASP Top 10](https://owasp.org/www-project-top-ten/), [SANS Top 25](https://cwe.mitre.org/top25/), or [MISRA-C](https://www.misra.org.uk/))
-   * Returns comprehensive security compliance data including:
-     * Security issue statistics by category and severity
-     * Compliance status (passing/failing)
-     * Trend data showing changes over time
-     * Analysis and recommendations for improving security posture
+    * Parameters:
+      * `projectKey` (required) - The unique identifier for the DeepSource project
+      * `reportType` (required) - The type of compliance report to fetch:
+        * `OWASP_TOP_10` - Web application security vulnerabilities
+        * `SANS_TOP_25` - Most dangerous software errors
+        * `MISRA_C` - Guidelines for safety-critical software in C
+        * Other report types: `CODE_COVERAGE`, `CODE_HEALTH_TREND`, `ISSUE_DISTRIBUTION`, `ISSUES_PREVENTED`, `ISSUES_AUTOFIXED`
+
+## Architecture
+
+The DeepSource MCP Server is built with modern TypeScript patterns to ensure maintainability, type safety, and robustness.
+
+### Key Components
+
+1. **MCP Server Integration** (`src/index.ts`):
+   - Sets up the Model Context Protocol server
+   - Registers and implements tool handlers
+   - Processes commands and returns results in the MCP format
+
+2. **DeepSource Client** (`src/deepsource.ts`):
+   - Implements communication with DeepSource's GraphQL API
+   - Handles authentication, error handling, and response parsing
+   - Provides methods for retrieving and manipulating DeepSource data
+
+### Type System Highlights
+
+#### Branded Types
+
+We use branded types to ensure type safety for string-based identifiers:
+
+```typescript
+// Definition of branded types
+export type ProjectKey = string & { readonly __brand: 'ProjectKey' };
+export type RunId = string & { readonly __brand: 'RunId' };
+
+// Helper functions to safely convert strings to branded types
+export function asProjectKey(value: string): ProjectKey {
+  return value as ProjectKey;
+}
+
+// Type safety in action
+function getProjectDetails(projectKey: ProjectKey) { /* ... */ }
+```
+
+#### Discriminated Unions
+
+For complex state management, we use discriminated unions:
+
+```typescript
+// Define a union with a discriminant field
+export type RunState =
+  | { status: 'PENDING'; queuePosition?: number; /* pending-specific fields */ }
+  | { status: 'SUCCESS'; finishedAt: string; /* success-specific fields */ }
+  | { status: 'FAILURE'; error?: { message: string }; /* failure-specific fields */ };
+
+// Usage with type narrowing
+function processRun(run: RunState) {
+  if (run.status === 'SUCCESS') {
+    // TypeScript knows this is a successful run with finishedAt
+    console.log(`Run completed at ${run.finishedAt}`);
+  }
+}
+```
 
 ## Development
+
+### Prerequisites
+
+* Node.js 20 or higher
+* pnpm 10.7.0 or higher
+* Docker (for container builds)
+
+### Setup
 
 1. Clone the repository:
 ```bash
@@ -307,37 +360,57 @@ pnpm install
 pnpm run build
 ```
 
-4. Configure Claude Desktop
-```json
-{
-  "mcpServers": {
-    "deepsource": {
-      "command": "node",
-      "args": [
-        "/path/to/deepsource-mcp-server/dist/index.js"
-      ],
-      "env": {
-        "DEEPSOURCE_API_KEY": "your-deepsource-api-key"
-      }
-    }
-  }
-}
+### Development Commands
+
+```bash
+# Install dependencies
+pnpm install
+
+# Build the TypeScript code
+pnpm run build
+
+# Start the server
+pnpm run start
+
+# Start the server in development mode (with auto-reload)
+pnpm run dev
+
+# Run all tests
+pnpm run test
+
+# Run tests with watching
+pnpm run test:watch
+
+# Run tests with coverage
+pnpm run test:coverage
+
+# Run ESLint
+pnpm run lint
+
+# Fix linting issues automatically
+pnpm run lint:fix
+
+# Format code with Prettier
+pnpm run format
+
+# Check code formatting
+pnpm run format:check
+
+# Type check without emitting files
+pnpm run check-types
+
+# Run the full CI check (format, lint, type check, build, test)
+pnpm run ci
+
+# Validate codebase (type check, lint, test)
+pnpm run validate
+
+# Inspect MCP server with inspector
+pnpm run inspect
+
+# Clean build artifacts
+pnpm run clean
 ```
-
-### Prerequisites
-
-* Node.js 20 or higher
-* pnpm 10.7.0 or higher
-* Docker (for container builds)
-
-### Scripts
-
-* `pnpm run build` - Build the TypeScript code
-* `pnpm run start` - Start the server
-* `pnpm run dev` - Start the server in development mode
-* `pnpm run test` - Run tests
-* `pnpm run lint` - Run ESLint
-* `pnpm run format` - Format code with Prettier
 
 ## Troubleshooting
 
@@ -349,13 +422,13 @@ If you're experiencing issues, enable debug logging to see detailed information:
 2. Set `LOG_LEVEL` to `DEBUG` (this is the default)
 3. Check the log file for detailed error information
 
-Example configuration:
+Example configuration with logging:
 ```json
 {
   "mcpServers": {
     "deepsource": {
       "command": "npx",
-      "args": ["-y", "deepsource-mcp-server@1.1.0"],
+      "args": ["-y", "deepsource-mcp-server@latest"],
       "env": {
         "DEEPSOURCE_API_KEY": "your-api-key",
         "LOG_FILE": "/tmp/deepsource-mcp.log",
@@ -376,7 +449,13 @@ tail -f /tmp/deepsource-mcp.log
 1. **Authentication Error**: Ensure your `DEEPSOURCE_API_KEY` is correct and has the necessary permissions
 2. **No logs appearing**: Verify that the `LOG_FILE` path is writable and the parent directory exists
 3. **Tool errors**: Check the log file for detailed error messages and stack traces
+4. **Connection issues**: Verify your network connectivity and that you can access the DeepSource API
+5. **Pagination errors**: When using cursor-based pagination, ensure cursors are valid and pagination parameters are correctly specified
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-MIT 
+MIT

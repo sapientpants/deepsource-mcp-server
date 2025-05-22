@@ -29,12 +29,12 @@ export default [
     },
     rules: {
       'prettier/prettier': 'error',
-      // Allow export of enums without using them directly in the file
+      // Allow export of enums and types without using them directly in the file
       'no-unused-vars': ['error', { 
         vars: 'all', 
         args: 'after-used', 
         ignoreRestSiblings: false,
-        varsIgnorePattern: '^(MetricShortcode|MetricKey|MetricThresholdStatus|MetricDirection)$'
+        varsIgnorePattern: '^(MetricShortcode|MetricKey|MetricThresholdStatus|MetricDirection|ReportType|ReportStatus|LogLevel|ErrorCategory|VulnerabilitySeverity|PackageVersionType|VulnerabilityReachability|VulnerabilityFixability|AnalysisRunStatus|z)$'
       }]
     },
   },

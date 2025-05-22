@@ -29,4 +29,6 @@ Thumbs.db
 
 # Local configuration
 CLAUDE.local.md
-issues.md
+
+# Temporary files
+tmp/*

@@ -1622,7 +1622,9 @@ export class DeepSourceClient {
    * @private
    */
   private static isValidVulnerabilityNode(node: unknown): boolean {
-    // Validate root level fields
+    // Validation logic defined inline
+
+    // Validate root level structure
     if (!node || typeof node !== 'object') {
       DeepSourceClient.logger.warn('Skipping invalid vulnerability node: not an object');
       return false;
@@ -1630,12 +1632,13 @@ export class DeepSourceClient {
 
     const record = node as Record<string, unknown>;
 
+    // Check if id exists and is a string (for backward compatibility with tests)
     if (!('id' in record) || typeof record.id !== 'string') {
       DeepSourceClient.logger.warn('Skipping vulnerability node with missing or invalid ID', node);
       return false;
     }
 
-    // Validate nested objects
+    // Check for package field (for backward compatibility with tests)
     if (!('package' in record) || typeof record.package !== 'object' || record.package === null) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability node with missing or invalid package',
@@ -1644,6 +1647,7 @@ export class DeepSourceClient {
       return false;
     }
 
+    // Check for packageVersion field (for backward compatibility with tests)
     if (
       !('packageVersion' in record) ||
       typeof record.packageVersion !== 'object' ||
@@ -1656,6 +1660,7 @@ export class DeepSourceClient {
       return false;
     }
 
+    // Check for vulnerability field (for backward compatibility with tests)
     if (
       !('vulnerability' in record) ||
       typeof record.vulnerability !== 'object' ||
@@ -1668,11 +1673,12 @@ export class DeepSourceClient {
       return false;
     }
 
+    // Now check the required fields in each nested object
     const packageRecord = record.package as Record<string, unknown>;
     const packageVersionRecord = record.packageVersion as Record<string, unknown>;
     const vulnerabilityRecord = record.vulnerability as Record<string, unknown>;
 
-    // Validate required package fields
+    // Package validations (for backward compatibility with tests)
     if (!('id' in packageRecord) || !('ecosystem' in packageRecord) || !('name' in packageRecord)) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability with incomplete package information',
@@ -1681,7 +1687,7 @@ export class DeepSourceClient {
       return false;
     }
 
-    // Validate required packageVersion fields
+    // PackageVersion validations (for backward compatibility with tests)
     if (!('id' in packageVersionRecord) || !('version' in packageVersionRecord)) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability with incomplete package version information',
@@ -1690,7 +1696,7 @@ export class DeepSourceClient {
       return false;
     }
 
-    // Validate required vulnerability fields
+    // Vulnerability validations (for backward compatibility with tests)
     if (!('id' in vulnerabilityRecord) || !('identifier' in vulnerabilityRecord)) {
       DeepSourceClient.logger.warn(
         'Skipping vulnerability with incomplete vulnerability information',
@@ -1749,12 +1755,34 @@ export class DeepSourceClient {
   }
 
   /**
-   * Generic helper to validate if a value is a valid enum value
-   * Performs type checking and ensures the value is one of the allowed enum values
+   * Type guard to validate if a value is a valid string enum value
    *
-   * @param value The value to validate
-   * @param validValues Array of valid enum values
-   * @returns true if the value is a valid enum value, false otherwise
+   * This generic helper function checks if an unknown value is both a string
+   * and one of the specified valid enum values. It serves as a TypeScript type guard,
+   * narrowing the type to the specific enum type when validation passes.
+   *
+   * Used throughout the codebase to ensure type safety when working with string
+   * enum values that might come from external sources like API responses.
+   *
+   * @example
+   * ```typescript
+   * // Define an array of valid severities
+   * const validSeverities: VulnerabilitySeverity[] = ['NONE', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+   *
+   * // Check if a value is a valid severity
+   * if (isValidEnum(severity, validSeverities)) {
+   *   // TypeScript knows severity is of type VulnerabilitySeverity here
+   *   processSeverity(severity);
+   * } else {
+   *   // Handle invalid severity
+   *   handleInvalidValue(severity);
+   * }
+   * ```
+   *
+   * @param value - The value to validate
+   * @param validValues - Array of valid enum values
+   * @returns Type predicate indicating whether the value is a valid enum value
+   * @typeParam T - The specific enum type to check for
    * @private
    */
   private static isValidEnum<T extends string>(value: unknown, validValues: T[]): value is T {
@@ -1762,10 +1790,26 @@ export class DeepSourceClient {
   }
 
   /**
-   * Helper to validate array fields in vulnerability data
-   * Ensures the value is an array, returning an empty array if invalid
+   * Validates and sanitizes a potentially unknown value as a string array
    *
-   * @param value The array to validate
+   * This utility function ensures that a value of unknown type is safely
+   * handled as a string array. If the value is already an array, it is returned
+   * unchanged. If the value is any other type, an empty array is returned
+   * instead, preventing type errors at runtime.
+   *
+   * Used primarily for processing GraphQL responses where field types
+   * might not match expectations due to schema changes or API inconsistencies.
+   *
+   * @example
+   * ```typescript
+   * // With a valid array
+   * const tags = validateArray(issue.tags); // Returns the tags array as is
+   *
+   * // With a non-array value
+   * const tags = validateArray(null); // Returns empty array []
+   * ```
+   *
+   * @param value - The value to validate as a string array
    * @returns The original array if valid, or an empty array if invalid
    * @private
    */
@@ -1774,11 +1818,30 @@ export class DeepSourceClient {
   }
 
   /**
-   * Helper to validate string fields in vulnerability data
-   * Ensures the value is a string, returning a default value if invalid
+   * Validates and sanitizes a potentially unknown value as a string
    *
-   * @param value The string to validate
-   * @param defaultValue Default value to return if invalid (defaults to empty string)
+   * This utility function ensures that a value of unknown type is safely
+   * handled as a string. If the value is already a string, it is returned
+   * unchanged. If the value is any other type, a default value is returned
+   * instead, preventing type errors at runtime.
+   *
+   * Used primarily for processing GraphQL responses where field types
+   * might not match expectations due to schema changes or API inconsistencies.
+   *
+   * @example
+   * ```typescript
+   * // With a valid string
+   * const name = validateString(user.name); // Returns the name as is
+   *
+   * // With a non-string value
+   * const name = validateString(null); // Returns empty string
+   *
+   * // With a custom default
+   * const name = validateString(undefined, 'Unknown User'); // Returns 'Unknown User'
+   * ```
+   *
+   * @param value - The value to validate as a string
+   * @param defaultValue - Default value to return if invalid (defaults to empty string)
    * @returns The original string if valid, or the default value if invalid
    * @private
    */
@@ -1787,10 +1850,29 @@ export class DeepSourceClient {
   }
 
   /**
-   * Helper to validate nullable string fields
-   * Ensures the value is a string or null, returning null if invalid
+   * Validates and sanitizes a potentially unknown value as a nullable string
    *
-   * @param value The string to validate
+   * This utility function ensures that a value of unknown type is safely
+   * handled as a string or null. If the value is already a string, it is returned
+   * unchanged. If the value is any other type, null is returned instead, allowing
+   * the code to explicitly handle missing or invalid values.
+   *
+   * Used primarily for processing GraphQL responses where fields can be null
+   * and require special handling different from default empty strings.
+   *
+   * @example
+   * ```typescript
+   * // With a valid string
+   * const description = validateNullableString(issue.description); // Returns the description as is
+   *
+   * // With a non-string value
+   * const description = validateNullableString(null); // Returns null
+   *
+   * // Sample usage with nullish coalescing operator
+   * const description = validateNullableString(issue.description) ?? 'No description provided';
+   * ```
+   *
+   * @param value - The value to validate as a nullable string
    * @returns The original string if valid, or null if invalid
    * @private
    */
@@ -1799,10 +1881,29 @@ export class DeepSourceClient {
   }
 
   /**
-   * Helper to validate number fields
-   * Ensures the value is a number, returning null if invalid
+   * Validates and sanitizes a potentially unknown value as a nullable number
    *
-   * @param value The number to validate
+   * This utility function ensures that a value of unknown type is safely
+   * handled as a number or null. If the value is already a number, it is returned
+   * unchanged. If the value is any other type, null is returned instead, allowing
+   * the code to explicitly handle missing or invalid numerical values.
+   *
+   * Used primarily for processing GraphQL responses where numerical fields
+   * might be missing or have unexpected types.
+   *
+   * @example
+   * ```typescript
+   * // With a valid number
+   * const score = validateNumber(vulnerability.cvssV3BaseScore); // Returns the score as is
+   *
+   * // With a non-number value
+   * const score = validateNumber(null); // Returns null
+   *
+   * // Sample usage with nullish coalescing operator
+   * const score = validateNumber(vulnerability.cvssV3BaseScore) ?? 0;
+   * ```
+   *
+   * @param value - The value to validate as a nullable number
    * @returns The original number if valid, or null if invalid
    * @private
    */
@@ -2037,6 +2138,72 @@ export class DeepSourceClient {
   }
 
   /**
+   * Safely accesses a nested property in an object of unknown structure
+   *
+   * This utility function provides type-safe access to deeply nested properties in objects
+   * with unknown or complex structures, such as GraphQL responses. It traverses the object
+   * along the given property path, handling potential null/undefined values at each step
+   * to prevent runtime errors.
+   *
+   * Features:
+   * - Type-safe property access with strong TypeScript typing
+   * - Graceful handling of undefined/null values at any depth
+   * - Optional validation of the final value
+   * - Generic return type for proper type inference
+   *
+   * @example
+   * ```typescript
+   * // Basic usage
+   * const name = getNestedProperty<string>(
+   *   response,
+   *   ['data', 'user', 'profile', 'name']
+   * );
+   *
+   * // With validation
+   * const age = getNestedProperty<number>(
+   *   response,
+   *   ['data', 'user', 'profile', 'age'],
+   *   (value) => typeof value === 'number' && value > 0
+   * );
+   * ```
+   *
+   * @param obj - The root object to traverse
+   * @param propPath - Array of property names to access in sequence
+   * @param validator - Optional function to validate the final value
+   * @returns The value at the specified path with the requested type, or undefined if any part of the path is invalid or validation fails
+   * @typeParam T - The expected type of the nested property value
+   * @private
+   */
+  private static getNestedProperty<T>(
+    obj: unknown,
+    propPath: string[],
+    // eslint-disable-next-line no-unused-vars
+    validator?: (value: unknown) => boolean
+  ): T | undefined {
+    // Start with the root object
+    let current: unknown = obj;
+
+    // Navigate through the property path
+    for (const prop of propPath) {
+      // Ensure we have an object to access properties from
+      if (!current || typeof current !== 'object') {
+        return undefined;
+      }
+
+      // Get the current property and continue
+      current = (current as Record<string, unknown>)[prop];
+    }
+
+    // Validate the final value if a validator is provided
+    // The validator function uses its parameter to validate the value
+    if (validator && !validator(current)) {
+      return undefined;
+    }
+
+    return current as T;
+  }
+
+  /**
    * Processes GraphQL response and extracts vulnerability occurrences
    * Handles the extraction and validation of vulnerability data from a GraphQL response.
    *
@@ -2062,83 +2229,55 @@ export class DeepSourceClient {
     };
     totalCount: number;
   } {
-    // Extract response data safely with type checking
-    if (!response || typeof response !== 'object') {
-      return {
-        vulnerabilities: [],
-        pageInfo: {
+    // Default values are used directly in the return statement for empty results
+
+    // Safely extract the vulnerability edges using the helper function
+    const vulnEdges =
+      DeepSourceClient.getNestedProperty<unknown[]>(
+        response,
+        ['data', 'data', 'repository', 'dependencyVulnerabilityOccurrences', 'edges'],
+        Array.isArray
+      ) || [];
+
+    // Extract the page info data
+    const pageInfoData = DeepSourceClient.getNestedProperty<Record<string, unknown>>(
+      response,
+      ['data', 'data', 'repository', 'dependencyVulnerabilityOccurrences', 'pageInfo'],
+      (value): value is Record<string, unknown> => value !== null && typeof value === 'object'
+    );
+
+    // Create the page info object with type-safe property access
+    const pageInfo = pageInfoData
+      ? {
+          hasNextPage: Boolean(pageInfoData.hasNextPage),
+          hasPreviousPage: Boolean(pageInfoData.hasPreviousPage),
+          startCursor:
+            typeof pageInfoData.startCursor === 'string' ? pageInfoData.startCursor : undefined,
+          endCursor:
+            typeof pageInfoData.endCursor === 'string' ? pageInfoData.endCursor : undefined,
+        }
+      : {
           hasNextPage: false,
           hasPreviousPage: false,
-        },
-        totalCount: 0,
+        };
+
+    // Safely extract the total count
+    const totalCount = DeepSourceClient.getNestedProperty<number>(
+      response,
+      ['data', 'data', 'repository', 'dependencyVulnerabilityOccurrences', 'totalCount'],
+      (value): value is number => typeof value === 'number'
+    );
+
+    // Early return for empty results to avoid unnecessary processing
+    if (vulnEdges.length === 0) {
+      return {
+        vulnerabilities: [],
+        pageInfo,
+        totalCount: totalCount ?? 0,
       };
     }
 
-    // Create an empty result for early returns
-    const emptyResult = {
-      vulnerabilities: [],
-      pageInfo: {
-        hasNextPage: false,
-        hasPreviousPage: false,
-      },
-      totalCount: 0,
-    };
-
-    const typedResponse = response as Record<string, unknown>;
-    const data = typedResponse.data as Record<string, unknown> | undefined;
-
-    if (!data || typeof data !== 'object') {
-      return emptyResult;
-    }
-
-    const gqlData = data.data as Record<string, unknown> | undefined;
-
-    if (!gqlData || typeof gqlData !== 'object') {
-      return emptyResult;
-    }
-
-    const repository = gqlData.repository as Record<string, unknown> | undefined;
-
-    if (!repository || typeof repository !== 'object') {
-      return emptyResult;
-    }
-
-    const occurrencesData = repository.dependencyVulnerabilityOccurrences as
-      | Record<string, unknown>
-      | undefined;
-
-    if (!occurrencesData || typeof occurrencesData !== 'object') {
-      return emptyResult;
-    }
-
-    // Extract edges, page info, and total count with defaults for missing data
-    const vulnEdges = Array.isArray(occurrencesData.edges) ? occurrencesData.edges : [];
-
-    const pageInfoData = occurrencesData.pageInfo as Record<string, unknown> | undefined;
-    const pageInfo =
-      pageInfoData && typeof pageInfoData === 'object'
-        ? {
-            hasNextPage: Boolean(pageInfoData.hasNextPage),
-            hasPreviousPage: Boolean(pageInfoData.hasPreviousPage),
-            startCursor:
-              typeof pageInfoData.startCursor === 'string' ? pageInfoData.startCursor : undefined,
-            endCursor:
-              typeof pageInfoData.endCursor === 'string' ? pageInfoData.endCursor : undefined,
-          }
-        : {
-            hasNextPage: false,
-            hasPreviousPage: false,
-          };
-
-    const totalCount =
-      typeof occurrencesData.totalCount === 'number' ? occurrencesData.totalCount : 0;
-
-    // Early return for empty results to avoid unnecessary processing
-    if (!vulnEdges.length) {
-      return { vulnerabilities: [], pageInfo, totalCount };
-    }
-
-    // Pre-allocate array with known size for better memory efficiency
+    // Process the vulnerability edges
     const vulnerabilities: VulnerabilityOccurrence[] = [];
 
     // Use the iterator for memory-efficient processing
@@ -2149,7 +2288,7 @@ export class DeepSourceClient {
     return {
       vulnerabilities,
       pageInfo,
-      totalCount,
+      totalCount: totalCount ?? 0,
     };
   }
 
