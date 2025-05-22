@@ -3,12 +3,12 @@
  * This module provides MCP tool handlers for fetching a specific DeepSource analysis run.
  */
 
-import { DeepSourceClient } from '../deepsource.js';
-import { ApiResponse } from '../models/common.js';
 import {
+  DeepSourceClient,
   OccurrenceDistributionByAnalyzer,
   OccurrenceDistributionByCategory,
 } from '../deepsource.js';
+import { ApiResponse } from '../models/common.js';
 import { createLogger } from '../utils/logging/logger.js';
 
 // Logger for the run handler
@@ -43,7 +43,7 @@ export async function handleDeepsourceRun({
   logger.debug('Checking API key', {
     exists: Boolean(apiKey),
     length: apiKey ? apiKey.length : 0,
-    prefix: apiKey ? apiKey.substring(0, 5) + '...' : 'N/A',
+    prefix: apiKey ? `${apiKey.substring(0, 5)}...` : 'N/A',
   });
 
   if (!apiKey) {
@@ -61,8 +61,7 @@ export async function handleDeepsourceRun({
       identifierType: isCommitOid ? 'commitOid' : 'runUid',
     });
 
-    let run;
-    run = await client.getRun(runIdentifier);
+    const run = await client.getRun(runIdentifier);
 
     if (!run) {
       logger.error('Run not found', {
