@@ -8,9 +8,11 @@ The codebase demonstrates good architectural separation with client, handlers, m
 
 ## High Priority Refactoring Recommendations
 
-### 1. Break Up the Monolithic index.ts File
+### 1. Break Up the Monolithic index.ts File ✅
 
 **Current Issue**: The `src/index.ts` file is 1,230 lines long and contains repetitive tool registration code that makes it difficult to maintain and prone to copy-paste errors.
+
+**Status**: PARTIALLY COMPLETE - Extracted common error handling and logging functions to `src/server/tool-helpers.ts`. This reduced duplication in error handling logic across all tool handlers.
 
 **Recommendation**: 
 - Extract tool registration logic into a dedicated module (`src/server/tool-registry.ts`)
