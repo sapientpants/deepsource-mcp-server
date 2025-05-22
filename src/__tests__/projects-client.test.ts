@@ -242,6 +242,87 @@ describe('ProjectsClient', () => {
 
       await expect(client.listProjects()).rejects.toThrow();
     });
+
+    it('should handle GraphQL errors by returning empty array', async () => {
+      const client = new ProjectsClient(API_KEY);
+      // Use TypeScript type assertion to access protected method
+      (client as unknown as { executeGraphQL: jest.Mock }).executeGraphQL = jest
+        .fn()
+        .mockRejectedValue(new Error('GraphQL Errors: Something went wrong'));
+
+      const projects = await client.listProjects();
+      expect(projects).toEqual([]);
+    });
+
+    it('should handle errors with response property', async () => {
+      const client = new ProjectsClient(API_KEY);
+      const errorWithResponse = new Error('API Error');
+      (errorWithResponse as any).response = {
+        data: { errors: [{ message: 'Forbidden' }] },
+      };
+
+      // Use TypeScript type assertion to access protected method
+      (client as unknown as { executeGraphQL: jest.Mock }).executeGraphQL = jest
+        .fn()
+        .mockRejectedValue(errorWithResponse);
+
+      await expect(client.listProjects()).rejects.toThrow();
+    });
+
+    it('should handle repository processing errors gracefully', async () => {
+      const mockResponse: { data: ViewerProjectsResponse } = {
+        data: {
+          data: {
+            viewer: {
+              email: 'test@example.com',
+              accounts: {
+                edges: [
+                  {
+                    node: {
+                      login: 'testorg',
+                      repositories: {
+                        edges: [
+                          {
+                            node: {
+                              name: 'Valid Project',
+                              dsn: 'valid-project',
+                              isPrivate: false,
+                              isActivated: true,
+                              vcsProvider: 'github',
+                            },
+                          },
+                          {
+                            node: {
+                              name: 'Invalid Project',
+                              dsn: '', // Empty DSN - will cause error in asProjectKey
+                              isPrivate: false,
+                              isActivated: true,
+                              vcsProvider: 'github',
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      };
+
+      const client = new ProjectsClient(API_KEY);
+      // Use TypeScript type assertion to access protected method
+      (client as unknown as { executeGraphQL: jest.Mock }).executeGraphQL = jest
+        .fn()
+        .mockResolvedValue(mockResponse);
+
+      const projects = await client.listProjects();
+
+      // Should only return the valid project, the invalid one should be skipped
+      expect(projects).toHaveLength(1);
+      expect(projects[0].key).toBe('valid-project');
+    });
   });
 
   describe('projectExists', () => {
