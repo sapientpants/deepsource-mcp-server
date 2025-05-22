@@ -54,17 +54,16 @@ describe('Projects Handler', () => {
   });
 
   describe('handleProjects', () => {
-    it('should throw an error if DEEPSOURCE_API_KEY is not set', async () => {
+    it('should return an error response if DEEPSOURCE_API_KEY is not set', async () => {
       // Unset API key
       delete process.env.DEEPSOURCE_API_KEY;
 
-      // Call the handler and expect an error
-      await expect(handleProjects()).rejects.toThrow(
-        'DEEPSOURCE_API_KEY environment variable is not set'
-      );
+      // Call the handler
+      const result = await handleProjects();
 
-      // Verify logger was called with the error
-      expect(mockLogger.error).toHaveBeenCalledWith(
+      // Verify it returns an error response
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain(
         'DEEPSOURCE_API_KEY environment variable is not set'
       );
     });

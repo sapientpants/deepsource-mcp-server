@@ -6,6 +6,7 @@
 import { DeepSourceClientFactory } from '../client/factory.js';
 import { ApiResponse } from '../models/common.js';
 import { createLogger } from '../utils/logging/logger.js';
+import { getApiKey } from '../config/index.js';
 
 // Logger for the projects handler
 const logger = createLogger('ProjectsHandler');
@@ -17,19 +18,13 @@ const logger = createLogger('ProjectsHandler');
  * @public
  */
 export async function handleProjects(): Promise<ApiResponse> {
-  const apiKey = process.env.DEEPSOURCE_API_KEY;
-  logger.debug('Checking API key', {
-    exists: Boolean(apiKey),
-    length: apiKey ? apiKey.length : 0,
-    prefix: apiKey ? `${apiKey.substring(0, 5)}...` : 'N/A',
-  });
-
-  if (!apiKey) {
-    logger.error('DEEPSOURCE_API_KEY environment variable is not set');
-    throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
-  }
-
   try {
+    const apiKey = getApiKey();
+    logger.debug('API key retrieved from config', {
+      length: apiKey.length,
+      prefix: `${apiKey.substring(0, 5)}...`,
+    });
+
     logger.debug('Creating client factory');
     const clientFactory = new DeepSourceClientFactory(apiKey);
 
