@@ -21,7 +21,7 @@ export async function handleProjects(): Promise<ApiResponse> {
   logger.debug('Checking API key', {
     exists: Boolean(apiKey),
     length: apiKey ? apiKey.length : 0,
-    prefix: apiKey ? apiKey.substring(0, 5) + '...' : 'N/A',
+    prefix: apiKey ? `${apiKey.substring(0, 5)}...` : 'N/A',
   });
 
   if (!apiKey) {

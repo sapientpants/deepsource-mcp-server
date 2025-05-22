@@ -111,7 +111,17 @@ export interface GraphQLAccountNode {
  * Viewer response for the projects query
  */
 export interface ViewerProjectsResponse {
-  /** Viewer data */
+  /** Current user information - Production API format */
+  viewer?: {
+    /** User email */
+    email?: string;
+    /** Accounts associated with this user */
+    accounts?: {
+      /** Account edges */
+      edges?: GraphQLEdge<GraphQLAccountNode>[];
+    };
+  };
+  /** Test mock format - for backward compatibility */
   data?: {
     /** Current user information */
     viewer?: {

@@ -36,8 +36,11 @@ export class ProjectsClient extends BaseDeepSourceClient {
       this.logger.debug('Raw GraphQL response received:', response.data);
 
       // Extract the data directly from the response structure
+      // Handle both production API format and test mock format
+      // Real API: response.data.viewer
+      // Test mock: response.data.data.viewer
       const responseData = response.data;
-      const viewerData = responseData?.data?.viewer;
+      const viewerData = responseData?.viewer || responseData?.data?.viewer;
 
       // Log the response structure to troubleshoot issues
       this.logger.debug('Response structure check:', {

@@ -7,7 +7,10 @@ import { DeepSourceClient } from '../deepsource';
 describe('DeepSourceClient Historical Data Error Handling', () => {
   // Create a testable version of DeepSourceClient that exposes the private processHistoricalData method
   class TestableDeepSourceClient extends DeepSourceClient {
-    static testProcessHistoricalData(data: Record<string, unknown>, params: any) {
+    static testProcessHistoricalData(
+      data: Record<string, unknown>,
+      params: Record<string, unknown>
+    ) {
       // @ts-expect-error - accessing private static method for testing
       return DeepSourceClient.processHistoricalData(data, params);
     }
