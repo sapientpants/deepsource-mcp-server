@@ -105,21 +105,90 @@ export interface ProcessedRunChecks {
 }
 
 /**
+ * Create a DeepSourceIssue from an occurrence node
+ * @param occurrence - Occurrence node from GraphQL response
+ * @returns DeepSourceIssue object
+ * @private
+ */
+function createIssueFromOccurrence(
+  occurrence: z.infer<typeof OccurrenceNodeSchema>
+): DeepSourceIssue {
+  return {
+    id: occurrence.id ?? 'unknown',
+    shortcode: occurrence.issue?.shortcode ?? '',
+    title: occurrence.issue?.title ?? 'Untitled Issue',
+    category: occurrence.issue?.category ?? 'UNKNOWN',
+    severity: occurrence.issue?.severity ?? 'UNKNOWN',
+    status: 'OPEN',
+    issue_text: occurrence.issue?.description ?? '',
+    file_path: occurrence.path ?? 'N/A',
+    line_number: occurrence.beginLine ?? 0,
+    tags: occurrence.issue?.tags ?? [],
+  };
+}
+
+/**
+ * Extract issues from validated response data
+ * @param validated - Validated response data
+ * @returns Processed run checks data
+ * @private
+ */
+function extractIssues(validated: z.infer<typeof RunChecksResponseSchema>): ProcessedRunChecks {
+  const issues: DeepSourceIssue[] = [];
+  let pageInfo = {
+    hasNextPage: false,
+    hasPreviousPage: false,
+    startCursor: undefined as string | undefined,
+    endCursor: undefined as string | undefined,
+  };
+  let totalCount = 0;
+
+  const checks = validated.data.data?.run?.checks?.edges ?? [];
+
+  for (const { node: check } of checks) {
+    const occurrences = check.occurrences?.edges ?? [];
+    const occurrencesPageInfo = check.occurrences?.pageInfo;
+    const occurrencesTotalCount = check.occurrences?.totalCount ?? 0;
+
+    // Aggregate page info (using the first check's pagination info for simplicity)
+    if (occurrencesPageInfo) {
+      pageInfo = {
+        hasNextPage: occurrencesPageInfo.hasNextPage,
+        hasPreviousPage: occurrencesPageInfo.hasPreviousPage,
+        startCursor: occurrencesPageInfo.startCursor,
+        endCursor: occurrencesPageInfo.endCursor,
+      };
+    }
+
+    // Always aggregate the total count
+    totalCount += occurrencesTotalCount;
+
+    for (const { node: occurrence } of occurrences) {
+      if (!occurrence || !occurrence.issue) continue;
+
+      issues.push(createIssueFromOccurrence(occurrence));
+    }
+  }
+
+  return { issues, pageInfo, totalCount };
+}
+
+/**
  * Processor for run checks GraphQL responses
  */
-export class RunChecksProcessor {
+export const RunChecksProcessor = {
   /**
    * Process a run checks GraphQL response
    * @param response - Raw GraphQL response
    * @returns Processed run checks data
    */
-  static process(response: unknown): ProcessedRunChecks {
+  process(response: unknown): ProcessedRunChecks {
     try {
       // Validate response structure
       const validated = RunChecksResponseSchema.parse(response);
 
       // Extract and process data
-      return this.extractIssues(validated);
+      return extractIssues(validated);
     } catch (error) {
       logger.warn('Failed to parse run checks response', {
         error: error instanceof Error ? error.message : String(error),
@@ -137,76 +206,5 @@ export class RunChecksProcessor {
         totalCount: 0,
       };
     }
-  }
-
-  /**
-   * Extract issues from validated response data
-   * @param validated - Validated response data
-   * @returns Processed run checks data
-   * @private
-   */
-  private static extractIssues(
-    validated: z.infer<typeof RunChecksResponseSchema>
-  ): ProcessedRunChecks {
-    const issues: DeepSourceIssue[] = [];
-    let pageInfo = {
-      hasNextPage: false,
-      hasPreviousPage: false,
-      startCursor: undefined as string | undefined,
-      endCursor: undefined as string | undefined,
-    };
-    let totalCount = 0;
-
-    const checks = validated.data.data?.run?.checks?.edges ?? [];
-
-    for (const { node: check } of checks) {
-      const occurrences = check.occurrences?.edges ?? [];
-      const occurrencesPageInfo = check.occurrences?.pageInfo;
-      const occurrencesTotalCount = check.occurrences?.totalCount ?? 0;
-
-      // Aggregate page info (using the first check's pagination info for simplicity)
-      if (occurrencesPageInfo) {
-        pageInfo = {
-          hasNextPage: occurrencesPageInfo.hasNextPage,
-          hasPreviousPage: occurrencesPageInfo.hasPreviousPage,
-          startCursor: occurrencesPageInfo.startCursor,
-          endCursor: occurrencesPageInfo.endCursor,
-        };
-      }
-
-      // Always aggregate the total count
-      totalCount += occurrencesTotalCount;
-
-      for (const { node: occurrence } of occurrences) {
-        if (!occurrence || !occurrence.issue) continue;
-
-        issues.push(this.createIssueFromOccurrence(occurrence));
-      }
-    }
-
-    return { issues, pageInfo, totalCount };
-  }
-
-  /**
-   * Create a DeepSourceIssue from an occurrence node
-   * @param occurrence - Occurrence node from GraphQL response
-   * @returns DeepSourceIssue object
-   * @private
-   */
-  private static createIssueFromOccurrence(
-    occurrence: z.infer<typeof OccurrenceNodeSchema>
-  ): DeepSourceIssue {
-    return {
-      id: occurrence.id ?? 'unknown',
-      shortcode: occurrence.issue?.shortcode ?? '',
-      title: occurrence.issue?.title ?? 'Untitled Issue',
-      category: occurrence.issue?.category ?? 'UNKNOWN',
-      severity: occurrence.issue?.severity ?? 'UNKNOWN',
-      status: 'OPEN',
-      issue_text: occurrence.issue?.description ?? '',
-      file_path: occurrence.path ?? 'N/A',
-      line_number: occurrence.beginLine ?? 0,
-      tags: occurrence.issue?.tags ?? [],
-    };
-  }
-}
+  },
+};
