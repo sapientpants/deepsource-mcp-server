@@ -25,6 +25,7 @@ import {
 import { MetricShortcode, ReportType } from './deepsource.js';
 import { MetricKey } from './types/metrics.js';
 import { AnalyzerShortcode } from './types/branded.js';
+import { logToolInvocation, logToolResult, logAndFormatError } from './server/tool-helpers.js';
 
 // Create logger instance for index.ts
 const logger = createLogger('DeepSourceMCP:index');
@@ -57,15 +58,11 @@ mcpServer.registerTool(
   // eslint-disable-next-line no-unused-vars
   async (_extra) => {
     try {
-      logger.info('MCP projects tool handler invoked');
+      logToolInvocation('projects');
 
       // Call the projects handler
       const result = await handleProjects();
-      logger.debug('handleProjects result received', {
-        isError: result.isError,
-        contentLength: result.content?.[0]?.text?.length || 0,
-        contentPreview: `${result.content?.[0]?.text?.substring(0, 50)}...`,
-      });
+      logToolResult('projects', result);
 
       // If the handler returned an error, throw it to be caught below
       if (result.isError) {
@@ -88,40 +85,7 @@ mcpServer.registerTool(
         isError: false,
       };
     } catch (error) {
-      logger.error('Error in projects tool handler', {
-        errorType: typeof error,
-        errorName: error instanceof Error ? error.name : 'Unknown',
-        errorMessage: error instanceof Error ? error.message : String(error),
-        errorStack: error instanceof Error ? error.stack : 'No stack available',
-      });
-
-      let errorMessage = 'Unknown error occurred';
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-
-        // Try to parse error message if it looks like JSON
-        if (error.message.startsWith('{') && error.message.endsWith('}')) {
-          // Try to parse the error message as JSON
-          const parsedErrorMessage = (() => {
-            try {
-              return JSON.parse(error.message);
-            } catch {
-              logger.debug('Failed to parse error message as JSON', { message: error.message });
-              return null;
-            }
-          })();
-
-          if (parsedErrorMessage?.error) {
-            errorMessage = `DeepSource API Error: ${parsedErrorMessage.error}`;
-            if (parsedErrorMessage.details) {
-              errorMessage = `${errorMessage} - ${parsedErrorMessage.details}`;
-            }
-          }
-        }
-      }
-
-      logger.info('Returning error response to MCP client', { errorMessage });
+      const errorMessage = logAndFormatError(error, 'projects');
       return {
         content: [
           {

@@ -1,6 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { createLogger } from './utils/logger.js';
 import { ErrorCategory, createClassifiedError, classifyGraphQLError } from './utils/errors.js';
+import { RunChecksProcessor } from './utils/graphql/processors/run-checks-processor.js';
 import {
   MetricShortcode,
   MetricKey,
@@ -524,44 +525,7 @@ export class DeepSourceClient {
    * Process issues from the GraphQL response
    * @private
    */
-  private static processRunChecksResponse(response: {
-    data: {
-      data?: {
-        run?: {
-          checks?: {
-            edges?: Array<{
-              node: {
-                occurrences?: {
-                  pageInfo?: {
-                    hasNextPage: boolean;
-                    hasPreviousPage: boolean;
-                    startCursor: string | undefined;
-                    endCursor: string | undefined;
-                  };
-                  totalCount?: number;
-                  edges?: Array<{
-                    node?: {
-                      id?: string;
-                      issue?: {
-                        shortcode?: string;
-                        title?: string;
-                        category?: string;
-                        severity?: string;
-                        description?: string;
-                        tags?: string[];
-                      };
-                      path?: string;
-                      beginLine?: number;
-                    };
-                  }>;
-                };
-              };
-            }>;
-          };
-        };
-      };
-    };
-  }): {
+  private static processRunChecksResponse(response: unknown): {
     issues: DeepSourceIssue[];
     pageInfo: {
       hasNextPage: boolean;
@@ -571,46 +535,7 @@ export class DeepSourceClient {
     };
     totalCount: number;
   } {
-    const issues: DeepSourceIssue[] = [];
-    let pageInfo = {
-      hasNextPage: false,
-      hasPreviousPage: false,
-      startCursor: undefined as string | undefined,
-      endCursor: undefined as string | undefined,
-    };
-    let totalCount = 0;
-
-    const checks = response.data.data?.run?.checks?.edges ?? [];
-    for (const { node: check } of checks) {
-      const occurrences = check.occurrences?.edges ?? [];
-      const occurrencesPageInfo = check.occurrences?.pageInfo;
-      const occurrencesTotalCount = check.occurrences?.totalCount ?? 0;
-
-      // Aggregate page info (using the first check's pagination info for simplicity)
-      if (occurrencesPageInfo) {
-        pageInfo = occurrencesPageInfo;
-        totalCount += occurrencesTotalCount;
-      }
-
-      for (const { node: occurrence } of occurrences) {
-        if (!occurrence || !occurrence.issue) continue;
-
-        issues.push({
-          id: occurrence.id ?? 'unknown',
-          shortcode: occurrence.issue.shortcode ?? '',
-          title: occurrence.issue.title ?? 'Untitled Issue',
-          category: occurrence.issue.category ?? 'UNKNOWN',
-          severity: occurrence.issue.severity ?? 'UNKNOWN',
-          status: 'OPEN',
-          issue_text: occurrence.issue.description ?? '',
-          file_path: occurrence.path ?? 'N/A',
-          line_number: occurrence.beginLine ?? 0,
-          tags: occurrence.issue.tags ?? [],
-        });
-      }
-    }
-
-    return { issues, pageInfo, totalCount };
+    return RunChecksProcessor.process(response);
   }
 
   /**

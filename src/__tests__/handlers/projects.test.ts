@@ -5,6 +5,8 @@
 import { jest } from '@jest/globals';
 import { ProjectKey } from '../../types/branded';
 import type { DeepSourceProject } from '../../models/projects';
+import type { DeepSourceClientFactory } from '../../client/factory';
+import type { Logger } from '../../utils/logging/logger';
 
 // Create mock logger
 const mockLogger = {
@@ -33,7 +35,7 @@ jest.unstable_mockModule('../../client/factory', () => ({
 }));
 
 // Import the modules under test AFTER mocking
-const { handleProjects } = await import('../../handlers/projects');
+const { handleProjects, createProjectsHandler } = await import('../../handlers/projects');
 
 describe('Projects Handler', () => {
   // Environment backup
@@ -53,18 +55,91 @@ describe('Projects Handler', () => {
     process.env = originalEnv;
   });
 
+  describe('createProjectsHandler', () => {
+    it('should create a handler that uses injected dependencies', async () => {
+      // Mock projects data
+      const mockProjects: DeepSourceProject[] = [
+        {
+          key: 'proj1' as ProjectKey,
+          name: 'Project One',
+          repository: {
+            url: 'https://github.com/org/repo1',
+            provider: 'GITHUB',
+            login: 'org',
+            isPrivate: false,
+            isActivated: true,
+          },
+        },
+      ];
+
+      // Set up the mock to return the projects
+      mockListProjects.mockResolvedValue(mockProjects);
+
+      // Create handler with injected dependencies
+      const mockGetApiKey = jest.fn(() => 'injected-api-key');
+      const mockClientFactory = {
+        getProjectsClient: mockGetProjectsClient,
+      };
+
+      const handler = createProjectsHandler({
+        clientFactory: mockClientFactory as unknown as DeepSourceClientFactory,
+        logger: mockLogger as unknown as Logger,
+        getApiKey: mockGetApiKey,
+      });
+
+      // Call the handler
+      const result = await handler();
+
+      // Verify injected dependencies were used
+      expect(mockGetApiKey).toHaveBeenCalled();
+      expect(mockGetProjectsClient).toHaveBeenCalled();
+      expect(mockListProjects).toHaveBeenCalled();
+
+      // Verify the response
+      const parsedContent = JSON.parse(result.content[0].text);
+      expect(parsedContent).toEqual([{ key: 'proj1', name: 'Project One' }]);
+    });
+
+    it('should handle errors using injected logger', async () => {
+      // Set up the mock to throw an error
+      const testError = new Error('Injected error');
+      mockListProjects.mockRejectedValue(testError);
+
+      // Create handler with injected dependencies
+      const mockGetApiKey = jest.fn(() => 'injected-api-key');
+      const mockClientFactory = {
+        getProjectsClient: mockGetProjectsClient,
+      };
+
+      const handler = createProjectsHandler({
+        clientFactory: mockClientFactory as unknown as DeepSourceClientFactory,
+        logger: mockLogger as unknown as Logger,
+        getApiKey: mockGetApiKey,
+      });
+
+      // Call the handler
+      const result = await handler();
+
+      // Verify error was logged using injected logger
+      expect(mockLogger.error).toHaveBeenCalledWith('Error in handleProjects', expect.any(Object));
+
+      // Verify error response
+      expect(result.isError).toBe(true);
+      const parsedContent = JSON.parse(result.content[0].text);
+      expect(parsedContent).toEqual({
+        error: 'Injected error',
+        details: 'Failed to retrieve projects',
+      });
+    });
+  });
+
   describe('handleProjects', () => {
     it('should throw an error if DEEPSOURCE_API_KEY is not set', async () => {
       // Unset API key
       delete process.env.DEEPSOURCE_API_KEY;
 
-      // Call the handler and expect an error
+      // Call the handler and expect it to throw
       await expect(handleProjects()).rejects.toThrow(
-        'DEEPSOURCE_API_KEY environment variable is not set'
-      );
-
-      // Verify logger was called with the error
-      expect(mockLogger.error).toHaveBeenCalledWith(
         'DEEPSOURCE_API_KEY environment variable is not set'
       );
     });
@@ -111,8 +186,11 @@ describe('Projects Handler', () => {
       // Verify listProjects was called
       expect(mockListProjects).toHaveBeenCalled();
 
-      // Verify logging behavior - only check the critical log messages
-      expect(mockLogger.debug).toHaveBeenCalledWith('Creating client factory');
+      // Verify logging behavior - check that key operations were logged
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('API key retrieved from config'),
+        expect.any(Object)
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith('Getting projects client');
       expect(mockLogger.info).toHaveBeenCalledWith('Fetching projects from client');
 
