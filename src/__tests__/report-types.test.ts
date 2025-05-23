@@ -99,7 +99,7 @@ describe('Report Types', () => {
       // Simulate building dropdown options from enums
       const reportTypeOptions = Object.entries(ReportType).map(([key, value]) => ({
         label: key.replace(/_/g, ' '),
-        value: value,
+        value,
       }));
 
       expect(reportTypeOptions.length).toBe(8);
