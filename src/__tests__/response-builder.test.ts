@@ -2,14 +2,28 @@
  * @fileoverview Tests for the response builder utility
  */
 
-import {
-  ToolResponseBuilder,
-  successResponse,
-  errorResponse,
-  parseToolResponse,
-} from '../utils/response-builder.js';
+import { jest } from '@jest/globals';
+
+// Mock logger
+const mockLogger = {
+  info: jest.fn(),
+  error: jest.fn(),
+};
+
+jest.unstable_mockModule('../utils/logging/logger.js', () => ({
+  createLogger: jest.fn(() => mockLogger),
+}));
+
+// Import after mocking
+const { ToolResponseBuilder, successResponse, errorResponse, parseToolResponse } = await import(
+  '../utils/response-builder.js'
+);
 
 describe('ToolResponseBuilder', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('success responses', () => {
     it('should create a success response with data', () => {
       const data = { message: 'Hello', count: 42 };
@@ -37,6 +51,25 @@ describe('ToolResponseBuilder', () => {
       expect(response.isError).toBe(false);
       expect(JSON.parse(response.content[0].text)).toEqual(data);
     });
+
+    it('should log when toolName is provided with logging enabled', () => {
+      const data = { message: 'Hello' };
+      const response = ToolResponseBuilder.success(data, {
+        log: true,
+        toolName: 'TestTool',
+      }).build();
+
+      expect(response.isError).toBe(false);
+      expect(mockLogger.info).toHaveBeenCalledWith('TestTool response built successfully');
+    });
+
+    it('should use structured content from options when provided', () => {
+      const data = { message: 'Hello' };
+      const structuredContent = { metadata: 'test' };
+      const response = ToolResponseBuilder.success(data, { structuredContent }).build();
+
+      expect(response.structuredContent).toEqual(structuredContent);
+    });
   });
 
   describe('error responses', () => {
@@ -58,6 +91,19 @@ describe('ToolResponseBuilder', () => {
       expect(response.isError).toBe(true);
       const errorData = JSON.parse(response.content[0].text);
       expect(errorData.error).toBe('Custom error message');
+    });
+
+    it('should log error when toolName is provided with logging enabled', () => {
+      const error = new Error('Test error');
+      const response = ToolResponseBuilder.error(error, {
+        log: true,
+        toolName: 'ErrorTool',
+      }).build();
+
+      expect(response.isError).toBe(true);
+      expect(mockLogger.error).toHaveBeenCalledWith('ErrorTool response contains error', {
+        error: 'Test error',
+      });
     });
   });
 
