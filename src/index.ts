@@ -597,9 +597,9 @@ mcpServer.registerTool(
   }
 );
 
-// Register the project_runs tool
+// Register the runs tool
 mcpServer.registerTool(
-  'project_runs',
+  'runs',
   {
     description: 'List analysis runs for a DeepSource project with filtering',
     inputSchema: {
@@ -666,7 +666,7 @@ mcpServer.registerTool(
   },
   async (params) => {
     try {
-      logger.info('MCP project_runs tool handler invoked', {
+      logger.info('MCP runs tool handler invoked', {
         projectKey: params.projectKey,
         hasAnalyzerInFilter: Boolean(params.analyzerIn),
       });
@@ -707,7 +707,7 @@ mcpServer.registerTool(
         isError: false,
       };
     } catch (error) {
-      logger.error('Error in project_runs tool handler', {
+      logger.error('Error in runs tool handler', {
         errorType: typeof error,
         errorMessage: error instanceof Error ? error.message : String(error),
       });

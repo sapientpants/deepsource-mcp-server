@@ -210,7 +210,7 @@ Get issues from a DeepSource project with filtering and pagination.
 }
 ```
 
-### 3. project_runs
+### 3. runs
 
 List analysis runs for a project with filtering.
 
