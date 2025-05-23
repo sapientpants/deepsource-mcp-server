@@ -21,7 +21,6 @@ A Model Context Protocol (MCP) server that integrates with DeepSource to provide
 - [Architecture](#architecture)
 - [Development](#development)
 - [Troubleshooting & FAQ](#troubleshooting--faq)
-- [Changelog](#changelog)
 - [Contributing](#contributing)
 - [License](#license)
 - [External Resources](#external-resources)
@@ -529,46 +528,6 @@ A: The API key is only stored in your local Claude Desktop configuration and is 
 
 **Q: Can I contribute custom tools?**
 A: Yes! See the [Contributing](#contributing) section for guidelines.
-
-## Changelog
-
-### [1.2.0] - 2024-01-XX
-
-#### Added
-- Table of contents for better navigation
-- Quick Start guide with API key instructions
-- Comprehensive tool parameter tables
-- Real-world usage scenarios
-- Example responses for all tools
-- FAQ section
-- Performance considerations
-- External resources section
-
-#### Changed
-- Reorganized documentation structure for better flow
-- Improved tool documentation with parameter tables
-- Enhanced troubleshooting with specific error cases
-- Updated all code examples for clarity
-
-#### Fixed
-- Documentation inconsistencies
-- Missing parameter descriptions
-- Unclear error messages
-
-### [1.1.0] - 2024-01-XX
-
-#### Added
-- Support for security compliance reports
-- Dependency vulnerability scanning
-- Metric threshold management
-- Enhanced error handling
-
-### [1.0.0] - 2024-01-XX
-
-#### Added
-- Initial release
-- Basic DeepSource integration
-- Core MCP tools implementation
 
 ## Contributing
 
