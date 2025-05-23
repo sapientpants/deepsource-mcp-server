@@ -132,7 +132,7 @@ export async function handleDeepsourceRecentRunIssues({
                 related_tools: {
                   run_details: 'Use the run tool to get detailed information about a specific run',
                   all_issues: 'Use the project_issues tool to get all issues in the project',
-                  other_runs: 'Use the project_runs tool to list all runs for the project',
+                  other_runs: 'Use the runs tool to list all runs for the project',
                 },
               },
             },

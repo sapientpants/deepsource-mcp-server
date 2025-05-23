@@ -85,7 +85,7 @@ The codebase is structured around two main components:
    - Provides ten main tools for AI assistants: 
      - `projects` - List all available projects
      - `project_issues` - Get issues with filtering and pagination
-     - `project_runs` - List analysis runs with filtering and pagination
+     - `runs` - List analysis runs with filtering and pagination
      - `run` - Get details for a specific run
      - `recent_run_issues` - Get issues from the most recent run on a specific branch with pagination
      - `dependency_vulnerabilities` - Get dependency vulnerabilities with pagination
