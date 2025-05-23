@@ -5,6 +5,8 @@
 import { jest } from '@jest/globals';
 import { ProjectKey } from '../../types/branded';
 import type { DeepSourceProject } from '../../models/projects';
+import type { DeepSourceClientFactory } from '../../client/factory';
+import type { Logger } from '../../utils/logging/logger';
 
 // Create mock logger
 const mockLogger = {
@@ -80,8 +82,8 @@ describe('Projects Handler', () => {
       };
 
       const handler = createProjectsHandler({
-        clientFactory: mockClientFactory as any,
-        logger: mockLogger as any,
+        clientFactory: mockClientFactory as unknown as DeepSourceClientFactory,
+        logger: mockLogger as unknown as Logger,
         getApiKey: mockGetApiKey,
       });
 
@@ -110,8 +112,8 @@ describe('Projects Handler', () => {
       };
 
       const handler = createProjectsHandler({
-        clientFactory: mockClientFactory as any,
-        logger: mockLogger as any,
+        clientFactory: mockClientFactory as unknown as DeepSourceClientFactory,
+        logger: mockLogger as unknown as Logger,
         getApiKey: mockGetApiKey,
       });
 
