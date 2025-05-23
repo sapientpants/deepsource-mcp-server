@@ -597,11 +597,9 @@ MIT - see [LICENSE](LICENSE) file for details.
 
 ## External Resources
 
-- [Model Context Protocol Specification](https://github.com/anthropics/model-context-protocol)
+- [Model Context Protocol Specification](https://modelcontextprotocol.io)
 - [DeepSource Documentation](https://docs.deepsource.com)
 - [DeepSource API Reference](https://docs.deepsource.com/docs/api-reference)
-- [MCP Servers Registry](https://github.com/anthropics/model-context-protocol/blob/main/servers.md)
-- [Claude Desktop Documentation](https://claude.ai/docs/desktop)
 
 ---
 
