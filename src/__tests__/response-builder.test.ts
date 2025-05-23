@@ -86,8 +86,8 @@ describe('ToolResponseBuilder', () => {
           d !== null &&
           'name' in d &&
           'age' in d &&
-          typeof (d as any).name === 'string' &&
-          typeof (d as any).age === 'number'
+          typeof (d as Record<string, unknown>).name === 'string' &&
+          typeof (d as Record<string, unknown>).age === 'number'
         );
       };
 
