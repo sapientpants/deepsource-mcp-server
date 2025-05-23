@@ -37,7 +37,7 @@ const logger = createLogger('DeepSourceMCP:index');
  */
 export const mcpServer = new McpServer({
   name: 'deepsource-mcp-server',
-  version: '1.0.3',
+  version: '1.2.0',
 });
 
 // Register the projects tool
