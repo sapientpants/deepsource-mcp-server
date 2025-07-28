@@ -95,7 +95,7 @@ export class ToolRegistry {
           logToolInvocation(tool.name, params);
 
           // Validate input if schema provided
-          let validatedParams: TInput | undefined;
+          let validatedParams: TInput;
           if (tool.inputSchema && params !== undefined) {
             const parseResult = tool.inputSchema.safeParse(params);
             if (!parseResult.success) {
@@ -106,11 +106,12 @@ export class ToolRegistry {
             }
             validatedParams = parseResult.data;
           } else {
-            validatedParams = params as TInput;
+            // If no schema or params is undefined, pass through as-is
+            validatedParams = (params ?? {}) as TInput;
           }
 
           // Execute handler
-          const result = await tool.handler(validatedParams!);
+          const result = await tool.handler(validatedParams);
 
           logToolResult(tool.name, result);
 

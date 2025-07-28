@@ -24,7 +24,7 @@ export interface BaseHandlerDeps {
  * @template TParams - The input parameters type
  * @template TResult - The result type (defaults to ApiResponse)
  */
-export type HandlerFunction<TParams = void, TResult = ApiResponse> = TParams extends void
+export type HandlerFunction<TParams = unknown, TResult = ApiResponse> = TParams extends undefined
   ? () => Promise<TResult>
   : // eslint-disable-next-line no-unused-vars
     (params: TParams) => Promise<TResult>;
@@ -37,7 +37,7 @@ export type HandlerFunction<TParams = void, TResult = ApiResponse> = TParams ext
  */
 export type HandlerFactory<
   TDeps extends BaseHandlerDeps = BaseHandlerDeps,
-  TParams = void,
+  TParams = unknown,
   TResult = ApiResponse,
   // eslint-disable-next-line no-unused-vars
 > = (deps: TDeps) => HandlerFunction<TParams, TResult>;
@@ -45,7 +45,7 @@ export type HandlerFactory<
 /**
  * Handler configuration for registration
  */
-export interface HandlerConfig<TParams = void> {
+export interface HandlerConfig<TParams = unknown> {
   /** The name of the handler/tool */
   name: string;
   /** Factory function to create the handler */

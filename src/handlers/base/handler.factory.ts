@@ -22,7 +22,7 @@ import { getApiKey } from '../../config/index.js';
  * @param handlerLogic - The actual handler implementation
  * @returns A handler factory function
  */
-export function createBaseHandlerFactory<TParams = void, TResult = ApiResponse>(
+export function createBaseHandlerFactory<TParams = unknown, TResult = ApiResponse>(
   handlerName: string,
   // eslint-disable-next-line no-unused-vars
   handlerLogic: (deps: BaseHandlerDeps, params: TParams) => Promise<TResult>
@@ -83,7 +83,7 @@ export function createDefaultHandlerDeps(overrides?: Partial<BaseHandlerDeps>): 
 
   return {
     clientFactory: new DeepSourceClientFactory(apiKey),
-    logger: createLogger(`Handler`),
+    logger: createLogger('Handler'),
     getApiKey,
     ...overrides,
   };
