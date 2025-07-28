@@ -119,17 +119,12 @@ describe('Project Issues Handler', () => {
       const testError = new Error('API client error');
       mockGetIssues.mockRejectedValue(testError);
 
-      // Call the handler
-      const result = await handleDeepsourceProjectIssues({
-        projectKey: 'test-project',
-      });
-
-      // Verify error response structure
-      expect(result).toHaveProperty('isError', true);
-      expect(result.content).toHaveLength(1);
-
-      const parsedContent = JSON.parse(result.content[0].text);
-      expect(parsedContent).toHaveProperty('error', 'API client error');
+      // Call the handler and expect it to throw
+      await expect(
+        handleDeepsourceProjectIssues({
+          projectKey: 'test-project',
+        })
+      ).rejects.toThrow('API client error');
     });
   });
 });
