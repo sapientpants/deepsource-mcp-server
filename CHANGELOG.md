@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.2] - 2025-07-28
+- Updated all dependencies to their latest versions
+  - @modelcontextprotocol/sdk: 1.12.3 → 1.17.0
+  - axios: 1.10.0 → 1.11.0
+  - @eslint/js: 9.29.0 → 9.32.0
+  - @types/jest: 29.5.14 → 30.0.0
+  - @types/node: 24.0.1 → 24.1.0
+  - @typescript-eslint/eslint-plugin: 8.34.0 → 8.38.0
+  - @typescript-eslint/parser: 8.34.0 → 8.38.0
+  - eslint: 9.29.0 → 9.32.0
+  - eslint-config-prettier: 10.1.5 → 10.1.8
+  - eslint-plugin-prettier: 5.4.1 → 5.5.3
+  - jest: 30.0.0 → 30.0.5
+  - nock: 14.0.5 → 14.0.7
+  - prettier: 3.5.3 → 3.6.2
+  - supertest: 7.1.1 → 7.1.4
+- Updated DeepSource test coverage action from v1.1.2 to v1.1.3 to fix CI issues
+- Added pnpm override to force form-data >= 4.0.4 for security
+- Security fix: Bumped brace-expansion to address vulnerability
+
 ## [v1.2.1] - 2025-06-16
 - Updated all dependencies to their latest versions
   - @modelcontextprotocol/sdk: 1.11.4 → 1.12.3
