@@ -8,6 +8,8 @@ import { z } from 'zod';
 import { ToolRegistry, ToolDefinition } from '../../server/tool-registry.js';
 import { BaseHandlerDeps } from '../../handlers/base/handler.interface.js';
 import { ApiResponse } from '../../models/common.js';
+import { DeepSourceClientFactory } from '../../client/factory.js';
+import { Logger } from '../../utils/logging/logger.js';
 
 // Mock the MCP server
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js');
@@ -56,7 +58,7 @@ describe('ToolRegistry', () => {
     mockDeps = {
       clientFactory: {
         createClient: jest.fn(),
-      } as any,
+      } as DeepSourceClientFactory,
       logger: {
         info: jest.fn(),
         debug: jest.fn(),
@@ -422,8 +424,8 @@ describe('ToolRegistry', () => {
   describe('updateDefaultDeps', () => {
     it('should update default dependencies', () => {
       const newDeps = {
-        clientFactory: {} as any,
-        logger: {} as any,
+        clientFactory: {} as DeepSourceClientFactory,
+        logger: {} as Logger,
         getApiKey: jest.fn(),
       };
       registry.updateDefaultDeps(newDeps);
@@ -467,6 +469,29 @@ describe('ToolRegistry', () => {
 
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toBe('Plain error message');
+    });
+
+    it('should handle error response with malformed JSON', async () => {
+      const tool: ToolDefinition = {
+        name: 'malformed_json_error_tool',
+        description: 'Returns error with malformed JSON',
+        handler: async () => ({
+          content: [{ type: 'text' as const, text: '{ invalid json }' }],
+          isError: true,
+        }),
+      };
+
+      registry.registerTool(tool);
+
+      const registeredHandler = mockServer.registerTool.mock.calls[0][2];
+      const result = await registeredHandler({}, {});
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toBe('{ invalid json }');
+      expect(result.structuredContent).toEqual({
+        code: 'HANDLER_ERROR',
+        message: '{ invalid json }',
+      });
     });
 
     it('should handle empty content array', async () => {
