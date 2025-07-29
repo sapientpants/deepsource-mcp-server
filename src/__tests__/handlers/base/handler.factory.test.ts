@@ -12,6 +12,7 @@ import {
 } from '../../../handlers/base/handler.factory.js';
 import { BaseHandlerDeps } from '../../../handlers/base/handler.interface.js';
 import { DeepSourceClientFactory } from '../../../client/factory.js';
+import { Logger } from '../../../utils/logging/logger.js';
 
 // Mock dependencies
 jest.mock('../../../client/factory.js');
@@ -52,7 +53,7 @@ describe('handler.factory', () => {
 
       mockDeps = {
         clientFactory: new DeepSourceClientFactory('test-key'),
-        logger: mockLogger as any,
+        logger: mockLogger as Logger,
         getApiKey: jest.fn(() => 'test-api-key'),
       };
     });
@@ -162,7 +163,7 @@ describe('handler.factory', () => {
       };
 
       const deps = createDefaultHandlerDeps({
-        logger: customLogger as any,
+        logger: customLogger as Logger,
       });
 
       expect(deps.logger).toBe(customLogger);
@@ -218,7 +219,7 @@ describe('handler.factory', () => {
 
     it('should handle Error with code property', () => {
       const error = new Error('API failed');
-      (error as any).code = 'API_ERROR';
+      (error as Record<string, unknown>).code = 'API_ERROR';
 
       const response = createErrorResponse(error);
 
@@ -228,9 +229,9 @@ describe('handler.factory', () => {
 
     it('should handle Error with details and suggestions', () => {
       const error = new Error('Validation failed');
-      (error as any).code = 'VALIDATION_ERROR';
-      (error as any).details = { field: 'email', reason: 'invalid format' };
-      (error as any).suggestions = ['Check email format', 'Use valid domain'];
+      (error as Record<string, unknown>).code = 'VALIDATION_ERROR';
+      (error as Record<string, unknown>).details = { field: 'email', reason: 'invalid format' };
+      (error as Record<string, unknown>).suggestions = ['Check email format', 'Use valid domain'];
 
       const response = createErrorResponse(error);
       const errorData = JSON.parse(response.content[0].text);

@@ -28,6 +28,11 @@ export function createBaseHandlerFactory<TParams = unknown, TResult = ApiRespons
   handlerLogic: (deps: BaseHandlerDeps, params: TParams) => Promise<TResult>
 ): HandlerFactory<BaseHandlerDeps, TParams, TResult> {
   return (deps: BaseHandlerDeps): HandlerFunction<TParams, TResult> => {
+    /**
+     * The actual handler function that processes the request
+     * @param params - The parameters passed to the handler
+     * @returns Promise resolving to the handler result
+     */
     const handler = async (params: TParams): Promise<TResult> => {
       const startTime = Date.now();
 
