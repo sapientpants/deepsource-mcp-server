@@ -35,8 +35,9 @@ describe('QualityMetricsRepository', () => {
     mockClient = {
       listProjects: jest.fn(),
       getQualityMetrics: jest.fn(),
-      updateMetricThreshold: jest.fn(),
+      setMetricThreshold: jest.fn(),
       updateMetricSetting: jest.fn(),
+      listRuns: jest.fn(),
     } as unknown as jest.Mocked<DeepSourceClient>;
 
     // Create test data
@@ -98,9 +99,27 @@ describe('QualityMetricsRepository', () => {
       {
         key: asProjectKey('test-project'),
         name: 'Test Project',
-        repository: { id: 'repo-123' },
+        repository: {
+          url: 'https://github.com/test/test-project',
+          provider: 'GITHUB',
+          login: 'test',
+          isPrivate: false,
+          isActivated: true,
+        },
       } as any,
     ]);
+
+    // Mock listRuns to provide repository ID
+    mockClient.listRuns.mockResolvedValue({
+      items: [
+        {
+          id: 'run-1',
+          repository: { id: 'repo-123' },
+        },
+      ],
+      pageInfo: { hasNextPage: false },
+      totalCount: 1,
+    } as any);
     mockClient.getQualityMetrics.mockResolvedValue(mockApiMetrics);
 
     // Create repository instance
@@ -327,13 +346,12 @@ describe('QualityMetricsRepository', () => {
       const projectKey = asProjectKey('test-project');
       const metrics = await repository.findByProjectAndMetric(projectKey, MetricShortcode.LCV);
 
-      mockClient.updateMetricThreshold.mockResolvedValue({ ok: true });
+      mockClient.setMetricThreshold.mockResolvedValue({ ok: true });
       mockClient.updateMetricSetting.mockResolvedValue({ ok: true });
 
       await repository.save(metrics!);
 
-      expect(mockClient.updateMetricThreshold).toHaveBeenCalledWith({
-        projectKey: 'test-project',
+      expect(mockClient.setMetricThreshold).toHaveBeenCalledWith({
         repositoryId: 'repo-123',
         metricShortcode: MetricShortcode.LCV,
         metricKey: 'AGGREGATE',
@@ -341,7 +359,6 @@ describe('QualityMetricsRepository', () => {
       });
 
       expect(mockClient.updateMetricSetting).toHaveBeenCalledWith({
-        projectKey: 'test-project',
         repositoryId: 'repo-123',
         metricShortcode: MetricShortcode.LCV,
         isReported: true,
@@ -356,7 +373,7 @@ describe('QualityMetricsRepository', () => {
 
       await repository.save(metrics!);
 
-      expect(mockClient.updateMetricThreshold).toHaveBeenCalledWith(
+      expect(mockClient.setMetricThreshold).toHaveBeenCalledWith(
         expect.objectContaining({
           thresholdValue: null,
         })
@@ -367,7 +384,7 @@ describe('QualityMetricsRepository', () => {
       const projectKey = asProjectKey('test-project');
       const metrics = await repository.findByProjectAndMetric(projectKey, MetricShortcode.LCV);
 
-      mockClient.updateMetricThreshold.mockRejectedValue(new Error('API Error'));
+      mockClient.setMetricThreshold.mockRejectedValue(new Error('API Error'));
 
       await expect(repository.save(metrics!)).rejects.toThrow('API Error');
     });
