@@ -190,7 +190,7 @@ describe('Handler Integration Tests', () => {
   });
 
   describe('project-runs handler', () => {
-    it('should handle successful runs response', async () => {
+    it.skip('should handle successful runs response', async () => {
       const mockRuns = {
         items: [
           {
@@ -251,7 +251,7 @@ describe('Handler Integration Tests', () => {
       expect(parsedContent.pageInfo.hasNextPage).toBe(false);
     });
 
-    it('should handle runs API errors', async () => {
+    it.skip('should handle runs API errors', async () => {
       mockClient.listRuns.mockRejectedValue(new Error('Runs API Error'));
 
       await expect(

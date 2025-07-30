@@ -68,6 +68,7 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
     - Handler properly maps domain ComplianceReport structure to expected MCP response format
     - Handles domain status mapping (READY→PASSING, ERROR→FAILING, etc.) correctly
     - Error handling converted from domain error responses to thrown exceptions for backward compatibility
+    - Successfully committed and pushed all changes (commit 4a39c5b)
   - 📋 Update remaining handlers (project-issues, project-runs, recent-run-issues, etc.)
 - Client architecture redesign
 
