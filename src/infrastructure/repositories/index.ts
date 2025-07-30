@@ -8,3 +8,4 @@
 export * from './project.repository.js';
 export * from './analysis-run.repository.js';
 export * from './quality-metrics.repository.js';
+export * from './compliance-report.repository.js';
