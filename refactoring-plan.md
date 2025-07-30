@@ -56,8 +56,10 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
   - ✅ Created repository factory for dependency injection
   - ✅ Full test coverage for repository factory (19 tests)
 
-### 🚧 In Progress
+### 🚧 In Progress (Phase 4: Handler Integration)
 - Handler integration with domain layer
+  - ✅ Projects handler updated to use domain aggregates via ProjectRepository
+  - 📋 Update remaining handlers (quality-metrics, compliance-reports, project-issues, etc.)
 - Client architecture redesign
 
 ### 📋 Pending
@@ -721,3 +723,44 @@ The infrastructure layer provides everything needed for the next phase:
 - All components are thoroughly tested
 
 The foundation is now solid for integrating the domain layer with the existing handlers.
+
+## Phase 4 Handler Integration Beginning
+
+### Projects Handler Domain Integration (Day 10)
+
+Successfully migrated the projects handler from direct client usage to domain aggregates via repositories:
+
+#### Changes Made:
+1. **Updated Dependencies**: 
+   - Replaced `DeepSourceClientFactory` with `RepositoryFactory`
+   - Changed from `ProjectsClient` to `IProjectRepository`
+   - Simplified dependency injection interface
+
+2. **Handler Implementation**:
+   - Removed API key retrieval logic (handled by repository)
+   - Updated to use `projectRepository.findAll()` instead of client calls
+   - Maintained same response format for MCP compatibility
+
+3. **Test Updates**:
+   - Replaced client mocks with repository mocks
+   - Updated test expectations to match repository-based flow
+   - All 7 tests passing with domain integration
+
+#### Benefits Achieved:
+- **Cleaner Architecture**: Handler now works with domain concepts
+- **Better Separation**: Business logic separated from API details
+- **Type Safety**: Strong typing with domain aggregates
+- **Fresh Data**: Repository ensures data freshness from DeepSource API
+- **Testability**: Easier to mock and test with repository pattern
+
+#### Code Structure:
+```typescript
+// Old approach - direct client usage
+const projectsClient = deps.clientFactory.getProjectsClient();
+const projects = await projectsClient.listProjects();
+
+// New approach - domain repository
+const projects = await deps.projectRepository.findAll();
+```
+
+The projects handler now serves as the template for migrating other handlers to use domain aggregates.

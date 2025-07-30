@@ -4,8 +4,8 @@
 
 import { jest } from '@jest/globals';
 import { ProjectKey } from '../../types/branded';
-import type { DeepSourceProject } from '../../models/projects';
-import type { DeepSourceClientFactory } from '../../client/factory';
+import type { IProjectRepository } from '../../domain/aggregates/project/project.repository';
+import type { Project } from '../../domain/aggregates/project/project.aggregate';
 import type { Logger } from '../../utils/logging/logger';
 
 // Create mock logger
@@ -21,17 +21,19 @@ jest.unstable_mockModule('../../utils/logging/logger', () => ({
   createLogger: jest.fn(() => mockLogger),
 }));
 
-// Mock the client factory and projects client
-const mockListProjects = jest.fn();
-const mockGetProjectsClient = jest.fn(() => ({
-  listProjects: mockListProjects,
-}));
-const mockFactory = jest.fn(() => ({
-  getProjectsClient: mockGetProjectsClient,
+// Mock the repository and factory
+const mockFindAll = jest.fn();
+const mockProjectRepository = {
+  findAll: mockFindAll,
+} as unknown as IProjectRepository;
+
+const mockCreateProjectRepository = jest.fn(() => mockProjectRepository);
+const mockRepositoryFactory = jest.fn(() => ({
+  createProjectRepository: mockCreateProjectRepository,
 }));
 
-jest.unstable_mockModule('../../client/factory', () => ({
-  DeepSourceClientFactory: mockFactory,
+jest.unstable_mockModule('../../infrastructure/factories/repository.factory', () => ({
+  RepositoryFactory: mockRepositoryFactory,
 }));
 
 // Import the modules under test AFTER mocking
@@ -57,43 +59,27 @@ describe('Projects Handler', () => {
 
   describe('createProjectsHandler', () => {
     it('should create a handler that uses injected dependencies', async () => {
-      // Mock projects data
-      const mockProjects: DeepSourceProject[] = [
+      // Mock domain projects
+      const mockProjects = [
         {
           key: 'proj1' as ProjectKey,
           name: 'Project One',
-          repository: {
-            url: 'https://github.com/org/repo1',
-            provider: 'GITHUB',
-            login: 'org',
-            isPrivate: false,
-            isActivated: true,
-          },
-        },
+        } as Project,
       ];
 
       // Set up the mock to return the projects
-      mockListProjects.mockResolvedValue(mockProjects);
-
-      // Create handler with injected dependencies
-      const mockGetApiKey = jest.fn(() => 'injected-api-key');
-      const mockClientFactory = {
-        getProjectsClient: mockGetProjectsClient,
-      };
+      mockFindAll.mockResolvedValue(mockProjects);
 
       const handler = createProjectsHandler({
-        clientFactory: mockClientFactory as unknown as DeepSourceClientFactory,
+        projectRepository: mockProjectRepository,
         logger: mockLogger as unknown as Logger,
-        getApiKey: mockGetApiKey,
       });
 
       // Call the handler
       const result = await handler();
 
-      // Verify injected dependencies were used
-      expect(mockGetApiKey).toHaveBeenCalled();
-      expect(mockGetProjectsClient).toHaveBeenCalled();
-      expect(mockListProjects).toHaveBeenCalled();
+      // Verify repository was used
+      expect(mockFindAll).toHaveBeenCalled();
 
       // Verify the response
       const parsedContent = JSON.parse(result.content[0].text);
@@ -103,18 +89,11 @@ describe('Projects Handler', () => {
     it('should handle errors using injected logger', async () => {
       // Set up the mock to throw an error
       const testError = new Error('Injected error');
-      mockListProjects.mockRejectedValue(testError);
-
-      // Create handler with injected dependencies
-      const mockGetApiKey = jest.fn(() => 'injected-api-key');
-      const mockClientFactory = {
-        getProjectsClient: mockGetProjectsClient,
-      };
+      mockFindAll.mockRejectedValue(testError);
 
       const handler = createProjectsHandler({
-        clientFactory: mockClientFactory as unknown as DeepSourceClientFactory,
+        projectRepository: mockProjectRepository,
         logger: mockLogger as unknown as Logger,
-        getApiKey: mockGetApiKey,
       });
 
       // Call the handler
@@ -145,54 +124,35 @@ describe('Projects Handler', () => {
     });
 
     it('should return a list of projects successfully', async () => {
-      // Mock projects data
-      const mockProjects: DeepSourceProject[] = [
+      // Mock domain projects
+      const mockProjects = [
         {
           key: 'proj1' as ProjectKey,
           name: 'Project One',
-          repository: {
-            url: 'https://github.com/org/repo1',
-            provider: 'GITHUB',
-            login: 'org',
-            isPrivate: false,
-            isActivated: true,
-          },
-        },
+        } as Project,
         {
           key: 'proj2' as ProjectKey,
           name: 'Project Two',
-          repository: {
-            url: 'https://github.com/org/repo2',
-            provider: 'GITHUB',
-            login: 'org',
-            isPrivate: true,
-            isActivated: true,
-          },
-        },
+        } as Project,
       ];
 
       // Set up the mock to return the projects
-      mockListProjects.mockResolvedValue(mockProjects);
+      mockFindAll.mockResolvedValue(mockProjects);
 
       // Call the handler
       const result = await handleProjects();
 
       // Verify factory was created with the API key
-      expect(mockFactory).toHaveBeenCalledWith('test-api-key');
+      expect(mockRepositoryFactory).toHaveBeenCalledWith({ apiKey: 'test-api-key' });
 
-      // Verify getProjectsClient was called
-      expect(mockGetProjectsClient).toHaveBeenCalled();
+      // Verify createProjectRepository was called
+      expect(mockCreateProjectRepository).toHaveBeenCalled();
 
-      // Verify listProjects was called
-      expect(mockListProjects).toHaveBeenCalled();
+      // Verify findAll was called
+      expect(mockFindAll).toHaveBeenCalled();
 
       // Verify logging behavior - check that key operations were logged
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('API key retrieved from config'),
-        expect.any(Object)
-      );
-      expect(mockLogger.debug).toHaveBeenCalledWith('Getting projects client');
-      expect(mockLogger.info).toHaveBeenCalledWith('Fetching projects from client');
+      expect(mockLogger.info).toHaveBeenCalledWith('Fetching projects from repository');
 
       // Verify the response structure
       expect(result).toHaveProperty('content');
@@ -209,18 +169,18 @@ describe('Projects Handler', () => {
 
     it('should handle empty projects list', async () => {
       // Set up the mock to return an empty array
-      mockListProjects.mockResolvedValue([]);
+      mockFindAll.mockResolvedValue([]);
 
       // Call the handler
       const result = await handleProjects();
 
-      // Verify that the factory and client methods were called
-      expect(mockFactory).toHaveBeenCalledWith('test-api-key');
-      expect(mockGetProjectsClient).toHaveBeenCalled();
-      expect(mockListProjects).toHaveBeenCalled();
+      // Verify that the factory and repository methods were called
+      expect(mockRepositoryFactory).toHaveBeenCalledWith({ apiKey: 'test-api-key' });
+      expect(mockCreateProjectRepository).toHaveBeenCalled();
+      expect(mockFindAll).toHaveBeenCalled();
 
       // Verify logging behavior - only check for key log messages
-      expect(mockLogger.info).toHaveBeenCalledWith('Fetching projects from client');
+      expect(mockLogger.info).toHaveBeenCalledWith('Fetching projects from repository');
 
       // Verify the response structure
       expect(result).toHaveProperty('content');
@@ -231,10 +191,10 @@ describe('Projects Handler', () => {
       expect(parsedContent).toEqual([]);
     });
 
-    it('should handle errors from the projects client', async () => {
+    it('should handle errors from the repository', async () => {
       // Set up the mock to throw an error
-      const testError = new Error('API connection failed');
-      mockListProjects.mockRejectedValue(testError);
+      const testError = new Error('Repository connection failed');
+      mockFindAll.mockRejectedValue(testError);
 
       // Call the handler
       const result = await handleProjects();
@@ -250,14 +210,14 @@ describe('Projects Handler', () => {
       // Parse and verify the error content
       const parsedContent = JSON.parse(result.content[0].text);
       expect(parsedContent).toEqual({
-        error: 'API connection failed',
+        error: 'Repository connection failed',
         details: 'Failed to retrieve projects',
       });
     });
 
     it('should handle non-Error type exceptions', async () => {
       // Set up the mock to throw a non-Error value
-      mockListProjects.mockRejectedValue('Just a string error');
+      mockFindAll.mockRejectedValue('Just a string error');
 
       // Call the handler
       const result = await handleProjects();

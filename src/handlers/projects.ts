@@ -1,9 +1,10 @@
 /**
  * @fileoverview Projects handler for the DeepSource MCP server
- * This module provides MCP tool handlers for DeepSource projects.
+ * This module provides MCP tool handlers for DeepSource projects using domain aggregates.
  */
 
-import { DeepSourceClientFactory } from '../client/factory.js';
+import { IProjectRepository } from '../domain/aggregates/project/project.repository.js';
+import { RepositoryFactory } from '../infrastructure/factories/repository.factory.js';
 import { ApiResponse } from '../models/common.js';
 import { createLogger, Logger } from '../utils/logging/logger.js';
 import { getApiKey } from '../config/index.js';
@@ -15,9 +16,8 @@ const logger = createLogger('ProjectsHandler');
  * Dependencies interface for the projects handler
  */
 export interface ProjectsHandlerDeps {
-  clientFactory: DeepSourceClientFactory;
+  projectRepository: IProjectRepository;
   logger: Logger;
-  getApiKey: () => string;
 }
 
 /**
@@ -28,24 +28,15 @@ export interface ProjectsHandlerDeps {
 export function createProjectsHandler(deps: ProjectsHandlerDeps) {
   return async function handleProjects(): Promise<ApiResponse> {
     try {
-      const apiKey = deps.getApiKey();
-      deps.logger.debug('API key retrieved from config', {
-        length: apiKey.length,
-        prefix: `${apiKey.substring(0, 5)}...`,
-      });
-
-      deps.logger.debug('Getting projects client');
-      const projectsClient = deps.clientFactory.getProjectsClient();
-
-      deps.logger.info('Fetching projects from client');
-      const projects = await projectsClient.listProjects();
+      deps.logger.info('Fetching projects from repository');
+      const projects = await deps.projectRepository.findAll();
 
       deps.logger.info('Successfully fetched projects', {
         count: projects.length,
         firstFew: projects.slice(0, 3).map((p) => ({ key: p.key, name: p.name })),
       });
 
-      // Map projects to the simplified format expected by the MCP tool
+      // Map domain projects to the simplified format expected by the MCP tool
       const projectsList = projects.map((project) => ({
         key: project.key,
         name: project.name,
@@ -95,19 +86,19 @@ export function createProjectsHandler(deps: ProjectsHandlerDeps) {
 }
 
 /**
- * Fetches and returns a list of all available DeepSource projects
+ * Fetches and returns a list of all available DeepSource projects using domain aggregates
  * @returns A response containing the list of projects with their keys and names
  * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
  * @public
  */
 export async function handleProjects(): Promise<ApiResponse> {
   const apiKey = getApiKey();
-  const clientFactory = new DeepSourceClientFactory(apiKey);
+  const repositoryFactory = new RepositoryFactory({ apiKey });
+  const projectRepository = repositoryFactory.createProjectRepository();
 
   const handler = createProjectsHandler({
-    clientFactory,
+    projectRepository,
     logger,
-    getApiKey,
   });
 
   return handler();
