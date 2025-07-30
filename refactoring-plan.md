@@ -49,7 +49,10 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
   - ✅ Created QualityMetricsMapper for API/Domain transformation
   - ✅ Full test coverage for QualityMetricsRepository (26 tests)
   - ✅ Full test coverage for QualityMetricsMapper (16 tests)
-  - 📋 Implement ComplianceReportRepository and mapper
+  - ✅ Implemented ComplianceReportRepository with DeepSourceClient
+  - ✅ Created ComplianceReportMapper for API/Domain transformation
+  - ✅ Full test coverage for ComplianceReportRepository (25 tests)
+  - ✅ Full test coverage for ComplianceReportMapper (18 tests)
   - 📋 Create repository factory for dependency injection
 
 ### 📋 Pending
@@ -608,8 +611,44 @@ With the domain layer complete and fully tested, the next steps are:
 - **Total new tests: 101 (bringing total to 1318 tests)**
 - All tests verify fresh data retrieval behavior
 
+7. **ComplianceReportRepository Implementation**
+   - Concrete implementation of `IComplianceReportRepository` using `DeepSourceClient`
+   - Supports all compliance report types (OWASP_TOP_10, SANS_TOP_25, MISRA_C)
+   - Repository ID fetching with fallback mechanism (similar to QualityMetricsRepository)
+   - Implements filtering by status, compliance level, and critical issues
+   - Fresh data retrieval on every request (no caching per requirements)
+
+8. **ComplianceReportMapper Implementation**
+   - Maps between DeepSource API compliance reports and domain aggregates
+   - Handles API/domain model differences (NOTE → INFO severity mapping)
+   - Corrected API structure alignment (uses `total` property, not `note`)
+   - Creates compliance categories with severity distribution
+   - Estimates compliance scores based on issue counts
+
+### Test Coverage Achievements
+
+- ProjectRepository: 25 tests covering all methods and edge cases
+- ProjectMapper: 7 tests covering all transformation scenarios
+- AnalysisRunRepository: 20 tests with comprehensive run filtering and pagination
+- AnalysisRunMapper: 7 tests covering API transformations
+- QualityMetricsRepository: 26 tests covering complex queries and filtering
+- QualityMetricsMapper: 16 tests covering mapping logic and edge cases
+- ComplianceReportRepository: 25 tests covering all query methods and data freshness
+- ComplianceReportMapper: 18 tests covering transformations and severity mapping
+- **Total new tests: 144 (bringing total to 1378 tests)**
+- All tests verify fresh data retrieval behavior
+
+### Key Implementation Achievements
+
+1. **All Core Repositories Complete**: Project, AnalysisRun, QualityMetrics, and ComplianceReport
+2. **Full Mapper Coverage**: All domain aggregates have corresponding mappers
+3. **Fresh Data Guarantee**: No caching implemented, ensuring data freshness
+4. **Comprehensive Error Handling**: All repositories handle API errors gracefully
+5. **TypeScript Safety**: Strong typing throughout with branded types
+6. **Test Coverage**: 90.79% overall coverage with infrastructure layer fully tested
+
 ### Next Infrastructure Tasks
 
-1. Implement ComplianceReportRepository and mapper
-2. Create repository factory for dependency injection
-3. Update handlers to use domain aggregates via repositories
+1. Create repository factory for dependency injection
+2. Update handlers to use domain aggregates via repositories
+3. Refactor DeepSourceClient into domain-specific clients
