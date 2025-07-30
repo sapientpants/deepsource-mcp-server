@@ -6,3 +6,4 @@
  */
 
 export * from './project.repository.js';
+export * from './analysis-run.repository.js';
