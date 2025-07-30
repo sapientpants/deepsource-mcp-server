@@ -63,7 +63,12 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
     - Created comprehensive unit tests (8 tests) for domain-based quality metrics handler
     - Handler properly integrates with repository pattern and maintains MCP compatibility
     - Error handling converted from domain error responses to thrown exceptions for backward compatibility
-  - 📋 Update remaining handlers (compliance-reports, project-issues, project-runs, etc.)
+  - ✅ Compliance-reports handler updated to use domain aggregates via ComplianceReportRepository
+    - Created comprehensive unit tests (9 tests) for domain-based compliance reports handler
+    - Handler properly maps domain ComplianceReport structure to expected MCP response format
+    - Handles domain status mapping (READY→PASSING, ERROR→FAILING, etc.) correctly
+    - Error handling converted from domain error responses to thrown exceptions for backward compatibility
+  - 📋 Update remaining handlers (project-issues, project-runs, recent-run-issues, etc.)
 - Client architecture redesign
 
 ### 📋 Pending
