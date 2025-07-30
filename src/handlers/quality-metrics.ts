@@ -7,6 +7,9 @@ import {
   createDefaultHandlerDeps,
 } from './base/handler.factory.js';
 import { createLogger } from '../utils/logging/logger.js';
+import { IQualityMetricsRepository } from '../domain/aggregates/quality-metrics/quality-metrics.repository.js';
+import { RepositoryFactory } from '../infrastructure/factories/repository.factory.js';
+import { asProjectKey } from '../types/branded.js';
 
 // Logger for the quality metrics handler
 const logger = createLogger('QualityMetricsHandler');
@@ -57,10 +60,123 @@ export interface DeepsourceUpdateMetricSettingParams {
 }
 
 /**
+ * Extended dependencies interface for quality metrics handler
+ */
+interface QualityMetricsHandlerDeps {
+  qualityMetricsRepository: IQualityMetricsRepository;
+  logger: any;
+}
+
+/**
  * Creates a quality metrics handler with injected dependencies
  * @param deps - The dependencies for the handler
- * @returns The configured handler factory
+ * @returns The configured handler function
  */
+export function createQualityMetricsHandlerWithRepo(deps: QualityMetricsHandlerDeps) {
+  return async function handleQualityMetrics(params: DeepsourceQualityMetricsParams) {
+    try {
+      const { projectKey, shortcodeIn } = params;
+      const projectKeyBranded = asProjectKey(projectKey);
+      deps.logger.info('Fetching quality metrics from repository', { projectKey, shortcodeIn });
+
+      // Get all metrics for the project from repository
+      const allMetrics = await deps.qualityMetricsRepository.findByProject(projectKeyBranded);
+
+      // Filter by shortcode if specified
+      const filteredMetrics = shortcodeIn
+        ? allMetrics.filter((metric: any) => shortcodeIn.includes(metric.configuration.shortcode))
+        : allMetrics;
+
+      deps.logger.info('Successfully fetched quality metrics', {
+        count: filteredMetrics.length,
+        projectKey,
+      });
+
+      const metricsData = {
+        metrics: filteredMetrics.map((domainMetric: any) => ({
+          name: domainMetric.configuration.name,
+          shortcode: domainMetric.configuration.shortcode,
+          description: domainMetric.configuration.description,
+          positiveDirection: domainMetric.configuration.positiveDirection,
+          unit: domainMetric.configuration.unit,
+          minValueAllowed: domainMetric.configuration.minValueAllowed,
+          maxValueAllowed: domainMetric.configuration.maxValueAllowed,
+          isReported: domainMetric.configuration.isReported,
+          isThresholdEnforced: domainMetric.configuration.isThresholdEnforced,
+          items: [
+            {
+              id: domainMetric.repositoryId,
+              key: domainMetric.configuration.metricKey,
+              threshold: domainMetric.configuration.threshold?.value ?? null,
+              latestValue: domainMetric.currentValue?.value ?? null,
+              latestValueDisplay: domainMetric.currentValue?.displayValue ?? null,
+              thresholdStatus: domainMetric.thresholdStatus,
+              // Add helpful metadata for threshold values
+              thresholdInfo:
+                domainMetric.configuration.threshold &&
+                domainMetric.currentValue &&
+                domainMetric.configuration.threshold.value !== null &&
+                domainMetric.currentValue.value !== null
+                  ? {
+                      difference:
+                        domainMetric.currentValue.value -
+                        domainMetric.configuration.threshold.value,
+                      percentDifference:
+                        domainMetric.configuration.threshold.value !== 0
+                          ? `${(((domainMetric.currentValue.value - domainMetric.configuration.threshold.value) / domainMetric.configuration.threshold.value) * 100).toFixed(2)}%`
+                          : 'N/A',
+                      isPassing: domainMetric.isCompliant,
+                    }
+                  : null,
+            },
+          ],
+        })),
+        // Add helpful examples for threshold management
+        usage_examples: {
+          filtering:
+            'To filter metrics by type, use the shortcodeIn parameter with specific metric codes (e.g., ["LCV", "BCV"])',
+          updating_threshold: 'To update a threshold, use the update_metric_threshold tool',
+          updating_settings:
+            'To update metric settings (e.g., enable reporting or threshold enforcement), use the update_metric_setting tool',
+        },
+      };
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify(metricsData),
+          },
+        ],
+      };
+    } catch (error) {
+      deps.logger.error('Error in handleQualityMetrics', {
+        errorType: typeof error,
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : 'No stack available',
+      });
+
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      deps.logger.debug('Returning error response', { errorMessage });
+
+      return {
+        isError: true,
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              error: errorMessage,
+              details: 'Failed to retrieve quality metrics',
+            }),
+          },
+        ],
+      };
+    }
+  };
+}
+
+// Keep the old handler for backward compatibility with the base handler pattern
 export const createQualityMetricsHandler: HandlerFactory<
   BaseHandlerDeps,
   DeepsourceQualityMetricsParams
@@ -132,16 +248,33 @@ export const createQualityMetricsHandler: HandlerFactory<
 });
 
 /**
- * Fetches and returns quality metrics from a specified DeepSource project
+ * Fetches and returns quality metrics from a specified DeepSource project using domain aggregates
  * @param params - Parameters for fetching metrics, including project key and optional filters
  * @returns A response containing the metrics data with their values and thresholds
- * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
+ * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set or if API call fails
  * @public
  */
 export async function handleDeepsourceQualityMetrics(params: DeepsourceQualityMetricsParams) {
-  const deps = createDefaultHandlerDeps({ logger });
-  const handler = createQualityMetricsHandler(deps);
-  return handler(params);
+  const baseDeps = createDefaultHandlerDeps({ logger });
+  const apiKey = baseDeps.getApiKey();
+  const repositoryFactory = new RepositoryFactory({ apiKey });
+  const qualityMetricsRepository = repositoryFactory.createQualityMetricsRepository();
+
+  const deps: QualityMetricsHandlerDeps = {
+    qualityMetricsRepository,
+    logger,
+  };
+
+  const handler = createQualityMetricsHandlerWithRepo(deps);
+  const result = await handler(params);
+
+  // If the domain handler returned an error response, throw an error for backward compatibility
+  if (result.isError) {
+    const errorData = JSON.parse(result.content[0].text);
+    throw new Error(errorData.error);
+  }
+
+  return result;
 }
 
 /**

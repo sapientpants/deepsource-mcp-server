@@ -59,7 +59,11 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
 ### 🚧 In Progress (Phase 4: Handler Integration)
 - Handler integration with domain layer
   - ✅ Projects handler updated to use domain aggregates via ProjectRepository
-  - 📋 Update remaining handlers (quality-metrics, compliance-reports, project-issues, etc.)
+  - ✅ Quality-metrics handler updated to use domain aggregates via QualityMetricsRepository
+    - Created comprehensive unit tests (8 tests) for domain-based quality metrics handler
+    - Handler properly integrates with repository pattern and maintains MCP compatibility
+    - Error handling converted from domain error responses to thrown exceptions for backward compatibility
+  - 📋 Update remaining handlers (compliance-reports, project-issues, project-runs, etc.)
 - Client architecture redesign
 
 ### 📋 Pending

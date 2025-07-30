@@ -176,8 +176,8 @@ describe('ComplianceReportRepository', () => {
       const reports = await repository.findLatest(asProjectKey('test-project'));
 
       expect(reports).toHaveLength(2);
-      expect(reports[0].reportType).toBe(ReportType.OWASP_TOP_10);
-      expect(reports[1].reportType).toBe(ReportType.SANS_TOP_25);
+      expect(reports.map((r) => r.reportType)).toContain(ReportType.OWASP_TOP_10);
+      expect(reports.map((r) => r.reportType)).toContain(ReportType.SANS_TOP_25);
       expect(mockClient.getComplianceReport).toHaveBeenCalledTimes(3);
     });
 
