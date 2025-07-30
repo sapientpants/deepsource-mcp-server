@@ -41,7 +41,16 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
   - ✅ Created ProjectMapper for API/Domain transformation
   - ✅ Full test coverage for ProjectRepository (25 tests)
   - ✅ Full test coverage for ProjectMapper (7 tests)
-  - 📋 Implement remaining repositories (AnalysisRun, QualityMetrics, ComplianceReport)
+  - ✅ Implemented AnalysisRunRepository with DeepSourceClient
+  - ✅ Created AnalysisRunMapper for API/Domain transformation
+  - ✅ Full test coverage for AnalysisRunRepository (20 tests)
+  - ✅ Full test coverage for AnalysisRunMapper (7 tests)
+  - ✅ Implemented QualityMetricsRepository with DeepSourceClient
+  - ✅ Created QualityMetricsMapper for API/Domain transformation
+  - ✅ Full test coverage for QualityMetricsRepository (26 tests)
+  - ✅ Full test coverage for QualityMetricsMapper (16 tests)
+  - 📋 Implement ComplianceReportRepository and mapper
+  - 📋 Create repository factory for dependency injection
 
 ### 📋 Pending
 - MCP server extraction
@@ -536,7 +545,7 @@ With the domain layer complete and fully tested, the next steps are:
 3. Integrate domain aggregates into existing handlers
 4. Refactor DeepSourceClient into domain-specific clients
 
-## Phase 3 Infrastructure Layer Implementation (Day 7)
+## Phase 3 Infrastructure Layer Implementation (Days 7-8)
 
 ### Completed Infrastructure Components
 
@@ -553,22 +562,54 @@ With the domain layer complete and fully tested, the next steps are:
    - Provides sensible defaults for configuration values not exposed by API
    - Supports both single and batch transformations
 
-3. **Key Design Decisions**
-   - **No Caching**: All repository methods fetch fresh data from DeepSource API
-   - **Read-Only Operations**: Save/delete throw errors as API doesn't support these
-   - **Local Filtering**: Since API lacks granular queries, we fetch all and filter locally
-   - **Consistent Logging**: Every operation is logged for observability
+3. **AnalysisRunRepository Implementation**
+   - Concrete implementation of `IAnalysisRunRepository` using `DeepSourceClient`
+   - Supports filtering by analyzer, commit OID, and run status
+   - Handles both cursor-based and limit/offset pagination
+   - Ensures fresh data retrieval on every request (no caching)
+   - Proper error handling for run lookups and filtering
+
+4. **AnalysisRunMapper Implementation**
+   - Maps between DeepSource API run models and domain AnalysisRun aggregates
+   - Converts API analyzer names to branded types
+   - Handles both single run and paginated run transformations
+   - Provides default values for optional fields
+
+5. **QualityMetricsRepository Implementation**
+   - Concrete implementation of `IQualityMetricsRepository` using `DeepSourceClient`
+   - Maps one API metric to multiple domain aggregates (one per item/language)
+   - Supports composite ID format: `projectKey:metricKey:shortcode`
+   - Implements save operations via threshold and setting updates
+   - Handles failing/reported metrics filtering with proper business logic
+
+6. **QualityMetricsMapper Implementation**
+   - Maps between DeepSource API metrics and domain QualityMetrics aggregates
+   - Handles complex mapping of threshold and metric values with all parameters
+   - Creates separate aggregates for each metric item (language-specific)
+   - Provides utilities for threshold status mapping and history entry creation
+
+### Implementation Decisions
+
+- **No Caching**: All repository methods fetch fresh data from DeepSource API
+- **Read-Only Operations**: Save/delete throw errors where API doesn't support these
+- **Local Filtering**: Since API lacks granular queries, we fetch all and filter locally
+- **Consistent Logging**: Every operation is logged for observability
+- **Composite Keys**: QualityMetrics uses composite IDs for unique identification
+- **One-to-Many Mapping**: API metrics can contain multiple items, creating multiple aggregates
 
 ### Test Coverage Achievements
 
 - ProjectRepository: 25 tests covering all methods and edge cases
 - ProjectMapper: 7 tests covering all transformation scenarios
-- Total new tests: 32 (bringing total to 1249 tests)
+- AnalysisRunRepository: 20 tests with comprehensive run filtering and pagination
+- AnalysisRunMapper: 7 tests covering API transformations
+- QualityMetricsRepository: 26 tests covering complex queries and filtering
+- QualityMetricsMapper: 16 tests covering mapping logic and edge cases
+- **Total new tests: 101 (bringing total to 1318 tests)**
 - All tests verify fresh data retrieval behavior
 
 ### Next Infrastructure Tasks
 
-1. Implement AnalysisRunRepository and mapper
-2. Implement QualityMetricsRepository and mapper
-3. Implement ComplianceReportRepository and mapper
-4. Create repository factory for dependency injection
+1. Implement ComplianceReportRepository and mapper
+2. Create repository factory for dependency injection
+3. Update handlers to use domain aggregates via repositories
