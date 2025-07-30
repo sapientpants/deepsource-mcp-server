@@ -75,6 +75,11 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
     - Error handling converted from domain error responses to thrown exceptions for backward compatibility
     - Successfully committed and pushed all changes (commit ea18056)
     - Note: Basic pagination implemented, cursor-based pagination and analyzer filtering to be added
+  - ✅ Run handler updated to use domain aggregates via AnalysisRunRepository  
+    - Created comprehensive unit tests (12 tests) for domain-based run handler
+    - Handler properly supports finding runs by either runId or commitOid
+    - Error handling converted from domain error responses to thrown exceptions for backward compatibility
+    - Successfully committed and pushed all changes (commit dca5b4b)
   - 📋 Update remaining handlers (project-issues, recent-run-issues, etc.)
 - Client architecture redesign
 
