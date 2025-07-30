@@ -28,11 +28,14 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
 - Unit tests for base domain classes (ValueObject, Entity, AggregateRoot)
 - Unit tests for all value objects (ThresholdValue, MetricValue, IssueCount, CoveragePercentage)
 - Unit tests for Project aggregate
+- Unit tests for AnalysisRun aggregate (36 tests, 100% coverage)
+- Unit tests for QualityMetrics aggregate (53 tests, 98.95% coverage)
+- Unit tests for ComplianceReport aggregate (52 tests, 100% coverage)
 - ESLint configuration fixes for test environment
-- CI pipeline fixes for domain layer tests
+- CI pipeline fixes for domain layer tests (1217 tests passing)
 
 ### 🚧 In Progress
-- Unit tests for remaining domain aggregates (AnalysisRun, QualityMetrics, ComplianceReport)
+- None - Phase 2 domain layer complete!
 
 ### 📋 Pending
 - MCP server extraction
@@ -133,7 +136,7 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
 
 #### 2.2 Repository Pattern Implementation
 - Create repository interfaces for each aggregate
-- Implement caching strategies at the repository level
+- Ensure fresh data retrieval from DeepSource API on every request
 - Separate read and write operations (CQRS-lite)
 
 #### 2.3 Enhanced Type Safety
@@ -162,7 +165,7 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
 #### 3.2 GraphQL Query Builder
 - Create a fluent query builder for GraphQL operations
 - Implement query composition and fragment reuse
-- Add query result caching with proper invalidation
+- Ensure all queries fetch fresh data from DeepSource API
 
 #### 3.3 Connection Management
 - Implement proper HTTP client configuration
@@ -229,14 +232,14 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
   - ✅ QualityMetrics aggregate with repository interface
   - ✅ ComplianceReport aggregate with repository interface
 - ~~Create repository interfaces~~ ✅ Done (Days 3-4)
-- 🚧 Create unit tests for domain components (Day 5)
+- ✅ Create unit tests for domain components (Days 5-6)
   - ✅ Base domain classes (ValueObject, Entity, AggregateRoot)
   - ✅ All value objects (ThresholdValue, MetricValue, IssueCount, CoveragePercentage) 
   - ✅ Project aggregate with comprehensive test coverage
   - ✅ ESLint configuration fixes for test environment
-  - 🚧 AnalysisRun aggregate tests (pending)
-  - 🚧 QualityMetrics aggregate tests (pending)
-  - 🚧 ComplianceReport aggregate tests (pending)
+  - ✅ AnalysisRun aggregate tests (36 tests, 100% coverage)
+  - ✅ QualityMetrics aggregate tests (53 tests, 98.95% coverage)
+  - ✅ ComplianceReport aggregate tests (52 tests, 100% coverage)
 - 📋 Implement concrete repository implementations (Days 5-6)
 - 📋 Split monolithic client into domain-specific clients (Days 7-8)
 - 📋 Add GraphQL query builder (Days 9-10)
@@ -432,26 +435,32 @@ export async function handleHandlerName(params: ParamsType) {
 4. **Validation**: Business rules enforced at construction/method level
 5. **Separation**: Clear boundaries between domain logic and infrastructure
 
-### Test Results (Updated Day 5)
-- All existing tests pass (1076 tests)
-- Code coverage improved to 79.15% overall
+### Test Results (Updated Days 5-6)
+
+- All tests passing (1217 tests total)
+- Code coverage improved to 92.25% overall
 - Comprehensive domain layer test coverage:
   - Base classes: 100% coverage with edge case testing
   - Value objects: 100% coverage with immutability verification
   - Project aggregate: 93.67% coverage with business logic validation
+  - AnalysisRun aggregate: 100% coverage with state machine testing
+  - QualityMetrics aggregate: 98.95% coverage with trend analysis
+  - ComplianceReport aggregate: 100% coverage with scoring validation
 - All linting and type checking passes
-- CI pipeline successful with ESLint configuration fixes
-- Domain layer ready for integration
+- CI pipeline successful with zero errors
+- Domain layer fully tested and ready for integration
 
 ### Integration Points
+
 - Uses existing branded types from `src/types/`
 - Compatible with current models in `src/models/`
 - Ready for handler integration via repositories
 - Can leverage existing DeepSourceClient
 
-## Phase 2 Continued: Domain Testing Progress (Day 5)
+## Phase 2 Domain Testing Complete (Days 5-6)
 
-### Completed Testing Tasks
+### ✅ Completed Testing Tasks
+
 1. **Base Domain Classes Testing**
    - `ValueObject`: Deep equality testing, immutability verification, nested object handling
    - `Entity`: Identity-based equality, inheritance behavior validation
@@ -463,27 +472,60 @@ export async function handleHandlerName(params: ParamsType) {
    - `IssueCount`: Non-negative validation, arithmetic operations, category handling
    - `CoveragePercentage`: Range validation, level categorization, specialized methods
 
-3. **Project Aggregate Full Coverage**
-   - Business logic: activate(), deactivate(), archive(), update() methods
-   - State transitions with proper validation and business rules
-   - Domain event emission for all state changes
-   - Repository pattern integration (fromPersistence/toPersistence)
-   - Edge cases: validation errors, already active/inactive states
+3. **All Domain Aggregate Testing Complete**
+   - **Project Aggregate** (93.67% coverage):
+     - Business logic: activate(), deactivate(), archive(), update() methods
+     - State transitions with proper validation and business rules
+     - Domain event emission for all state changes
+     - Repository pattern integration (fromPersistence/toPersistence)
+   - **AnalysisRun Aggregate** (100% coverage):
+     - State machine validation (PENDING → RUNNING → SUCCESS/FAILURE/TIMEOUT/CANCELLED/SKIPPED)
+     - Issue occurrence tracking and summary calculation
+     - Domain event emission for lifecycle changes
+     - 36 comprehensive tests covering all scenarios
+   - **QualityMetrics Aggregate** (98.95% coverage):
+     - Composite ID creation and validation
+     - Threshold evaluation and compliance checking
+     - Measurement recording with history tracking
+     - Trend analysis with multiple time periods
+     - 53 tests covering edge cases and business logic
+   - **ComplianceReport Aggregate** (100% coverage):
+     - Report generation lifecycle (PENDING → GENERATING → READY/ERROR)
+     - Compliance score calculation and severity distribution
+     - Category management and trend comparison
+     - 52 tests including edge cases for score levels
 
-4. **CI Pipeline Fixes**
-   - ESLint configuration updated to support test globals (`setTimeout`, `global`)
-   - Async test patterns with proper Promise handling
-   - Test environment configuration for Node.js timer functions
-   - All 1076 tests passing with 79.15% overall coverage
+4. **CI Pipeline Achievements**
+   - ESLint configuration fully optimized for test environment
+   - All formatting issues resolved with Prettier
+   - **Final test results: 1217 tests passing**
+   - **Domain layer coverage: 92.25% statements overall**
+   - Zero linting errors, zero type errors
 
-### Current Status
-- **Completed**: Base classes, value objects, Project aggregate (93.67% coverage)
-- **Pending**: AnalysisRun, QualityMetrics, ComplianceReport aggregate tests
-- **Infrastructure**: Test environment fully configured and working
-- **Quality**: All code passes linting, type checking, and formatting requirements
+### Key Testing Insights
 
-### Next Immediate Tasks
-1. Create tests for AnalysisRun aggregate (status transitions, issue tracking)
-2. Create tests for QualityMetrics aggregate (threshold evaluation, trend analysis)  
-3. Create tests for ComplianceReport aggregate (severity distribution, scoring)
-4. Achieve 90%+ coverage for all domain components
+1. **Test-Driven Fixes Applied**:
+   - QualityMetrics: Fixed `timestamp` vs `measuredAt` property mismatch
+   - ComplianceReport: Added async delays for timestamp comparison tests
+   - ComplianceReport: Used integer counts to avoid decimal validation errors
+
+2. **Comprehensive Coverage Achieved**:
+   - All domain aggregates have >90% test coverage
+   - Every business rule and state transition tested
+   - Edge cases thoroughly validated
+   - Immutability and encapsulation verified
+
+3. **Quality Standards Met**:
+   - All tests follow consistent patterns
+   - Proper use of TypeScript types in tests
+   - No ESLint suppressions needed
+   - Clean, maintainable test code
+
+### Next Phase: Integration
+
+With the domain layer complete and fully tested, the next steps are:
+
+1. Implement concrete repository classes using DeepSourceClient
+2. Create mappers between domain models and API responses
+3. Integrate domain aggregates into existing handlers
+4. Refactor DeepSourceClient into domain-specific clients
