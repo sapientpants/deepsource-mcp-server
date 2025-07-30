@@ -50,6 +50,8 @@ export default [
         afterEach: 'readonly',
         afterAll: 'readonly',
         jest: 'readonly',
+        setTimeout: 'readonly',
+        global: 'readonly',
       },
     },
     rules: {
