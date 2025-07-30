@@ -6,3 +6,4 @@
 
 export * from './project.mapper.js';
 export * from './analysis-run.mapper.js';
+export * from './quality-metrics.mapper.js';
