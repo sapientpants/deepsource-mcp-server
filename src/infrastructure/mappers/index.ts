@@ -5,3 +5,4 @@
  */
 
 export * from './project.mapper.js';
+export * from './analysis-run.mapper.js';
