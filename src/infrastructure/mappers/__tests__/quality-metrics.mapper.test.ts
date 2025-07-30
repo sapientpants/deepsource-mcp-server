@@ -4,11 +4,7 @@
 
 import { describe, it, expect } from '@jest/globals';
 import { QualityMetricsMapper } from '../quality-metrics.mapper.js';
-import {
-  RepositoryMetric,
-  RepositoryMetricItem,
-  MetricShortcode,
-} from '../../../models/metrics.js';
+import { RepositoryMetric, MetricShortcode } from '../../../models/metrics.js';
 import { QualityMetrics } from '../../../domain/aggregates/quality-metrics/quality-metrics.aggregate.js';
 
 describe('QualityMetricsMapper', () => {

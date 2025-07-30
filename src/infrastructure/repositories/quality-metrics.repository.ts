@@ -44,7 +44,52 @@ export class QualityMetricsRepository implements IQualityMetricsRepository {
     if (!project) {
       throw new Error(`Project not found: ${projectKey}`);
     }
-    return project.repository.id;
+
+    // The listProjects doesn't include repository ID, so we need to fetch it
+    // using a repository query. We can get it from any repository-specific query.
+    // Let's use the runs query with minimal parameters to get the repository ID.
+    try {
+      const runs = await this.client.listRuns(projectKey, { first: 1 });
+      // The runs query includes repository information with ID
+      if (runs.items.length > 0 && runs.items[0].repository?.id) {
+        return runs.items[0].repository.id;
+      }
+
+      // If no runs exist, we need to make a direct repository query
+      // This is a fallback that uses the GraphQL client directly
+      const repoQuery = `
+        query($login: String!, $name: String!, $provider: VCSProvider!) {
+          repository(login: $login, name: $name, vcsProvider: $provider) {
+            id
+          }
+        }
+      `;
+
+      const response = await (this.client as any).client.post('', {
+        query: repoQuery.trim(),
+        variables: {
+          login: project.repository.login,
+          name: project.name,
+          provider: project.repository.provider,
+        },
+      });
+
+      if (response.data.errors) {
+        throw new Error(
+          `GraphQL Errors: ${response.data.errors.map((e: any) => e.message).join(', ')}`
+        );
+      }
+
+      const repositoryId = response.data.data?.repository?.id;
+      if (!repositoryId) {
+        throw new Error(`Repository ID not found for project: ${projectKey}`);
+      }
+
+      return repositoryId;
+    } catch (error) {
+      logger.error('Error fetching repository ID', { projectKey, error });
+      throw error;
+    }
   }
 
   /**
@@ -317,8 +362,7 @@ export class QualityMetricsRepository implements IQualityMetricsRepository {
       const threshold = metrics.configuration.threshold;
       const thresholdValue = threshold ? threshold.value : null;
 
-      await this.client.updateMetricThreshold({
-        projectKey: metrics.projectKey,
+      await this.client.setMetricThreshold({
         repositoryId: metrics.repositoryId,
         metricShortcode: metrics.configuration.shortcode,
         metricKey: metrics.configuration.metricKey,
@@ -327,7 +371,6 @@ export class QualityMetricsRepository implements IQualityMetricsRepository {
 
       // Update settings
       await this.client.updateMetricSetting({
-        projectKey: metrics.projectKey,
         repositoryId: metrics.repositoryId,
         metricShortcode: metrics.configuration.shortcode,
         isReported: metrics.configuration.isReported,

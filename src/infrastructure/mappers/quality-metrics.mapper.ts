@@ -123,9 +123,14 @@ export class QualityMetricsMapper {
     configuration: MetricConfiguration;
     currentValue: MetricValue | null;
     history: MetricHistoryEntry[];
-    lastSyncedAt: Date;
+    lastUpdated: Date;
   } {
-    return metrics.toPersistence();
+    const persistence = metrics.toPersistence();
+    return {
+      ...persistence,
+      projectKey: persistence.projectKey as string,
+      repositoryId: persistence.repositoryId as string,
+    };
   }
 
   /**
@@ -159,7 +164,7 @@ export class QualityMetricsMapper {
 
     // Determine threshold status based on value and threshold
     let thresholdStatus: ThresholdStatus = 'UNKNOWN';
-    if (thresholdValue && metricValue) {
+    if (thresholdValue && metricValue && threshold !== null) {
       // This is simplified - actual logic would need to consider metric direction
       thresholdStatus = value >= threshold ? 'PASSING' : 'FAILING';
     }
@@ -196,4 +201,3 @@ export class QualityMetricsMapper {
     return allMetrics;
   }
 }
-
