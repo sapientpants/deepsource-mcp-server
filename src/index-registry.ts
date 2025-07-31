@@ -58,7 +58,7 @@ const logger = createLogger('Main');
 /**
  * Validates environment configuration
  */
-function validateEnvironment(): void {
+export function validateEnvironment(): void {
   if (!process.env.DEEPSOURCE_API_KEY) {
     const errorMsg = 'DEEPSOURCE_API_KEY environment variable is required';
     logger.error(errorMsg);
@@ -70,7 +70,7 @@ function validateEnvironment(): void {
 /**
  * Creates and configures the tool registry with all handlers
  */
-function createAndConfigureToolRegistry(server: McpServer): ToolRegistry {
+export function createAndConfigureToolRegistry(server: McpServer): ToolRegistry {
   const toolRegistry = new ToolRegistry(server);
 
   // Register project listing tool
@@ -169,7 +169,7 @@ function createAndConfigureToolRegistry(server: McpServer): ToolRegistry {
 /**
  * Main function that starts the MCP server
  */
-async function main() {
+export async function main() {
   logger.info('Starting DeepSource MCP Server (Registry Implementation)');
 
   // Validate environment
