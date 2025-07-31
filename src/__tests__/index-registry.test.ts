@@ -276,7 +276,7 @@ describe('Index Registry Implementation', () => {
   describe.skip('Main Entry Point Functions', () => {
     let mockExit: jest.SpyInstance;
     let mockConsoleError: jest.SpyInstance;
-    let originalProcessEnv: NodeJS.ProcessEnv;
+    let originalProcessEnv: typeof process.env;
 
     beforeEach(() => {
       // Mock process.exit
@@ -292,11 +292,16 @@ describe('Index Registry Implementation', () => {
       process.env.DEEPSOURCE_API_KEY = 'test-api-key';
 
       // Mock MCP SDK classes
-      (McpServer as jest.MockedClass<typeof McpServer>).mockImplementation(() => ({
-        connect: jest.fn().mockResolvedValue(undefined),
-      } as any));
+      (McpServer as jest.MockedClass<typeof McpServer>).mockImplementation(
+        () =>
+          ({
+            connect: jest.fn().mockResolvedValue(undefined),
+          }) as any
+      );
 
-      (StdioServerTransport as jest.MockedClass<typeof StdioServerTransport>).mockImplementation(() => ({} as any));
+      (StdioServerTransport as jest.MockedClass<typeof StdioServerTransport>).mockImplementation(
+        () => ({}) as any
+      );
     });
 
     afterEach(() => {
@@ -309,28 +314,28 @@ describe('Index Registry Implementation', () => {
     describe('validateEnvironment', () => {
       it('should pass when DEEPSOURCE_API_KEY is set', () => {
         process.env.DEEPSOURCE_API_KEY = 'valid-api-key';
-        
+
         // Import the module functions
         const { validateEnvironment } = require('../index-registry.js');
-        
+
         // Should not throw
         expect(() => validateEnvironment()).not.toThrow();
       });
 
       it('should exit when DEEPSOURCE_API_KEY is missing', () => {
         delete process.env.DEEPSOURCE_API_KEY;
-        
+
         const { validateEnvironment } = require('../index-registry.js');
-        
+
         expect(() => validateEnvironment()).toThrow('process.exit called with code 1');
         expect(mockExit).toHaveBeenCalledWith(1);
       });
 
       it('should exit when DEEPSOURCE_API_KEY is empty', () => {
         process.env.DEEPSOURCE_API_KEY = '';
-        
+
         const { validateEnvironment } = require('../index-registry.js');
-        
+
         expect(() => validateEnvironment()).toThrow('process.exit called with code 1');
         expect(mockExit).toHaveBeenCalledWith(1);
       });
@@ -339,14 +344,22 @@ describe('Index Registry Implementation', () => {
     describe('createAndConfigureToolRegistry', () => {
       it('should create registry and register all tools', () => {
         const mockServer = new McpServer({ name: 'test', version: '1.0.0' });
-        const mockToolRegistry = new ToolRegistry(mockServer);
-        
+
         jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation(() => {});
-        jest.spyOn(ToolRegistry.prototype, 'getToolNames').mockReturnValue([
-          'projects', 'quality_metrics', 'update_metric_threshold', 
-          'update_metric_setting', 'compliance_report', 'project_issues',
-          'dependency_vulnerabilities', 'runs', 'run', 'recent_run_issues'
-        ]);
+        jest
+          .spyOn(ToolRegistry.prototype, 'getToolNames')
+          .mockReturnValue([
+            'projects',
+            'quality_metrics',
+            'update_metric_threshold',
+            'update_metric_setting',
+            'compliance_report',
+            'project_issues',
+            'dependency_vulnerabilities',
+            'runs',
+            'run',
+            'recent_run_issues',
+          ]);
 
         const { createAndConfigureToolRegistry } = require('../index-registry.js');
         const registry = createAndConfigureToolRegistry(mockServer);
@@ -357,7 +370,7 @@ describe('Index Registry Implementation', () => {
 
       it('should log tool configuration', () => {
         const mockServer = new McpServer({ name: 'test', version: '1.0.0' });
-        
+
         jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation(() => {});
         jest.spyOn(ToolRegistry.prototype, 'getToolNames').mockReturnValue(['test-tool']);
 
@@ -373,11 +386,13 @@ describe('Index Registry Implementation', () => {
         const mockServer = {
           connect: jest.fn().mockResolvedValue(undefined),
         };
-        
-(McpServer as jest.MockedClass<typeof McpServer>).mockImplementation(() => mockServer as any);
+
+        (McpServer as jest.MockedClass<typeof McpServer>).mockImplementation(
+          () => mockServer as any
+        );
 
         const { main } = require('../index-registry.js');
-        
+
         await expect(main()).resolves.not.toThrow();
         expect(McpServer).toHaveBeenCalledWith({
           name: 'deepsource-mcp-server',
@@ -390,11 +405,13 @@ describe('Index Registry Implementation', () => {
         const mockServer = {
           connect: jest.fn().mockRejectedValue(new Error('Connection failed')),
         };
-        
-(McpServer as jest.MockedClass<typeof McpServer>).mockImplementation(() => mockServer as any);
+
+        (McpServer as jest.MockedClass<typeof McpServer>).mockImplementation(
+          () => mockServer as any
+        );
 
         const { main } = require('../index-registry.js');
-        
+
         await expect(main()).rejects.toThrow('process.exit called with code 1');
         expect(mockExit).toHaveBeenCalledWith(1);
       });
@@ -403,7 +420,7 @@ describe('Index Registry Implementation', () => {
         delete process.env.DEEPSOURCE_API_KEY;
 
         const { main } = require('../index-registry.js');
-        
+
         await expect(main()).rejects.toThrow('process.exit called with code 1');
         expect(mockExit).toHaveBeenCalledWith(1);
       });
@@ -418,7 +435,7 @@ describe('Index Registry Implementation', () => {
           uncaughtException: process.listeners('uncaughtException'),
           unhandledRejection: process.listeners('unhandledRejection'),
         };
-        
+
         process.removeAllListeners('uncaughtException');
         process.removeAllListeners('unhandledRejection');
       });
@@ -427,7 +444,7 @@ describe('Index Registry Implementation', () => {
         // Restore original listeners
         process.removeAllListeners('uncaughtException');
         process.removeAllListeners('unhandledRejection');
-        
+
         originalListeners.uncaughtException.forEach((listener: any) => {
           process.on('uncaughtException', listener);
         });
@@ -441,7 +458,7 @@ describe('Index Registry Implementation', () => {
         require('../index-registry.js');
 
         const testError = new Error('Test uncaught exception');
-        
+
         expect(() => {
           process.emit('uncaughtException', testError);
         }).toThrow('process.exit called with code 1');
@@ -462,7 +479,12 @@ describe('Index Registry Implementation', () => {
         }).toThrow('process.exit called with code 1');
 
         expect(mockExit).toHaveBeenCalledWith(1);
-        expect(mockConsoleError).toHaveBeenCalledWith('Unhandled rejection at:', testPromise, 'reason:', testReason);
+        expect(mockConsoleError).toHaveBeenCalledWith(
+          'Unhandled rejection at:',
+          testPromise,
+          'reason:',
+          testReason
+        );
       });
     });
 
@@ -470,7 +492,7 @@ describe('Index Registry Implementation', () => {
       it('should register projects handler without parameters', () => {
         const mockServer = new McpServer({ name: 'test', version: '1.0.0' });
         let registeredHandler: any;
-        
+
         jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation((tool) => {
           if (tool.name === 'projects') {
             registeredHandler = tool.handler;
@@ -486,7 +508,7 @@ describe('Index Registry Implementation', () => {
       it('should register quality metrics handler with adapter', () => {
         const mockServer = new McpServer({ name: 'test', version: '1.0.0' });
         let registeredHandler: any;
-        
+
         jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation((tool) => {
           if (tool.name === 'quality_metrics') {
             registeredHandler = tool.handler;
@@ -502,7 +524,7 @@ describe('Index Registry Implementation', () => {
       it('should call handlers with correct parameters', async () => {
         const mockServer = new McpServer({ name: 'test', version: '1.0.0' });
         const handlers: Record<string, any> = {};
-        
+
         jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation((tool) => {
           handlers[tool.name] = tool.handler;
         });
