@@ -44,7 +44,7 @@ jest.mock('../utils/logging/logger.js', () => ({
 
 describe('Index.ts MCP Server Comprehensive Tests', () => {
   let indexModule: any;
-  let originalEnv: NodeJS.ProcessEnv;
+  let originalEnv: typeof process.env;
 
   beforeEach(async () => {
     // Clear all mocks
@@ -87,7 +87,9 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
   describe('Handler Integration Testing', () => {
     it('should test handleProjects success scenario', async () => {
       const mockResult = {
-        content: [{ type: 'text' as const, text: JSON.stringify([{ key: 'test', name: 'Test Project' }]) }],
+        content: [
+          { type: 'text' as const, text: JSON.stringify([{ key: 'test', name: 'Test Project' }]) },
+        ],
         isError: false,
       };
       mockHandlers.handleProjects.mockResolvedValue(mockResult);
@@ -121,7 +123,9 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
     it('should test handleDeepsourceQualityMetrics success scenario', async () => {
       const mockParams = { projectKey: 'test-project', shortcodeIn: ['LCV'] };
       const mockResult = {
-        content: [{ type: 'text' as const, text: JSON.stringify({ metrics: [{ name: 'Test Metric' }] }) }],
+        content: [
+          { type: 'text' as const, text: JSON.stringify({ metrics: [{ name: 'Test Metric' }] }) },
+        ],
         isError: false,
       };
       mockHandlers.handleDeepsourceQualityMetrics.mockResolvedValue(mockResult);
@@ -137,7 +141,9 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
       const mockParams = { projectKey: 'test-project' };
       mockHandlers.handleDeepsourceQualityMetrics.mockRejectedValue(new Error('API error'));
 
-      await expect(mockHandlers.handleDeepsourceQualityMetrics(mockParams)).rejects.toThrow('API error');
+      await expect(mockHandlers.handleDeepsourceQualityMetrics(mockParams)).rejects.toThrow(
+        'API error'
+      );
     });
 
     it('should test handleDeepsourceUpdateMetricThreshold success scenario', async () => {
@@ -188,7 +194,9 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
         reportType: 'OWASP_TOP_10' as const,
       };
       const mockResult = {
-        content: [{ type: 'text' as const, text: JSON.stringify({ report: { name: 'OWASP Top 10' } }) }],
+        content: [
+          { type: 'text' as const, text: JSON.stringify({ report: { name: 'OWASP Top 10' } }) },
+        ],
         isError: false,
       };
       mockHandlers.handleDeepsourceComplianceReport.mockResolvedValue(mockResult);
@@ -207,7 +215,12 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
         path: '/src/test.js',
       };
       const mockResult = {
-        content: [{ type: 'text' as const, text: JSON.stringify({ issues: [{ id: '1', title: 'Test Issue' }] }) }],
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({ issues: [{ id: '1', title: 'Test Issue' }] }),
+          },
+        ],
         isError: false,
       };
       mockHandlers.handleDeepsourceProjectIssues.mockResolvedValue(mockResult);
@@ -216,7 +229,9 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
 
       expect(mockHandlers.handleDeepsourceProjectIssues).toHaveBeenCalledWith(mockParams);
       expect(result.isError).toBe(false);
-      expect(JSON.parse(result.content[0].text)).toEqual({ issues: [{ id: '1', title: 'Test Issue' }] });
+      expect(JSON.parse(result.content[0].text)).toEqual({
+        issues: [{ id: '1', title: 'Test Issue' }],
+      });
     });
 
     it('should test handleDeepsourceProjectRuns success scenario', async () => {
@@ -225,7 +240,12 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
         first: 10,
       };
       const mockResult = {
-        content: [{ type: 'text' as const, text: JSON.stringify({ runs: [{ id: '1', status: 'SUCCESS' }] }) }],
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({ runs: [{ id: '1', status: 'SUCCESS' }] }),
+          },
+        ],
         isError: false,
       };
       mockHandlers.handleDeepsourceProjectRuns.mockResolvedValue(mockResult);
@@ -234,7 +254,9 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
 
       expect(mockHandlers.handleDeepsourceProjectRuns).toHaveBeenCalledWith(mockParams);
       expect(result.isError).toBe(false);
-      expect(JSON.parse(result.content[0].text)).toEqual({ runs: [{ id: '1', status: 'SUCCESS' }] });
+      expect(JSON.parse(result.content[0].text)).toEqual({
+        runs: [{ id: '1', status: 'SUCCESS' }],
+      });
     });
 
     it('should test handleDeepsourceRun success scenario', async () => {
@@ -244,7 +266,12 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
         isCommitOid: false,
       };
       const mockResult = {
-        content: [{ type: 'text' as const, text: JSON.stringify({ run: { id: 'run123', status: 'SUCCESS' } }) }],
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({ run: { id: 'run123', status: 'SUCCESS' } }),
+          },
+        ],
         isError: false,
       };
       mockHandlers.handleDeepsourceRun.mockResolvedValue(mockResult);
@@ -253,7 +280,9 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
 
       expect(mockHandlers.handleDeepsourceRun).toHaveBeenCalledWith(mockParams);
       expect(result.isError).toBe(false);
-      expect(JSON.parse(result.content[0].text)).toEqual({ run: { id: 'run123', status: 'SUCCESS' } });
+      expect(JSON.parse(result.content[0].text)).toEqual({
+        run: { id: 'run123', status: 'SUCCESS' },
+      });
     });
 
     it('should test handleDeepsourceRecentRunIssues success scenario', async () => {
@@ -263,7 +292,12 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
         first: 10,
       };
       const mockResult = {
-        content: [{ type: 'text' as const, text: JSON.stringify({ issues: [{ id: '1', title: 'Recent Issue' }] }) }],
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({ issues: [{ id: '1', title: 'Recent Issue' }] }),
+          },
+        ],
         isError: false,
       };
       mockHandlers.handleDeepsourceRecentRunIssues.mockResolvedValue(mockResult);
@@ -272,7 +306,9 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
 
       expect(mockHandlers.handleDeepsourceRecentRunIssues).toHaveBeenCalledWith(mockParams);
       expect(result.isError).toBe(false);
-      expect(JSON.parse(result.content[0].text)).toEqual({ issues: [{ id: '1', title: 'Recent Issue' }] });
+      expect(JSON.parse(result.content[0].text)).toEqual({
+        issues: [{ id: '1', title: 'Recent Issue' }],
+      });
     });
 
     it('should test handleDeepsourceDependencyVulnerabilities success scenario', async () => {
@@ -281,16 +317,25 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
         first: 10,
       };
       const mockResult = {
-        content: [{ type: 'text' as const, text: JSON.stringify({ vulnerabilities: [{ id: '1', severity: 'HIGH' }] }) }],
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({ vulnerabilities: [{ id: '1', severity: 'HIGH' }] }),
+          },
+        ],
         isError: false,
       };
       mockHandlers.handleDeepsourceDependencyVulnerabilities.mockResolvedValue(mockResult);
 
       const result = await mockHandlers.handleDeepsourceDependencyVulnerabilities(mockParams);
 
-      expect(mockHandlers.handleDeepsourceDependencyVulnerabilities).toHaveBeenCalledWith(mockParams);
+      expect(mockHandlers.handleDeepsourceDependencyVulnerabilities).toHaveBeenCalledWith(
+        mockParams
+      );
       expect(result.isError).toBe(false);
-      expect(JSON.parse(result.content[0].text)).toEqual({ vulnerabilities: [{ id: '1', severity: 'HIGH' }] });
+      expect(JSON.parse(result.content[0].text)).toEqual({
+        vulnerabilities: [{ id: '1', severity: 'HIGH' }],
+      });
     });
   });
 
@@ -331,22 +376,38 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
   describe('Error Handling Scenarios', () => {
     it('should handle all handlers throwing errors', async () => {
       const error = new Error('Generic handler error');
-      
-      Object.values(mockHandlers).forEach(handler => {
+
+      Object.values(mockHandlers).forEach((handler) => {
         handler.mockRejectedValue(error);
       });
 
       // Test each handler
       await expect(mockHandlers.handleProjects()).rejects.toThrow('Generic handler error');
-      await expect(mockHandlers.handleDeepsourceQualityMetrics({})).rejects.toThrow('Generic handler error');
-      await expect(mockHandlers.handleDeepsourceUpdateMetricThreshold({})).rejects.toThrow('Generic handler error');
-      await expect(mockHandlers.handleDeepsourceUpdateMetricSetting({})).rejects.toThrow('Generic handler error');
-      await expect(mockHandlers.handleDeepsourceComplianceReport({})).rejects.toThrow('Generic handler error');
-      await expect(mockHandlers.handleDeepsourceProjectIssues({})).rejects.toThrow('Generic handler error');
-      await expect(mockHandlers.handleDeepsourceProjectRuns({})).rejects.toThrow('Generic handler error');
+      await expect(mockHandlers.handleDeepsourceQualityMetrics({})).rejects.toThrow(
+        'Generic handler error'
+      );
+      await expect(mockHandlers.handleDeepsourceUpdateMetricThreshold({})).rejects.toThrow(
+        'Generic handler error'
+      );
+      await expect(mockHandlers.handleDeepsourceUpdateMetricSetting({})).rejects.toThrow(
+        'Generic handler error'
+      );
+      await expect(mockHandlers.handleDeepsourceComplianceReport({})).rejects.toThrow(
+        'Generic handler error'
+      );
+      await expect(mockHandlers.handleDeepsourceProjectIssues({})).rejects.toThrow(
+        'Generic handler error'
+      );
+      await expect(mockHandlers.handleDeepsourceProjectRuns({})).rejects.toThrow(
+        'Generic handler error'
+      );
       await expect(mockHandlers.handleDeepsourceRun({})).rejects.toThrow('Generic handler error');
-      await expect(mockHandlers.handleDeepsourceRecentRunIssues({})).rejects.toThrow('Generic handler error');
-      await expect(mockHandlers.handleDeepsourceDependencyVulnerabilities({})).rejects.toThrow('Generic handler error');
+      await expect(mockHandlers.handleDeepsourceRecentRunIssues({})).rejects.toThrow(
+        'Generic handler error'
+      );
+      await expect(mockHandlers.handleDeepsourceDependencyVulnerabilities({})).rejects.toThrow(
+        'Generic handler error'
+      );
     });
 
     it('should handle all handlers returning error results', async () => {
@@ -354,8 +415,8 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
         content: [{ type: 'text' as const, text: JSON.stringify({ error: 'Handler error' }) }],
         isError: true,
       };
-      
-      Object.values(mockHandlers).forEach(handler => {
+
+      Object.values(mockHandlers).forEach((handler) => {
         handler.mockResolvedValue(errorResult);
       });
 
@@ -373,7 +434,7 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
         mockHandlers.handleDeepsourceDependencyVulnerabilities({}),
       ]);
 
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.isError).toBe(true);
         expect(JSON.parse(result.content[0].text)).toEqual({ error: 'Handler error' });
       });

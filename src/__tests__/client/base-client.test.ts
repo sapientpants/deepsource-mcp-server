@@ -179,9 +179,9 @@ describe('BaseDeepSourceClient', () => {
     it('should return a project for a valid project key', async () => {
       const client = new TestableBaseClient(API_KEY);
       const projectKey = 'organization/repository';
-      
+
       const result = await client.testFindProjectByKey(projectKey);
-      
+
       expect(result).not.toBeNull();
       expect(result?.key).toBe(projectKey);
       expect(result?.name).toBe('Project');
@@ -192,9 +192,9 @@ describe('BaseDeepSourceClient', () => {
     it('should handle simple project keys without slash', async () => {
       const client = new TestableBaseClient(API_KEY);
       const projectKey = 'simple-project';
-      
+
       const result = await client.testFindProjectByKey(projectKey);
-      
+
       expect(result).not.toBeNull();
       expect(result?.key).toBe(projectKey);
       // When there's no slash, split returns the full key for both parts
@@ -205,9 +205,9 @@ describe('BaseDeepSourceClient', () => {
     it('should handle normal processing without errors', async () => {
       const client = new TestableBaseClient(API_KEY);
       const projectKey = 'test/project';
-      
+
       const result = await client.testFindProjectByKey(projectKey);
-      
+
       expect(result).not.toBeNull();
       expect(result?.key).toBe(projectKey);
       expect(result?.repository.login).toBe('test');
@@ -221,7 +221,7 @@ describe('BaseDeepSourceClient', () => {
     it('should normalize offset to non-negative integer', () => {
       const result = client.testNormalizePaginationParams({ offset: -5.7 });
       expect(result.offset).toBe(0);
-      
+
       const result2 = client.testNormalizePaginationParams({ offset: 10.9 });
       expect(result2.offset).toBe(10);
     });
@@ -229,7 +229,7 @@ describe('BaseDeepSourceClient', () => {
     it('should normalize first to positive integer', () => {
       const result = client.testNormalizePaginationParams({ first: -5 });
       expect(result.first).toBe(1);
-      
+
       const result2 = client.testNormalizePaginationParams({ first: 15.7 });
       expect(result2.first).toBe(15);
     });
@@ -237,22 +237,22 @@ describe('BaseDeepSourceClient', () => {
     it('should normalize last to positive integer', () => {
       const result = client.testNormalizePaginationParams({ last: -3 });
       expect(result.last).toBe(1);
-      
+
       const result2 = client.testNormalizePaginationParams({ last: 20.2 });
       expect(result2.last).toBe(20);
     });
 
     it('should convert after and before to strings when they are not deleted by pagination logic', () => {
       // Test after conversion (before cursor logic doesn't apply here)
-      const result1 = client.testNormalizePaginationParams({ 
-        after: 123
+      const result1 = client.testNormalizePaginationParams({
+        after: 123,
       });
       expect(result1.after).toBe('123');
       expect(result1.first).toBe(10); // default value
-      
+
       // Test before conversion with empty string (null converts to empty string but empty string is falsy)
-      const result2 = client.testNormalizePaginationParams({ 
-        before: 'some-cursor'
+      const result2 = client.testNormalizePaginationParams({
+        before: 'some-cursor',
       });
       expect(result2.before).toBe('some-cursor');
       expect(result2.last).toBe(10); // default value when before is truthy
@@ -262,9 +262,9 @@ describe('BaseDeepSourceClient', () => {
       const result = client.testNormalizePaginationParams({
         before: 'cursor123',
         first: 10,
-        after: 'cursor456'
+        after: 'cursor456',
       });
-      
+
       expect(result.before).toBe('cursor123');
       expect(result.last).toBe(10);
       expect(result.first).toBeUndefined();
@@ -273,9 +273,9 @@ describe('BaseDeepSourceClient', () => {
 
     it('should use last value when before is provided without first or last', () => {
       const result = client.testNormalizePaginationParams({
-        before: 'cursor123'
+        before: 'cursor123',
       });
-      
+
       expect(result.before).toBe('cursor123');
       expect(result.last).toBe(10); // default value
     });
@@ -284,9 +284,9 @@ describe('BaseDeepSourceClient', () => {
       const result = client.testNormalizePaginationParams({
         after: 'cursor456',
         last: 5,
-        before: 'cursor789'
+        before: 'cursor789',
       });
-      
+
       // before logic wins due to if/else if structure - before is preserved, after/first are deleted
       expect(result.before).toBe('cursor789');
       expect(result.last).toBe(5); // existing value preserved
@@ -297,9 +297,9 @@ describe('BaseDeepSourceClient', () => {
     it('should use existing first value when after is provided', () => {
       const result = client.testNormalizePaginationParams({
         after: 'cursor456',
-        first: 25
+        first: 25,
       });
-      
+
       expect(result.after).toBe('cursor456');
       expect(result.first).toBe(25); // preserved existing value
     });
@@ -307,9 +307,9 @@ describe('BaseDeepSourceClient', () => {
     it('should preserve params when no cursor-based pagination is used', () => {
       const result = client.testNormalizePaginationParams({
         first: 15,
-        offset: 20
+        offset: 20,
       });
-      
+
       expect(result.first).toBe(15);
       expect(result.offset).toBe(20);
       expect(result.after).toBeUndefined();
@@ -320,9 +320,9 @@ describe('BaseDeepSourceClient', () => {
   describe('createEmptyPaginatedResponse', () => {
     it('should create an empty paginated response with correct structure', () => {
       const client = new TestableBaseClient(API_KEY);
-      
+
       const result = client.testCreateEmptyPaginatedResponse();
-      
+
       expect(result).toEqual({
         items: [],
         pageInfo: {
@@ -340,9 +340,9 @@ describe('BaseDeepSourceClient', () => {
     it('should extract single error message', () => {
       const client = new TestableBaseClient(API_KEY);
       const errors = [{ message: 'Single error' }];
-      
+
       const result = client.testExtractErrorMessages(errors);
-      
+
       expect(result).toBe('Single error');
     });
 
@@ -351,20 +351,20 @@ describe('BaseDeepSourceClient', () => {
       const errors = [
         { message: 'First error' },
         { message: 'Second error' },
-        { message: 'Third error' }
+        { message: 'Third error' },
       ];
-      
+
       const result = client.testExtractErrorMessages(errors);
-      
+
       expect(result).toBe('First error; Second error; Third error');
     });
 
     it('should handle empty errors array', () => {
       const client = new TestableBaseClient(API_KEY);
       const errors: Array<{ message: string }> = [];
-      
+
       const result = client.testExtractErrorMessages(errors);
-      
+
       expect(result).toBe('');
     });
   });
