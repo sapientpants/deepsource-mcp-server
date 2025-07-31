@@ -62,7 +62,6 @@ function validateEnvironment(): void {
   if (!process.env.DEEPSOURCE_API_KEY) {
     const errorMsg = 'DEEPSOURCE_API_KEY environment variable is required';
     logger.error(errorMsg);
-    console.error(errorMsg);
     process.exit(1);
   }
   logger.info('Environment validated', { hasApiKey: true });
