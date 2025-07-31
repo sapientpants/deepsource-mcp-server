@@ -34,7 +34,8 @@ export default [
         vars: 'all', 
         args: 'after-used', 
         ignoreRestSiblings: false,
-        varsIgnorePattern: '^(MetricShortcode|MetricKey|MetricThresholdStatus|MetricDirection|ReportType|ReportStatus|LogLevel|ErrorCategory|VulnerabilitySeverity|PackageVersionType|VulnerabilityReachability|VulnerabilityFixability|AnalysisRunStatus|z)$'
+        varsIgnorePattern: '^(MetricShortcode|MetricKey|MetricThresholdStatus|MetricDirection|ReportType|ReportStatus|LogLevel|ErrorCategory|VulnerabilitySeverity|PackageVersionType|VulnerabilityReachability|VulnerabilityFixability|AnalysisRunStatus|MCPErrorCode|MCPErrorCategory|z)$',
+        argsIgnorePattern: '^_'
       }]
     },
   },

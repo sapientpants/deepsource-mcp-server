@@ -10,6 +10,7 @@ import { createLogger } from '../utils/logging/logger.js';
 import { IQualityMetricsRepository } from '../domain/aggregates/quality-metrics/quality-metrics.repository.js';
 import { RepositoryFactory } from '../infrastructure/factories/repository.factory.js';
 import { asProjectKey } from '../types/branded.js';
+import { MCPErrorFormatter, validateNonEmptyString } from '../utils/error-handling/index.js';
 
 // Logger for the quality metrics handler
 const logger = createLogger('QualityMetricsHandler');
@@ -76,6 +77,10 @@ export function createQualityMetricsHandlerWithRepo(deps: QualityMetricsHandlerD
   return async function handleQualityMetrics(params: DeepsourceQualityMetricsParams) {
     try {
       const { projectKey, shortcodeIn } = params;
+
+      // Validate required parameters using MCP error handling
+      validateNonEmptyString(projectKey, 'projectKey');
+
       const projectKeyBranded = asProjectKey(projectKey);
       deps.logger.info('Fetching quality metrics from repository', { projectKey, shortcodeIn });
 
@@ -157,21 +162,8 @@ export function createQualityMetricsHandlerWithRepo(deps: QualityMetricsHandlerD
         errorStack: error instanceof Error ? error.stack : 'No stack available',
       });
 
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      deps.logger.debug('Returning error response', { errorMessage });
-
-      return {
-        isError: true,
-        content: [
-          {
-            type: 'text' as const,
-            text: JSON.stringify({
-              error: errorMessage,
-              details: 'Failed to retrieve quality metrics',
-            }),
-          },
-        ],
-      };
+      // Use MCP-compliant error formatting
+      return MCPErrorFormatter.createErrorResponse(error, 'quality-metrics-fetch');
     }
   };
 }
@@ -255,26 +247,25 @@ export const createQualityMetricsHandler: HandlerFactory<
  * @public
  */
 export async function handleDeepsourceQualityMetrics(params: DeepsourceQualityMetricsParams) {
-  const baseDeps = createDefaultHandlerDeps({ logger });
-  const apiKey = baseDeps.getApiKey();
-  const repositoryFactory = new RepositoryFactory({ apiKey });
-  const qualityMetricsRepository = repositoryFactory.createQualityMetricsRepository();
+  try {
+    const baseDeps = createDefaultHandlerDeps({ logger });
+    const apiKey = baseDeps.getApiKey();
+    const repositoryFactory = new RepositoryFactory({ apiKey });
+    const qualityMetricsRepository = repositoryFactory.createQualityMetricsRepository();
 
-  const deps: QualityMetricsHandlerDeps = {
-    qualityMetricsRepository,
-    logger,
-  };
+    const deps: QualityMetricsHandlerDeps = {
+      qualityMetricsRepository,
+      logger,
+    };
 
-  const handler = createQualityMetricsHandlerWithRepo(deps);
-  const result = await handler(params);
+    const handler = createQualityMetricsHandlerWithRepo(deps);
+    const result = await handler(params);
 
-  // If the domain handler returned an error response, throw an error for backward compatibility
-  if (result.isError) {
-    const errorData = JSON.parse(result.content[0].text);
-    throw new Error(errorData.error);
+    return result;
+  } catch (error) {
+    // Handle configuration errors and other setup issues
+    return MCPErrorFormatter.createErrorResponse(error, 'quality-metrics-setup');
   }
-
-  return result;
 }
 
 /**

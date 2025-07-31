@@ -332,7 +332,7 @@ describe('Run Handler', () => {
           runIdentifier: 'run-123',
           isCommitOid: false,
         })
-      ).rejects.toThrow('DEEPSOURCE_API_KEY environment variable is not set');
+      ).rejects.toThrow('Configuration error: DeepSource API key is required but not configured');
     });
 
     it('should return run data successfully by runId', async () => {

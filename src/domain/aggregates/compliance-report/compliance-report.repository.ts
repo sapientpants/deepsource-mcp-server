@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 /**
  * @fileoverview ComplianceReport repository interface
  *

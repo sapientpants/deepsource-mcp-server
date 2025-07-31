@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 /**
  * @fileoverview Project repository interface
  *

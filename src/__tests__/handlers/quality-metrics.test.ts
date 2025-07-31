@@ -224,22 +224,29 @@ describe('Quality Metrics Handler', () => {
       // Verify error response
       expect(result.isError).toBe(true);
       const parsedContent = JSON.parse(result.content[0].text);
-      expect(parsedContent).toEqual({
-        error: 'Repository connection failed',
-        details: 'Failed to retrieve quality metrics',
-      });
+
+      // Should include MCP error format
+      expect(parsedContent.error).toBe('An error occurred while processing your request');
+      expect(parsedContent.code).toBeDefined();
+      expect(parsedContent.category).toBeDefined();
+      expect(parsedContent.timestamp).toBeDefined();
     });
   });
 
   describe('handleDeepsourceQualityMetrics', () => {
-    it('should throw an error if DEEPSOURCE_API_KEY is not set', async () => {
+    it('should return error response if DEEPSOURCE_API_KEY is not set', async () => {
       // Unset API key
       delete process.env.DEEPSOURCE_API_KEY;
 
-      // Call the handler and expect it to throw
-      await expect(handleDeepsourceQualityMetrics({ projectKey: 'test-project' })).rejects.toThrow(
-        'DEEPSOURCE_API_KEY environment variable is not set'
-      );
+      // Call the handler and expect error response
+      const result = await handleDeepsourceQualityMetrics({ projectKey: 'test-project' });
+      expect(result.isError).toBe(true);
+
+      const errorData = JSON.parse(result.content[0].text);
+      expect(errorData.error).toBe('An error occurred while processing your request');
+      expect(errorData.code).toBe(-32008); // Configuration error code
+      expect(errorData.category).toBe('server_error');
+      expect(errorData.details?.environmentVariable).toBe('DEEPSOURCE_API_KEY');
     });
 
     it('should return quality metrics successfully', async () => {
@@ -338,25 +345,33 @@ describe('Quality Metrics Handler', () => {
       expect(parsedContent.metrics).toEqual([]);
     });
 
-    it('should throw error when repository fails', async () => {
+    it('should return error response when repository fails', async () => {
       // Set up the mock to throw an error
       const testError = new Error('Repository connection failed');
       mockFindByProject.mockRejectedValue(testError);
 
-      // Call the handler and expect it to throw
-      await expect(handleDeepsourceQualityMetrics({ projectKey: 'test-project' })).rejects.toThrow(
-        'Repository connection failed'
-      );
+      // Call the handler and expect error response
+      const result = await handleDeepsourceQualityMetrics({ projectKey: 'test-project' });
+      expect(result.isError).toBe(true);
+
+      const errorData = JSON.parse(result.content[0].text);
+      expect(errorData.error).toBe('An error occurred while processing your request');
+      expect(errorData.code).toBeDefined();
+      expect(errorData.category).toBeDefined();
     });
 
     it('should handle non-Error type exceptions', async () => {
       // Set up the mock to throw a non-Error value
       mockFindByProject.mockRejectedValue('Just a string error');
 
-      // Call the handler and expect it to throw
-      await expect(handleDeepsourceQualityMetrics({ projectKey: 'test-project' })).rejects.toThrow(
-        'Unknown error'
-      );
+      // Call the handler and expect error response
+      const result = await handleDeepsourceQualityMetrics({ projectKey: 'test-project' });
+      expect(result.isError).toBe(true);
+
+      const errorData = JSON.parse(result.content[0].text);
+      expect(errorData.error).toBe('An error occurred while processing your request');
+      expect(errorData.code).toBeDefined();
+      expect(errorData.category).toBeDefined();
     });
   });
 });

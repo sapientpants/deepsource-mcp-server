@@ -300,7 +300,7 @@ describe('DeepSource Compliance Reports', () => {
           projectKey: PROJECT_KEY,
           reportType: ReportType.MISRA_C,
         })
-      ).rejects.toThrow('DEEPSOURCE_API_KEY environment variable is not set');
+      ).rejects.toThrow('Configuration error: DeepSource API key is required but not configured');
     });
 
     it.skip('should throw error when report is not found', async () => {

@@ -240,7 +240,7 @@ describe('Project Runs Handler', () => {
           projectKey: 'test-project',
           first: 20,
         })
-      ).rejects.toThrow('DEEPSOURCE_API_KEY environment variable is not set');
+      ).rejects.toThrow('Configuration error: DeepSource API key is required but not configured');
     });
 
     it('should return project runs successfully', async () => {
