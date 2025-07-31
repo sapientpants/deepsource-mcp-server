@@ -233,12 +233,16 @@ describe('DeepSource MCP Quality Metrics Handlers', () => {
       // Setup auth error mock
       setupAuthErrorMock();
 
-      // Call handler and expect it to throw
-      await expect(
-        handleDeepsourceQualityMetrics({
-          projectKey: 'test-project',
-        })
-      ).rejects.toThrow();
+      // Call handler and expect error response
+      const result = await handleDeepsourceQualityMetrics({
+        projectKey: 'test-project',
+      });
+
+      expect(result.isError).toBe(true);
+      const errorData = JSON.parse(result.content[0].text);
+      expect(errorData.error).toBeDefined();
+      expect(errorData.code).toBeDefined();
+      expect(errorData.category).toBeDefined();
     });
   });
 

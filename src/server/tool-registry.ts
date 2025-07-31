@@ -89,7 +89,7 @@ export class ToolRegistry {
     this.server.registerTool(
       tool.name,
       toolConfig,
-      // eslint-disable-next-line no-unused-vars
+
       async (params: Record<string, unknown>, _extra: unknown): Promise<McpResponse> => {
         try {
           logToolInvocation(tool.name, params);

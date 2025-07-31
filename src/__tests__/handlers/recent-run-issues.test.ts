@@ -510,7 +510,7 @@ describe('Recent Run Issues Handler', () => {
           projectKey: 'test-project',
           branchName: 'main',
         })
-      ).rejects.toThrow('DEEPSOURCE_API_KEY environment variable is not set');
+      ).rejects.toThrow('Configuration error: DeepSource API key is required but not configured');
     });
 
     it('should return recent run issues successfully', async () => {

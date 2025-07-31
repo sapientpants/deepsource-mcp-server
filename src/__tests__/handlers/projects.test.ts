@@ -105,10 +105,12 @@ describe('Projects Handler', () => {
       // Verify error response
       expect(result.isError).toBe(true);
       const parsedContent = JSON.parse(result.content[0].text);
-      expect(parsedContent).toEqual({
-        error: 'Injected error',
-        details: 'Failed to retrieve projects',
-      });
+
+      // Should include MCP error format
+      expect(parsedContent.error).toBe('An error occurred while processing your request');
+      expect(parsedContent.code).toBeDefined();
+      expect(parsedContent.category).toBeDefined();
+      expect(parsedContent.timestamp).toBeDefined();
     });
   });
 
@@ -117,10 +119,15 @@ describe('Projects Handler', () => {
       // Unset API key
       delete process.env.DEEPSOURCE_API_KEY;
 
-      // Call the handler and expect it to throw
-      await expect(handleProjects()).rejects.toThrow(
-        'DEEPSOURCE_API_KEY environment variable is not set'
-      );
+      // Call the handler and expect error response
+      const result = await handleProjects();
+      expect(result.isError).toBe(true);
+
+      const errorData = JSON.parse(result.content[0].text);
+      expect(errorData.error).toBe('An error occurred while processing your request');
+      expect(errorData.code).toBe(-32008); // Configuration error code
+      expect(errorData.category).toBe('server_error');
+      expect(errorData.details?.environmentVariable).toBe('DEEPSOURCE_API_KEY');
     });
 
     it('should return a list of projects successfully', async () => {
@@ -209,10 +216,10 @@ describe('Projects Handler', () => {
 
       // Parse and verify the error content
       const parsedContent = JSON.parse(result.content[0].text);
-      expect(parsedContent).toEqual({
-        error: 'Repository connection failed',
-        details: 'Failed to retrieve projects',
-      });
+      expect(parsedContent.error).toBe('An error occurred while processing your request');
+      expect(parsedContent.code).toBeDefined();
+      expect(parsedContent.category).toBeDefined();
+      expect(parsedContent.timestamp).toBeDefined();
     });
 
     it('should handle non-Error type exceptions', async () => {
@@ -232,10 +239,10 @@ describe('Projects Handler', () => {
 
       // Parse and verify the error content uses a generic message for non-Error objects
       const parsedContent = JSON.parse(result.content[0].text);
-      expect(parsedContent).toEqual({
-        error: 'Unknown error',
-        details: 'Failed to retrieve projects',
-      });
+      expect(parsedContent.error).toBe('An error occurred while processing your request');
+      expect(parsedContent.code).toBeDefined();
+      expect(parsedContent.category).toBeDefined();
+      expect(parsedContent.timestamp).toBeDefined();
     });
   });
 });

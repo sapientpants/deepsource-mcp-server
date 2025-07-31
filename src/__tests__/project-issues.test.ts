@@ -126,7 +126,7 @@ describe('Project Issues Handler', () => {
         handleDeepsourceProjectIssues({
           projectKey: 'test-project',
         })
-      ).rejects.toThrow('DEEPSOURCE_API_KEY environment variable is not set');
+      ).rejects.toThrow('Configuration error: DeepSource API key is required but not configured');
     });
 
     it('should handle errors from the client', async () => {

@@ -247,7 +247,7 @@ describe('Compliance Reports Handler', () => {
           projectKey: 'test-project',
           reportType: ReportType.OWASP_TOP_10,
         })
-      ).rejects.toThrow('DEEPSOURCE_API_KEY environment variable is not set');
+      ).rejects.toThrow('Configuration error: DeepSource API key is required but not configured');
     });
 
     it('should return compliance report successfully', async () => {

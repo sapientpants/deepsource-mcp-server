@@ -8,6 +8,7 @@ import { RepositoryFactory } from '../infrastructure/factories/repository.factor
 import { ApiResponse } from '../models/common.js';
 import { createLogger, Logger } from '../utils/logging/logger.js';
 import { getApiKey } from '../config/index.js';
+import { MCPErrorFormatter } from '../utils/error-handling/index.js';
 
 // Logger for the projects handler
 const logger = createLogger('ProjectsHandler');
@@ -65,22 +66,8 @@ export function createProjectsHandler(deps: ProjectsHandlerDeps) {
         errorStack: error instanceof Error ? error.stack : 'No stack available',
       });
 
-      // Return an error object with details to match test expectations
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      deps.logger.debug('Returning error response', { errorMessage });
-
-      return {
-        isError: true,
-        content: [
-          {
-            type: 'text' as const,
-            text: JSON.stringify({
-              error: errorMessage,
-              details: 'Failed to retrieve projects',
-            }),
-          },
-        ],
-      };
+      // Use MCP-compliant error formatting
+      return MCPErrorFormatter.createErrorResponse(error, 'projects-fetch');
     }
   };
 }
@@ -88,18 +75,23 @@ export function createProjectsHandler(deps: ProjectsHandlerDeps) {
 /**
  * Fetches and returns a list of all available DeepSource projects using domain aggregates
  * @returns A response containing the list of projects with their keys and names
- * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
+ * @throws MCPError if the DEEPSOURCE_API_KEY environment variable is not set or other errors occur
  * @public
  */
 export async function handleProjects(): Promise<ApiResponse> {
-  const apiKey = getApiKey();
-  const repositoryFactory = new RepositoryFactory({ apiKey });
-  const projectRepository = repositoryFactory.createProjectRepository();
+  try {
+    const apiKey = getApiKey();
+    const repositoryFactory = new RepositoryFactory({ apiKey });
+    const projectRepository = repositoryFactory.createProjectRepository();
 
-  const handler = createProjectsHandler({
-    projectRepository,
-    logger,
-  });
+    const handler = createProjectsHandler({
+      projectRepository,
+      logger,
+    });
 
-  return handler();
+    return handler();
+  } catch (error) {
+    // Handle configuration errors and other setup issues
+    return MCPErrorFormatter.createErrorResponse(error, 'projects-setup');
+  }
 }
