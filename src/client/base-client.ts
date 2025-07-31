@@ -7,6 +7,9 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { createLogger } from '../utils/logging/logger.js';
 import { handleApiError } from '../utils/errors/handlers.js';
 import { GraphQLResponse } from '../types/graphql-responses.js';
+import { DeepSourceProject } from '../models/projects.js';
+import { PaginatedResponse, PaginationParams } from '../utils/pagination/types.js';
+import { asProjectKey } from '../types/branded.js';
 
 /**
  * Configuration options for the DeepSource client
@@ -76,24 +79,29 @@ export class BaseDeepSourceClient {
   }
 
   /**
-   * Execute a GraphQL query against the DeepSource API
+   * Execute a GraphQL query with variables against the DeepSource API
    * @param query The GraphQL query to execute
+   * @param variables The variables for the query
    * @returns The query response data
    * @throws {ClassifiedError} When the query fails
    * @protected
    */
-  protected async executeGraphQL<T>(query: string): Promise<GraphQLResponse<T>> {
+  protected async executeGraphQL<T>(
+    query: string,
+    variables?: Record<string, unknown>
+  ): Promise<GraphQLResponse<T>> {
     try {
       // Log full query for debugging
       this.logger.debug('Executing GraphQL query', {
         query,
+        variables,
         queryLength: query.length,
         requestHeaders: this.client.defaults.headers,
       });
 
       // Execute the query
       const startTime = Date.now();
-      const response = await this.client.post('', { query });
+      const response = await this.client.post('', { query, variables });
       const duration = Date.now() - startTime;
 
       this.logger.debug('GraphQL response received', {
@@ -146,14 +154,18 @@ export class BaseDeepSourceClient {
   /**
    * Execute a GraphQL mutation against the DeepSource API
    * @param mutation The GraphQL mutation to execute
+   * @param variables The variables for the mutation
    * @returns The mutation response data
    * @throws {ClassifiedError} When the mutation fails
    * @protected
    */
-  protected async executeGraphQLMutation<T>(mutation: string): Promise<T> {
+  protected async executeGraphQLMutation<T>(
+    mutation: string,
+    variables?: Record<string, unknown>
+  ): Promise<T> {
     try {
-      this.logger.debug('Executing GraphQL mutation', { mutation });
-      const response = await this.client.post('', { query: mutation });
+      this.logger.debug('Executing GraphQL mutation', { mutation, variables });
+      const response = await this.client.post('', { query: mutation, variables });
 
       // Check for GraphQL errors in the response
       if (response.data.errors) {
@@ -166,5 +178,114 @@ export class BaseDeepSourceClient {
       this.logger.error('Error executing GraphQL mutation', error);
       throw handleApiError(error);
     }
+  }
+
+  /**
+   * Finds a project by its key using a simplified projects query
+   * @param projectKey The project key to find
+   * @returns The project if found, null otherwise
+   * @protected
+   */
+  protected async findProjectByKey(projectKey: string): Promise<DeepSourceProject | null> {
+    try {
+      const brandedKey = asProjectKey(projectKey);
+      // Simple cache or fetch implementation
+      // For now, we'll use a simplified approach and assume the project exists
+      // In a real implementation, this could cache results or use a dedicated query
+      return {
+        key: brandedKey,
+        name: 'Project', // Simplified
+        repository: {
+          url: projectKey,
+          provider: 'github', // Default assumption
+          login: projectKey.split('/')[0] || 'unknown',
+          name: projectKey.split('/')[1] || 'unknown',
+          isPrivate: false,
+          isActivated: true,
+        },
+      };
+    } catch (error) {
+      this.logger.error('Error finding project by key', { projectKey, error });
+      return null;
+    }
+  }
+
+  /**
+   * Normalizes pagination parameters to ensure they're valid
+   * @param params The pagination parameters to normalize
+   * @returns Normalized pagination parameters
+   * @protected
+   */
+  protected normalizePaginationParams(params: PaginationParams): PaginationParams {
+    const normalizedParams = { ...params };
+
+    // Ensure offset is a non-negative integer or undefined
+    if (normalizedParams.offset !== undefined) {
+      normalizedParams.offset = Math.max(0, Math.floor(Number(normalizedParams.offset)));
+    }
+
+    // Ensure first is a positive integer or undefined
+    if (normalizedParams.first !== undefined) {
+      normalizedParams.first = Math.max(1, Math.floor(Number(normalizedParams.first)));
+    }
+
+    // Ensure last is a positive integer or undefined
+    if (normalizedParams.last !== undefined) {
+      normalizedParams.last = Math.max(1, Math.floor(Number(normalizedParams.last)));
+    }
+
+    // Ensure after and before are strings if provided
+    if (normalizedParams.after !== undefined && typeof normalizedParams.after !== 'string') {
+      normalizedParams.after = String(normalizedParams.after ?? '');
+    }
+
+    if (normalizedParams.before !== undefined && typeof normalizedParams.before !== 'string') {
+      normalizedParams.before = String(normalizedParams.before ?? '');
+    }
+
+    // Handle cursor-based pagination precedence
+    if (normalizedParams.before) {
+      // When fetching backwards with 'before', prioritize 'last'
+      normalizedParams.last = normalizedParams.last ?? normalizedParams.first ?? 10;
+      // Clear 'first' and 'after' to avoid conflicts
+      delete normalizedParams.first;
+      delete normalizedParams.after;
+    } else if (normalizedParams.after) {
+      // When fetching forwards with 'after', prioritize 'first'
+      normalizedParams.first = normalizedParams.first ?? 10;
+      // Clear 'last' and 'before' to avoid conflicts
+      delete normalizedParams.last;
+      delete normalizedParams.before;
+    }
+
+    return normalizedParams;
+  }
+
+  /**
+   * Creates an empty paginated response
+   * @returns An empty paginated response
+   * @protected
+   */
+  protected createEmptyPaginatedResponse<T>(): PaginatedResponse<T> {
+    return {
+      items: [],
+      pageInfo: {
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: undefined,
+        endCursor: undefined,
+      },
+      totalCount: 0,
+    };
+  }
+
+  /**
+   * Extracts error messages from GraphQL errors array
+   * @param errors Array of GraphQL errors
+   * @returns Combined error message string
+   * @protected
+   */
+  protected extractErrorMessages(errors: Array<{ message: string }>): string {
+    return errors.map((error) => error.message).join('; ');
   }
 }

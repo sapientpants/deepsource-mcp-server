@@ -25,6 +25,21 @@ jest.unstable_mockModule('../deepsource', () => ({
   DeepSourceClient: jest.fn().mockImplementation(() => ({
     getIssues: mockGetIssues,
   })),
+  ReportType: {
+    OWASP_TOP_10: 'OWASP_TOP_10',
+    SANS_TOP_25: 'SANS_TOP_25',
+    MISRA_C: 'MISRA_C',
+    CODE_COVERAGE: 'CODE_COVERAGE',
+    CODE_HEALTH_TREND: 'CODE_HEALTH_TREND',
+    ISSUE_DISTRIBUTION: 'ISSUE_DISTRIBUTION',
+    ISSUES_PREVENTED: 'ISSUES_PREVENTED',
+    ISSUES_AUTOFIXED: 'ISSUES_AUTOFIXED',
+  },
+  ReportStatus: {
+    PASSING: 'PASSING',
+    FAILING: 'FAILING',
+    NOOP: 'NOOP',
+  },
 }));
 
 // Import the modules under test AFTER mocking

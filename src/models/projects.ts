@@ -22,6 +22,8 @@ export interface DeepSourceProject {
     provider: string;
     /** Account login that owns the repository */
     login: string;
+    /** Repository name */
+    name: string;
     /** Whether the repository is private */
     isPrivate: boolean;
     /** Whether the repository is activated in DeepSource */

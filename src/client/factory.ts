@@ -5,6 +5,10 @@
 
 import { DeepSourceClientConfig } from './base-client.js';
 import { ProjectsClient } from './projects-client.js';
+import { IssuesClient } from './issues-client.js';
+import { RunsClient } from './runs-client.js';
+import { MetricsClient } from './metrics-client.js';
+import { SecurityClient } from './security-client.js';
 import { createLogger } from '../utils/logging/logger.js';
 
 // Logger for the client factory
@@ -21,6 +25,10 @@ export class DeepSourceClientFactory {
 
   // Cached client instances
   private projectsClient?: ProjectsClient;
+  private issuesClient?: IssuesClient;
+  private runsClient?: RunsClient;
+  private metricsClient?: MetricsClient;
+  private securityClient?: SecurityClient;
 
   /**
    * Creates a new DeepSourceClientFactory instance
@@ -52,6 +60,62 @@ export class DeepSourceClientFactory {
     }
 
     return this.projectsClient;
+  }
+
+  /**
+   * Gets or creates an IssuesClient instance
+   * @returns An IssuesClient instance
+   * @public
+   */
+  getIssuesClient(): IssuesClient {
+    if (!this.issuesClient) {
+      logger.debug('Creating new IssuesClient instance');
+      this.issuesClient = new IssuesClient(this.apiKey, this.config);
+    }
+
+    return this.issuesClient;
+  }
+
+  /**
+   * Gets or creates a RunsClient instance
+   * @returns A RunsClient instance
+   * @public
+   */
+  getRunsClient(): RunsClient {
+    if (!this.runsClient) {
+      logger.debug('Creating new RunsClient instance');
+      this.runsClient = new RunsClient(this.apiKey, this.config);
+    }
+
+    return this.runsClient;
+  }
+
+  /**
+   * Gets or creates a MetricsClient instance
+   * @returns A MetricsClient instance
+   * @public
+   */
+  getMetricsClient(): MetricsClient {
+    if (!this.metricsClient) {
+      logger.debug('Creating new MetricsClient instance');
+      this.metricsClient = new MetricsClient(this.apiKey, this.config);
+    }
+
+    return this.metricsClient;
+  }
+
+  /**
+   * Gets or creates a SecurityClient instance
+   * @returns A SecurityClient instance
+   * @public
+   */
+  getSecurityClient(): SecurityClient {
+    if (!this.securityClient) {
+      logger.debug('Creating new SecurityClient instance');
+      this.securityClient = new SecurityClient(this.apiKey, this.config);
+    }
+
+    return this.securityClient;
   }
 
   /**

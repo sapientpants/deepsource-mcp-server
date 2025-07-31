@@ -56,7 +56,7 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
   - ✅ Created repository factory for dependency injection
   - ✅ Full test coverage for repository factory (19 tests)
 
-### 🚧 In Progress (Phase 4: Handler Integration)
+### ✅ Completed (Phase 4: Handler Integration)
 - Handler integration with domain layer
   - ✅ Projects handler updated to use domain aggregates via ProjectRepository
   - ✅ Quality-metrics handler updated to use domain aggregates via QualityMetricsRepository
@@ -80,8 +80,18 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
     - Handler properly supports finding runs by either runId or commitOid
     - Error handling converted from domain error responses to thrown exceptions for backward compatibility
     - Successfully committed and pushed all changes (commit dca5b4b)
-  - 📋 Update remaining handlers (project-issues, recent-run-issues, etc.)
-- Client architecture redesign
+  - ✅ Recent-run-issues handler updated to use domain aggregates via AnalysisRunRepository
+    - Created comprehensive unit tests (11 tests) for domain-based recent-run-issues handler
+    - Implemented hybrid approach: domain repository for run data, client for issues data
+    - Handler properly integrates with repository pattern and maintains MCP compatibility
+    - Error handling converted from domain error responses to thrown exceptions for backward compatibility
+    - Successfully committed and pushed all changes (commit b6ab90e)
+  - ✅ Remaining handlers (project-issues, dependency-vulnerabilities) already use proper patterns
+    - Both handlers follow dependency injection pattern established in Phase 1
+    - No domain aggregates exist for Issues or Vulnerabilities (read-only data)
+    - Handlers maintain consistent error handling and response formatting
+
+### 🚧 In Progress (Phase 5: Client Architecture Redesign)
 
 ### 📋 Pending
 - MCP server extraction
