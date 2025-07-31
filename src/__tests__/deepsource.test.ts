@@ -2491,7 +2491,7 @@ describe('DeepSourceClient', () => {
 
         // Override MAX_ITERATIONS temporarily for testing
         const originalMaxIterations = (DeepSourceClient as any).MAX_ITERATIONS;
-        
+
         try {
           (DeepSourceClient as any).MAX_ITERATIONS = 0; // Set very low for testing
 
@@ -2547,7 +2547,7 @@ describe('DeepSourceClient', () => {
           // Restore original MAX_ITERATIONS
           (DeepSourceClient as any).MAX_ITERATIONS = originalMaxIterations;
           loggerWarnSpy.mockRestore();
-        }  
+        }
       });
 
       it('should handle error in processVulnerabilities', () => {
@@ -2557,13 +2557,15 @@ describe('DeepSourceClient', () => {
         // Mock isValidVulnerabilityNode to throw an error for the first call
         const originalIsValidVulnNode = (DeepSourceClient as any).isValidVulnerabilityNode;
         let callCount = 0;
-        (DeepSourceClient as any).isValidVulnerabilityNode = jest.fn().mockImplementation((node) => {
-          callCount++;
-          if (callCount === 1) {
-            throw new Error('Simulated validation error');
-          }
-          return originalIsValidVulnNode(node);
-        });
+        (DeepSourceClient as any).isValidVulnerabilityNode = jest
+          .fn()
+          .mockImplementation((node) => {
+            callCount++;
+            if (callCount === 1) {
+              throw new Error('Simulated validation error');
+            }
+            return originalIsValidVulnNode(node);
+          });
 
         // Create edges where the first one will trigger the error
         const edgesWithOneError = [
@@ -2619,7 +2621,7 @@ describe('DeepSourceClient', () => {
           // Should continue processing despite the error and return the valid vulnerability
           expect(results).toHaveLength(1); // Only the valid vulnerability should be returned
           expect(results[0].id).toBe('valid-vuln');
-          
+
           // Should log the error but continue processing
           expect(loggerWarnSpy).toHaveBeenCalledWith(
             'Error processing vulnerability edge:',
@@ -2648,9 +2650,7 @@ describe('DeepSourceClient', () => {
             totalCount: 0,
           });
 
-        const isErrorSpy = jest
-          .spyOn(DeepSourceClient as any, 'isError')
-          .mockReturnValue(false); // This will make the error not be handled by handleVulnerabilityError
+        const isErrorSpy = jest.spyOn(DeepSourceClient as any, 'isError').mockReturnValue(false); // This will make the error not be handled by handleVulnerabilityError
 
         // Create a test scenario where the dependency vulnerabilities method throws an error
         const mockClient = {
