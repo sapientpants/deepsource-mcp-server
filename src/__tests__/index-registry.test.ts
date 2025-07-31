@@ -4,7 +4,6 @@
 
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { ToolRegistry } from '../server/tool-registry.js';
 
 // Mock MCP SDK modules

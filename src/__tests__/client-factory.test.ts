@@ -5,6 +5,10 @@
 import { jest } from '@jest/globals';
 import { DeepSourceClientFactory } from '../client/factory.js';
 import { ProjectsClient } from '../client/projects-client.js';
+import { IssuesClient } from '../client/issues-client.js';
+import { RunsClient } from '../client/runs-client.js';
+import { MetricsClient } from '../client/metrics-client.js';
+import { SecurityClient } from '../client/security-client.js';
 
 describe('DeepSourceClientFactory', () => {
   const API_KEY = 'test-api-key';
@@ -99,6 +103,82 @@ describe('DeepSourceClientFactory', () => {
 
       expect(result).toBe(false);
       expect(mockProjectsClient.listProjects).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getIssuesClient', () => {
+    it('should return an IssuesClient instance', () => {
+      const factory = new DeepSourceClientFactory(API_KEY);
+      const client = factory.getIssuesClient();
+
+      expect(client).toBeInstanceOf(IssuesClient);
+    });
+
+    it('should cache the IssuesClient instance', () => {
+      const factory = new DeepSourceClientFactory(API_KEY);
+
+      const client1 = factory.getIssuesClient();
+      const client2 = factory.getIssuesClient();
+
+      // Should be the same instance
+      expect(client1).toBe(client2);
+    });
+  });
+
+  describe('getRunsClient', () => {
+    it('should return a RunsClient instance', () => {
+      const factory = new DeepSourceClientFactory(API_KEY);
+      const client = factory.getRunsClient();
+
+      expect(client).toBeInstanceOf(RunsClient);
+    });
+
+    it('should cache the RunsClient instance', () => {
+      const factory = new DeepSourceClientFactory(API_KEY);
+
+      const client1 = factory.getRunsClient();
+      const client2 = factory.getRunsClient();
+
+      // Should be the same instance
+      expect(client1).toBe(client2);
+    });
+  });
+
+  describe('getMetricsClient', () => {
+    it('should return a MetricsClient instance', () => {
+      const factory = new DeepSourceClientFactory(API_KEY);
+      const client = factory.getMetricsClient();
+
+      expect(client).toBeInstanceOf(MetricsClient);
+    });
+
+    it('should cache the MetricsClient instance', () => {
+      const factory = new DeepSourceClientFactory(API_KEY);
+
+      const client1 = factory.getMetricsClient();
+      const client2 = factory.getMetricsClient();
+
+      // Should be the same instance
+      expect(client1).toBe(client2);
+    });
+  });
+
+  describe('getSecurityClient', () => {
+    it('should return a SecurityClient instance', () => {
+      const factory = new DeepSourceClientFactory(API_KEY);
+      const client = factory.getSecurityClient();
+
+      expect(client).toBeInstanceOf(SecurityClient);
+    });
+
+    it('should cache the SecurityClient instance', () => {
+      const factory = new DeepSourceClientFactory(API_KEY);
+
+      const client1 = factory.getSecurityClient();
+      const client2 = factory.getSecurityClient();
+
+      // Should be the same instance
+      expect(client1).toBe(client2);
     });
   });
 });
