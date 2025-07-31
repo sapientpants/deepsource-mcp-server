@@ -260,11 +260,11 @@ export class GraphQLQueryBuilder {
       .selectNested(
         'run',
         [
-          'id',
-          'commitOid',
-          'createdAt',
-          'updatedAt',
-          'status',
+          { name: 'id' },
+          { name: 'commitOid' },
+          { name: 'createdAt' },
+          { name: 'updatedAt' },
+          { name: 'status' },
           {
             name: 'checks',
             fields: [{ name: 'analyzer' }, { name: 'status' }, { name: 'summary' }],

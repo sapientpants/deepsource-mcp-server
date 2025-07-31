@@ -5,7 +5,7 @@ import {
   wrapInApiResponse,
   createDefaultHandlerDeps,
 } from './base/handler.factory.js';
-import { createLogger } from '../utils/logging/logger.js';
+import { createLogger, Logger } from '../utils/logging/logger.js';
 import { IComplianceReportRepository } from '../domain/aggregates/compliance-report/compliance-report.repository.js';
 import { RepositoryFactory } from '../infrastructure/factories/repository.factory.js';
 import { asProjectKey } from '../types/branded.js';
@@ -29,7 +29,7 @@ export interface DeepsourceComplianceReportParams {
  */
 interface ComplianceReportHandlerDeps {
   complianceReportRepository: IComplianceReportRepository;
-  logger: any;
+  logger: Logger;
 }
 
 /**

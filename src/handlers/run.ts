@@ -9,7 +9,7 @@ import {
   OccurrenceDistributionByCategory,
 } from '../deepsource.js';
 import { ApiResponse } from '../models/common.js';
-import { createLogger } from '../utils/logging/logger.js';
+import { createLogger, Logger } from '../utils/logging/logger.js';
 import { BaseHandlerDeps } from './base/handler.interface.js';
 import {
   createBaseHandlerFactory,
@@ -42,7 +42,7 @@ export interface DeepsourceRunParams {
  */
 interface RunHandlerDeps {
   analysisRunRepository: IAnalysisRunRepository;
-  logger: any;
+  logger: Logger;
 }
 
 /**

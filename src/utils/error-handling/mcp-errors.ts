@@ -13,38 +13,44 @@ const logger = createLogger('MCPErrorHandler');
 
 /**
  * Standard MCP error codes based on JSON-RPC 2.0 specification
+ * These codes are exported for use by consumers of the library
  */
+/* eslint-disable no-unused-vars */
 export enum MCPErrorCode {
   // JSON-RPC 2.0 standard error codes
-  PARSE_ERROR = -32700, // eslint-disable-line no-unused-vars
-  INVALID_REQUEST = -32600, // eslint-disable-line no-unused-vars
-  METHOD_NOT_FOUND = -32601, // eslint-disable-line no-unused-vars
-  INVALID_PARAMS = -32602, // eslint-disable-line no-unused-vars
-  INTERNAL_ERROR = -32603, // eslint-disable-line no-unused-vars
+  PARSE_ERROR = -32700,
+  INVALID_REQUEST = -32600,
+  METHOD_NOT_FOUND = -32601,
+  INVALID_PARAMS = -32602,
+  INTERNAL_ERROR = -32603,
 
   // MCP-specific error codes (range -32000 to -32099)
-  SERVER_ERROR = -32000, // eslint-disable-line no-unused-vars
-  RESOURCE_NOT_FOUND = -32001, // eslint-disable-line no-unused-vars
-  AUTHENTICATION_ERROR = -32002, // eslint-disable-line no-unused-vars
-  AUTHORIZATION_ERROR = -32003, // eslint-disable-line no-unused-vars
-  RATE_LIMITED = -32004, // eslint-disable-line no-unused-vars
-  TIMEOUT_ERROR = -32005, // eslint-disable-line no-unused-vars
-  VALIDATION_ERROR = -32006, // eslint-disable-line no-unused-vars
-  DEPENDENCY_ERROR = -32007, // eslint-disable-line no-unused-vars
-  CONFIGURATION_ERROR = -32008, // eslint-disable-line no-unused-vars
+  SERVER_ERROR = -32000,
+  RESOURCE_NOT_FOUND = -32001,
+  AUTHENTICATION_ERROR = -32002,
+  AUTHORIZATION_ERROR = -32003,
+  RATE_LIMITED = -32004,
+  TIMEOUT_ERROR = -32005,
+  VALIDATION_ERROR = -32006,
+  DEPENDENCY_ERROR = -32007,
+  CONFIGURATION_ERROR = -32008,
 }
+/* eslint-enable no-unused-vars */
 
 /**
  * MCP error categories for better error classification
+ * These categories are exported for use by consumers of the library
  */
+/* eslint-disable no-unused-vars */
 export enum MCPErrorCategory {
-  CLIENT_ERROR = 'client_error', // eslint-disable-line no-unused-vars
-  SERVER_ERROR = 'server_error', // eslint-disable-line no-unused-vars
-  NETWORK_ERROR = 'network_error', // eslint-disable-line no-unused-vars
-  VALIDATION_ERROR = 'validation_error', // eslint-disable-line no-unused-vars
-  AUTHENTICATION_ERROR = 'authentication_error', // eslint-disable-line no-unused-vars
-  RESOURCE_ERROR = 'resource_error', // eslint-disable-line no-unused-vars
+  CLIENT_ERROR = 'client_error',
+  SERVER_ERROR = 'server_error',
+  NETWORK_ERROR = 'network_error',
+  VALIDATION_ERROR = 'validation_error',
+  AUTHENTICATION_ERROR = 'authentication_error',
+  RESOURCE_ERROR = 'resource_error',
 }
+/* eslint-enable no-unused-vars */
 
 /**
  * Interface for structured MCP error information
