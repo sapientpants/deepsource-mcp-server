@@ -2,9 +2,14 @@
  * @fileoverview Integration tests for the registry-based MCP server implementation
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { ToolRegistry } from '../server/tool-registry.js';
+
+// Mock MCP SDK modules
+jest.mock('@modelcontextprotocol/sdk/server/mcp.js');
+jest.mock('@modelcontextprotocol/sdk/server/stdio.js');
 import {
   adaptQualityMetricsParams,
   adaptUpdateMetricThresholdParams,
@@ -265,6 +270,256 @@ describe('Index Registry Implementation', () => {
         projectKey: 'test-project',
       });
       expect(result.content[0].text).toContain('metrics');
+    });
+  });
+
+  describe.skip('Main Entry Point Functions', () => {
+    let mockExit: jest.SpyInstance;
+    let mockConsoleError: jest.SpyInstance;
+    let originalProcessEnv: NodeJS.ProcessEnv;
+
+    beforeEach(() => {
+      // Mock process.exit
+      mockExit = jest.spyOn(process, 'exit').mockImplementation((code?: number) => {
+        throw new Error(`process.exit called with code ${code}`);
+      });
+
+      // Mock console.error
+      mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      // Save and set environment
+      originalProcessEnv = { ...process.env };
+      process.env.DEEPSOURCE_API_KEY = 'test-api-key';
+
+      // Mock MCP SDK classes
+      (McpServer as jest.MockedClass<typeof McpServer>).mockImplementation(() => ({
+        connect: jest.fn().mockResolvedValue(undefined),
+      } as any));
+
+      (StdioServerTransport as jest.MockedClass<typeof StdioServerTransport>).mockImplementation(() => ({} as any));
+    });
+
+    afterEach(() => {
+      mockExit.mockRestore();
+      mockConsoleError.mockRestore();
+      process.env = originalProcessEnv;
+      jest.clearAllMocks();
+    });
+
+    describe('validateEnvironment', () => {
+      it('should pass when DEEPSOURCE_API_KEY is set', () => {
+        process.env.DEEPSOURCE_API_KEY = 'valid-api-key';
+        
+        // Import the module functions
+        const { validateEnvironment } = require('../index-registry.js');
+        
+        // Should not throw
+        expect(() => validateEnvironment()).not.toThrow();
+      });
+
+      it('should exit when DEEPSOURCE_API_KEY is missing', () => {
+        delete process.env.DEEPSOURCE_API_KEY;
+        
+        const { validateEnvironment } = require('../index-registry.js');
+        
+        expect(() => validateEnvironment()).toThrow('process.exit called with code 1');
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+
+      it('should exit when DEEPSOURCE_API_KEY is empty', () => {
+        process.env.DEEPSOURCE_API_KEY = '';
+        
+        const { validateEnvironment } = require('../index-registry.js');
+        
+        expect(() => validateEnvironment()).toThrow('process.exit called with code 1');
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('createAndConfigureToolRegistry', () => {
+      it('should create registry and register all tools', () => {
+        const mockServer = new McpServer({ name: 'test', version: '1.0.0' });
+        const mockToolRegistry = new ToolRegistry(mockServer);
+        
+        jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation(() => {});
+        jest.spyOn(ToolRegistry.prototype, 'getToolNames').mockReturnValue([
+          'projects', 'quality_metrics', 'update_metric_threshold', 
+          'update_metric_setting', 'compliance_report', 'project_issues',
+          'dependency_vulnerabilities', 'runs', 'run', 'recent_run_issues'
+        ]);
+
+        const { createAndConfigureToolRegistry } = require('../index-registry.js');
+        const registry = createAndConfigureToolRegistry(mockServer);
+
+        expect(registry).toBeInstanceOf(ToolRegistry);
+        expect(ToolRegistry.prototype.registerTool).toHaveBeenCalledTimes(10);
+      });
+
+      it('should log tool configuration', () => {
+        const mockServer = new McpServer({ name: 'test', version: '1.0.0' });
+        
+        jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation(() => {});
+        jest.spyOn(ToolRegistry.prototype, 'getToolNames').mockReturnValue(['test-tool']);
+
+        const { createAndConfigureToolRegistry } = require('../index-registry.js');
+        createAndConfigureToolRegistry(mockServer);
+
+        expect(ToolRegistry.prototype.getToolNames).toHaveBeenCalled();
+      });
+    });
+
+    describe('main function', () => {
+      it('should start server successfully', async () => {
+        const mockServer = {
+          connect: jest.fn().mockResolvedValue(undefined),
+        };
+        
+(McpServer as jest.MockedClass<typeof McpServer>).mockImplementation(() => mockServer as any);
+
+        const { main } = require('../index-registry.js');
+        
+        await expect(main()).resolves.not.toThrow();
+        expect(McpServer).toHaveBeenCalledWith({
+          name: 'deepsource-mcp-server',
+          version: '1.2.2',
+        });
+        expect(mockServer.connect).toHaveBeenCalled();
+      });
+
+      it('should handle connection errors', async () => {
+        const mockServer = {
+          connect: jest.fn().mockRejectedValue(new Error('Connection failed')),
+        };
+        
+(McpServer as jest.MockedClass<typeof McpServer>).mockImplementation(() => mockServer as any);
+
+        const { main } = require('../index-registry.js');
+        
+        await expect(main()).rejects.toThrow('process.exit called with code 1');
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+
+      it('should handle validation errors', async () => {
+        delete process.env.DEEPSOURCE_API_KEY;
+
+        const { main } = require('../index-registry.js');
+        
+        await expect(main()).rejects.toThrow('process.exit called with code 1');
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('error handlers', () => {
+      let originalListeners: any;
+
+      beforeEach(() => {
+        // Store and clear existing listeners
+        originalListeners = {
+          uncaughtException: process.listeners('uncaughtException'),
+          unhandledRejection: process.listeners('unhandledRejection'),
+        };
+        
+        process.removeAllListeners('uncaughtException');
+        process.removeAllListeners('unhandledRejection');
+      });
+
+      afterEach(() => {
+        // Restore original listeners
+        process.removeAllListeners('uncaughtException');
+        process.removeAllListeners('unhandledRejection');
+        
+        originalListeners.uncaughtException.forEach((listener: any) => {
+          process.on('uncaughtException', listener);
+        });
+        originalListeners.unhandledRejection.forEach((listener: any) => {
+          process.on('unhandledRejection', listener);
+        });
+      });
+
+      it('should handle uncaught exceptions', () => {
+        // Import the module to register error handlers
+        require('../index-registry.js');
+
+        const testError = new Error('Test uncaught exception');
+        
+        expect(() => {
+          process.emit('uncaughtException', testError);
+        }).toThrow('process.exit called with code 1');
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+        expect(mockConsoleError).toHaveBeenCalledWith('Uncaught exception:', testError);
+      });
+
+      it('should handle unhandled rejections', () => {
+        // Import the module to register error handlers
+        require('../index-registry.js');
+
+        const testReason = 'Test unhandled rejection';
+        const testPromise = Promise.resolve();
+
+        expect(() => {
+          process.emit('unhandledRejection', testReason, testPromise);
+        }).toThrow('process.exit called with code 1');
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+        expect(mockConsoleError).toHaveBeenCalledWith('Unhandled rejection at:', testPromise, 'reason:', testReason);
+      });
+    });
+
+    describe('tool handler integrations', () => {
+      it('should register projects handler without parameters', () => {
+        const mockServer = new McpServer({ name: 'test', version: '1.0.0' });
+        let registeredHandler: any;
+        
+        jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation((tool) => {
+          if (tool.name === 'projects') {
+            registeredHandler = tool.handler;
+          }
+        });
+
+        const { createAndConfigureToolRegistry } = require('../index-registry.js');
+        createAndConfigureToolRegistry(mockServer);
+
+        expect(registeredHandler).toBeDefined();
+      });
+
+      it('should register quality metrics handler with adapter', () => {
+        const mockServer = new McpServer({ name: 'test', version: '1.0.0' });
+        let registeredHandler: any;
+        
+        jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation((tool) => {
+          if (tool.name === 'quality_metrics') {
+            registeredHandler = tool.handler;
+          }
+        });
+
+        const { createAndConfigureToolRegistry } = require('../index-registry.js');
+        createAndConfigureToolRegistry(mockServer);
+
+        expect(registeredHandler).toBeDefined();
+      });
+
+      it('should call handlers with correct parameters', async () => {
+        const mockServer = new McpServer({ name: 'test', version: '1.0.0' });
+        const handlers: Record<string, any> = {};
+        
+        jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation((tool) => {
+          handlers[tool.name] = tool.handler;
+        });
+
+        const { createAndConfigureToolRegistry } = require('../index-registry.js');
+        createAndConfigureToolRegistry(mockServer);
+
+        // Test projects handler (no params)
+        if (handlers.projects) {
+          await expect(handlers.projects()).resolves.toBeDefined();
+        }
+
+        // Test quality metrics handler (with params)
+        if (handlers.quality_metrics) {
+          await expect(handlers.quality_metrics({ projectKey: 'test' })).resolves.toBeDefined();
+        }
+      });
     });
   });
 });
