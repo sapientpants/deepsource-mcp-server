@@ -6,7 +6,7 @@ import {
   wrapInApiResponse,
   createDefaultHandlerDeps,
 } from './base/handler.factory.js';
-import { createLogger } from '../utils/logging/logger.js';
+import { createLogger, Logger } from '../utils/logging/logger.js';
 import { IQualityMetricsRepository } from '../domain/aggregates/quality-metrics/quality-metrics.repository.js';
 import { RepositoryFactory } from '../infrastructure/factories/repository.factory.js';
 import { asProjectKey } from '../types/branded.js';
@@ -65,7 +65,7 @@ export interface DeepsourceUpdateMetricSettingParams {
  */
 interface QualityMetricsHandlerDeps {
   qualityMetricsRepository: IQualityMetricsRepository;
-  logger: any;
+  logger: Logger;
 }
 
 /**
@@ -89,7 +89,7 @@ export function createQualityMetricsHandlerWithRepo(deps: QualityMetricsHandlerD
 
       // Filter by shortcode if specified
       const filteredMetrics = shortcodeIn
-        ? allMetrics.filter((metric: any) => shortcodeIn.includes(metric.configuration.shortcode))
+        ? allMetrics.filter((metric) => shortcodeIn.includes(metric.configuration.shortcode))
         : allMetrics;
 
       deps.logger.info('Successfully fetched quality metrics', {
@@ -98,14 +98,14 @@ export function createQualityMetricsHandlerWithRepo(deps: QualityMetricsHandlerD
       });
 
       const metricsData = {
-        metrics: filteredMetrics.map((domainMetric: any) => ({
+        metrics: filteredMetrics.map((domainMetric) => ({
           name: domainMetric.configuration.name,
           shortcode: domainMetric.configuration.shortcode,
           description: domainMetric.configuration.description,
           positiveDirection: domainMetric.configuration.positiveDirection,
           unit: domainMetric.configuration.unit,
-          minValueAllowed: domainMetric.configuration.minValueAllowed,
-          maxValueAllowed: domainMetric.configuration.maxValueAllowed,
+          minValueAllowed: domainMetric.configuration.minAllowed,
+          maxValueAllowed: domainMetric.configuration.maxAllowed,
           isReported: domainMetric.configuration.isReported,
           isThresholdEnforced: domainMetric.configuration.isThresholdEnforced,
           items: [

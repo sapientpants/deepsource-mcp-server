@@ -5,7 +5,7 @@
 
 import { DeepSourceClient, DeepSourceRun } from '../deepsource.js';
 import { ApiResponse } from '../models/common.js';
-import { createLogger } from '../utils/logging/logger.js';
+import { createLogger, Logger } from '../utils/logging/logger.js';
 import { RunFilterParams } from '../models/runs.js';
 import { AnalyzerShortcode, asProjectKey } from '../types/branded.js';
 import { BaseHandlerDeps } from './base/handler.interface.js';
@@ -35,7 +35,7 @@ export interface DeepsourceProjectRunsParams extends RunFilterParams {
  */
 interface ProjectRunsHandlerDeps {
   analysisRunRepository: IAnalysisRunRepository;
-  logger: any;
+  logger: Logger;
 }
 
 /**

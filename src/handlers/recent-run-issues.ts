@@ -6,7 +6,7 @@
 import { DeepSourceClient } from '../deepsource.js';
 import { ApiResponse } from '../models/common.js';
 import { DeepSourceIssue } from '../models/issues.js';
-import { createLogger } from '../utils/logging/logger.js';
+import { createLogger, Logger } from '../utils/logging/logger.js';
 import { PaginationParams } from '../utils/pagination/types.js';
 import { BranchName, asProjectKey, asBranchName } from '../types/branded.js';
 import { BaseHandlerDeps } from './base/handler.interface.js';
@@ -38,7 +38,7 @@ export interface DeepsourceRecentRunIssuesParams extends PaginationParams {
 interface RecentRunIssuesHandlerDeps {
   analysisRunRepository: IAnalysisRunRepository;
   client: DeepSourceClient;
-  logger: any;
+  logger: Logger;
 }
 
 /**
