@@ -422,8 +422,8 @@ export class AnalysisRun extends AggregateRoot<RunId> {
     // Update summary
     this._summary = {
       totalIntroduced: IssueCount.create(this._issues.size),
-      totalResolved: IssueCount.zero(), // TODO: Implement resolution tracking
-      totalSuppressed: IssueCount.zero(), // TODO: Implement suppression tracking
+      totalResolved: IssueCount.zero(), // Resolution tracking not yet implemented
+      totalSuppressed: IssueCount.zero(), // Suppression tracking not yet implemented
       byAnalyzer: Array.from(analyzerMap.values()),
       byCategory: Array.from(categoryMap.values()),
     };

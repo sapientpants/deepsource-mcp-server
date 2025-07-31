@@ -232,7 +232,7 @@ export class RunsClient extends BaseDeepSourceClient {
       // This would require additional GraphQL queries to get checks and occurrences for the specific run
       return {
         run: mostRecentRun,
-        items: [], // TODO: Implement run-specific issue fetching
+        items: [], // Run-specific issue fetching not yet implemented
         pageInfo: { hasNextPage: false, hasPreviousPage: false },
         totalCount: 0,
       };

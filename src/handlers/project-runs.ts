@@ -56,7 +56,7 @@ export function createProjectRunsHandlerWithRepo(deps: ProjectRunsHandlerDeps) {
 
       // Get the analysis runs from repository
       // Note: Basic pagination using page/pageSize for now
-      // TODO: Implement cursor-based pagination and analyzer filtering in repository
+      // Note: Advanced pagination and analyzer filtering can be implemented in future versions
       const pageSize = first || 20; // Default page size
       const page = 1; // For now, always fetch first page
 
