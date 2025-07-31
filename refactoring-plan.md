@@ -2,7 +2,10 @@
 
 ## Executive Summary
 
-This plan outlines focused architectural improvements for the DeepSource MCP server, emphasizing handler architecture, domain modeling, client redesign, error handling, and testing infrastructure while maintaining DDD, SOLID, and DRY principles.
+This plan outlines focused architectural improvements for the DeepSource MCP
+server, emphasizing handler architecture, domain modeling, client redesign,
+error handling, and testing infrastructure while maintaining DDD, SOLID, and
+DRY principles.
 
 ## Progress Tracker
 
@@ -60,47 +63,84 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
 - Handler integration with domain layer
   - ✅ Projects handler updated to use domain aggregates via ProjectRepository
   - ✅ Quality-metrics handler updated to use domain aggregates via QualityMetricsRepository
-    - Created comprehensive unit tests (8 tests) for domain-based quality metrics handler
-    - Handler properly integrates with repository pattern and maintains MCP compatibility
-    - Error handling converted from domain error responses to thrown exceptions for backward compatibility
+    - Created comprehensive unit tests (8 tests) for domain-based
+      quality metrics handler
+    - Handler properly integrates with repository pattern and
+      maintains MCP compatibility
+    - Error handling converted from domain error responses to
+      thrown exceptions for backward compatibility
   - ✅ Compliance-reports handler updated to use domain aggregates via ComplianceReportRepository
-    - Created comprehensive unit tests (9 tests) for domain-based compliance reports handler
-    - Handler properly maps domain ComplianceReport structure to expected MCP response format
-    - Handles domain status mapping (READY→PASSING, ERROR→FAILING, etc.) correctly
-    - Error handling converted from domain error responses to thrown exceptions for backward compatibility
+    - Created comprehensive unit tests (9 tests) for domain-based
+      compliance reports handler
+    - Handler properly maps domain ComplianceReport structure to
+      expected MCP response format
+    - Handles domain status mapping (READY→PASSING, ERROR→FAILING,
+      etc.) correctly
+    - Error handling converted from domain error responses to
+      thrown exceptions for backward compatibility
     - Successfully committed and pushed all changes (commit 4a39c5b)
   - ✅ Project-runs handler updated to use domain aggregates via AnalysisRunRepository
-    - Created comprehensive unit tests (9 tests) for domain-based project runs handler
-    - Handler properly maps domain AnalysisRun structure to expected MCP response format
-    - Error handling converted from domain error responses to thrown exceptions for backward compatibility
+    - Created comprehensive unit tests (9 tests) for domain-based
+      project runs handler
+    - Handler properly maps domain AnalysisRun structure to expected
+      MCP response format
+    - Error handling converted from domain error responses to
+      thrown exceptions for backward compatibility
     - Successfully committed and pushed all changes (commit ea18056)
-    - Note: Basic pagination implemented, cursor-based pagination and analyzer filtering to be added
+    - Note: Basic pagination implemented, cursor-based pagination and
+      analyzer filtering to be added
   - ✅ Run handler updated to use domain aggregates via AnalysisRunRepository  
     - Created comprehensive unit tests (12 tests) for domain-based run handler
     - Handler properly supports finding runs by either runId or commitOid
     - Error handling converted from domain error responses to thrown exceptions for backward compatibility
     - Successfully committed and pushed all changes (commit dca5b4b)
   - ✅ Recent-run-issues handler updated to use domain aggregates via AnalysisRunRepository
-    - Created comprehensive unit tests (11 tests) for domain-based recent-run-issues handler
-    - Implemented hybrid approach: domain repository for run data, client for issues data
-    - Handler properly integrates with repository pattern and maintains MCP compatibility
-    - Error handling converted from domain error responses to thrown exceptions for backward compatibility
+    - Created comprehensive unit tests (11 tests) for domain-based
+      recent-run-issues handler
+    - Implemented hybrid approach: domain repository for run data,
+      client for issues data
+    - Handler properly integrates with repository pattern and
+      maintains MCP compatibility
+    - Error handling converted from domain error responses to
+      thrown exceptions for backward compatibility
     - Successfully committed and pushed all changes (commit b6ab90e)
   - ✅ Remaining handlers (project-issues, dependency-vulnerabilities) already use proper patterns
-    - Both handlers follow dependency injection pattern established in Phase 1
+    - Both handlers follow dependency injection pattern established
+      in Phase 1
     - No domain aggregates exist for Issues or Vulnerabilities (read-only data)
     - Handlers maintain consistent error handling and response formatting
 
-### 🚧 In Progress (Phase 5: Client Architecture Redesign)
+### ✅ Completed (Phase 5: Client Architecture Redesign)
+
+- Domain-specific client architecture foundation created
+  - ✅ Created specialized clients for different API domains:
+    - IssuesClient for issue operations  
+    - RunsClient for analysis run operations
+    - MetricsClient for quality metrics operations
+    - SecurityClient for vulnerability and compliance operations
+  - ✅ Extended BaseDeepSourceClient with shared utilities:
+    - Project lookup functionality
+    - Pagination parameter normalization
+    - Empty response creation helpers
+    - Error message extraction
+  - ✅ Updated DeepSourceClientFactory to include all domain clients
+  - ✅ Added repository name field to DeepSourceProject interface
+  - ✅ Fixed TypeScript compilation errors and ensured type safety
+  - ✅ Used branded types for type-safe identifiers
+  - ✅ Implemented proper GraphQL response handling
+  - ✅ Fixed test mocks to include ReportType and ReportStatus exports
+  - ✅ Successfully committed and pushed all changes (commit 58a8159)
 
 ### 📋 Pending
 - MCP server extraction
-- Error handling enhancement
+- Error handling enhancement  
 - Testing infrastructure improvements
+- Integrate repository factory with main MCP server
 
 ## 1. Handler Architecture Refactoring
 
-### Current Issues:
+### Current Issues
+
 - ~~Inconsistent handler patterns (some use dependency injection, others don't)~~ ✅ Partially resolved
 - ~~Direct environment variable access in handlers~~ ✅ Partially resolved
 - Mixed responsibilities between MCP tool registration and business logic
@@ -129,7 +169,9 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
 - [x] dependency-vulnerabilities.ts
 
 #### 1.2 Handler Middleware System ✅ Partially Implemented
-- ~~Implement a middleware pipeline for cross-cutting concerns:~~ ✅ Basic implementation done
+
+- ~~Implement a middleware pipeline for cross-cutting concerns:~~
+  ✅ Basic implementation done
   - ~~Request validation~~ ✅ Via Zod in ToolRegistry
   - ~~Error handling and classification~~ ✅ In createBaseHandlerFactory
   - ~~Response formatting~~ ✅ Via wrapInApiResponse
@@ -153,14 +195,16 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
 
 ## 2. Domain Modeling Improvements
 
-### Current Issues:
+### Current Issues
+
 - Loose domain boundaries between different concerns
 - Missing aggregate roots for complex entities
 - Insufficient use of branded types throughout the codebase
 
-### Proposed Improvements:
+### Proposed Improvements
 
 #### 2.1 Domain Aggregate Design ✅ Complete
+
 - Create proper aggregates for:
   - ✅ Project (root: includes repository info, configuration)
   - ✅ AnalysisRun (root: includes issues, summaries)
@@ -188,25 +232,29 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
 - All code passes linting, type checking, and CI pipeline (1076 tests, 79.15% coverage)
 
 #### 2.2 Repository Pattern Implementation
+
 - Create repository interfaces for each aggregate
 - Ensure fresh data retrieval from DeepSource API on every request
 - Separate read and write operations (CQRS-lite)
 
 #### 2.3 Enhanced Type Safety
+
 - Extend branded types usage to all identifiers
 - Create value objects for complex values (e.g., ThresholdValue, MetricValue)
 - Implement discriminated unions for all status/state fields
 
 ## 3. Client Architecture Redesign
 
-### Current Issues:
+### Current Issues
+
 - Monolithic DeepSourceClient with too many responsibilities
 - Missing abstraction layers between GraphQL and domain logic
 - Inconsistent error handling across client methods
 
-### Proposed Improvements:
+### Proposed Improvements
 
 #### 3.1 Client Modularization
+
 - Split DeepSourceClient into domain-specific clients:
   - ProjectsClient (already exists)
   - IssuesClient
@@ -216,49 +264,57 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
   - VulnerabilityClient
 
 #### 3.2 GraphQL Query Builder
+
 - Create a fluent query builder for GraphQL operations
 - Implement query composition and fragment reuse
 - Ensure all queries fetch fresh data from DeepSource API
 
 #### 3.3 Connection Management
+
 - Implement proper HTTP client configuration
 - Add retry logic with exponential backoff
 - Implement circuit breaker pattern for API failures
 
 ## 4. Error Handling Enhancement
 
-### Current Issues:
+### Current Issues
+
 - Inconsistent error classification and handling
 - Missing MCP-specific error codes
 - Poor error context propagation
 
-### Proposed Improvements:
+### Proposed Improvements
 
 #### 4.1 MCP Error Standardization
+
 - Map all errors to proper MCP error codes
 - Implement error context preservation
 - Create error recovery strategies for transient failures
 
 #### 4.2 Error Middleware
+
 - Centralize error handling in middleware
 - Add user-friendly error messages with actionable steps
 - Implement proper error logging and categorization
 
 ## 5. Testing Infrastructure
 
-### Current Issues:
+### Current Issues
+
 - Test coverage gaps in error scenarios
 - Missing integration tests for MCP protocol
 - Insufficient mock infrastructure
 
-### Proposed Improvements:
+### Proposed Improvements
 
 #### 5.1 Test Harness Enhancement
+
 - Create MCP protocol test harness
 - Add contract testing for GraphQL queries
 - Implement scenario-based testing for error cases
 
 #### 5.2 Mock Infrastructure
+
 - Create comprehensive mock servers
 - Implement fixture-based testing
 - Add test utilities for common scenarios
@@ -266,11 +322,13 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
 ## Implementation Priority (Updated)
 
 ### Phase 1 (Week 1): Foundation ✅ Complete
+
 - ~~Standardize handler patterns~~ ✅ Done for all 7 handlers
 - ~~Implement basic middleware system~~ ✅ Done via factory pattern
 - ~~Create core domain models~~ 📋 Pending (moved to Phase 2)
 
-**Actual Progress:** 
+**Actual Progress:**
+
 - Day 1: Created base infrastructure (handler interfaces, factory, tool registry)
 - Day 2: Refactored all 7 handlers to use dependency injection pattern
 - Discovered that factory pattern provides sufficient middleware functionality
@@ -278,6 +336,7 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
 - All handlers now have consistent error handling, logging, and response formatting
 
 ### Phase 2 (Weeks 2-3): Domain & Repository Layer ✅ Complete
+
 - ✅ Complete remaining handler refactoring (Day 2)
 - ✅ Implement domain aggregates (Days 3-4)
   - ✅ Project aggregate with repository interface
@@ -287,7 +346,8 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
 - ✅ Create repository interfaces (Days 3-4)
 - ✅ Create unit tests for domain components (Days 5-6)
   - ✅ Base domain classes (ValueObject, Entity, AggregateRoot)
-  - ✅ All value objects (ThresholdValue, MetricValue, IssueCount, CoveragePercentage) 
+  - ✅ All value objects (ThresholdValue, MetricValue, IssueCount,
+    CoveragePercentage)
   - ✅ Project aggregate with comprehensive test coverage
   - ✅ ESLint configuration fixes for test environment
   - ✅ AnalysisRun aggregate tests (36 tests, 100% coverage)
@@ -299,18 +359,21 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
   - ✅ Comprehensive test coverage (163 tests)
 
 ### Phase 3 (Week 4): Handler Integration & Client Redesign
+
 - Integrate domain layer with handlers via repositories
 - Split monolithic client into domain-specific clients
 - Add GraphQL query builder
 - Update MCP server to use repository factory
 
 ### Phase 4 (Week 5): Error Handling & Testing
+
 - Enhance error handling with MCP standards
 - Implement comprehensive test harness
 - Add integration tests
 - Increase test coverage for new components
 
 ### Phase 5 (Week 6): Refinement & Documentation
+
 - Complete tool registration abstraction
 - Enhance type safety throughout
 - Documentation and final cleanup
@@ -327,6 +390,7 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
 ## Lessons Learned (So Far)
 
 ### What Worked Well
+
 1. **Factory Pattern**: The `createBaseHandlerFactory` provided an elegant solution for:
    - Consistent error handling
    - Automatic logging
@@ -338,6 +402,7 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
 3. **Centralized Tool Definitions**: Having all Zod schemas in one place improves maintainability
 
 ### Challenges Encountered
+
 1. **MCP Type Compatibility**: The MCP server has specific type requirements that needed careful handling:
    - Required `Record<string, unknown>` for handler parameters
    - Response format must include `content` array
@@ -348,6 +413,7 @@ This plan outlines focused architectural improvements for the DeepSource MCP ser
 3. **Test Coverage**: New infrastructure components (tool-registry, tool-definitions) need comprehensive tests
 
 ### Recommendations for Next Phase
+
 1. **Handler Refactoring**: Use the established pattern consistently:
    ```typescript
    export const createXHandler = createBaseHandlerFactory('handler_name', async (deps, params) => {
@@ -653,14 +719,14 @@ With the domain layer complete and fully tested, the next steps are:
 - **Total new tests: 101 (bringing total to 1318 tests)**
 - All tests verify fresh data retrieval behavior
 
-7. **ComplianceReportRepository Implementation**
+1. **ComplianceReportRepository Implementation**
    - Concrete implementation of `IComplianceReportRepository` using `DeepSourceClient`
    - Supports all compliance report types (OWASP_TOP_10, SANS_TOP_25, MISRA_C)
    - Repository ID fetching with fallback mechanism (similar to QualityMetricsRepository)
    - Implements filtering by status, compliance level, and critical issues
    - Fresh data retrieval on every request (no caching per requirements)
 
-8. **ComplianceReportMapper Implementation**
+2. **ComplianceReportMapper Implementation**
    - Maps between DeepSource API compliance reports and domain aggregates
    - Handles API/domain model differences (NOTE → INFO severity mapping)
    - Corrected API structure alignment (uses `total` property, not `note`)
@@ -759,10 +825,12 @@ The foundation is now solid for integrating the domain layer with the existing h
 
 ### Projects Handler Domain Integration (Day 10)
 
-Successfully migrated the projects handler from direct client usage to domain aggregates via repositories:
+Successfully migrated the projects handler from direct client usage to domain
+aggregates via repositories:
 
-#### Changes Made:
-1. **Updated Dependencies**: 
+#### Changes Made
+
+1. **Updated Dependencies**:
    - Replaced `DeepSourceClientFactory` with `RepositoryFactory`
    - Changed from `ProjectsClient` to `IProjectRepository`
    - Simplified dependency injection interface
@@ -777,14 +845,16 @@ Successfully migrated the projects handler from direct client usage to domain ag
    - Updated test expectations to match repository-based flow
    - All 7 tests passing with domain integration
 
-#### Benefits Achieved:
+#### Benefits Achieved
+
 - **Cleaner Architecture**: Handler now works with domain concepts
 - **Better Separation**: Business logic separated from API details
 - **Type Safety**: Strong typing with domain aggregates
 - **Fresh Data**: Repository ensures data freshness from DeepSource API
 - **Testability**: Easier to mock and test with repository pattern
 
-#### Code Structure:
+#### Code Structure
+
 ```typescript
 // Old approach - direct client usage
 const projectsClient = deps.clientFactory.getProjectsClient();
