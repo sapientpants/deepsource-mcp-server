@@ -203,6 +203,7 @@ export class ProjectsClient extends BaseDeepSourceClient {
           url: repo.dsn,
           provider: repo.vcsProvider ?? 'N/A',
           login: account?.login,
+          name: repo.name ?? 'Unnamed Repository',
           isPrivate: repo.isPrivate ?? false,
           isActivated: repo.isActivated ?? false,
         },
