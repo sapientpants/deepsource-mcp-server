@@ -36,7 +36,7 @@ describe('ProjectsClient', () => {
 
   beforeEach(() => {
     projectsClient = new ProjectsClient('test-api-key');
-    mockBaseClient = (projectsClient as unknown) as {
+    mockBaseClient = projectsClient as unknown as {
       executeGraphQL: jest.Mock;
     };
     jest.clearAllMocks();

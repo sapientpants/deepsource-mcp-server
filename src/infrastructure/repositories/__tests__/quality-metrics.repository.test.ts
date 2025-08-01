@@ -5,7 +5,12 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { QualityMetricsRepository } from '../quality-metrics.repository.js';
 import { DeepSourceClient } from '../../../deepsource.js';
-import { RepositoryMetric, MetricShortcode, MetricDirection, MetricThresholdStatus } from '../../../models/metrics.js';
+import {
+  RepositoryMetric,
+  MetricShortcode,
+  MetricDirection,
+  MetricThresholdStatus,
+} from '../../../models/metrics.js';
 import { asProjectKey } from '../../../types/branded.js';
 import { QualityMetrics } from '../../../domain/aggregates/quality-metrics/quality-metrics.aggregate.js';
 import { DeepSourceProject } from '../../../models/projects.js';
@@ -377,10 +382,10 @@ describe('QualityMetricsRepository', () => {
     it('should handle null threshold', async () => {
       const projectKey = asProjectKey('test-project');
       const metrics = await repository.findByProjectAndMetric(projectKey, MetricShortcode.LCV);
-      
+
       expect(metrics).not.toBeNull();
       if (!metrics) return;
-      
+
       metrics.updateThreshold(null);
 
       await repository.save(metrics);
@@ -395,7 +400,7 @@ describe('QualityMetricsRepository', () => {
     it('should propagate errors from client', async () => {
       const projectKey = asProjectKey('test-project');
       const metrics = await repository.findByProjectAndMetric(projectKey, MetricShortcode.LCV);
-      
+
       expect(metrics).not.toBeNull();
       if (!metrics) return;
 

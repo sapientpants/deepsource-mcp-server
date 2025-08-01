@@ -429,7 +429,7 @@ describe('Index Registry Implementation', () => {
     describe('tool handler integrations', () => {
       it('should register projects handler without parameters', async () => {
         const mockServer = new McpServer({ name: 'test', version: '1.0.0' });
-        let registeredHandler: ((params: unknown) => Promise<unknown>) | undefined;
+        let registeredHandler: (() => Promise<unknown>) | undefined;
 
         jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation((tool) => {
           if (tool.name === 'projects') {
@@ -445,7 +445,7 @@ describe('Index Registry Implementation', () => {
 
       it('should register quality metrics handler with adapter', async () => {
         const mockServer = new McpServer({ name: 'test', version: '1.0.0' });
-        let registeredHandler: ((params: unknown) => Promise<unknown>) | undefined;
+        let registeredHandler: (() => Promise<unknown>) | undefined;
 
         jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation((tool) => {
           if (tool.name === 'quality_metrics') {
@@ -461,7 +461,7 @@ describe('Index Registry Implementation', () => {
 
       it('should call handlers with correct parameters', async () => {
         const mockServer = new McpServer({ name: 'test', version: '1.0.0' });
-        const handlers: Record<string, (params: unknown) => Promise<unknown>> = {};
+        const handlers: Record<string, () => Promise<unknown>> = {};
 
         jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation((tool) => {
           handlers[tool.name] = tool.handler;

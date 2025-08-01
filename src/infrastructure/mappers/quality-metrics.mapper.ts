@@ -87,7 +87,9 @@ export function mapQualityMetricsToDomainList(
   projectKey: string,
   repositoryId: string
 ): QualityMetrics[] {
-  return apiMetric.items.map((item) => mapQualityMetricToDomain(apiMetric, item, projectKey, repositoryId));
+  return apiMetric.items.map((item) =>
+    mapQualityMetricToDomain(apiMetric, item, projectKey, repositoryId)
+  );
 }
 
 /**

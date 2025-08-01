@@ -57,7 +57,7 @@ function mapApiCategoryToDomain(apiCategory: string): IssueCategory {
   const categoryMap: Record<string, IssueCategory> = {
     'anti-pattern': 'ANTI_PATTERN',
     'bug-risk': 'BUG_RISK',
-    'bug_risk': 'BUG_RISK', // Support both hyphen and underscore
+    bug_risk: 'BUG_RISK', // Support both hyphen and underscore
     coverage: 'COVERAGE',
     documentation: 'DOCUMENTATION',
     performance: 'PERFORMANCE',
@@ -77,57 +77,57 @@ function mapApiCategoryToDomain(apiCategory: string): IssueCategory {
  * @returns The domain AnalysisRun aggregate
  */
 export function mapAnalysisRunToDomain(apiRun: DeepSourceRun, projectKey: string): AnalysisRun {
-    const commitInfo: CommitInfo = {
-      oid: asCommitOid(apiRun.commitOid),
-      branch: asBranchName(apiRun.branchName),
-      baseOid: asCommitOid(apiRun.baseOid),
-    };
+  const commitInfo: CommitInfo = {
+    oid: asCommitOid(apiRun.commitOid),
+    branch: asBranchName(apiRun.branchName),
+    baseOid: asCommitOid(apiRun.baseOid),
+  };
 
-    // Map API status to domain status
-    const status = mapApiStatusToDomain(apiRun.status);
+  // Map API status to domain status
+  const status = mapApiStatusToDomain(apiRun.status);
 
-    // Map issue distributions
-    const analyzerDistributions: AnalyzerDistribution[] =
-      apiRun.summary.occurrenceDistributionByAnalyzer?.map((dist) => ({
-        analyzerShortcode: asAnalyzerShortcode(dist.analyzerShortcode),
-        introduced: IssueCount.create(dist.introduced),
-        resolved: IssueCount.create(0), // API doesn't provide resolved by analyzer
-        suppressed: IssueCount.create(0), // API doesn't provide suppressed by analyzer
-      })) || [];
+  // Map issue distributions
+  const analyzerDistributions: AnalyzerDistribution[] =
+    apiRun.summary.occurrenceDistributionByAnalyzer?.map((dist) => ({
+      analyzerShortcode: asAnalyzerShortcode(dist.analyzerShortcode),
+      introduced: IssueCount.create(dist.introduced),
+      resolved: IssueCount.create(0), // API doesn't provide resolved by analyzer
+      suppressed: IssueCount.create(0), // API doesn't provide suppressed by analyzer
+    })) || [];
 
-    const categoryDistributions: CategoryDistribution[] =
-      apiRun.summary.occurrenceDistributionByCategory?.map((dist) => ({
-        category: mapApiCategoryToDomain(dist.category) as IssueCategory,
-        introduced: IssueCount.create(dist.introduced),
-        resolved: IssueCount.create(0), // API doesn't provide resolved by category
-        suppressed: IssueCount.create(0), // API doesn't provide suppressed by category
-      })) || [];
+  const categoryDistributions: CategoryDistribution[] =
+    apiRun.summary.occurrenceDistributionByCategory?.map((dist) => ({
+      category: mapApiCategoryToDomain(dist.category) as IssueCategory,
+      introduced: IssueCount.create(dist.introduced),
+      resolved: IssueCount.create(0), // API doesn't provide resolved by category
+      suppressed: IssueCount.create(0), // API doesn't provide suppressed by category
+    })) || [];
 
-    const summary: RunSummary = {
-      totalIntroduced: IssueCount.create(apiRun.summary.occurrencesIntroduced),
-      totalResolved: IssueCount.create(apiRun.summary.occurrencesResolved),
-      totalSuppressed: IssueCount.create(apiRun.summary.occurrencesSuppressed),
-      byAnalyzer: analyzerDistributions,
-      byCategory: categoryDistributions,
-    };
+  const summary: RunSummary = {
+    totalIntroduced: IssueCount.create(apiRun.summary.occurrencesIntroduced),
+    totalResolved: IssueCount.create(apiRun.summary.occurrencesResolved),
+    totalSuppressed: IssueCount.create(apiRun.summary.occurrencesSuppressed),
+    byAnalyzer: analyzerDistributions,
+    byCategory: categoryDistributions,
+  };
 
-    const run = AnalysisRun.fromPersistence({
-      runId: asRunId(apiRun.runUid),
-      projectKey: asProjectKey(projectKey),
-      repositoryId: asGraphQLNodeId(apiRun.repository.id),
-      commitInfo,
-      status,
-      timestamps: {
-        createdAt: new Date(apiRun.createdAt),
-        startedAt: status !== 'PENDING' ? new Date(apiRun.updatedAt) : undefined,
-        finishedAt: apiRun.finishedAt ? new Date(apiRun.finishedAt) : undefined,
-      },
-      summary,
-      issues: [], // Issues are fetched separately if needed
-    });
+  const run = AnalysisRun.fromPersistence({
+    runId: asRunId(apiRun.runUid),
+    projectKey: asProjectKey(projectKey),
+    repositoryId: asGraphQLNodeId(apiRun.repository.id),
+    commitInfo,
+    status,
+    timestamps: {
+      createdAt: new Date(apiRun.createdAt),
+      startedAt: status !== 'PENDING' ? new Date(apiRun.updatedAt) : undefined,
+      finishedAt: apiRun.finishedAt ? new Date(apiRun.finishedAt) : undefined,
+    },
+    summary,
+    issues: [], // Issues are fetched separately if needed
+  });
 
-    return run;
-  }
+  return run;
+}
 
 /**
  * Maps a domain AnalysisRun aggregate to persistence format
@@ -169,7 +169,10 @@ export function mapAnalysisRunToPersistence(run: AnalysisRun): {
  * @param projectKey - The project key for all runs
  * @returns Array of domain AnalysisRun aggregates
  */
-export function mapAnalysisRunsToDomainList(apiRuns: DeepSourceRun[], projectKey: string): AnalysisRun[] {
+export function mapAnalysisRunsToDomainList(
+  apiRuns: DeepSourceRun[],
+  projectKey: string
+): AnalysisRun[] {
   return apiRuns.map((run) => mapAnalysisRunToDomain(run, projectKey));
 }
 
