@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from '@jest/globals';
 import { AnalysisRunMapper } from '../analysis-run.mapper.js';
-import { DeepSourceRun } from '../../../models/runs.js';
+import { DeepSourceRun, AnalysisRunStatus } from '../../../models/runs.js';
 import {
   asRunId,
   asCommitOid,
@@ -136,14 +136,14 @@ describe('AnalysisRunMapper', () => {
       ];
 
       for (const { apiStatus, expectedStatus } of testCases) {
-        const apiRun = { ...mockApiRun, status: apiStatus as any };
+        const apiRun = { ...mockApiRun, status: apiStatus as AnalysisRunStatus };
         const run = AnalysisRunMapper.toDomain(apiRun, 'test-project');
         expect(run.status).toBe(expectedStatus);
       }
     });
 
     it('should handle unknown status by defaulting to FAILURE', () => {
-      const apiRun = { ...mockApiRun, status: 'UNKNOWN_STATUS' as any };
+      const apiRun = { ...mockApiRun, status: 'UNKNOWN_STATUS' as AnalysisRunStatus };
       const run = AnalysisRunMapper.toDomain(apiRun, 'test-project');
       expect(run.status).toBe('FAILURE');
     });

@@ -22,7 +22,7 @@ class TestableBaseClient extends BaseDeepSourceClient {
     return this.findProjectByKey(projectKey);
   }
 
-  testNormalizePaginationParams(params: any) {
+  testNormalizePaginationParams(params: unknown) {
     return this.normalizePaginationParams(params);
   }
 
@@ -31,7 +31,7 @@ class TestableBaseClient extends BaseDeepSourceClient {
   }
 
   testExtractErrorMessages(errors: Array<{ message: string }>) {
-    return this.extractErrorMessages(errors);
+    return BaseDeepSourceClient.extractErrorMessages(errors);
   }
 }
 

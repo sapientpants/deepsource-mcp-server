@@ -43,7 +43,15 @@ jest.mock('../utils/logging/logger.js', () => ({
 }));
 
 describe('Index.ts MCP Server Comprehensive Tests', () => {
-  let indexModule: any;
+  let indexModule: {
+    mcpServer: {
+      constructor: { name: string };
+      registerTool: unknown;
+      connect: unknown;
+    };
+    server?: unknown;
+    setLogLevel?: (level: string) => void;
+  };
   let originalEnv: typeof process.env;
 
   beforeEach(async () => {

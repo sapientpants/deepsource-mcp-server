@@ -25,17 +25,56 @@ import {
 import { IssueCount } from '../../domain/value-objects/issue-count.js';
 
 /**
- * Maps between API models and domain models for AnalysisRuns
+ * Maps API status to domain status
+ *
+ * @param apiStatus - The API status
+ * @returns The domain status
  */
-export class AnalysisRunMapper {
-  /**
-   * Maps a DeepSource API run to a domain AnalysisRun aggregate
-   *
-   * @param apiRun - The API run model
-   * @param projectKey - The project key (not available in API response)
-   * @returns The domain AnalysisRun aggregate
-   */
-  static toDomain(apiRun: DeepSourceRun, projectKey: string): AnalysisRun {
+function mapApiStatusToDomain(apiStatus: string): RunStatus {
+  // API uses different status names than domain
+  const statusMap: Record<string, RunStatus> = {
+    PENDING: 'PENDING',
+    READY: 'RUNNING',
+    SUCCESS: 'SUCCESS',
+    FAILURE: 'FAILURE',
+    TIMEOUT: 'TIMEOUT',
+    CANCEL: 'CANCELLED',
+    CANCELLED: 'CANCELLED',
+    SKIPPED: 'SKIPPED',
+  };
+
+  return statusMap[apiStatus] || 'FAILURE';
+}
+
+/**
+ * Maps API category to domain category
+ *
+ * @param apiCategory - The API category
+ * @returns The domain category
+ */
+function mapApiCategoryToDomain(apiCategory: string): IssueCategory {
+  // Map API categories to domain categories
+  const categoryMap: Record<string, IssueCategory> = {
+    'anti-pattern': 'ANTI_PATTERN',
+    'bug-risk': 'BUG_RISK',
+    coverage: 'COVERAGE',
+    documentation: 'DOCUMENTATION',
+    performance: 'PERFORMANCE',
+    security: 'SECURITY',
+    style: 'STYLE',
+    typecheck: 'TYPE_CHECK',
+  };
+
+  return categoryMap[apiCategory.toLowerCase()] || 'OTHER';
+}
+/**
+ * Maps a DeepSource API run to a domain AnalysisRun aggregate
+ *
+ * @param apiRun - The API run model
+ * @param projectKey - The project key (not available in API response)
+ * @returns The domain AnalysisRun aggregate
+ */
+export function mapAnalysisRunToDomain(apiRun: DeepSourceRun, projectKey: string): AnalysisRun {
     const commitInfo: CommitInfo = {
       oid: asCommitOid(apiRun.commitOid),
       branch: asBranchName(apiRun.branchName),
@@ -43,7 +82,7 @@ export class AnalysisRunMapper {
     };
 
     // Map API status to domain status
-    const status = this.mapApiStatusToDomain(apiRun.status);
+    const status = mapApiStatusToDomain(apiRun.status);
 
     // Map issue distributions
     const analyzerDistributions: AnalyzerDistribution[] =
@@ -56,7 +95,7 @@ export class AnalysisRunMapper {
 
     const categoryDistributions: CategoryDistribution[] =
       apiRun.summary.occurrenceDistributionByCategory?.map((dist) => ({
-        category: this.mapApiCategoryToDomain(dist.category) as IssueCategory,
+        category: mapApiCategoryToDomain(dist.category) as IssueCategory,
         introduced: IssueCount.create(dist.introduced),
         resolved: IssueCount.create(0), // API doesn't provide resolved by category
         suppressed: IssueCount.create(0), // API doesn't provide suppressed by category
@@ -88,103 +127,53 @@ export class AnalysisRunMapper {
     return run;
   }
 
-  /**
-   * Maps API status to domain status
-   *
-   * @param apiStatus - The API status
-   * @returns The domain status
-   */
-  private static mapApiStatusToDomain(apiStatus: string): RunStatus {
-    // API uses different status names than domain
-    const statusMap: Record<string, RunStatus> = {
-      PENDING: 'PENDING',
-      READY: 'RUNNING', // API uses READY for running state
-      SUCCESS: 'SUCCESS',
-      FAILURE: 'FAILURE',
-      TIMEOUT: 'TIMEOUT',
-      CANCEL: 'CANCELLED', // API uses CANCEL, domain uses CANCELLED
-      SKIPPED: 'SKIPPED',
-    };
-
-    const domainStatus = statusMap[apiStatus];
-    if (!domainStatus) {
-      // Default to FAILURE for unknown statuses
-      return 'FAILURE';
-    }
-
-    return domainStatus;
-  }
-
-  /**
-   * Maps API category to domain category
-   *
-   * @param apiCategory - The API category string
-   * @returns The domain category
-   */
-  private static mapApiCategoryToDomain(apiCategory: string): IssueCategory {
-    // API categories might be in different case or format
-    const categoryMap: Record<string, IssueCategory> = {
-      bug_risk: 'BUG_RISK',
-      security: 'SECURITY',
-      style: 'STYLE',
-      performance: 'PERFORMANCE',
-      documentation: 'DOCUMENTATION',
-      coverage: 'COVERAGE',
-      complexity: 'COMPLEXITY',
-      // Handle uppercase variants
-      BUG_RISK: 'BUG_RISK',
-      SECURITY: 'SECURITY',
-      STYLE: 'STYLE',
-      PERFORMANCE: 'PERFORMANCE',
-      DOCUMENTATION: 'DOCUMENTATION',
-      COVERAGE: 'COVERAGE',
-      COMPLEXITY: 'COMPLEXITY',
-    };
-
-    return categoryMap[apiCategory] || ('BUG_RISK' as IssueCategory);
-  }
-
-  /**
-   * Maps a domain AnalysisRun aggregate to persistence format
-   *
-   * @param run - The domain AnalysisRun aggregate
-   * @returns The persistence model
-   */
-  static toPersistence(run: AnalysisRun): {
-    runId: string;
-    projectKey: string;
-    repositoryId: string;
-    commitInfo: CommitInfo;
-    status: RunStatus;
-    timestamps: {
-      createdAt: Date;
-      startedAt?: Date;
-      finishedAt?: Date;
-    };
-    summary?: RunSummary;
-    issues: Array<{
-      id: string;
-      issueCode: string;
-      analyzerShortcode: string;
-      category: string;
-      severity: string;
-      message: string;
-      path: string;
-      line?: number;
-      column?: number;
-    }>;
-  } {
-    return run.toPersistence();
-  }
-
-  /**
-   * Maps multiple API runs to domain aggregates
-   *
-   * @param apiRuns - Array of API run models
-   * @param projectKey - The project key for all runs
-   * @returns Array of domain AnalysisRun aggregates
-   */
-  static toDomainList(apiRuns: DeepSourceRun[], projectKey: string): AnalysisRun[] {
-    return apiRuns.map((run) => AnalysisRunMapper.toDomain(run, projectKey));
-  }
+/**
+ * Maps a domain AnalysisRun aggregate to persistence format
+ *
+ * @param run - The domain AnalysisRun aggregate
+ * @returns The persistence model
+ */
+export function mapAnalysisRunToPersistence(run: AnalysisRun): {
+  runId: string;
+  projectKey: string;
+  repositoryId: string;
+  commitInfo: CommitInfo;
+  status: RunStatus;
+  timestamps: {
+    createdAt: Date;
+    startedAt?: Date;
+    finishedAt?: Date;
+  };
+  summary?: RunSummary;
+  issues: Array<{
+    id: string;
+    issueCode: string;
+    analyzerShortcode: string;
+    category: string;
+    severity: string;
+    message: string;
+    path: string;
+    line?: number;
+    column?: number;
+  }>;
+} {
+  return run.toPersistence();
 }
+
+/**
+ * Maps multiple API runs to domain aggregates
+ *
+ * @param apiRuns - Array of API run models
+ * @param projectKey - The project key for all runs
+ * @returns Array of domain AnalysisRun aggregates
+ */
+export function mapAnalysisRunsToDomainList(apiRuns: DeepSourceRun[], projectKey: string): AnalysisRun[] {
+  return apiRuns.map((run) => mapAnalysisRunToDomain(run, projectKey));
+}
+
+// For backward compatibility, export a namespace with the old static methods
+export const AnalysisRunMapper = {
+  toDomain: mapAnalysisRunToDomain,
+  toPersistence: mapAnalysisRunToPersistence,
+  toDomainList: mapAnalysisRunsToDomainList,
+};

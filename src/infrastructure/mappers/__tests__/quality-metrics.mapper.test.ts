@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from '@jest/globals';
 import { QualityMetricsMapper } from '../quality-metrics.mapper.js';
-import { RepositoryMetric, MetricShortcode } from '../../../models/metrics.js';
+import { RepositoryMetric, MetricShortcode, MetricDirection, MetricThresholdStatus } from '../../../models/metrics.js';
 import { QualityMetrics } from '../../../domain/aggregates/quality-metrics/quality-metrics.aggregate.js';
 
 describe('QualityMetricsMapper', () => {
@@ -12,7 +12,7 @@ describe('QualityMetricsMapper', () => {
     name: 'Line Coverage',
     shortcode: MetricShortcode.LCV,
     description: 'Percentage of lines covered by tests',
-    positiveDirection: 'UPWARD' as any,
+    positiveDirection: MetricDirection.UPWARD,
     unit: '%',
     minValueAllowed: 0,
     maxValueAllowed: 100,
@@ -25,7 +25,7 @@ describe('QualityMetricsMapper', () => {
         threshold: 80,
         latestValue: 85.5,
         latestValueDisplay: '85.5%',
-        thresholdStatus: 'PASSING' as any,
+        thresholdStatus: MetricThresholdStatus.PASSING,
       },
       {
         id: 'item-2',
@@ -33,7 +33,7 @@ describe('QualityMetricsMapper', () => {
         threshold: 75,
         latestValue: 70,
         latestValueDisplay: '70%',
-        thresholdStatus: 'FAILING' as any,
+        thresholdStatus: MetricThresholdStatus.FAILING,
       },
     ],
   };
@@ -236,7 +236,7 @@ describe('QualityMetricsMapper', () => {
               threshold: 70,
               latestValue: 75,
               latestValueDisplay: '75%',
-              thresholdStatus: 'PASSING' as any,
+              thresholdStatus: MetricThresholdStatus.PASSING,
             },
           ],
         },

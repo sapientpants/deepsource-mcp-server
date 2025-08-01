@@ -37,7 +37,7 @@ describe('DeepSourceMCPServer', () => {
   });
 
   afterEach(() => {
-    server = null!;
+    server = null as unknown as DeepSourceMCPServer;
   });
 
   describe('constructor', () => {

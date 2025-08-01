@@ -5,6 +5,7 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { ProjectsClient } from '../../client/projects-client.js';
+import { asProjectKey } from '../../types/branded.js';
 
 // Mock the base client
 const mockLogger = {
@@ -22,18 +23,22 @@ jest.mock('../../client/base-client.js', () => ({
 }));
 
 // Mock the branded type function
-const mockAsProjectKey = jest.fn();
+const mockAsProjectKey = jest.fn((str: string) => str);
 jest.mock('../../types/branded.js', () => ({
-  asProjectKey: mockAsProjectKey,
+  asProjectKey: jest.fn((str: string) => str),
 }));
 
 describe('ProjectsClient', () => {
   let projectsClient: ProjectsClient;
-  let mockBaseClient: any;
+  let mockBaseClient: {
+    executeGraphQL: jest.Mock;
+  };
 
   beforeEach(() => {
     projectsClient = new ProjectsClient('test-api-key');
-    mockBaseClient = projectsClient as any;
+    mockBaseClient = (projectsClient as unknown) as {
+      executeGraphQL: jest.Mock;
+    };
     jest.clearAllMocks();
     mockLogger.info.mockClear();
     mockLogger.error.mockClear();
@@ -73,7 +78,7 @@ describe('ProjectsClient', () => {
         },
       };
 
-      const mockProjectKey = 'github.com/test-org/test-repo' as any;
+      const mockProjectKey = asProjectKey('github.com/test-org/test-repo');
       mockAsProjectKey.mockReturnValue(mockProjectKey);
 
       mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
@@ -125,7 +130,7 @@ describe('ProjectsClient', () => {
         },
       };
 
-      const mockProjectKey = 'github.com/test-org/repo-with-dsn' as any;
+      const mockProjectKey = asProjectKey('github.com/test-org/repo-with-dsn');
       mockAsProjectKey.mockReturnValue(mockProjectKey);
 
       mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
@@ -302,7 +307,7 @@ describe('ProjectsClient', () => {
 
   describe('projectExists', () => {
     it('should return true when project exists', async () => {
-      const mockProjectKey = 'test-project' as any;
+      const mockProjectKey = asProjectKey('test-project');
 
       // Mock listProjects to return a project with the matching key
       jest.spyOn(projectsClient, 'listProjects').mockResolvedValue([
@@ -326,8 +331,8 @@ describe('ProjectsClient', () => {
     });
 
     it('should return false when project does not exist', async () => {
-      const mockProjectKey = 'test-project' as any;
-      const differentProjectKey = 'different-project' as any;
+      const mockProjectKey = asProjectKey('test-project');
+      const differentProjectKey = asProjectKey('different-project');
 
       // Mock listProjects to return a project with a different key
       jest.spyOn(projectsClient, 'listProjects').mockResolvedValue([
@@ -351,7 +356,7 @@ describe('ProjectsClient', () => {
     });
 
     it.skip('should return false and log error when listProjects throws', async () => {
-      const mockProjectKey = 'test-project' as any;
+      const mockProjectKey = asProjectKey('test-project');
 
       // Mock listProjects to throw an error
       jest.spyOn(projectsClient, 'listProjects').mockRejectedValue(new Error('API error'));
