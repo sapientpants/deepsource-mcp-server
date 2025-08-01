@@ -8,8 +8,8 @@ describe('Index Registry Error Handlers', () => {
   let mockExit: jest.SpyInstance;
   let mockConsoleError: jest.SpyInstance;
   let originalListeners: {
-    uncaughtException: NodeJS.UncaughtExceptionListener[];
-    unhandledRejection: NodeJS.UnhandledRejectionListener[];
+    uncaughtException: Array<() => void>;
+    unhandledRejection: Array<() => void>;
   };
 
   beforeEach(() => {

@@ -10,6 +10,7 @@ import type {
   RunSummary,
   CommitInfo,
   RunTimestamps,
+  RunStatus,
 } from '../analysis-run.types.js';
 import type {
   RunId,
@@ -19,6 +20,7 @@ import type {
   BranchName,
   AnalyzerShortcode,
 } from '../../../../types/branded.js';
+import { IssueCount } from '../../../value-objects/issue-count.js';
 
 describe('AnalysisRun Aggregate', () => {
   let validParams: CreateAnalysisRunParams;

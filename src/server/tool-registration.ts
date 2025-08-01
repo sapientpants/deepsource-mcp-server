@@ -33,7 +33,7 @@ const logger = createLogger('ToolRegistration');
 /**
  * Handler mapping for tool schemas
  */
-const TOOL_HANDLERS: Record<string, (params: unknown) => Promise<unknown>> = {
+const TOOL_HANDLERS: Record<string, (_params: unknown) => Promise<unknown>> = {
   projects: async (_params: unknown) => handleProjects(),
   quality_metrics: async (params: unknown) => {
     const typedParams = params as Record<string, unknown>;
@@ -182,6 +182,7 @@ export function registerDeepSourceTools(registry: ToolRegistry): void {
 /**
  * Tool categories for organization
  */
+/* eslint-disable no-unused-vars */
 export enum ToolCategory {
   PROJECT_MANAGEMENT = 'project_management',
   CODE_QUALITY = 'code_quality',
@@ -189,6 +190,7 @@ export enum ToolCategory {
   ANALYSIS = 'analysis',
   DEPENDENCIES = 'dependencies',
 }
+/* eslint-enable no-unused-vars */
 
 /**
  * Tool metadata for categorization and filtering

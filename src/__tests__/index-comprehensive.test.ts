@@ -50,7 +50,7 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
       connect: unknown;
     };
     server?: unknown;
-    setLogLevel?: (level: string) => void;
+    setLogLevel?: (level: string) => void; // eslint-disable-line no-unused-vars
   };
   let originalEnv: typeof process.env;
 

@@ -64,34 +64,34 @@ export function mapComplianceReportToDomain(
   projectKey: string,
   repositoryId: string
 ): ComplianceReport {
-    const categories: ComplianceCategory[] = apiReport.securityIssueStats.map((stat) => {
-      // API provides total directly, but we can also calculate it for verification
-      const totalIssues =
-        stat.occurrence.total ||
-        stat.occurrence.critical + stat.occurrence.major + stat.occurrence.minor;
+  const categories: ComplianceCategory[] = apiReport.securityIssueStats.map((stat) => {
+    // API provides total directly, but we can also calculate it for verification
+    const totalIssues =
+      stat.occurrence.total ||
+      stat.occurrence.critical + stat.occurrence.major + stat.occurrence.minor;
 
-      // Simple approach: treat all detected issues as non-compliant
-      // In a real implementation, this would depend on business rules about what constitutes compliance
-      return {
-        name: stat.title,
-        description: `Security category: ${stat.key}`,
-        compliant: IssueCount.create(0), // API doesn't provide compliant count directly
-        nonCompliant: IssueCount.create(totalIssues),
-        issueCount: IssueCount.create(totalIssues),
-        severity: mapHighestSeverity(stat.occurrence),
-      };
-    });
-
-    const params: CreateComplianceReportParams = {
-      projectKey: asProjectKey(projectKey),
-      repositoryId: asGraphQLNodeId(repositoryId),
-      reportType: apiReport.key,
-      status: mapReportStatus(apiReport.status),
-      categories,
+    // Simple approach: treat all detected issues as non-compliant
+    // In a real implementation, this would depend on business rules about what constitutes compliance
+    return {
+      name: stat.title,
+      description: `Security category: ${stat.key}`,
+      compliant: IssueCount.create(0), // API doesn't provide compliant count directly
+      nonCompliant: IssueCount.create(totalIssues),
+      issueCount: IssueCount.create(totalIssues),
+      severity: mapHighestSeverity(stat.occurrence),
     };
+  });
 
-    return ComplianceReport.create(params);
-  }
+  const params: CreateComplianceReportParams = {
+    projectKey: asProjectKey(projectKey),
+    repositoryId: asGraphQLNodeId(repositoryId),
+    reportType: apiReport.key,
+    status: mapReportStatus(apiReport.status),
+    categories,
+  };
+
+  return ComplianceReport.create(params);
+}
 
 /**
  * Maps a domain ComplianceReport aggregate to persistence format
@@ -116,7 +116,6 @@ export function mapComplianceReportToPersistence(report: ComplianceReport): {
     repositoryId: persistence.repositoryId as string,
   };
 }
-
 
 /**
  * Creates a category from API security issue stat

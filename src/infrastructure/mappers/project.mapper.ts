@@ -20,31 +20,31 @@ import {
  * @returns The domain Project aggregate
  */
 export function mapProjectToDomain(apiProject: DeepSourceProject): Project {
-    const repository: ProjectRepository = {
-      url: apiProject.repository.url,
-      provider: apiProject.repository.provider as VcsProvider,
-      login: apiProject.repository.login,
-      isPrivate: apiProject.repository.isPrivate,
-    };
+  const repository: ProjectRepository = {
+    url: apiProject.repository.url,
+    provider: apiProject.repository.provider as VcsProvider,
+    login: apiProject.repository.login,
+    isPrivate: apiProject.repository.isPrivate,
+  };
 
-    // Determine status based on activation
-    const status: ProjectStatus = apiProject.repository.isActivated ? 'ACTIVE' : 'INACTIVE';
+  // Determine status based on activation
+  const status: ProjectStatus = apiProject.repository.isActivated ? 'ACTIVE' : 'INACTIVE';
 
-    return Project.fromPersistence({
-      key: apiProject.key,
-      name: apiProject.name,
-      repository,
-      configuration: {
-        isActivated: apiProject.repository.isActivated,
-        autoFix: false, // Default, as not provided by API
-        pullRequestIntegration: true, // Default, as not provided by API
-        issueReporting: true, // Default, as not provided by API
-      },
-      status,
-      createdAt: new Date(), // Not provided by API, use current date
-      updatedAt: new Date(), // Not provided by API, use current date
-    });
-  }
+  return Project.fromPersistence({
+    key: apiProject.key,
+    name: apiProject.name,
+    repository,
+    configuration: {
+      isActivated: apiProject.repository.isActivated,
+      autoFix: false, // Default, as not provided by API
+      pullRequestIntegration: true, // Default, as not provided by API
+      issueReporting: true, // Default, as not provided by API
+    },
+    status,
+    createdAt: new Date(), // Not provided by API, use current date
+    updatedAt: new Date(), // Not provided by API, use current date
+  });
+}
 
 /**
  * Maps a domain Project aggregate to persistence format

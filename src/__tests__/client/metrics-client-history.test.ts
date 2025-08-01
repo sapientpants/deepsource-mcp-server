@@ -65,7 +65,7 @@ describe('MetricsClient - History and Additional Methods', () => {
   beforeEach(() => {
     originalEnv = { ...process.env };
     metricsClient = new TestableMetricsClient('test-api-key');
-    mockBaseClient = (metricsClient as unknown) as {
+    mockBaseClient = metricsClient as unknown as {
       findProjectByKey: jest.Mock;
       executeGraphQL: jest.Mock;
       logger: {
@@ -353,10 +353,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      const result = metricsClient.testExtractHistoryFromResponse(
-        mockResponseData,
-        mockParams
-      );
+      const result = metricsClient.testExtractHistoryFromResponse(mockResponseData, mockParams);
 
       expect(result).not.toBeNull();
       expect(result.shortcode).toBe(MetricShortcode.LCV);
@@ -378,10 +375,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      const result = metricsClient.testExtractHistoryFromResponse(
-        mockResponseData,
-        mockParams
-      );
+      const result = metricsClient.testExtractHistoryFromResponse(mockResponseData, mockParams);
 
       expect(result).toBeNull();
     });
@@ -403,10 +397,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      const result = metricsClient.testExtractHistoryFromResponse(
-        mockResponseData,
-        mockParams
-      );
+      const result = metricsClient.testExtractHistoryFromResponse(mockResponseData, mockParams);
 
       expect(result).toBeNull();
     });
@@ -428,10 +419,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      const result = metricsClient.testExtractHistoryFromResponse(
-        mockResponseData,
-        mockParams
-      );
+      const result = metricsClient.testExtractHistoryFromResponse(mockResponseData, mockParams);
 
       expect(result).toBeNull();
     });
@@ -459,10 +447,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      const result = metricsClient.testExtractHistoryFromResponse(
-        mockResponseData,
-        mockParams
-      );
+      const result = metricsClient.testExtractHistoryFromResponse(mockResponseData, mockParams);
 
       expect(result).not.toBeNull();
       expect(result.values).toHaveLength(2); // Only valid nodes
@@ -474,7 +459,7 @@ describe('MetricsClient - History and Additional Methods', () => {
 
       // Create a new metrics client with a mocked logger
       const testClient = new MetricsClient('test-api-key');
-      const testMockClient = (testClient as unknown) as {
+      const testMockClient = testClient as unknown as {
         findProjectByKey: jest.Mock;
         executeGraphQL: jest.Mock;
       };
@@ -584,7 +569,7 @@ describe('MetricsClient - History and Additional Methods', () => {
 
       // Create a new metrics client with a mocked logger
       const testClient = new MetricsClient('test-api-key');
-      const testMockClient = (testClient as unknown) as {
+      const testMockClient = testClient as unknown as {
         findProjectByKey: jest.Mock;
         executeGraphQL: jest.Mock;
       };

@@ -3,7 +3,6 @@
  */
 
 import { describe, it, expect, beforeAll, jest } from '@jest/globals';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 // Mock the projects handler
 jest.mock('../handlers/projects.js', () => ({

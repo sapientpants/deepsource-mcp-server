@@ -22,11 +22,18 @@ jest.mock('../../client/base-client.js', () => ({
 
 describe('MetricsClient', () => {
   let metricsClient: MetricsClient;
-  let mockBaseClient: any;
+  let mockExecuteGraphQL: jest.Mock;
+  let mockFindProjectByKey: jest.Mock;
 
   beforeEach(() => {
     metricsClient = new MetricsClient('test-api-key');
-    mockBaseClient = metricsClient as any;
+    // Access the protected methods through the prototype
+    mockExecuteGraphQL = jest.fn();
+    mockFindProjectByKey = jest.fn();
+
+    // Replace the methods on the instance
+    (metricsClient as any).executeGraphQL = mockExecuteGraphQL;
+    (metricsClient as any).findProjectByKey = mockFindProjectByKey;
   });
 
   describe('getQualityMetrics', () => {
@@ -82,13 +89,13 @@ describe('MetricsClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockFindProjectByKey.mockResolvedValue(mockProject);
+      mockExecuteGraphQL.mockResolvedValue(mockResponse);
 
       const result = await metricsClient.getQualityMetrics('test-project');
 
-      expect(mockBaseClient.findProjectByKey).toHaveBeenCalledWith('test-project');
-      expect(mockBaseClient.executeGraphQL).toHaveBeenCalledWith(
+      expect(mockFindProjectByKey).toHaveBeenCalledWith('test-project');
+      expect(mockExecuteGraphQL).toHaveBeenCalledWith(
         expect.stringContaining('query getQualityMetrics'),
         expect.objectContaining({
           login: 'test-org',
@@ -105,7 +112,7 @@ describe('MetricsClient', () => {
     });
 
     it('should return empty array when project not found', async () => {
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(null);
+      mockFindProjectByKey.mockResolvedValue(null);
 
       const result = await metricsClient.getQualityMetrics('nonexistent-project');
 
@@ -121,8 +128,8 @@ describe('MetricsClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest.fn().mockRejectedValue(new Error('GraphQL error'));
+      mockFindProjectByKey.mockResolvedValue(mockProject);
+      mockExecuteGraphQL.mockRejectedValue(new Error('GraphQL error'));
 
       await expect(metricsClient.getQualityMetrics('test-project')).rejects.toThrow(
         'GraphQL error'
@@ -142,8 +149,8 @@ describe('MetricsClient', () => {
         data: null,
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockFindProjectByKey.mockResolvedValue(mockProject);
+      mockExecuteGraphQL.mockResolvedValue(mockResponse);
 
       await expect(metricsClient.getQualityMetrics('test-project')).rejects.toThrow(
         'No data received from GraphQL API'
@@ -185,14 +192,14 @@ describe('MetricsClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockFindProjectByKey.mockResolvedValue(mockProject);
+      mockExecuteGraphQL.mockResolvedValue(mockResponse);
 
       const result = await metricsClient.getQualityMetrics('test-project', {
         shortcodeIn: ['LCV'],
       });
 
-      expect(mockBaseClient.executeGraphQL).toHaveBeenCalledWith(
+      expect(mockExecuteGraphQL).toHaveBeenCalledWith(
         expect.stringContaining('query getQualityMetrics'),
         expect.objectContaining({
           shortcodeIn: ['LCV'],
@@ -214,7 +221,7 @@ describe('MetricsClient', () => {
         },
       };
 
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockExecuteGraphQL.mockResolvedValue(mockResponse);
 
       const result = await metricsClient.setMetricThreshold({
         repositoryId: 'repo-123',
@@ -223,7 +230,7 @@ describe('MetricsClient', () => {
         thresholdValue: 80.0,
       });
 
-      expect(mockBaseClient.executeGraphQL).toHaveBeenCalledWith(
+      expect(mockExecuteGraphQL).toHaveBeenCalledWith(
         expect.stringContaining('mutation updateMetricThreshold'),
         expect.objectContaining({
           repositoryId: 'repo-123',
@@ -237,7 +244,7 @@ describe('MetricsClient', () => {
     });
 
     it('should handle threshold update errors', async () => {
-      mockBaseClient.executeGraphQL = jest.fn().mockRejectedValue(new Error('Update failed'));
+      mockExecuteGraphQL.mockRejectedValue(new Error('Update failed'));
 
       await expect(
         metricsClient.setMetricThreshold({
@@ -254,7 +261,7 @@ describe('MetricsClient', () => {
         data: null,
       };
 
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockExecuteGraphQL.mockResolvedValue(mockResponse);
 
       await expect(
         metricsClient.setMetricThreshold({
@@ -277,7 +284,7 @@ describe('MetricsClient', () => {
         },
       };
 
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockExecuteGraphQL.mockResolvedValue(mockResponse);
 
       const result = await metricsClient.updateMetricSetting({
         repositoryId: 'repo-123',
@@ -286,7 +293,7 @@ describe('MetricsClient', () => {
         isThresholdEnforced: false,
       });
 
-      expect(mockBaseClient.executeGraphQL).toHaveBeenCalledWith(
+      expect(mockExecuteGraphQL).toHaveBeenCalledWith(
         expect.stringContaining('mutation updateMetricSetting'),
         expect.objectContaining({
           repositoryId: 'repo-123',
@@ -300,9 +307,7 @@ describe('MetricsClient', () => {
     });
 
     it('should handle setting update errors', async () => {
-      mockBaseClient.executeGraphQL = jest
-        .fn()
-        .mockRejectedValue(new Error('Setting update failed'));
+      mockExecuteGraphQL.mockRejectedValue(new Error('Setting update failed'));
 
       await expect(
         metricsClient.updateMetricSetting({
@@ -319,7 +324,7 @@ describe('MetricsClient', () => {
         data: null,
       };
 
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockExecuteGraphQL.mockResolvedValue(mockResponse);
 
       await expect(
         metricsClient.updateMetricSetting({
