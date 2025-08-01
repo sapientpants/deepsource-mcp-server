@@ -25,7 +25,12 @@ jest.mock('../../client/base-client.js', () => ({
 
 describe('RunsClient', () => {
   let runsClient: RunsClient;
-  let mockBaseClient: any;
+  let mockBaseClient: {
+    findProjectByKey: jest.Mock;
+    executeGraphQL: jest.Mock;
+    createEmptyPaginatedResponse: jest.Mock;
+    normalizePaginationParams: jest.Mock;
+  };
 
   beforeEach(() => {
     runsClient = new RunsClient('test-api-key');
@@ -268,9 +273,11 @@ describe('RunsClient', () => {
       );
 
       expect(result).not.toBeNull();
-      expect(result!.runUid).toBe(mockUuid);
-      expect(result!.status).toBe('SUCCESS');
-      expect(result!.branchName).toBe('main');
+      if (result) {
+        expect(result.runUid).toBe(mockUuid);
+        expect(result.status).toBe('SUCCESS');
+        expect(result.branchName).toBe('main');
+      }
     });
 
     it('should fetch run by commit OID successfully', async () => {
@@ -310,8 +317,10 @@ describe('RunsClient', () => {
       );
 
       expect(result).not.toBeNull();
-      expect(result!.commitOid).toBe(mockCommitOid);
-      expect(result!.status).toBe('SUCCESS');
+      if (result) {
+        expect(result.commitOid).toBe(mockCommitOid);
+        expect(result.status).toBe('SUCCESS');
+      }
     });
 
     it('should return null when run not found', async () => {
@@ -385,9 +394,11 @@ describe('RunsClient', () => {
       const result = await runsClient.findMostRecentRunForBranch('test-project', 'main');
 
       expect(result).not.toBeNull();
-      expect(result!.runUid).toBe('f47ac10b-58cc-4372-a567-0e02b2c3d479');
-      expect(result!.branchName).toBe('main');
-      expect(result!.createdAt).toBe('2023-01-02T00:00:00Z');
+      if (result) {
+        expect(result.runUid).toBe('f47ac10b-58cc-4372-a567-0e02b2c3d479');
+        expect(result.branchName).toBe('main');
+        expect(result.createdAt).toBe('2023-01-02T00:00:00Z');
+      }
     });
 
     it('should throw error when no runs found for branch', async () => {
@@ -459,7 +470,9 @@ describe('RunsClient', () => {
       });
 
       expect(result).not.toBeNull();
-      expect(result!.runUid).toBe('a1b2c3d4-e5f6-7890-abcd-ef1234567890');
+      if (result) {
+        expect(result.runUid).toBe('a1b2c3d4-e5f6-7890-abcd-ef1234567890');
+      }
     });
   });
 

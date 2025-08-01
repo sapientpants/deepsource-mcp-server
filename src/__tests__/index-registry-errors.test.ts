@@ -8,8 +8,8 @@ describe('Index Registry Error Handlers', () => {
   let mockExit: jest.SpyInstance;
   let mockConsoleError: jest.SpyInstance;
   let originalListeners: {
-    uncaughtException: any[];
-    unhandledRejection: any[];
+    uncaughtException: NodeJS.UncaughtExceptionListener[];
+    unhandledRejection: NodeJS.UnhandledRejectionListener[];
   };
 
   beforeEach(() => {
@@ -82,7 +82,7 @@ describe('Index Registry Error Handlers', () => {
 
   it('should register and handle unhandledRejection', () => {
     // Manually add the unhandledRejection handler from index-registry.ts
-    const handler = (reason: any, promise: Promise<any>) => {
+    const handler = (reason: unknown, promise: Promise<unknown>) => {
       const logger = { error: jest.fn() };
       logger.error('Unhandled rejection', {
         reason,

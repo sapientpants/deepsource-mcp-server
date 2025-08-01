@@ -11,7 +11,7 @@ import { IssueCount } from '../../value-objects/issue-count.js';
 /**
  * Report generation status
  */
-export type ComplianceReportStatus = 'PENDING' | 'GENERATING' | 'READY' | 'ERROR';
+export type ComplianceReportStatus = 'PENDING' | 'GENERATING' | 'READY' | 'ERROR' | 'PASSING' | 'FAILING' | 'NOT_APPLICABLE' | 'UNKNOWN';
 
 /**
  * Severity levels for compliance issues

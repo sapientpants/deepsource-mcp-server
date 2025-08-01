@@ -285,7 +285,7 @@ export class BaseDeepSourceClient {
    * @returns Combined error message string
    * @protected
    */
-  protected extractErrorMessages(errors: Array<{ message: string }>): string {
+  protected static extractErrorMessages(errors: Array<{ message: string }>): string {
     return errors.map((error) => error.message).join('; ');
   }
 }

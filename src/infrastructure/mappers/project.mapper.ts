@@ -14,16 +14,12 @@ import {
 } from '../../domain/aggregates/project/project.types.js';
 
 /**
- * Maps between API models and domain models for Projects
+ * Maps a DeepSource API project to a domain Project aggregate
+ *
+ * @param apiProject - The API project model
+ * @returns The domain Project aggregate
  */
-export class ProjectMapper {
-  /**
-   * Maps a DeepSource API project to a domain Project aggregate
-   *
-   * @param apiProject - The API project model
-   * @returns The domain Project aggregate
-   */
-  static toDomain(apiProject: DeepSourceProject): Project {
+export function mapProjectToDomain(apiProject: DeepSourceProject): Project {
     const repository: ProjectRepository = {
       url: apiProject.repository.url,
       provider: apiProject.repository.provider as VcsProvider,
@@ -50,31 +46,37 @@ export class ProjectMapper {
     });
   }
 
-  /**
-   * Maps a domain Project aggregate to persistence format
-   *
-   * @param project - The domain Project aggregate
-   * @returns The persistence model
-   */
-  static toPersistence(project: Project): {
-    key: string;
-    name: string;
-    repository: ProjectRepository;
-    configuration: ProjectConfiguration;
-    status: ProjectStatus;
-    createdAt: Date;
-    updatedAt: Date;
-  } {
-    return project.toPersistence();
-  }
-
-  /**
-   * Maps multiple API projects to domain aggregates
-   *
-   * @param apiProjects - Array of API project models
-   * @returns Array of domain Project aggregates
-   */
-  static toDomainList(apiProjects: DeepSourceProject[]): Project[] {
-    return apiProjects.map((project) => ProjectMapper.toDomain(project));
-  }
+/**
+ * Maps a domain Project aggregate to persistence format
+ *
+ * @param project - The domain Project aggregate
+ * @returns The persistence model
+ */
+export function mapProjectToPersistence(project: Project): {
+  key: string;
+  name: string;
+  repository: ProjectRepository;
+  configuration: ProjectConfiguration;
+  status: ProjectStatus;
+  createdAt: Date;
+  updatedAt: Date;
+} {
+  return project.toPersistence();
 }
+
+/**
+ * Maps multiple API projects to domain aggregates
+ *
+ * @param apiProjects - Array of API project models
+ * @returns Array of domain Project aggregates
+ */
+export function mapProjectsToDomainList(apiProjects: DeepSourceProject[]): Project[] {
+  return apiProjects.map((project) => mapProjectToDomain(project));
+}
+
+// For backward compatibility, export a namespace with the old static methods
+export const ProjectMapper = {
+  toDomain: mapProjectToDomain,
+  toPersistence: mapProjectToPersistence,
+  toDomainList: mapProjectsToDomainList,
+};

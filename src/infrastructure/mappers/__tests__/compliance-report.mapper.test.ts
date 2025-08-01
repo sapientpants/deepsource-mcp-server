@@ -7,6 +7,7 @@ import { ComplianceReportMapper } from '../compliance-report.mapper.js';
 import { ComplianceReport as ApiComplianceReport } from '../../../deepsource.js';
 import { ReportType } from '../../../types/report-types.js';
 import { ComplianceReport } from '../../../domain/aggregates/compliance-report/compliance-report.aggregate.js';
+import { IssueCount } from '../../../domain/value-objects/issue-count.js';
 
 describe('ComplianceReportMapper', () => {
   const mockApiReport: ApiComplianceReport = {
@@ -227,17 +228,17 @@ describe('ComplianceReportMapper', () => {
         {
           name: 'Test Category 1',
           description: 'Test',
-          compliant: { count: 0 } as any,
-          nonCompliant: { count: 5 } as any,
-          issueCount: { count: 5 } as any,
+          compliant: IssueCount.create(0),
+          nonCompliant: IssueCount.create(5),
+          issueCount: IssueCount.create(5),
           severity: 'CRITICAL' as const,
         },
         {
           name: 'Test Category 2',
           description: 'Test',
-          compliant: { count: 0 } as any,
-          nonCompliant: { count: 3 } as any,
-          issueCount: { count: 3 } as any,
+          compliant: IssueCount.create(0),
+          nonCompliant: IssueCount.create(3),
+          issueCount: IssueCount.create(3),
           severity: 'MAJOR' as const,
         },
       ];
@@ -252,9 +253,9 @@ describe('ComplianceReportMapper', () => {
       const categories = Array(10).fill({
         name: 'Critical Category',
         description: 'Test',
-        compliant: { count: 0 } as any,
-        nonCompliant: { count: 10 } as any,
-        issueCount: { count: 10 } as any,
+        compliant: IssueCount.create(0),
+        nonCompliant: IssueCount.create(10),
+        issueCount: IssueCount.create(10),
         severity: 'CRITICAL' as const,
       });
 
@@ -267,9 +268,9 @@ describe('ComplianceReportMapper', () => {
         {
           name: 'Minor Category',
           description: 'Test',
-          compliant: { count: 0 } as any,
-          nonCompliant: { count: 1 } as any,
-          issueCount: { count: 1 } as any,
+          compliant: IssueCount.create(0),
+          nonCompliant: IssueCount.create(1),
+          issueCount: IssueCount.create(1),
           severity: 'INFO' as const,
         },
       ];

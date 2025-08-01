@@ -24,7 +24,12 @@ jest.mock('../../client/base-client.js', () => ({
 
 describe('IssuesClient', () => {
   let issuesClient: IssuesClient;
-  let mockBaseClient: any;
+  let mockBaseClient: {
+    findProjectByKey: jest.Mock;
+    executeGraphQL: jest.Mock;
+    createEmptyPaginatedResponse: jest.Mock;
+    normalizePaginationParams: jest.Mock;
+  };
 
   beforeEach(() => {
     issuesClient = new IssuesClient('test-api-key');

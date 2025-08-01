@@ -36,7 +36,10 @@ export type IssueCategory =
   | 'PERFORMANCE'
   | 'DOCUMENTATION'
   | 'COVERAGE'
-  | 'COMPLEXITY';
+  | 'COMPLEXITY'
+  | 'ANTI_PATTERN'
+  | 'TYPE_CHECK'
+  | 'OTHER';
 
 /**
  * Issue severity levels

@@ -21,15 +21,60 @@ jest.mock('../../client/base-client.js', () => ({
   })),
 }));
 
+// Test helper class to expose private methods for testing
+class TestableMetricsClient extends MetricsClient {
+  testBuildMetricHistoryQuery() {
+    return (this as any).buildMetricHistoryQuery();
+  }
+
+  testExtractHistoryFromResponse(data: unknown, params: unknown) {
+    return (this as any).extractHistoryFromResponse(data, params);
+  }
+
+  testCalculateTrend(values: unknown[]) {
+    return (this as any).calculateTrend(values);
+  }
+
+  testHandleMetricsError(error: unknown) {
+    return (this as any).handleMetricsError(error);
+  }
+
+  testExtractMetricsFromResponse(data: unknown) {
+    return (this as any).extractMetricsFromResponse(data);
+  }
+
+  testHandleTestEnvironment(params: unknown) {
+    return (this as any).handleTestEnvironment(params);
+  }
+}
+
 describe('MetricsClient - History and Additional Methods', () => {
-  let metricsClient: MetricsClient;
-  let mockBaseClient: any;
+  let metricsClient: TestableMetricsClient;
+  let mockBaseClient: {
+    findProjectByKey: jest.Mock;
+    executeGraphQL: jest.Mock;
+    logger: {
+      info: jest.Mock;
+      error: jest.Mock;
+      debug: jest.Mock;
+      warn: jest.Mock;
+    };
+  };
   let originalEnv: typeof process.env;
 
   beforeEach(() => {
     originalEnv = { ...process.env };
-    metricsClient = new MetricsClient('test-api-key');
-    mockBaseClient = metricsClient as any;
+    metricsClient = new TestableMetricsClient('test-api-key');
+    mockBaseClient = (metricsClient as unknown) as {
+      findProjectByKey: jest.Mock;
+      executeGraphQL: jest.Mock;
+      logger: {
+        info: jest.Mock;
+        error: jest.Mock;
+        debug: jest.Mock;
+        warn: jest.Mock;
+      };
+    };
     // Ensure logger is properly set up
     if (!mockBaseClient.logger) {
       mockBaseClient.logger = {
@@ -252,7 +297,7 @@ describe('MetricsClient - History and Additional Methods', () => {
 
   describe('buildMetricHistoryQuery', () => {
     it('should build correct GraphQL query for metric history', () => {
-      const query = (metricsClient as any).buildMetricHistoryQuery();
+      const query = metricsClient.testBuildMetricHistoryQuery();
 
       expect(query).toContain('query getMetricHistory');
       expect(query).toContain('$login: String!');
@@ -308,7 +353,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      const result = (metricsClient as any).extractHistoryFromResponse(
+      const result = metricsClient.testExtractHistoryFromResponse(
         mockResponseData,
         mockParams
       );
@@ -333,7 +378,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      const result = (metricsClient as any).extractHistoryFromResponse(
+      const result = metricsClient.testExtractHistoryFromResponse(
         mockResponseData,
         mockParams
       );
@@ -358,7 +403,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      const result = (metricsClient as any).extractHistoryFromResponse(
+      const result = metricsClient.testExtractHistoryFromResponse(
         mockResponseData,
         mockParams
       );
@@ -383,7 +428,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      const result = (metricsClient as any).extractHistoryFromResponse(
+      const result = metricsClient.testExtractHistoryFromResponse(
         mockResponseData,
         mockParams
       );
@@ -414,7 +459,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      const result = (metricsClient as any).extractHistoryFromResponse(
+      const result = metricsClient.testExtractHistoryFromResponse(
         mockResponseData,
         mockParams
       );
@@ -429,7 +474,10 @@ describe('MetricsClient - History and Additional Methods', () => {
 
       // Create a new metrics client with a mocked logger
       const testClient = new MetricsClient('test-api-key');
-      const testMockClient = testClient as any;
+      const testMockClient = (testClient as unknown) as {
+        findProjectByKey: jest.Mock;
+        executeGraphQL: jest.Mock;
+      };
       testMockClient.logger = {
         info: jest.fn(),
         error: jest.fn(),
@@ -451,12 +499,12 @@ describe('MetricsClient - History and Additional Methods', () => {
     it('should return stable for less than 2 values', () => {
       const values = [{ value: 75, createdAt: '2023-01-01T00:00:00Z' }];
 
-      const trend = (metricsClient as any).calculateTrend(values);
+      const trend = metricsClient.testCalculateTrend(values);
       expect(trend).toBe('stable');
     });
 
     it('should return stable for empty array', () => {
-      const trend = (metricsClient as any).calculateTrend([]);
+      const trend = metricsClient.testCalculateTrend([]);
       expect(trend).toBe('stable');
     });
 
@@ -467,7 +515,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         { value: 85, createdAt: '2023-01-03T00:00:00Z' },
       ];
 
-      const trend = (metricsClient as any).calculateTrend(values);
+      const trend = metricsClient.testCalculateTrend(values);
       expect(trend).toBe('improving');
     });
 
@@ -478,7 +526,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         { value: 75, createdAt: '2023-01-03T00:00:00Z' },
       ];
 
-      const trend = (metricsClient as any).calculateTrend(values);
+      const trend = metricsClient.testCalculateTrend(values);
       expect(trend).toBe('declining');
     });
 
@@ -488,7 +536,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         { value: 81, createdAt: '2023-01-02T00:00:00Z' },
       ];
 
-      const trend = (metricsClient as any).calculateTrend(values);
+      const trend = metricsClient.testCalculateTrend(values);
       expect(trend).toBe('stable');
     });
 
@@ -499,7 +547,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         { value: 80, createdAt: '2023-01-02T00:00:00Z' },
       ];
 
-      const trend = (metricsClient as any).calculateTrend(values);
+      const trend = metricsClient.testCalculateTrend(values);
       expect(trend).toBe('improving'); // 75 to 85
     });
   });
@@ -508,7 +556,7 @@ describe('MetricsClient - History and Additional Methods', () => {
     it('should return empty array for NoneType errors', () => {
       const error = new Error("'NoneType' object has no attribute 'metrics'");
 
-      const result = (metricsClient as any).handleMetricsError(error);
+      const result = metricsClient.testHandleMetricsError(error);
       expect(result).toEqual([]);
     });
 
@@ -516,7 +564,7 @@ describe('MetricsClient - History and Additional Methods', () => {
       const error = new Error('Network error');
 
       expect(() => {
-        (metricsClient as any).handleMetricsError(error);
+        metricsClient.testHandleMetricsError(error);
       }).toThrow('Network error');
     });
 
@@ -524,7 +572,7 @@ describe('MetricsClient - History and Additional Methods', () => {
       const error = 'String error';
 
       expect(() => {
-        (metricsClient as any).handleMetricsError(error);
+        metricsClient.testHandleMetricsError(error);
       }).toThrow('String error');
     });
   });
@@ -536,7 +584,10 @@ describe('MetricsClient - History and Additional Methods', () => {
 
       // Create a new metrics client with a mocked logger
       const testClient = new MetricsClient('test-api-key');
-      const testMockClient = testClient as any;
+      const testMockClient = (testClient as unknown) as {
+        findProjectByKey: jest.Mock;
+        executeGraphQL: jest.Mock;
+      };
       testMockClient.logger = {
         info: jest.fn(),
         error: jest.fn(),
@@ -566,7 +617,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      const result = (metricsClient as any).extractMetricsFromResponse(mockResponseData);
+      const result = metricsClient.testExtractMetricsFromResponse(mockResponseData);
 
       expect(result).toHaveLength(1);
       expect(result[0].items).toEqual([]);
@@ -583,7 +634,7 @@ describe('MetricsClient - History and Additional Methods', () => {
     it('should return undefined when not in test environment', () => {
       process.env.NODE_ENV = 'production';
 
-      const result = (metricsClient as any).handleTestEnvironment(mockHistoryParams);
+      const result = metricsClient.testHandleTestEnvironment(mockHistoryParams);
       expect(result).toBeUndefined();
     });
 
@@ -596,7 +647,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         metricKey: MetricKey.AGGREGATE,
       };
 
-      const result = (metricsClient as any).handleTestEnvironment(params);
+      const result = metricsClient.testHandleTestEnvironment(params);
       expect(result).toBeUndefined();
     });
   });

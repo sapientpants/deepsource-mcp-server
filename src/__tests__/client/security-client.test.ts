@@ -87,10 +87,12 @@ describe('SecurityClient', () => {
       );
 
       expect(result).not.toBeNull();
-      expect(result!.reportType).toBe('OWASP_TOP_10');
-      expect(result!.status).toBe('FAILING');
-      expect(result!.categories).toHaveLength(2);
-      expect(result!.categories[0].name).toBe('Injection');
+      if (result) {
+        expect(result.reportType).toBe('OWASP_TOP_10');
+        expect(result.status).toBe('FAILING');
+        expect(result.categories).toHaveLength(2);
+        expect(result.categories[0].name).toBe('Injection');
+      }
     });
 
     it('should return null when project not found', async () => {

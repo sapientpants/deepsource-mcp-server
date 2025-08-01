@@ -5,9 +5,10 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { QualityMetricsRepository } from '../quality-metrics.repository.js';
 import { DeepSourceClient } from '../../../deepsource.js';
-import { RepositoryMetric, MetricShortcode } from '../../../models/metrics.js';
+import { RepositoryMetric, MetricShortcode, MetricDirection, MetricThresholdStatus } from '../../../models/metrics.js';
 import { asProjectKey } from '../../../types/branded.js';
 import { QualityMetrics } from '../../../domain/aggregates/quality-metrics/quality-metrics.aggregate.js';
+import { DeepSourceProject } from '../../../models/projects.js';
 
 // Mock the DeepSourceClient
 jest.mock('../../../deepsource.js');
@@ -46,7 +47,7 @@ describe('QualityMetricsRepository', () => {
         name: 'Line Coverage',
         shortcode: MetricShortcode.LCV,
         description: 'Percentage of lines covered by tests',
-        positiveDirection: 'UPWARD' as any,
+        positiveDirection: MetricDirection.UPWARD,
         unit: '%',
         minValueAllowed: 0,
         maxValueAllowed: 100,
@@ -59,7 +60,7 @@ describe('QualityMetricsRepository', () => {
             threshold: 80,
             latestValue: 85.5,
             latestValueDisplay: '85.5%',
-            thresholdStatus: 'PASSING' as any,
+            thresholdStatus: MetricThresholdStatus.PASSING,
           },
           {
             id: 'lcv-python',
@@ -67,7 +68,7 @@ describe('QualityMetricsRepository', () => {
             threshold: 75,
             latestValue: 70,
             latestValueDisplay: '70%',
-            thresholdStatus: 'FAILING' as any,
+            thresholdStatus: MetricThresholdStatus.FAILING,
           },
         ],
       },
@@ -75,7 +76,7 @@ describe('QualityMetricsRepository', () => {
         name: 'Branch Coverage',
         shortcode: MetricShortcode.BCV,
         description: 'Percentage of branches covered by tests',
-        positiveDirection: 'UPWARD' as any,
+        positiveDirection: MetricDirection.UPWARD,
         unit: '%',
         minValueAllowed: 0,
         maxValueAllowed: 100,
@@ -88,7 +89,7 @@ describe('QualityMetricsRepository', () => {
             threshold: 70,
             latestValue: 75,
             latestValueDisplay: '75%',
-            thresholdStatus: 'PASSING' as any,
+            thresholdStatus: MetricThresholdStatus.PASSING,
           },
         ],
       },
@@ -106,7 +107,7 @@ describe('QualityMetricsRepository', () => {
           isPrivate: false,
           isActivated: true,
         },
-      } as any,
+      } as DeepSourceProject,
     ]);
 
     // Mock listRuns to provide repository ID
@@ -119,7 +120,11 @@ describe('QualityMetricsRepository', () => {
       ],
       pageInfo: { hasNextPage: false },
       totalCount: 1,
-    } as any);
+    } as {
+      items: Array<{ id: string; repository: { id: string } }>;
+      pageInfo: { hasNextPage: boolean };
+      totalCount: number;
+    });
     mockClient.getQualityMetrics.mockResolvedValue(mockApiMetrics);
 
     // Create repository instance
@@ -183,7 +188,7 @@ describe('QualityMetricsRepository', () => {
       const metrics = await repository.findByProjectAndMetric(
         projectKey,
         MetricShortcode.LCV,
-        'PYTHON' as any
+        'PYTHON'
       );
 
       expect(metrics).not.toBeNull();
@@ -213,7 +218,7 @@ describe('QualityMetricsRepository', () => {
       const metrics = await repository.findByProjectAndMetric(
         projectKey,
         MetricShortcode.LCV,
-        'JAVASCRIPT' as any
+        'JAVASCRIPT'
       );
 
       expect(metrics).toBeNull();
@@ -291,7 +296,7 @@ describe('QualityMetricsRepository', () => {
     it('should find metrics by composite ID components', async () => {
       const id = {
         projectKey: asProjectKey('test-project'),
-        metricKey: 'AGGREGATE' as any,
+        metricKey: 'AGGREGATE',
         shortcode: MetricShortcode.BCV,
       };
 
@@ -346,10 +351,13 @@ describe('QualityMetricsRepository', () => {
       const projectKey = asProjectKey('test-project');
       const metrics = await repository.findByProjectAndMetric(projectKey, MetricShortcode.LCV);
 
+      expect(metrics).not.toBeNull();
+      if (!metrics) return;
+
       mockClient.setMetricThreshold.mockResolvedValue({ ok: true });
       mockClient.updateMetricSetting.mockResolvedValue({ ok: true });
 
-      await repository.save(metrics!);
+      await repository.save(metrics);
 
       expect(mockClient.setMetricThreshold).toHaveBeenCalledWith({
         repositoryId: 'repo-123',
@@ -369,9 +377,13 @@ describe('QualityMetricsRepository', () => {
     it('should handle null threshold', async () => {
       const projectKey = asProjectKey('test-project');
       const metrics = await repository.findByProjectAndMetric(projectKey, MetricShortcode.LCV);
-      metrics!.updateThreshold(null);
+      
+      expect(metrics).not.toBeNull();
+      if (!metrics) return;
+      
+      metrics.updateThreshold(null);
 
-      await repository.save(metrics!);
+      await repository.save(metrics);
 
       expect(mockClient.setMetricThreshold).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -383,10 +395,13 @@ describe('QualityMetricsRepository', () => {
     it('should propagate errors from client', async () => {
       const projectKey = asProjectKey('test-project');
       const metrics = await repository.findByProjectAndMetric(projectKey, MetricShortcode.LCV);
+      
+      expect(metrics).not.toBeNull();
+      if (!metrics) return;
 
       mockClient.setMetricThreshold.mockRejectedValue(new Error('API Error'));
 
-      await expect(repository.save(metrics!)).rejects.toThrow('API Error');
+      await expect(repository.save(metrics)).rejects.toThrow('API Error');
     });
   });
 
