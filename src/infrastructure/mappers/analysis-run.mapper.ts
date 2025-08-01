@@ -57,12 +57,14 @@ function mapApiCategoryToDomain(apiCategory: string): IssueCategory {
   const categoryMap: Record<string, IssueCategory> = {
     'anti-pattern': 'ANTI_PATTERN',
     'bug-risk': 'BUG_RISK',
+    'bug_risk': 'BUG_RISK', // Support both hyphen and underscore
     coverage: 'COVERAGE',
     documentation: 'DOCUMENTATION',
     performance: 'PERFORMANCE',
     security: 'SECURITY',
     style: 'STYLE',
     typecheck: 'TYPE_CHECK',
+    'type-check': 'TYPE_CHECK', // Support both forms
   };
 
   return categoryMap[apiCategory.toLowerCase()] || 'OTHER';

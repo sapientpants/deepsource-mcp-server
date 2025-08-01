@@ -37,13 +37,18 @@ function mapHighestSeverity(
  */
 function mapReportStatus(apiStatus?: string): ComplianceReportStatus {
   const statusMap: Record<string, ComplianceReportStatus> = {
+    READY: 'READY',
+    COMPLETED: 'READY',
+    GENERATING: 'GENERATING',
+    PENDING: 'GENERATING',
+    ERROR: 'ERROR',
+    FAILED: 'ERROR',
     PASSING: 'PASSING',
     FAILING: 'FAILING',
-    READY: 'PASSING', // READY means the report is generated and passing
     NOOP: 'NOT_APPLICABLE',
   };
 
-  return statusMap[apiStatus || ''] || 'UNKNOWN';
+  return statusMap[apiStatus || ''] || 'PENDING';
 }
 /**
  * Maps a DeepSource API compliance report to domain ComplianceReport aggregate
