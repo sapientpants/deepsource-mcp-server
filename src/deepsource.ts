@@ -18,6 +18,18 @@ import {
   MetricHistoryResponse,
   MetricHistoryValue,
 } from './types/metrics.js';
+import {
+  asGraphQLNodeId,
+  asRunId,
+  asCommitOid,
+  asBranchName,
+  asAnalyzerShortcode,
+  GraphQLNodeId,
+  RunId,
+  CommitOid,
+  BranchName,
+  AnalyzerShortcode,
+} from './types/branded.js';
 
 /**
  * @fileoverview DeepSource API client for interacting with the DeepSource service.
@@ -161,7 +173,7 @@ export interface DeepSourceIssue {
  * @public
  */
 export interface OccurrenceDistributionByAnalyzer {
-  analyzerShortcode: string;
+  analyzerShortcode: AnalyzerShortcode;
   introduced: number;
 }
 
@@ -205,11 +217,11 @@ export type AnalysisRunStatus =
  * @public
  */
 export interface DeepSourceRun {
-  id: string;
-  runUid: string;
-  commitOid: string;
-  branchName: string;
-  baseOid: string;
+  id: GraphQLNodeId;
+  runUid: RunId;
+  commitOid: CommitOid;
+  branchName: BranchName;
+  baseOid: CommitOid;
   status: AnalysisRunStatus;
   createdAt: string;
   updatedAt: string;
@@ -217,7 +229,7 @@ export interface DeepSourceRun {
   summary: RunSummary;
   repository: {
     name: string;
-    id: string;
+    id: GraphQLNodeId;
   };
 }
 
@@ -1109,11 +1121,11 @@ export class DeepSourceClient {
 
       for (const { node: run } of repoRuns) {
         runs.push({
-          id: run.id,
-          runUid: run.runUid,
-          commitOid: run.commitOid,
-          branchName: run.branchName,
-          baseOid: run.baseOid,
+          id: asGraphQLNodeId(run.id),
+          runUid: asRunId(run.runUid),
+          commitOid: asCommitOid(run.commitOid),
+          branchName: asBranchName(run.branchName),
+          baseOid: asCommitOid(run.baseOid),
           status: run.status,
           createdAt: run.createdAt,
           updatedAt: run.updatedAt,
@@ -1122,12 +1134,18 @@ export class DeepSourceClient {
             occurrencesIntroduced: run.summary?.occurrencesIntroduced ?? 0,
             occurrencesResolved: run.summary?.occurrencesResolved ?? 0,
             occurrencesSuppressed: run.summary?.occurrencesSuppressed ?? 0,
-            occurrenceDistributionByAnalyzer: run.summary?.occurrenceDistributionByAnalyzer ?? [],
+            occurrenceDistributionByAnalyzer:
+              run.summary?.occurrenceDistributionByAnalyzer?.map(
+                (dist: Record<string, unknown>) => ({
+                  analyzerShortcode: asAnalyzerShortcode(dist.analyzerShortcode as string),
+                  introduced: dist.introduced as number,
+                })
+              ) ?? [],
             occurrenceDistributionByCategory: run.summary?.occurrenceDistributionByCategory ?? [],
           },
           repository: {
             name: run.repository?.name ?? '',
-            id: run.repository?.id ?? '',
+            id: asGraphQLNodeId(run.repository?.id ?? ''),
           },
         });
       }
@@ -1204,11 +1222,11 @@ export class DeepSourceClient {
       }
 
       return {
-        id: run.id,
-        runUid: run.runUid,
-        commitOid: run.commitOid,
-        branchName: run.branchName,
-        baseOid: run.baseOid,
+        id: asGraphQLNodeId(run.id),
+        runUid: asRunId(run.runUid),
+        commitOid: asCommitOid(run.commitOid),
+        branchName: asBranchName(run.branchName),
+        baseOid: asCommitOid(run.baseOid),
         status: run.status,
         createdAt: run.createdAt,
         updatedAt: run.updatedAt,
@@ -1217,12 +1235,16 @@ export class DeepSourceClient {
           occurrencesIntroduced: run.summary?.occurrencesIntroduced ?? 0,
           occurrencesResolved: run.summary?.occurrencesResolved ?? 0,
           occurrencesSuppressed: run.summary?.occurrencesSuppressed ?? 0,
-          occurrenceDistributionByAnalyzer: run.summary?.occurrenceDistributionByAnalyzer ?? [],
+          occurrenceDistributionByAnalyzer:
+            run.summary?.occurrenceDistributionByAnalyzer?.map((dist: Record<string, unknown>) => ({
+              analyzerShortcode: asAnalyzerShortcode(dist.analyzerShortcode as string),
+              introduced: dist.introduced as number,
+            })) ?? [],
           occurrenceDistributionByCategory: run.summary?.occurrenceDistributionByCategory ?? [],
         },
         repository: {
           name: run.repository?.name ?? '',
-          id: run.repository?.id ?? '',
+          id: asGraphQLNodeId(run.repository?.id ?? ''),
         },
       };
     } catch (error) {

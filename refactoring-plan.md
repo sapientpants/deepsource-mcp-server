@@ -802,7 +802,7 @@ With the domain layer complete and fully tested, the next steps are:
 The repository factory implementation provides a centralized way to create repository instances with their required dependencies:
 
 - **Configuration Management**: Accepts API key and optional base URL
-- **Instance Caching**: Avoids creating multiple instances for performance
+- **Instance Management**: Provides efficient repository instance creation
 - **Individual Creation Methods**: Allows creating specific repositories when needed
 - **Type Safety**: Full TypeScript support with proper interfaces
 - **Convenience Functions**: `createRepositoryFactory()` and `createRepositories()` for easy usage
@@ -833,7 +833,7 @@ The infrastructure layer implementation is now fully complete, providing a solid
 
 3. **Repository Factory Pattern**
    - Centralized dependency injection for all repositories
-   - Instance caching to improve performance
+   - Efficient instance management for performance
    - Configuration management with defensive copying
    - Individual repository creation methods for flexibility
 
@@ -1021,7 +1021,6 @@ The architecture is ready for:
 1. Gradual migration of handlers to use full domain types
 2. Additional domain services as needed
 3. Event sourcing if required
-4. Performance optimizations with optional caching
 
 ## Final Project Statistics
 

@@ -5,7 +5,7 @@
  */
 
 import { QualityMetrics } from '../../domain/aggregates/quality-metrics/quality-metrics.aggregate.js';
-import { RepositoryMetric, RepositoryMetricItem } from '../../models/metrics.js';
+import { RepositoryMetric, RepositoryMetricItem, MetricKey } from '../../models/metrics.js';
 import {
   MetricConfiguration,
   CreateQualityMetricsParams,
@@ -58,7 +58,7 @@ export class QualityMetricsMapper {
       name: apiMetric.name,
       description: apiMetric.description,
       shortcode: apiMetric.shortcode,
-      metricKey: item.key as any, // Will be validated by domain
+      metricKey: item.key as MetricKey, // Cast to MetricKey
       unit: apiMetric.unit,
       minAllowed: apiMetric.minValueAllowed,
       maxAllowed: apiMetric.maxValueAllowed,

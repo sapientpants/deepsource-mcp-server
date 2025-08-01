@@ -12,6 +12,8 @@ import { QualityMetricsId } from '../../domain/aggregates/quality-metrics/qualit
 import { DeepSourceClient } from '../../deepsource.js';
 import { QualityMetricsMapper } from '../mappers/quality-metrics.mapper.js';
 import { createLogger } from '../../utils/logging/logger.js';
+import { BaseDeepSourceClient } from '../../client/base-client.js';
+import type { AxiosInstance } from 'axios';
 
 const logger = createLogger('QualityMetricsRepository');
 
@@ -65,7 +67,11 @@ export class QualityMetricsRepository implements IQualityMetricsRepository {
         }
       `;
 
-      const response = await (this.client as any).client.post('', {
+      // Access protected client member via type assertion
+      const clientWithAxios = this.client as unknown as BaseDeepSourceClient & {
+        client: AxiosInstance;
+      };
+      const response = await clientWithAxios.client.post('', {
         query: repoQuery.trim(),
         variables: {
           login: project.repository.login,
@@ -76,7 +82,7 @@ export class QualityMetricsRepository implements IQualityMetricsRepository {
 
       if (response.data.errors) {
         throw new Error(
-          `GraphQL Errors: ${response.data.errors.map((e: any) => e.message).join(', ')}`
+          `GraphQL Errors: ${response.data.errors.map((e: { message: string }) => e.message).join(', ')}`
         );
       }
 

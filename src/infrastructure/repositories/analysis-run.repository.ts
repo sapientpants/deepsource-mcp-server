@@ -6,29 +6,52 @@
 
 import { IAnalysisRunRepository } from '../../domain/aggregates/analysis-run/analysis-run.repository.js';
 import { AnalysisRun } from '../../domain/aggregates/analysis-run/analysis-run.aggregate.js';
-import { RunId, ProjectKey, BranchName, CommitOid } from '../../types/branded.js';
+import {
+  RunId,
+  ProjectKey,
+  BranchName,
+  CommitOid,
+  asRunId,
+  asBranchName,
+  asCommitOid,
+  asGraphQLNodeId,
+} from '../../types/branded.js';
 import { RunStatus } from '../../domain/aggregates/analysis-run/analysis-run.types.js';
 import { PaginationOptions, PaginatedResult } from '../../domain/shared/repository.interface.js';
 import { DeepSourceClient } from '../../deepsource.js';
 import { AnalysisRunMapper } from '../mappers/analysis-run.mapper.js';
 import { createLogger } from '../../utils/logging/logger.js';
-import { DeepSourceRun } from '../../models/runs.js';
-import { asGraphQLNodeId } from '../../types/branded.js';
+import { DeepSourceRun, AnalysisRunStatus, RunSummary } from '../../models/runs.js';
 
 const logger = createLogger('AnalysisRunRepository');
 
 /**
- * Converts client DeepSourceRun to model DeepSourceRun
+ * Converts client run response to model DeepSourceRun
  * The client returns plain strings but the model expects branded types
  */
-function convertClientRunToModelRun(clientRun: any): DeepSourceRun {
+function convertClientRunToModelRun(clientRun: {
+  id: string;
+  runUid: string;
+  commitOid: string;
+  branchName: string;
+  baseOid: string;
+  status: AnalysisRunStatus;
+  createdAt: string;
+  updatedAt: string;
+  finishedAt?: string;
+  summary: RunSummary;
+  repository: {
+    id: string;
+    name: string;
+  };
+}): DeepSourceRun {
   return {
     ...clientRun,
     id: asGraphQLNodeId(clientRun.id),
-    runUid: clientRun.runUid,
-    commitOid: clientRun.commitOid,
-    branchName: clientRun.branchName,
-    baseOid: clientRun.baseOid,
+    runUid: asRunId(clientRun.runUid),
+    commitOid: asCommitOid(clientRun.commitOid),
+    branchName: asBranchName(clientRun.branchName),
+    baseOid: asCommitOid(clientRun.baseOid),
     repository: {
       ...clientRun.repository,
       id: asGraphQLNodeId(clientRun.repository.id),
