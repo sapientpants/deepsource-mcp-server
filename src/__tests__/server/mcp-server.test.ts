@@ -22,6 +22,8 @@ jest.mock('../../server/tool-registration.js', () => ({
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
   McpServer: jest.fn().mockImplementation(() => ({
     connect: jest.fn().mockResolvedValue(undefined),
+    registerTool: jest.fn(),
+    tool: jest.fn(),
   })),
 }));
 
@@ -34,10 +36,14 @@ describe('DeepSourceMCPServer', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Set up mock API key for tests
+    process.env.DEEPSOURCE_API_KEY = 'test-api-key';
   });
 
   afterEach(() => {
     server = null as unknown as DeepSourceMCPServer;
+    // Clean up environment
+    delete process.env.DEEPSOURCE_API_KEY;
   });
 
   describe('constructor', () => {

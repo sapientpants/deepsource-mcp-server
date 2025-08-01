@@ -23,10 +23,11 @@ import { ReportType } from '../../types/report-types.js';
  */
 function mapHighestSeverity(
   occurrence: ApiComplianceReport['securityIssueStats'][0]['occurrence']
-): 'CRITICAL' | 'MAJOR' | 'MINOR' {
+): 'CRITICAL' | 'MAJOR' | 'MINOR' | 'INFO' {
   if (occurrence.critical > 0) return 'CRITICAL';
   if (occurrence.major > 0) return 'MAJOR';
-  return 'MINOR';
+  if (occurrence.minor > 0) return 'MINOR';
+  return 'INFO';
 }
 
 /**
