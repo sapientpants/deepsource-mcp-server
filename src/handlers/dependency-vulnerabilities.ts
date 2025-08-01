@@ -8,6 +8,12 @@ import { ApiResponse } from '../models/common.js';
 import { VulnerabilityOccurrence } from '../models/security.js';
 import { createLogger } from '../utils/logging/logger.js';
 import { PaginationParams } from '../utils/pagination/types.js';
+import { BaseHandlerDeps } from './base/handler.interface.js';
+import {
+  createBaseHandlerFactory,
+  wrapInApiResponse,
+  createDefaultHandlerDeps,
+} from './base/handler.factory.js';
 
 // Logger for the dependency vulnerabilities handler
 const logger = createLogger('DependencyVulnerabilitiesHandler');
@@ -22,36 +28,25 @@ export interface DeepsourceDependencyVulnerabilitiesParams extends PaginationPar
 }
 
 /**
- * Fetches and returns dependency vulnerabilities from a DeepSource project
- * @param params - Parameters for fetching vulnerabilities, including project key and pagination
- * @returns A response containing the vulnerabilities data
- * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
- * @public
+ * Creates a dependency vulnerabilities handler with injected dependencies
+ * @param deps - The dependencies for the handler
+ * @returns The configured handler factory
  */
-export async function handleDeepsourceDependencyVulnerabilities({
-  projectKey,
-  first,
-  after,
-  last,
-  before,
-}: DeepsourceDependencyVulnerabilitiesParams): Promise<ApiResponse> {
-  const apiKey = process.env.DEEPSOURCE_API_KEY;
-  logger.debug('Checking API key', {
-    exists: Boolean(apiKey),
-    length: apiKey ? apiKey.length : 0,
-    prefix: apiKey ? `${apiKey.substring(0, 5)}...` : 'N/A',
-  });
+export const createDependencyVulnerabilitiesHandler = createBaseHandlerFactory(
+  'dependency_vulnerabilities',
+  async (
+    deps: BaseHandlerDeps,
+    { projectKey, first, after, last, before }: DeepsourceDependencyVulnerabilitiesParams
+  ) => {
+    const apiKey = deps.getApiKey();
+    deps.logger.debug('API key retrieved from config', {
+      length: apiKey.length,
+      prefix: `${apiKey.substring(0, 5)}...`,
+    });
 
-  if (!apiKey) {
-    logger.error('DEEPSOURCE_API_KEY environment variable is not set');
-    throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
-  }
-
-  try {
-    logger.debug('Creating DeepSource client');
     const client = new DeepSourceClient(apiKey);
 
-    logger.info('Fetching dependency vulnerabilities', {
+    deps.logger.info('Fetching dependency vulnerabilities', {
       projectKey,
     });
 
@@ -62,107 +57,83 @@ export async function handleDeepsourceDependencyVulnerabilities({
       before,
     });
 
-    logger.info('Successfully fetched dependency vulnerabilities', {
+    deps.logger.info('Successfully fetched dependency vulnerabilities', {
       count: vulnerabilities.items.length,
       totalCount: vulnerabilities.totalCount,
       hasNextPage: vulnerabilities.pageInfo?.hasNextPage,
       hasPreviousPage: vulnerabilities.pageInfo?.hasPreviousPage,
     });
 
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text: JSON.stringify(
-            {
-              vulnerabilities: vulnerabilities.items.map(
-                (vulnerability: VulnerabilityOccurrence) => ({
-                  id: vulnerability.id,
-                  title:
-                    vulnerability.vulnerability.summary || vulnerability.vulnerability.identifier,
-                  severity: vulnerability.vulnerability.severity,
-                  cvssScore:
-                    vulnerability.vulnerability.cvssV3BaseScore ||
-                    vulnerability.vulnerability.cvssV2BaseScore,
-                  packageName: vulnerability.package.name,
-                  packageVersion: vulnerability.packageVersion.version,
-                  fixedIn:
-                    vulnerability.vulnerability.fixedVersions.length > 0
-                      ? vulnerability.vulnerability.fixedVersions[0]
-                      : null,
-                  description:
-                    vulnerability.vulnerability.details ||
-                    vulnerability.vulnerability.summary ||
-                    '',
-                  identifiers: [
-                    vulnerability.vulnerability.identifier,
-                    ...vulnerability.vulnerability.aliases,
-                  ],
-                  references: vulnerability.vulnerability.referenceUrls,
-                  // Add metadata to help with risk assessment
-                  risk_assessment: {
-                    severity_level: getSeverityLevel(vulnerability.vulnerability.severity),
-                    cvss_description: describeCvssScore(
-                      vulnerability.vulnerability.cvssV3BaseScore ||
-                        vulnerability.vulnerability.cvssV2BaseScore ||
-                        null
-                    ),
-                    fixed_version_available: vulnerability.vulnerability.fixedVersions.length > 0,
-                    remediation_advice: getRemediationAdvice(vulnerability),
-                  },
-                })
-              ),
-              pageInfo: {
-                hasNextPage: vulnerabilities.pageInfo?.hasNextPage || false,
-                hasPreviousPage: vulnerabilities.pageInfo?.hasPreviousPage || false,
-                startCursor: vulnerabilities.pageInfo?.startCursor || null,
-                endCursor: vulnerabilities.pageInfo?.endCursor || null,
-              },
-              totalCount: vulnerabilities.totalCount,
-              // Provide helpful information and guidance
-              usage_examples: {
-                pagination: {
-                  next_page: 'For forward pagination, use first and after parameters',
-                  previous_page: 'For backward pagination, use last and before parameters',
-                },
-                related_tools: {
-                  issues: 'Use the project_issues tool to get code issues in the project',
-                  compliance: 'Use the compliance_report tool to get security compliance reports',
-                },
-              },
-            },
-            null,
-            2
+    const vulnerabilitiesData = {
+      vulnerabilities: vulnerabilities.items.map((vulnerability: VulnerabilityOccurrence) => ({
+        id: vulnerability.id,
+        title: vulnerability.vulnerability.summary || vulnerability.vulnerability.identifier,
+        severity: vulnerability.vulnerability.severity,
+        cvssScore:
+          vulnerability.vulnerability.cvssV3BaseScore ||
+          vulnerability.vulnerability.cvssV2BaseScore,
+        packageName: vulnerability.package.name,
+        packageVersion: vulnerability.packageVersion.version,
+        fixedIn:
+          vulnerability.vulnerability.fixedVersions.length > 0
+            ? vulnerability.vulnerability.fixedVersions[0]
+            : null,
+        description:
+          vulnerability.vulnerability.details || vulnerability.vulnerability.summary || '',
+        identifiers: [
+          vulnerability.vulnerability.identifier,
+          ...vulnerability.vulnerability.aliases,
+        ],
+        references: vulnerability.vulnerability.referenceUrls,
+        // Add metadata to help with risk assessment
+        risk_assessment: {
+          severity_level: getSeverityLevel(vulnerability.vulnerability.severity),
+          cvss_description: describeCvssScore(
+            vulnerability.vulnerability.cvssV3BaseScore ||
+              vulnerability.vulnerability.cvssV2BaseScore ||
+              null
           ),
+          fixed_version_available: vulnerability.vulnerability.fixedVersions.length > 0,
+          remediation_advice: getRemediationAdvice(vulnerability),
         },
-      ],
-    };
-  } catch (error) {
-    logger.error('Error in handleDeepsourceDependencyVulnerabilities', {
-      errorType: typeof error,
-      errorName: error instanceof Error ? error.name : 'Unknown',
-      errorMessage: error instanceof Error ? error.message : String(error),
-      errorStack: error instanceof Error ? error.stack : 'No stack available',
-    });
-
-    // Return an error object with details
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logger.debug('Returning error response', { errorMessage });
-
-    return {
-      isError: true,
-      content: [
-        {
-          type: 'text' as const,
-          text: JSON.stringify({
-            error: errorMessage,
-            details: 'Failed to retrieve dependency vulnerabilities',
-            project_key: projectKey,
-          }),
+      })),
+      pageInfo: {
+        hasNextPage: vulnerabilities.pageInfo?.hasNextPage || false,
+        hasPreviousPage: vulnerabilities.pageInfo?.hasPreviousPage || false,
+        startCursor: vulnerabilities.pageInfo?.startCursor || null,
+        endCursor: vulnerabilities.pageInfo?.endCursor || null,
+      },
+      totalCount: vulnerabilities.totalCount,
+      // Provide helpful information and guidance
+      usage_examples: {
+        pagination: {
+          next_page: 'For forward pagination, use first and after parameters',
+          previous_page: 'For backward pagination, use last and before parameters',
         },
-      ],
+        related_tools: {
+          issues: 'Use the project_issues tool to get code issues in the project',
+          compliance: 'Use the compliance_report tool to get security compliance reports',
+        },
+      },
     };
+
+    return wrapInApiResponse(vulnerabilitiesData);
   }
+);
+
+/**
+ * Fetches and returns dependency vulnerabilities from a DeepSource project
+ * @param params - Parameters for fetching vulnerabilities, including project key and pagination
+ * @returns A response containing the vulnerabilities data
+ * @throws Error if the DEEPSOURCE_API_KEY environment variable is not set
+ * @public
+ */
+export async function handleDeepsourceDependencyVulnerabilities(
+  params: DeepsourceDependencyVulnerabilitiesParams
+): Promise<ApiResponse> {
+  const deps = createDefaultHandlerDeps({ logger });
+  const handler = createDependencyVulnerabilitiesHandler(deps);
+  return handler(params);
 }
 
 /**

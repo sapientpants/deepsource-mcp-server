@@ -27,7 +27,7 @@ describe('Handler Functions Unit Tests', () => {
         handleDeepsourceDependencyVulnerabilities({
           projectKey: 'test-project',
         })
-      ).rejects.toThrow('DEEPSOURCE_API_KEY environment variable is not set');
+      ).rejects.toThrow('Configuration error: DeepSource API key is required but not configured');
     });
 
     it('should import successfully with API key set', async () => {
@@ -49,7 +49,7 @@ describe('Handler Functions Unit Tests', () => {
         handleDeepsourceProjectRuns({
           projectKey: 'test-project',
         })
-      ).rejects.toThrow('DEEPSOURCE_API_KEY environment variable is not set');
+      ).rejects.toThrow('Configuration error: DeepSource API key is required but not configured');
     });
 
     it('should import successfully with API key set', async () => {
@@ -72,7 +72,7 @@ describe('Handler Functions Unit Tests', () => {
           projectKey: 'test-project',
           branchName: 'main',
         })
-      ).rejects.toThrow('DEEPSOURCE_API_KEY environment variable is not set');
+      ).rejects.toThrow('Configuration error: DeepSource API key is required but not configured');
     });
 
     it('should import successfully with API key set', async () => {
@@ -95,7 +95,7 @@ describe('Handler Functions Unit Tests', () => {
           projectKey: 'test-project',
           runIdentifier: 'run-123',
         })
-      ).rejects.toThrow('DEEPSOURCE_API_KEY environment variable is not set');
+      ).rejects.toThrow('Configuration error: DeepSource API key is required but not configured');
     });
 
     it('should import successfully with API key set', async () => {

@@ -25,6 +25,21 @@ jest.unstable_mockModule('../deepsource', () => ({
   DeepSourceClient: jest.fn().mockImplementation(() => ({
     getIssues: mockGetIssues,
   })),
+  ReportType: {
+    OWASP_TOP_10: 'OWASP_TOP_10',
+    SANS_TOP_25: 'SANS_TOP_25',
+    MISRA_C: 'MISRA_C',
+    CODE_COVERAGE: 'CODE_COVERAGE',
+    CODE_HEALTH_TREND: 'CODE_HEALTH_TREND',
+    ISSUE_DISTRIBUTION: 'ISSUE_DISTRIBUTION',
+    ISSUES_PREVENTED: 'ISSUES_PREVENTED',
+    ISSUES_AUTOFIXED: 'ISSUES_AUTOFIXED',
+  },
+  ReportStatus: {
+    PASSING: 'PASSING',
+    FAILING: 'FAILING',
+    NOOP: 'NOOP',
+  },
 }));
 
 // Import the modules under test AFTER mocking
@@ -111,7 +126,7 @@ describe('Project Issues Handler', () => {
         handleDeepsourceProjectIssues({
           projectKey: 'test-project',
         })
-      ).rejects.toThrow('DEEPSOURCE_API_KEY environment variable is not set');
+      ).rejects.toThrow('Configuration error: DeepSource API key is required but not configured');
     });
 
     it('should handle errors from the client', async () => {
@@ -119,17 +134,12 @@ describe('Project Issues Handler', () => {
       const testError = new Error('API client error');
       mockGetIssues.mockRejectedValue(testError);
 
-      // Call the handler
-      const result = await handleDeepsourceProjectIssues({
-        projectKey: 'test-project',
-      });
-
-      // Verify error response structure
-      expect(result).toHaveProperty('isError', true);
-      expect(result.content).toHaveLength(1);
-
-      const parsedContent = JSON.parse(result.content[0].text);
-      expect(parsedContent).toHaveProperty('error', 'API client error');
+      // Call the handler and expect it to throw
+      await expect(
+        handleDeepsourceProjectIssues({
+          projectKey: 'test-project',
+        })
+      ).rejects.toThrow('API client error');
     });
   });
 });
