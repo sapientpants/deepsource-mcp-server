@@ -15,6 +15,8 @@ import {
 import { DeepSourceClient } from '../../deepsource.js';
 import { ComplianceReportMapper } from '../mappers/compliance-report.mapper.js';
 import { createLogger } from '../../utils/logging/logger.js';
+import { BaseDeepSourceClient } from '../../client/base-client.js';
+import type { AxiosInstance } from 'axios';
 
 const logger = createLogger('ComplianceReportRepository');
 
@@ -63,7 +65,11 @@ export class ComplianceReportRepository implements IComplianceReportRepository {
         }
       `;
 
-      const response = await (this.client as any).client.post('', {
+      // Access protected client member via type assertion
+      const clientWithAxios = this.client as unknown as BaseDeepSourceClient & {
+        client: AxiosInstance;
+      };
+      const response = await clientWithAxios.client.post('', {
         query: repoQuery.trim(),
         variables: {
           login: project.repository.login,
@@ -74,7 +80,7 @@ export class ComplianceReportRepository implements IComplianceReportRepository {
 
       if (response.data.errors) {
         throw new Error(
-          `GraphQL Errors: ${response.data.errors.map((e: any) => e.message).join(', ')}`
+          `GraphQL Errors: ${response.data.errors.map((e: { message: string }) => e.message).join(', ')}`
         );
       }
 

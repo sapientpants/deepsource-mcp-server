@@ -34,10 +34,11 @@ import { DeepsourceRecentRunIssuesParams } from '../handlers/recent-run-issues.j
 /**
  * Adapts quality metrics parameters from tool schema to handler interface
  */
-export function adaptQualityMetricsParams(params: any): DeepsourceQualityMetricsParams {
+export function adaptQualityMetricsParams(params: unknown): DeepsourceQualityMetricsParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: params.projectKey, // Handler still expects string
-    shortcodeIn: params.shortcodeIn as MetricShortcode[] | undefined,
+    projectKey: typedParams.projectKey as string, // Handler still expects string
+    shortcodeIn: typedParams.shortcodeIn as MetricShortcode[] | undefined,
   };
 }
 
@@ -45,53 +46,59 @@ export function adaptQualityMetricsParams(params: any): DeepsourceQualityMetrics
  * Adapts update metric threshold parameters from tool schema to handler interface
  */
 export function adaptUpdateMetricThresholdParams(
-  params: any
+  params: unknown
 ): DeepsourceUpdateMetricThresholdParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: params.projectKey, // Handler still expects string
-    repositoryId: params.repositoryId, // Handler still expects string
-    metricShortcode: params.metricShortcode as MetricShortcode,
-    metricKey: params.metricKey as MetricKey,
-    thresholdValue: params.thresholdValue,
+    projectKey: typedParams.projectKey as string, // Handler still expects string
+    repositoryId: typedParams.repositoryId as string, // Handler still expects string
+    metricShortcode: typedParams.metricShortcode as MetricShortcode,
+    metricKey: typedParams.metricKey as MetricKey,
+    thresholdValue: typedParams.thresholdValue as number | null | undefined,
   };
 }
 
 /**
  * Adapts update metric setting parameters from tool schema to handler interface
  */
-export function adaptUpdateMetricSettingParams(params: any): DeepsourceUpdateMetricSettingParams {
+export function adaptUpdateMetricSettingParams(
+  params: unknown
+): DeepsourceUpdateMetricSettingParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: params.projectKey, // Handler still expects string
-    repositoryId: params.repositoryId, // Handler still expects string
-    metricShortcode: params.metricShortcode as MetricShortcode,
-    isReported: params.isReported,
-    isThresholdEnforced: params.isThresholdEnforced,
+    projectKey: typedParams.projectKey as string, // Handler still expects string
+    repositoryId: typedParams.repositoryId as string, // Handler still expects string
+    metricShortcode: typedParams.metricShortcode as MetricShortcode,
+    isReported: typedParams.isReported as boolean,
+    isThresholdEnforced: typedParams.isThresholdEnforced as boolean,
   };
 }
 
 /**
  * Adapts compliance report parameters from tool schema to handler interface
  */
-export function adaptComplianceReportParams(params: any): DeepsourceComplianceReportParams {
+export function adaptComplianceReportParams(params: unknown): DeepsourceComplianceReportParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: params.projectKey, // Handler still expects string
-    reportType: params.reportType as ReportType,
+    projectKey: typedParams.projectKey as string, // Handler still expects string
+    reportType: typedParams.reportType as ReportType,
   };
 }
 
 /**
  * Adapts project issues parameters from tool schema to handler interface
  */
-export function adaptProjectIssuesParams(params: any): DeepsourceProjectIssuesParams {
+export function adaptProjectIssuesParams(params: unknown): DeepsourceProjectIssuesParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: params.projectKey, // Handler still expects string
-    path: params.path,
-    analyzerIn: params.analyzerIn,
-    tags: params.tags,
-    first: params.first,
-    last: params.last,
-    after: params.after,
-    before: params.before,
+    projectKey: typedParams.projectKey as string, // Handler still expects string
+    path: typedParams.path as string | undefined,
+    analyzerIn: typedParams.analyzerIn as string[] | undefined,
+    tags: typedParams.tags as string[] | undefined,
+    first: typedParams.first as number | undefined,
+    last: typedParams.last as number | undefined,
+    after: typedParams.after as string | undefined,
+    before: typedParams.before as string | undefined,
   };
 }
 
@@ -99,53 +106,57 @@ export function adaptProjectIssuesParams(params: any): DeepsourceProjectIssuesPa
  * Adapts dependency vulnerabilities parameters from tool schema to handler interface
  */
 export function adaptDependencyVulnerabilitiesParams(
-  params: any
+  params: unknown
 ): DeepsourceDependencyVulnerabilitiesParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: params.projectKey, // Handler still expects string
-    first: params.first,
-    last: params.last,
-    after: params.after,
-    before: params.before,
+    projectKey: typedParams.projectKey as string, // Handler still expects string
+    first: typedParams.first as number | undefined,
+    last: typedParams.last as number | undefined,
+    after: typedParams.after as string | undefined,
+    before: typedParams.before as string | undefined,
   };
 }
 
 /**
  * Adapts project runs parameters from tool schema to handler interface
  */
-export function adaptProjectRunsParams(params: any): DeepsourceProjectRunsParams {
+export function adaptProjectRunsParams(params: unknown): DeepsourceProjectRunsParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: params.projectKey, // Handler still expects string
-    analyzerIn: params.analyzerIn,
-    first: params.first,
-    last: params.last,
-    after: params.after,
-    before: params.before,
+    projectKey: typedParams.projectKey as string, // Handler still expects string
+    analyzerIn: typedParams.analyzerIn as AnalyzerShortcode[] | undefined,
+    first: typedParams.first as number | undefined,
+    last: typedParams.last as number | undefined,
+    after: typedParams.after as string | undefined,
+    before: typedParams.before as string | undefined,
   };
 }
 
 /**
  * Adapts run parameters from tool schema to handler interface
  */
-export function adaptRunParams(params: any): DeepsourceRunParams {
+export function adaptRunParams(params: unknown): DeepsourceRunParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: params.projectKey, // Handler still expects string
-    runIdentifier: params.runIdentifier, // Handler still expects string
-    isCommitOid: params.isCommitOid || false,
+    projectKey: typedParams.projectKey as string, // Handler still expects string
+    runIdentifier: typedParams.runIdentifier as string, // Handler still expects string
+    isCommitOid: (typedParams.isCommitOid as boolean | undefined) || false,
   };
 }
 
 /**
  * Adapts recent run issues parameters from tool schema to handler interface
  */
-export function adaptRecentRunIssuesParams(params: any): DeepsourceRecentRunIssuesParams {
+export function adaptRecentRunIssuesParams(params: unknown): DeepsourceRecentRunIssuesParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: params.projectKey, // Handler still expects string
-    branchName: params.branchName,
-    first: params.first,
-    last: params.last,
-    after: params.after,
-    before: params.before,
+    projectKey: typedParams.projectKey as string, // Handler still expects string
+    branchName: typedParams.branchName as string,
+    first: typedParams.first as number | undefined,
+    last: typedParams.last as number | undefined,
+    after: typedParams.after as string | undefined,
+    before: typedParams.before as string | undefined,
   };
 }
 
@@ -224,97 +235,110 @@ export interface DomainRecentRunIssuesParams {
 /**
  * Adapts parameters for domain-based handlers
  */
-export function adaptToDomainQualityMetricsParams(params: any): DomainQualityMetricsParams {
+export function adaptToDomainQualityMetricsParams(params: unknown): DomainQualityMetricsParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: asProjectKey(params.projectKey),
-    shortcodeIn: params.shortcodeIn as MetricShortcode[] | undefined,
+    projectKey: asProjectKey(typedParams.projectKey as string),
+    shortcodeIn: typedParams.shortcodeIn as MetricShortcode[] | undefined,
   };
 }
 
 export function adaptToDomainUpdateMetricThresholdParams(
-  params: any
+  params: unknown
 ): DomainUpdateMetricThresholdParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: asProjectKey(params.projectKey),
-    repositoryId: asGraphQLNodeId(params.repositoryId),
-    metricShortcode: params.metricShortcode as MetricShortcode,
-    metricKey: params.metricKey as MetricKey,
-    thresholdValue: params.thresholdValue,
+    projectKey: asProjectKey(typedParams.projectKey as string),
+    repositoryId: asGraphQLNodeId(typedParams.repositoryId as string),
+    metricShortcode: typedParams.metricShortcode as MetricShortcode,
+    metricKey: typedParams.metricKey as MetricKey,
+    thresholdValue: typedParams.thresholdValue as number | null | undefined,
   };
 }
 
 export function adaptToDomainUpdateMetricSettingParams(
-  params: any
+  params: unknown
 ): DomainUpdateMetricSettingParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: asProjectKey(params.projectKey),
-    repositoryId: asGraphQLNodeId(params.repositoryId),
-    metricShortcode: params.metricShortcode as MetricShortcode,
-    isReported: params.isReported,
-    isThresholdEnforced: params.isThresholdEnforced,
+    projectKey: asProjectKey(typedParams.projectKey as string),
+    repositoryId: asGraphQLNodeId(typedParams.repositoryId as string),
+    metricShortcode: typedParams.metricShortcode as MetricShortcode,
+    isReported: typedParams.isReported as boolean,
+    isThresholdEnforced: typedParams.isThresholdEnforced as boolean,
   };
 }
 
-export function adaptToDomainComplianceReportParams(params: any): DomainComplianceReportParams {
+export function adaptToDomainComplianceReportParams(params: unknown): DomainComplianceReportParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: asProjectKey(params.projectKey),
-    reportType: params.reportType as ReportType,
+    projectKey: asProjectKey(typedParams.projectKey as string),
+    reportType: typedParams.reportType as ReportType,
   };
 }
 
-export function adaptToDomainProjectIssuesParams(params: any): DomainProjectIssuesParams {
+export function adaptToDomainProjectIssuesParams(params: unknown): DomainProjectIssuesParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: asProjectKey(params.projectKey),
-    path: params.path,
-    analyzerIn: params.analyzerIn?.map((a: string) => asAnalyzerShortcode(a)),
-    tags: params.tags,
-    first: params.first,
-    last: params.last,
-    after: params.after,
-    before: params.before,
+    projectKey: asProjectKey(typedParams.projectKey as string),
+    path: typedParams.path as string | undefined,
+    analyzerIn: (typedParams.analyzerIn as string[] | undefined)?.map((a: string) =>
+      asAnalyzerShortcode(a)
+    ),
+    tags: typedParams.tags as string[] | undefined,
+    first: typedParams.first as number | undefined,
+    last: typedParams.last as number | undefined,
+    after: typedParams.after as string | undefined,
+    before: typedParams.before as string | undefined,
   };
 }
 
 export function adaptToDomainDependencyVulnerabilitiesParams(
-  params: any
+  params: unknown
 ): DomainDependencyVulnerabilitiesParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: asProjectKey(params.projectKey),
-    first: params.first,
-    last: params.last,
-    after: params.after,
-    before: params.before,
+    projectKey: asProjectKey(typedParams.projectKey as string),
+    first: typedParams.first as number | undefined,
+    last: typedParams.last as number | undefined,
+    after: typedParams.after as string | undefined,
+    before: typedParams.before as string | undefined,
   };
 }
 
-export function adaptToDomainProjectRunsParams(params: any): DomainProjectRunsParams {
+export function adaptToDomainProjectRunsParams(params: unknown): DomainProjectRunsParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: asProjectKey(params.projectKey),
-    analyzerIn: params.analyzerIn?.map((a: string) => asAnalyzerShortcode(a)),
-    first: params.first,
-    last: params.last,
-    after: params.after,
-    before: params.before,
+    projectKey: asProjectKey(typedParams.projectKey as string),
+    analyzerIn: (typedParams.analyzerIn as string[] | undefined)?.map((a: string) =>
+      asAnalyzerShortcode(a)
+    ),
+    first: typedParams.first as number | undefined,
+    last: typedParams.last as number | undefined,
+    after: typedParams.after as string | undefined,
+    before: typedParams.before as string | undefined,
   };
 }
 
-export function adaptToDomainRunParams(params: any): DomainRunParams {
+export function adaptToDomainRunParams(params: unknown): DomainRunParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: asProjectKey(params.projectKey),
-    runIdentifier: params.isCommitOid
-      ? asCommitOid(params.runIdentifier)
-      : asRunId(params.runIdentifier),
-    isCommitOid: params.isCommitOid,
+    projectKey: asProjectKey(typedParams.projectKey as string),
+    runIdentifier: typedParams.isCommitOid
+      ? asCommitOid(typedParams.runIdentifier as string)
+      : asRunId(typedParams.runIdentifier as string),
+    isCommitOid: typedParams.isCommitOid as boolean | undefined,
   };
 }
 
-export function adaptToDomainRecentRunIssuesParams(params: any): DomainRecentRunIssuesParams {
+export function adaptToDomainRecentRunIssuesParams(params: unknown): DomainRecentRunIssuesParams {
+  const typedParams = params as Record<string, unknown>;
   return {
-    projectKey: asProjectKey(params.projectKey),
-    branchName: params.branchName,
-    first: params.first,
-    last: params.last,
-    after: params.after,
-    before: params.before,
+    projectKey: asProjectKey(typedParams.projectKey as string),
+    branchName: typedParams.branchName as string,
+    first: typedParams.first as number | undefined,
+    last: typedParams.last as number | undefined,
+    after: typedParams.after as string | undefined,
+    before: typedParams.before as string | undefined,
   };
 }

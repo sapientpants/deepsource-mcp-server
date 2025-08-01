@@ -151,7 +151,7 @@ export const complianceReportToolSchema = {
         }),
       })
     ),
-    trends: z.record(z.string(), z.any()).optional(),
+    trends: z.record(z.string(), z.unknown()).optional(),
     analysis: z.object({
       summary: z.string(),
       status_explanation: z.string(),

@@ -68,8 +68,8 @@ export abstract class ValueObject<T> {
    * @returns A new instance of the value object with updated properties
    */
   protected copyWith(_props: Partial<T>): this {
-    // Using any type for constructor to enable proper inheritance
-    const ctor = this.constructor as any;
+    // Using unknown type and runtime validation for constructor to enable proper inheritance
+    const ctor = this.constructor as new (_props: T) => this;
     return new ctor({ ...this.props, ..._props });
   }
 }
