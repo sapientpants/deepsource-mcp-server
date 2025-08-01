@@ -42,11 +42,11 @@ describe('index.ts module', () => {
 
   it('should export an mcpServer instance', () => {
     expect(indexModule.mcpServer).toBeDefined();
-    expect(indexModule.mcpServer).toBeInstanceOf(McpServer);
+    expect(indexModule.mcpServer.mcpServer).toBeDefined();
   });
 
   it('should have a server with appropriate methods', () => {
-    expect(typeof indexModule.mcpServer.tool).toBe('function');
-    expect(typeof indexModule.mcpServer.connect).toBe('function');
+    expect(typeof indexModule.mcpServer.getRegisteredTools).toBe('function');
+    expect(typeof indexModule.getMcpServer).toBe('function');
   });
 });

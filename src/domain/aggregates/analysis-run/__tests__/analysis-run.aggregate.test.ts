@@ -137,23 +137,23 @@ describe('AnalysisRun Aggregate', () => {
       const issues = [createTestIssue('issue-1'), createTestIssue('issue-2')];
 
       const summary: RunSummary = {
-        totalIntroduced: { count: 2, category: undefined } as any,
-        totalResolved: { count: 0, category: undefined } as any,
-        totalSuppressed: { count: 0, category: undefined } as any,
+        totalIntroduced: IssueCount.create(2),
+        totalResolved: IssueCount.create(0),
+        totalSuppressed: IssueCount.create(0),
         byAnalyzer: [
           {
             analyzerShortcode: 'test-analyzer' as AnalyzerShortcode,
-            introduced: { count: 2, category: undefined } as any,
-            resolved: { count: 0, category: undefined } as any,
-            suppressed: { count: 0, category: undefined } as any,
+            introduced: IssueCount.create(2),
+            resolved: IssueCount.create(0),
+            suppressed: IssueCount.create(0),
           },
         ],
         byCategory: [
           {
             category: 'BUG_RISK',
-            introduced: { count: 2, category: undefined } as any,
-            resolved: { count: 0, category: undefined } as any,
-            suppressed: { count: 0, category: undefined } as any,
+            introduced: IssueCount.create(2),
+            resolved: IssueCount.create(0),
+            suppressed: IssueCount.create(0),
           },
         ],
       };
@@ -460,13 +460,13 @@ describe('AnalysisRun Aggregate', () => {
           projectKey,
           repositoryId,
           commitInfo,
-          status: testCase.status as any,
+          status: testCase.status as RunStatus,
           timestamps: { createdAt: new Date() },
           issues: [],
           summary: {
-            totalIntroduced: { count: 0 } as any,
-            totalResolved: { count: 0 } as any,
-            totalSuppressed: { count: 0 } as any,
+            totalIntroduced: IssueCount.create(0),
+            totalResolved: IssueCount.create(0),
+            totalSuppressed: IssueCount.create(0),
             byAnalyzer: [],
             byCategory: [],
           },
@@ -573,7 +573,12 @@ describe('AnalysisRun Aggregate', () => {
 
       // Verify arrays are copies
       const originalAnalyzerLength = summary.byAnalyzer.length;
-      summary.byAnalyzer.push({} as any);
+      summary.byAnalyzer.push({
+        analyzerShortcode: 'test' as AnalyzerShortcode,
+        introduced: IssueCount.create(0),
+        resolved: IssueCount.create(0),
+        suppressed: IssueCount.create(0),
+      });
       expect(run.summary.byAnalyzer).toHaveLength(originalAnalyzerLength);
     });
   });
