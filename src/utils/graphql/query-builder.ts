@@ -181,7 +181,7 @@ export class GraphQLQueryBuilder {
       let field = sel.alias ? `${sel.alias}: ${sel.name}` : sel.name;
 
       if (sel.args && Object.keys(sel.args).length > 0) {
-        const args = this.buildArguments(sel.args);
+        const args = GraphQLQueryBuilder.buildArguments(sel.args);
         field += `(${args})`;
       }
 
@@ -199,7 +199,7 @@ export class GraphQLQueryBuilder {
   /**
    * Builds argument string
    */
-  private buildArguments(args: Record<string, unknown>): string {
+  private static buildArguments(args: Record<string, unknown>): string {
     return Object.entries(args)
       .map(([key, value]) => {
         if (typeof value === 'string' && value.startsWith('$')) {

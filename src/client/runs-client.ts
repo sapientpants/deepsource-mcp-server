@@ -63,7 +63,7 @@ export class RunsClient extends BaseDeepSourceClient {
       }
 
       const normalizedParams = this.normalizePaginationParams(params);
-      const query = this.buildRunsQuery();
+      const query = RunsClient.buildRunsQuery();
 
       const response = await this.executeGraphQL(query, {
         login: project.repository.login,
@@ -112,7 +112,7 @@ export class RunsClient extends BaseDeepSourceClient {
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
         runIdentifier
       );
-      const query = isUuid ? this.buildRunByUidQuery() : this.buildRunByCommitQuery();
+      const query = isUuid ? RunsClient.buildRunByUidQuery() : RunsClient.buildRunByCommitQuery();
 
       const response = await this.executeGraphQL(query, {
         [isUuid ? 'runUid' : 'commitOid']: runIdentifier,
@@ -250,7 +250,7 @@ export class RunsClient extends BaseDeepSourceClient {
    * Builds the GraphQL query for fetching runs
    * @private
    */
-  private buildRunsQuery(): string {
+  private static buildRunsQuery(): string {
     return `
       query getRepositoryRuns(
         $login: String!
@@ -299,7 +299,7 @@ export class RunsClient extends BaseDeepSourceClient {
    * Builds GraphQL query for fetching a run by UID
    * @private
    */
-  private buildRunByUidQuery(): string {
+  private static buildRunByUidQuery(): string {
     return `
       query getRunByUid($runUid: UUID!) {
         run(runUid: $runUid) {
@@ -330,7 +330,7 @@ export class RunsClient extends BaseDeepSourceClient {
    * Builds GraphQL query for fetching a run by commit OID
    * @private
    */
-  private buildRunByCommitQuery(): string {
+  private static buildRunByCommitQuery(): string {
     return `
       query getRunByCommit($commitOid: String!) {
         runByCommit(commitOid: $commitOid) {
@@ -374,7 +374,7 @@ export class RunsClient extends BaseDeepSourceClient {
 
       for (const { node: run } of repoRuns) {
         const runNode = run as Record<string, unknown>;
-        runs.push(this.mapRunNode(runNode));
+        runs.push(RunsClient.mapRunNode(runNode));
       }
     } catch (error) {
       this.logger.error('Error extracting runs from response', { error });
@@ -396,7 +396,7 @@ export class RunsClient extends BaseDeepSourceClient {
         return null;
       }
 
-      return this.mapRunNode(runNode as Record<string, unknown>);
+      return RunsClient.mapRunNode(runNode as Record<string, unknown>);
     } catch (error) {
       this.logger.error('Error extracting single run from response', { error });
       return null;
@@ -407,7 +407,7 @@ export class RunsClient extends BaseDeepSourceClient {
    * Maps a run node from GraphQL to DeepSourceRun
    * @private
    */
-  private mapRunNode(runNode: Record<string, unknown>): DeepSourceRun {
+  private static mapRunNode(runNode: Record<string, unknown>): DeepSourceRun {
     const summary = (runNode.summary as Record<string, unknown>) || {};
     const repository = (runNode.repository as Record<string, unknown>) || {};
 

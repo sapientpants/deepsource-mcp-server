@@ -39,7 +39,7 @@ export class IssuesClient extends BaseDeepSourceClient {
       }
 
       const normalizedParams = this.normalizePaginationParams(params);
-      const query = this.buildIssuesQuery();
+      const query = IssuesClient.buildIssuesQuery();
 
       const response = await this.executeGraphQL(query, {
         login: project.repository.login,
@@ -95,7 +95,7 @@ export class IssuesClient extends BaseDeepSourceClient {
    * Builds the GraphQL query for fetching issues
    * @private
    */
-  private buildIssuesQuery(): string {
+  private static buildIssuesQuery(): string {
     return `
       query getRepositoryIssues(
         $login: String!

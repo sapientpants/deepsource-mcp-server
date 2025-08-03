@@ -167,7 +167,7 @@ export class EnhancedToolRegistry extends ToolRegistry {
           // Recursively scan subdirectories
           const subTools = await this.scanDirectory(fullPath, patterns, recursive, filters);
           discoveredTools.push(...subTools);
-        } else if (entry.isFile() && this.matchesPattern(entry.name, patterns)) {
+        } else if (entry.isFile() && EnhancedToolRegistry.matchesPattern(entry.name, patterns)) {
           // Try to load the tool
           const toolName = await this.loadToolFromFile(fullPath, filters);
           if (toolName) {
@@ -189,7 +189,7 @@ export class EnhancedToolRegistry extends ToolRegistry {
    * @param patterns - Patterns to match against
    * @returns True if matches any pattern
    */
-  private matchesPattern(filename: string, patterns: string[]): boolean {
+  private static matchesPattern(filename: string, patterns: string[]): boolean {
     return patterns.some((pattern) => {
       const regex = new RegExp(pattern.replace('*', '.*'));
       return regex.test(filename);
@@ -245,7 +245,7 @@ export class EnhancedToolRegistry extends ToolRegistry {
       }
 
       // Apply filters
-      if (!this.passesFilters(toolDef, filters)) {
+      if (!EnhancedToolRegistry.passesFilters(toolDef, filters)) {
         logger.debug(`Tool ${toolDef.name} filtered out`);
         return null;
       }
@@ -272,7 +272,7 @@ export class EnhancedToolRegistry extends ToolRegistry {
    * @param filters - Filters to apply
    * @returns True if passes all filters
    */
-  private passesFilters(
+  private static passesFilters(
     tool: EnhancedToolDefinition,
     filters: {
       includeCategories?: string[];
@@ -298,13 +298,13 @@ export class EnhancedToolRegistry extends ToolRegistry {
 
     // Tag filters
     if (filters.includeTags && filters.includeTags.length > 0) {
-      if (!metadata.tags || !metadata.tags.some((tag) => filters.includeTags!.includes(tag))) {
+      if (!metadata.tags || !metadata.tags.some((tag) => filters.includeTags?.includes(tag))) {
         return false;
       }
     }
 
     if (filters.excludeTags && filters.excludeTags.length > 0) {
-      if (metadata.tags && metadata.tags.some((tag) => filters.excludeTags!.includes(tag))) {
+      if (metadata.tags && metadata.tags.some((tag) => filters.excludeTags?.includes(tag))) {
         return false;
       }
     }

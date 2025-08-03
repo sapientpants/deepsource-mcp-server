@@ -28,13 +28,22 @@ jest.mock('../utils/logging/logger.js', () => ({
   })),
 }));
 
+// Define a type for registered tools
+interface RegisteredTool {
+  name: string;
+  description: string;
+  inputSchema?: unknown;
+  handler?: (..._args: unknown[]) => unknown;
+  [key: string]: unknown;
+}
+
 // Store registered tools - need to use a variable that persists across tests
-let registeredTools: Record<string, any> = {};
+let registeredTools: Record<string, RegisteredTool> = {};
 
 jest.mock('../server/tool-registry.js', () => ({
   ToolRegistry: jest.fn().mockImplementation(() => {
     // Create a new instance-specific tools object
-    const instanceTools: Record<string, any> = {};
+    const instanceTools: Record<string, RegisteredTool> = {};
 
     return {
       registerTool: jest.fn((tool) => {

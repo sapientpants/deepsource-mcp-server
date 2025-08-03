@@ -346,9 +346,7 @@ describe('SecurityClient', () => {
 
   describe('buildComplianceReportQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (
-        securityClient as unknown as SecurityClientTestable
-      ).buildComplianceReportQuery();
+      const query = (SecurityClient as any).buildComplianceReportQuery();
 
       expect(query).toContain('query getComplianceReports');
       expect(query).toContain('$login: String!');

@@ -340,7 +340,7 @@ describe('MetricsClient', () => {
 
   describe('buildQualityMetricsQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (metricsClient as unknown as MetricsClientTestable).buildQualityMetricsQuery();
+      const query = (MetricsClient as any).buildQualityMetricsQuery();
 
       expect(query).toContain('query getQualityMetrics');
       expect(query).toContain('$login: String!');
@@ -352,9 +352,7 @@ describe('MetricsClient', () => {
 
   describe('buildUpdateThresholdMutation', () => {
     it('should build correct GraphQL mutation', () => {
-      const mutation = (
-        metricsClient as unknown as MetricsClientTestable
-      ).buildUpdateThresholdMutation();
+      const mutation = (MetricsClient as any).buildUpdateThresholdMutation();
 
       expect(mutation).toContain('mutation updateMetricThreshold');
       expect(mutation).toContain('$repositoryId: ID!');
@@ -366,9 +364,7 @@ describe('MetricsClient', () => {
 
   describe('buildUpdateSettingMutation', () => {
     it('should build correct GraphQL mutation', () => {
-      const mutation = (
-        metricsClient as unknown as MetricsClientTestable
-      ).buildUpdateSettingMutation();
+      const mutation = (MetricsClient as any).buildUpdateSettingMutation();
 
       expect(mutation).toContain('mutation updateMetricSetting');
       expect(mutation).toContain('$repositoryId: ID!');

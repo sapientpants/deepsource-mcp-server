@@ -134,8 +134,8 @@ export class SecurityClient extends BaseDeepSourceClient {
         return null;
       }
 
-      const query = this.buildComplianceReportQuery();
-      const fieldName = this.getReportFieldName(reportType);
+      const query = SecurityClient.buildComplianceReportQuery();
+      const fieldName = SecurityClient.getReportFieldName(reportType);
 
       const response = await this.executeGraphQL(query, {
         login: project.repository.login,
@@ -227,7 +227,7 @@ export class SecurityClient extends BaseDeepSourceClient {
    * Builds GraphQL query for compliance reports
    * @private
    */
-  private buildComplianceReportQuery(): string {
+  private static buildComplianceReportQuery(): string {
     return `
       query getComplianceReports(
         $login: String!
@@ -294,8 +294,8 @@ export class SecurityClient extends BaseDeepSourceClient {
 
       for (const edge of vulnEdges) {
         const node = edge.node as Record<string, unknown>;
-        if (this.isValidVulnerabilityNode(node)) {
-          vulnerabilities.push(this.mapVulnerabilityOccurrence(node));
+        if (SecurityClient.isValidVulnerabilityNode(node)) {
+          vulnerabilities.push(SecurityClient.mapVulnerabilityOccurrence(node));
         }
       }
     } catch (error) {
@@ -309,7 +309,7 @@ export class SecurityClient extends BaseDeepSourceClient {
    * Validates if a vulnerability node has required structure
    * @private
    */
-  private isValidVulnerabilityNode(node: unknown): boolean {
+  private static isValidVulnerabilityNode(node: unknown): boolean {
     if (!node || typeof node !== 'object') {
       return false;
     }
@@ -323,7 +323,9 @@ export class SecurityClient extends BaseDeepSourceClient {
    * Maps a vulnerability node to VulnerabilityOccurrence
    * @private
    */
-  private mapVulnerabilityOccurrence(node: Record<string, unknown>): VulnerabilityOccurrence {
+  private static mapVulnerabilityOccurrence(
+    node: Record<string, unknown>
+  ): VulnerabilityOccurrence {
     const packageInfo = (node.package as Record<string, unknown>) || {};
     const packageVersion = (node.packageVersion as Record<string, unknown>) || {};
     const vulnerability = (node.vulnerability as Record<string, unknown>) || {};
@@ -427,7 +429,7 @@ export class SecurityClient extends BaseDeepSourceClient {
       return {
         reportType,
         status,
-        title: this.getReportTitle(reportType),
+        title: SecurityClient.getReportTitle(reportType),
         description: `${reportType.replace(/_/g, ' ')} compliance analysis`,
         severityDistribution: {
           critical: totalCritical,
@@ -449,7 +451,7 @@ export class SecurityClient extends BaseDeepSourceClient {
    * Gets the GraphQL field name for a report type
    * @private
    */
-  private getReportFieldName(reportType: ReportType): string {
+  private static getReportFieldName(reportType: ReportType): string {
     switch (reportType) {
       case ReportType.OWASP_TOP_10:
         return 'owaspTop10';
@@ -466,7 +468,7 @@ export class SecurityClient extends BaseDeepSourceClient {
    * Gets the human-readable title for a report type
    * @private
    */
-  private getReportTitle(reportType: ReportType): string {
+  private static getReportTitle(reportType: ReportType): string {
     switch (reportType) {
       case ReportType.OWASP_TOP_10:
         return 'OWASP Top 10';

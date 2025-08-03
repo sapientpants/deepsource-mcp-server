@@ -10,7 +10,6 @@
 import process from 'node:process';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { z } from 'zod';
 import { createLogger } from './utils/logging/logger.js';
 // import { RepositoryFactory } from './infrastructure/factories/repository.factory.js';
 import { ToolRegistry } from './server/tool-registry.js';

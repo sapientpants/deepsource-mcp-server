@@ -514,7 +514,7 @@ describe('RunsClient', () => {
 
   describe('buildRunsQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (runsClient as unknown as RunsClientTestable).buildRunsQuery();
+      const query = (RunsClient as any).buildRunsQuery();
 
       expect(query).toContain('query getRepositoryRuns');
       expect(query).toContain('$login: String!');
@@ -527,7 +527,7 @@ describe('RunsClient', () => {
 
   describe('buildRunByUidQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (runsClient as unknown as RunsClientTestable).buildRunByUidQuery();
+      const query = (RunsClient as any).buildRunByUidQuery();
 
       expect(query).toContain('query getRunByUid');
       expect(query).toContain('$runUid: UUID!');
@@ -537,7 +537,7 @@ describe('RunsClient', () => {
 
   describe('buildRunByCommitQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (runsClient as unknown as RunsClientTestable).buildRunByCommitQuery();
+      const query = (RunsClient as any).buildRunByCommitQuery();
 
       expect(query).toContain('query getRunByCommit');
       expect(query).toContain('$commitOid: String!');
@@ -678,7 +678,7 @@ describe('RunsClient', () => {
         },
       };
 
-      const run = (runsClient as unknown as RunsClientTestable).mapRunNode(mockNode);
+      const run = (RunsClient as any).mapRunNode(mockNode);
 
       expect(run.id).toBe('run-node-1');
       expect(run.runUid).toBe('f47ac10b-58cc-4372-a567-0e02b2c3d479');
@@ -700,7 +700,7 @@ describe('RunsClient', () => {
         repository: null,
       };
 
-      const run = (runsClient as unknown as RunsClientTestable).mapRunNode(mockNode);
+      const run = (RunsClient as any).mapRunNode(mockNode);
 
       expect(run.id).toBe('');
       expect(run.runUid).toBe('');

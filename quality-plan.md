@@ -2,207 +2,185 @@
 
 ## Overview
 
-This document outlines a comprehensive plan to address all 195 DeepSource issues identified in run `2e96d4fa-60b4-44b1-8a00-51a8484013f8` for the `refactor/improve-code-quality` branch.
+This document outlines a comprehensive plan to address all 59 issues identified in DeepSource run `cbc7544e-e615-40f0-a2fd-02f6f2bfd071` for the `refactor/improve-code-quality` branch.
 
 ## Issue Summary
 
-- **Total Issues**: 195
-- **Critical**: 84
-- **Major**: 41
-- **Minor**: 70
+- **Total Issues**: 59 (11 unique types)
+- **Critical**: 2
+- **Major**: 4
+- **Minor**: 53
 
 ## Detailed Issue Breakdown
 
-### 🔴 Critical Issues (84 occurrences)
+### 🔴 Critical Issues (2 occurrences)
 
-#### JS-0323: Detected usage of the `any` type (84 occurrences)
+#### JS-0323: Detected usage of the `any` type (2 occurrences)
 **Severity**: Critical  
-**Impact**: Type safety violations throughout the codebase  
+**Impact**: Type safety violations that bypass TypeScript's benefits  
 **Solution Strategy**:
-- Replace `any` with `unknown` for truly unknown types
+- Search for remaining `any` types in the codebase
+- Replace with `unknown` for truly unknown types
 - Use `Record<string, unknown>` for objects with unknown structure
-- Create specific interfaces and type definitions
-- Use generics for flexible but type-safe implementations
-- Add type guards and type predicates where necessary
+- Create specific interfaces where structure is known
+- Use generic types for flexible but type-safe implementations
+- Add type guards for runtime type checking where needed
 
-### 🟠 Major Issues (41 occurrences)
+### 🟠 Major Issues (4 occurrences)
 
-#### JS-0327: Classes used as namespaces (3 occurrences)
+#### JS-0356: Found unused variables in TypeScript code (2 occurrences)
 **Severity**: Major  
-**Impact**: Anti-pattern that misuses class syntax  
+**Impact**: Dead code that indicates incomplete implementations  
 **Solution Strategy**:
-- Convert static-only classes to modules with exported functions
-- Use TypeScript namespaces if logical grouping is required
-- Refactor to follow module pattern best practices
+- Identify and remove genuinely unused variables
+- Prefix with underscore (_) if intentionally unused (e.g., `_unusedParam`)
+- Use the variable if it was meant to be used
+- Update ESLint configuration to match project conventions
 
-#### JS-0356: Unused variables (2 occurrences)
-**Severity**: Major  
-**Impact**: Dead code that increases bundle size  
-**Solution Strategy**:
-- Remove genuinely unused variables
-- Prefix with underscore (_) if intentionally unused (e.g., caught errors)
-
-#### JS-0331: Unnecessary explicit type declarations (2 occurrences)
-**Severity**: Major  
-**Impact**: Verbose code that reduces readability  
-**Solution Strategy**:
-- Remove type annotations where TypeScript can infer
-- Keep explicit types only where they add clarity or constrain types
-
-#### JS-0339: Non-null assertions (5 occurrences)
+#### JS-0339: Found non-null assertions (2 occurrences)
 **Severity**: Major  
 **Impact**: Potential runtime errors from bypassing null checks  
 **Solution Strategy**:
-- Add proper null/undefined checks before access
-- Use optional chaining (`?.`) and nullish coalescing (`??`)
-- Validate data at boundaries (API responses, user input)
-- Throw early with descriptive errors if null is unexpected
+- Replace non-null assertions (!) with proper null checks
+- Use optional chaining (`?.`) for property access
+- Add explicit null/undefined checks before access
+- Refactor code to ensure values are non-null by design
+- Add runtime validation at API boundaries
 
-#### JS-E1004: Repeated named/default exports (30 occurrences)
-**Severity**: Major  
-**Impact**: Module organization issues and potential circular dependencies  
+### 🟡 Minor Issues (53 occurrences)
+
+#### JS-0105: Class methods should utilize `this` (30 occurrences)
+**Severity**: Minor  
+**Impact**: Methods that don't use instance data should be static  
 **Solution Strategy**:
-- Audit all index.ts files for duplicate exports
-- Implement proper barrel export pattern
-- Ensure each symbol is exported only once per module
-- Use re-exports carefully to avoid duplication
+- Review all 30 method occurrences
+- Convert to static methods if no instance data is used
+- Extract as standalone functions for utility logic
+- Refactor to use `this` if instance data should be accessed
+- Consider converting utility classes to modules
 
-#### JS-E1009: Mutable exports (1 occurrence)
-**Severity**: Major  
-**Impact**: Shared mutable state can cause bugs  
-**Solution Strategy**:
-- Convert mutable exports to immutable using `const`
-- Use `readonly` modifier for object properties
-- Consider factory functions if mutation is needed
-
-### 🟡 Minor Issues (70 occurrences)
-
-#### JS-0246: String concatenation instead of templates (2 occurrences)
+#### JS-0320: Detected the `delete` operator with computed key expressions (1 occurrence)
 **Severity**: Minor  
-**Solution**: Replace `+` concatenation with template literals
+**Solution**: Use object destructuring/spread or immutable patterns
 
-#### JS-0105: Class methods not using `this` (30 occurrences)
+#### JS-0358: Detected unnecessary constructors (4 occurrences)
 **Severity**: Minor  
-**Solution**: Convert to static methods or extract as standalone functions
+**Solution**: Remove constructors that only call super()
 
-#### JS-0320: Delete operator with computed keys (1 occurrence)
+#### JS-0321: Detected empty functions (4 occurrences)
 **Severity**: Minor  
-**Solution**: Use object rest/spread or `Omit` utility type
+**Solution**: Implement functionality, add TODO comments, or remove
 
-#### JS-0047: Missing default case in switch (1 occurrence)
+#### JS-0066: Found shorthand type coercions (1 occurrence)
 **Severity**: Minor  
-**Solution**: Add default case or use exhaustive type checking
+**Solution**: Use explicit `Boolean()` instead of `!!`
 
-#### JS-0358: Unnecessary constructors (4 occurrences)
-**Severity**: Minor  
-**Solution**: Remove constructors that only call super
-
-#### JS-0126: Variables initialized to undefined (1 occurrence)
-**Severity**: Minor  
-**Solution**: Declare without initialization
-
-#### JS-0321: Empty functions (4 occurrences)
-**Severity**: Minor  
-**Solution**: Add implementation, TODO comment, or remove
-
-#### JS-0098: Void operators (6 occurrences)
-**Severity**: Minor  
-**Solution**: Use proper return statements or remove
-
-#### JS-0066: Shorthand type coercions (2 occurrences)
-**Severity**: Minor  
-**Solution**: Use explicit Boolean() or Number() conversions
-
-#### JS-D1001: Missing documentation (8 occurrences)
+#### JS-D1001: Documentation comments not found for functions and classes (8 occurrences)
 **Severity**: Minor  
 **Solution**: Add JSDoc comments for public APIs
 
-#### JS-R1000: Multiple imports from same path (4 occurrences)
+#### JS-R1002: Found unused objects (1 occurrence)
 **Severity**: Minor  
-**Solution**: Combine imports from the same module
+**Solution**: Remove or use the unused object
 
-#### JS-R1004: Useless template literals (1 occurrence)
-**Severity**: Minor  
-**Solution**: Use regular strings when no interpolation
-
-#### JS-W1044: Logical operators instead of optional chaining (4 occurrences)
+#### JS-W1044: Logical operator can be refactored to optional chain (4 occurrences)
 **Severity**: Minor  
 **Solution**: Replace `&&` chains with `?.` operator
 
 ## Implementation Phases
 
-### Phase 1: Critical Issues (Day 1)
-**Goal**: Eliminate all type safety violations
-- [ ] Fix all 84 `any` type usages
-- [ ] Run type checking to ensure no regressions
-- [ ] Update tests affected by type changes
+### Phase 1: Critical & Major Issues (Priority 1 - 1 hour)
+**Goal**: Restore type safety and eliminate major issues
+- [ ] Fix 2 `any` type usages (JS-0323)
+- [ ] Remove/fix 2 unused variables (JS-0356)
+- [ ] Replace 2 non-null assertions (JS-0339)
+- [ ] Run type checking and tests after each fix
 
-### Phase 2: Major Anti-patterns (Day 2)
-**Goal**: Fix architectural issues
-- [ ] Refactor 3 namespace classes
-- [ ] Fix 5 non-null assertions
-- [ ] Resolve 30 repeated exports
-- [ ] Fix 1 mutable export
-- [ ] Remove 2 unused variables
-- [ ] Remove 2 unnecessary type declarations
+### Phase 2: High-Impact Minor Issues (Priority 2 - 2.5 hours)
+**Goal**: Address the bulk of code quality issues
+- [ ] Convert 30 class methods to static or standalone (JS-0105)
+- [ ] Add 8 JSDoc comments for public APIs (JS-D1001)
+- [ ] Implement or document 4 empty functions (JS-0321)
+- [ ] Remove 4 unnecessary constructors (JS-0358)
 
-### Phase 3: Code Quality (Day 3)
-**Goal**: Improve code maintainability
-- [ ] Convert 30 methods to static
-- [ ] Fix 2 string concatenations
-- [ ] Add missing switch default case
-- [ ] Remove 4 unnecessary constructors
-- [ ] Fix variable initialization
-- [ ] Implement 4 empty functions
-- [ ] Remove 6 void operators
-- [ ] Fix 2 type coercions
-
-### Phase 4: Polish (Day 4)
-**Goal**: Complete documentation and cleanup
-- [ ] Add 8 missing JSDoc comments
-- [ ] Consolidate 4 duplicate imports
-- [ ] Fix 1 useless template literal
-- [ ] Convert 4 logical operators to optional chaining
-- [ ] Fix 1 delete operator usage
-- [ ] Run final DeepSource analysis
-- [ ] Ensure 100% issue resolution
-
-## Success Metrics
-
-- **Zero** DeepSource issues remaining
-- **100%** type safety (no `any` types)
-- **Improved** code maintainability score
-- **All tests** passing
-- **No** performance regressions
+### Phase 3: Code Cleanup (Priority 3 - 30 minutes)
+**Goal**: Final polish and modernization
+- [ ] Replace 4 logical operators with optional chaining (JS-W1044)
+- [ ] Fix 1 shorthand type coercion (JS-0066)
+- [ ] Remove 1 delete operator usage (JS-0320)
+- [ ] Remove 1 unused object (JS-R1002)
+- [ ] Run final validation
 
 ## Testing Strategy
 
-1. **Unit Tests**: Update/add tests for all modified code
-2. **Type Tests**: Ensure TypeScript compilation with strict mode
-3. **Integration Tests**: Verify MCP handlers work correctly
-4. **Manual Testing**: Test critical paths in development environment
+After each phase, run:
+```bash
+# Type checking
+pnpm run check-types
 
-## Rollback Plan
+# Linting
+pnpm run lint
 
-- Each phase will be committed separately
-- Create a backup branch before starting
-- Maintain compatibility with existing API contracts
-- Document any breaking changes (though none are expected)
+# Tests
+pnpm test
+
+# Build verification
+pnpm run build
+```
+
+## Success Metrics
+
+- **Zero** critical issues
+- **Zero** major issues  
+- **Significant reduction** in minor issues (aim for <10)
+- **All tests** passing
+- **No regressions** in functionality
+- **Improved** DeepSource grade
+
+## Implementation Notes
+
+### For JS-0105 (Class methods not using `this`)
+1. Check if method accesses instance properties/methods
+2. If not, make it static: `static methodName() { ... }`
+3. For utility methods, consider extracting to separate functions
+4. Update all call sites when changing method signatures
+
+### For JS-D1001 (Missing documentation)
+Focus on public/exported APIs:
+```typescript
+/**
+ * Brief description of the function
+ * @param paramName - Description of parameter
+ * @returns Description of return value
+ * @throws {ErrorType} Description of when this error is thrown
+ */
+```
+
+### For JS-W1044 (Optional chaining)
+Replace patterns like:
+```typescript
+// Before
+const value = obj && obj.prop && obj.prop.nested;
+
+// After  
+const value = obj?.prop?.nested;
+```
 
 ## Timeline
 
-- **Total Duration**: 4 days
-- **Daily Progress**: ~50 issues per day
-- **Review Checkpoints**: After each phase
-- **Final Validation**: Complete DeepSource scan
+- **Day 1 Morning (2 hours)**: Complete Phase 1 and start Phase 2
+- **Day 1 Afternoon (2 hours)**: Complete Phase 2 and Phase 3
+- **Day 1 End**: Run DeepSource analysis to verify improvements
 
-## Notes
+Total estimated time: ~4 hours of focused work
 
-- Priority given to critical issues that affect type safety
-- Architectural improvements (namespace classes) addressed early
-- Minor issues batched for efficiency
-- Documentation added as final step to ensure it reflects final implementation
+## Rollback Plan
+
+- Commit after each phase completion
+- Use descriptive commit messages
+- Keep changes atomic and reversible
+- No breaking API changes expected
 
 ---
 
-*This plan addresses all 195 issues identified in DeepSource run 2e96d4fa-60b4-44b1-8a00-51a8484013f8*
+*This plan addresses all 59 issues identified in DeepSource run cbc7544e-e615-40f0-a2fd-02f6f2bfd071*

@@ -215,7 +215,7 @@ describe('IssuesClient', () => {
 
   describe('buildIssuesQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (issuesClient as unknown as IssuesClientTestable).buildIssuesQuery();
+      const query = (IssuesClient as any).buildIssuesQuery();
 
       expect(query).toContain('query getRepositoryIssues');
       expect(query).toContain('$login: String!');

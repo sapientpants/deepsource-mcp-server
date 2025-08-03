@@ -49,7 +49,7 @@ export class MetricsClient extends BaseDeepSourceClient {
         return [];
       }
 
-      const query = this.buildQualityMetricsQuery();
+      const query = MetricsClient.buildQualityMetricsQuery();
       const response = await this.executeGraphQL(query, {
         login: project.repository.login,
         name: project.repository.name,
@@ -89,7 +89,7 @@ export class MetricsClient extends BaseDeepSourceClient {
         metricKey: params.metricKey,
       });
 
-      const mutation = this.buildUpdateThresholdMutation();
+      const mutation = MetricsClient.buildUpdateThresholdMutation();
       const response = await this.executeGraphQL(mutation, { ...params });
 
       if (!response.data) {
@@ -119,7 +119,7 @@ export class MetricsClient extends BaseDeepSourceClient {
         metricShortcode: params.metricShortcode,
       });
 
-      const mutation = this.buildUpdateSettingMutation();
+      const mutation = MetricsClient.buildUpdateSettingMutation();
       const response = await this.executeGraphQL(mutation, { ...params });
 
       if (!response.data) {
@@ -159,7 +159,7 @@ export class MetricsClient extends BaseDeepSourceClient {
         throw new Error(`Project with key ${params.projectKey} not found`);
       }
 
-      const query = this.buildMetricHistoryQuery();
+      const query = MetricsClient.buildMetricHistoryQuery();
       const response = await this.executeGraphQL(query, {
         login: project.repository.login,
         name: project.repository.name,
@@ -192,7 +192,7 @@ export class MetricsClient extends BaseDeepSourceClient {
    * Builds GraphQL query for quality metrics
    * @private
    */
-  private buildQualityMetricsQuery(): string {
+  private static buildQualityMetricsQuery(): string {
     return `
       query getQualityMetrics(
         $login: String!
@@ -227,7 +227,7 @@ export class MetricsClient extends BaseDeepSourceClient {
    * Builds GraphQL mutation for updating metric threshold
    * @private
    */
-  private buildUpdateThresholdMutation(): string {
+  private static buildUpdateThresholdMutation(): string {
     return `
       mutation updateMetricThreshold(
         $repositoryId: ID!
@@ -251,7 +251,7 @@ export class MetricsClient extends BaseDeepSourceClient {
    * Builds GraphQL mutation for updating metric setting
    * @private
    */
-  private buildUpdateSettingMutation(): string {
+  private static buildUpdateSettingMutation(): string {
     return `
       mutation updateMetricSetting(
         $repositoryId: ID!
@@ -275,7 +275,7 @@ export class MetricsClient extends BaseDeepSourceClient {
    * Builds GraphQL query for metric history
    * @private
    */
-  private buildMetricHistoryQuery(): string {
+  private static buildMetricHistoryQuery(): string {
     return `
       query getMetricHistory(
         $login: String!
@@ -404,7 +404,7 @@ export class MetricsClient extends BaseDeepSourceClient {
         unit: metricData.unit ? String(metricData.unit) : '',
         positiveDirection: 'UPWARD' as MetricDirection,
         threshold: null,
-        isTrendingPositive: this.calculateTrend(values) === 'improving',
+        isTrendingPositive: MetricsClient.calculateTrend(values) === 'improving',
         values,
       };
     } catch (error) {
@@ -417,7 +417,7 @@ export class MetricsClient extends BaseDeepSourceClient {
    * Calculates trend from metric history values
    * @private
    */
-  private calculateTrend(
+  private static calculateTrend(
     values: Array<{ value: number; createdAt: string }>
   ): 'improving' | 'declining' | 'stable' {
     if (values.length < 2) {

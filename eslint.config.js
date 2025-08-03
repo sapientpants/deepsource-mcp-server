@@ -61,7 +61,8 @@ export default [
         vars: 'all', 
         args: 'after-used', 
         ignoreRestSiblings: false,
-        varsIgnorePattern: '^(jest)$'
+        varsIgnorePattern: '^(jest)$',
+        argsIgnorePattern: '^_'
       }]
     }
   },

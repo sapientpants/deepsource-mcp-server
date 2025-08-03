@@ -25,7 +25,8 @@ jest.mock('../../client/base-client.js', () => ({
 // Test helper class to expose private methods for testing
 class TestableMetricsClient extends MetricsClient {
   testBuildMetricHistoryQuery() {
-    return (this as unknown as MetricsClientTestable).buildMetricHistoryQuery();
+    // buildMetricHistoryQuery is now a static method
+    return (MetricsClient as any).buildMetricHistoryQuery();
   }
 
   testExtractHistoryFromResponse(data: unknown, params: unknown) {
@@ -33,7 +34,8 @@ class TestableMetricsClient extends MetricsClient {
   }
 
   testCalculateTrend(values: unknown[]) {
-    return (this as unknown as MetricsClientTestable).calculateTrend(values);
+    // calculateTrend is now a static method
+    return (MetricsClient as any).calculateTrend(values);
   }
 
   testHandleMetricsError(error: unknown) {
