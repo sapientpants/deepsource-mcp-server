@@ -79,11 +79,11 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
 
     it('should export an mcpServer instance', () => {
       expect(indexModule.mcpServer).toBeDefined();
-      expect(indexModule.mcpServer.mcpServer).toBeDefined();
+      expect(indexModule.mcpServer.current).toBeDefined();
     });
 
     it('should have server with correct name and version', () => {
-      const server = indexModule.mcpServer;
+      const server = indexModule.mcpServer.current;
       expect(server).toBeDefined();
       // The server is now a DeepSourceMCPServer wrapper
       expect(server.getRegisteredTools).toBeDefined();

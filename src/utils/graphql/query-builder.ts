@@ -223,7 +223,7 @@ export class GraphQLQueryBuilder {
       fragmentDefs.push(`fragment ${fragment.name} on ${fragment.type} {${fields}\n}`);
     });
 
-    return '\n' + fragmentDefs.join('\n');
+    return `\n${fragmentDefs.join('\n')}`;
   }
 
   /**

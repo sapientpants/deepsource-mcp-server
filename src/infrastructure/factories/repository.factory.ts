@@ -60,7 +60,7 @@ export class RepositoryFactory {
   constructor(config: RepositoryConfig) {
     this.config = config;
     logger.debug('Repository factory initialized', {
-      hasApiKey: !!config.apiKey,
+      hasApiKey: Boolean(config.apiKey),
       baseUrl: config.baseUrl,
     });
   }

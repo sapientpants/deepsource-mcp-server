@@ -370,7 +370,7 @@ describe('withMCPErrorHandling', () => {
       isError: true,
     });
 
-    const responseText = (result as any).content[0].text;
+    const responseText = (result as { content: Array<{ text: string }> }).content[0].text;
     const responseData = JSON.parse(responseText);
     expect(responseData.error).toBe('Validation failed: Invalid input');
     expect(responseData.code).toBe(MCPErrorCode.VALIDATION_ERROR);
@@ -415,7 +415,7 @@ describe('Validation functions', () => {
     });
 
     it('should throw error for non-string', () => {
-      expect(() => validateNonEmptyString(123 as any, 'field')).toThrow(
+      expect(() => validateNonEmptyString(123 as unknown as string, 'field')).toThrow(
         'field must be a non-empty string'
       );
     });
@@ -445,7 +445,7 @@ describe('Validation functions', () => {
     });
 
     it('should throw error for non-number', () => {
-      expect(() => validateNumberRange('5' as any, 'field')).toThrow(
+      expect(() => validateNumberRange('5' as unknown as number, 'field')).toThrow(
         'field must be a valid number'
       );
       expect(() => validateNumberRange(NaN, 'field')).toThrow('field must be a valid number');

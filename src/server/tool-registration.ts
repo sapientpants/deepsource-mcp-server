@@ -279,13 +279,6 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
   },
 };
 
-// Use enum values to prevent ESLint warnings
-void ToolCategory.PROJECT_MANAGEMENT;
-void ToolCategory.CODE_QUALITY;
-void ToolCategory.SECURITY;
-void ToolCategory.ANALYSIS;
-void ToolCategory.DEPENDENCIES;
-
 /**
  * Gets tools by category
  *

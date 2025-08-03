@@ -158,7 +158,7 @@ export class RunsClient extends BaseDeepSourceClient {
 
       let mostRecentRun: DeepSourceRun | null = null;
       let hasNextPage = true;
-      let after: string | undefined = undefined;
+      let after: string | undefined;
 
       // Paginate through runs to find the most recent for the specific branch
       while (hasNextPage) {

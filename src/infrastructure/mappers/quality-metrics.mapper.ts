@@ -147,8 +147,8 @@ export function createMetricHistoryEntry(
   commitOid: string,
   recordedAt: Date,
   unit: string,
-  minAllowed: number = 0,
-  maxAllowed: number = 100
+  minAllowed = 0,
+  maxAllowed = 100
 ): MetricHistoryEntry {
   const metricValue = MetricValue.create(
     value,

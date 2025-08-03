@@ -9,6 +9,7 @@ import { AggregateRoot } from '../../shared/aggregate-root.js';
 import { ProjectKey, GraphQLNodeId } from '../../../types/branded.js';
 import { ReportType } from '../../../types/report-types.js';
 import { IssueCount } from '../../value-objects/issue-count.js';
+import { createLogger } from '../../../utils/logging/logger.js';
 import {
   ComplianceReportId,
   ComplianceReportStatus,
@@ -21,6 +22,8 @@ import {
   UpdateCategoriesParams,
   UpdateTrendParams,
 } from './compliance-report.types.js';
+
+const logger = createLogger('ComplianceReport');
 
 /**
  * ComplianceReport aggregate root
@@ -167,6 +170,10 @@ export class ComplianceReport extends AggregateRoot<string> {
           break;
         case 'INFO':
           severityDistribution.info = severityDistribution.info.add(category.nonCompliant);
+          break;
+        default:
+          // Log unexpected severity level but continue processing
+          logger.warn(`Unexpected severity level: ${category.severity}`);
           break;
       }
     }
@@ -426,7 +433,7 @@ export class ComplianceReport extends AggregateRoot<string> {
     }
 
     return {
-      label: `Compared to previous report`,
+      label: 'Compared to previous report',
       value: currentScore,
       changePercentage,
       direction,

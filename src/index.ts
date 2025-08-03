@@ -16,8 +16,18 @@ import { DeepSourceMCPServer } from './server/mcp-server.js';
 // Create logger instance for index.ts
 const logger = createLogger('DeepSourceMCP:index');
 
-// Export the server instance for backward compatibility
-export let mcpServer: DeepSourceMCPServer;
+// Internal mutable reference
+let _mcpServer: DeepSourceMCPServer | undefined;
+
+// Export an immutable getter for backward compatibility
+export const mcpServer = {
+  get current(): DeepSourceMCPServer {
+    if (!_mcpServer) {
+      throw new Error('MCP server not initialized. Call initializeServer() first.');
+    }
+    return _mcpServer;
+  },
+};
 
 // Initialize the DeepSource MCP server
 async function initializeServer(): Promise<void> {
@@ -25,13 +35,13 @@ async function initializeServer(): Promise<void> {
     logger.info('Initializing DeepSource MCP Server');
 
     // Create server with default configuration
-    mcpServer = await DeepSourceMCPServer.create({
+    _mcpServer = await DeepSourceMCPServer.create({
       autoRegisterTools: true,
       autoStart: false,
     });
 
     logger.info('DeepSource MCP Server initialized successfully', {
-      tools: mcpServer.getRegisteredTools(),
+      tools: _mcpServer.getRegisteredTools(),
     });
   } catch (error) {
     logger.error('Failed to initialize DeepSource MCP Server', error);
@@ -41,10 +51,7 @@ async function initializeServer(): Promise<void> {
 
 // Export functions for backward compatibility
 export function getMcpServer() {
-  if (!mcpServer) {
-    throw new Error('MCP server not initialized. Call initializeServer() first.');
-  }
-  return mcpServer.getMcpServer();
+  return mcpServer.current.getMcpServer();
 }
 
 // Main entry point
@@ -57,7 +64,7 @@ async function main(): Promise<void> {
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'test') {
       logger.info('Starting MCP server...');
-      await mcpServer.start();
+      await mcpServer.current.start();
       logger.info('MCP server started successfully');
     }
   } catch (error) {

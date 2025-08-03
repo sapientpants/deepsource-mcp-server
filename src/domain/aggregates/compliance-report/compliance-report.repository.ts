@@ -8,8 +8,7 @@ import { IRepository } from '../../shared/repository.interface.js';
 import { ComplianceReport } from './compliance-report.aggregate.js';
 import { ProjectKey } from '../../../types/branded.js';
 import { ReportType } from '../../../types/report-types.js';
-import { ComplianceReportStatus } from './compliance-report.types.js';
-import { ComplianceReportId } from './compliance-report.types.js';
+import { ComplianceReportStatus, ComplianceReportId } from './compliance-report.types.js';
 
 /**
  * Repository interface for ComplianceReport aggregates

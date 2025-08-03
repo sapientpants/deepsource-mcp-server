@@ -40,6 +40,6 @@ describe('index.ts module loading', () => {
   it('should export mcpServer', async () => {
     const { mcpServer } = await import('../index.js');
     expect(mcpServer).toBeDefined();
-    expect(mcpServer.mcpServer).toBeDefined();
+    expect(mcpServer.current).toBeDefined();
   });
 });

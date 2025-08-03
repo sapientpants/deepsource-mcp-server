@@ -264,7 +264,7 @@ describe('QualityMetricsRepository', () => {
         items: metric.items.map((item) => ({
           ...item,
           latestValue: item.threshold ? item.threshold + 5 : 85, // Ensure value > threshold
-          thresholdStatus: 'PASSING' as any,
+          thresholdStatus: 'PASSING' as const,
         })),
       }));
       mockClient.getQualityMetrics.mockResolvedValue(passingMetrics);

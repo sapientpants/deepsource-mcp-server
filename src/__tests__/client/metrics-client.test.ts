@@ -5,6 +5,7 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { MetricsClient } from '../../client/metrics-client.js';
+import type { MetricsClientTestable } from '../test-types.js';
 
 // Mock the base client
 jest.mock('../../client/base-client.js', () => ({
@@ -32,8 +33,8 @@ describe('MetricsClient', () => {
     mockFindProjectByKey = jest.fn();
 
     // Replace the methods on the instance
-    (metricsClient as any).executeGraphQL = mockExecuteGraphQL;
-    (metricsClient as any).findProjectByKey = mockFindProjectByKey;
+    (metricsClient as unknown as Record<string, unknown>).executeGraphQL = mockExecuteGraphQL;
+    (metricsClient as unknown as Record<string, unknown>).findProjectByKey = mockFindProjectByKey;
   });
 
   describe('getQualityMetrics', () => {
@@ -339,7 +340,7 @@ describe('MetricsClient', () => {
 
   describe('buildQualityMetricsQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (metricsClient as any).buildQualityMetricsQuery();
+      const query = (metricsClient as unknown as MetricsClientTestable).buildQualityMetricsQuery();
 
       expect(query).toContain('query getQualityMetrics');
       expect(query).toContain('$login: String!');
@@ -351,7 +352,9 @@ describe('MetricsClient', () => {
 
   describe('buildUpdateThresholdMutation', () => {
     it('should build correct GraphQL mutation', () => {
-      const mutation = (metricsClient as any).buildUpdateThresholdMutation();
+      const mutation = (
+        metricsClient as unknown as MetricsClientTestable
+      ).buildUpdateThresholdMutation();
 
       expect(mutation).toContain('mutation updateMetricThreshold');
       expect(mutation).toContain('$repositoryId: ID!');
@@ -363,7 +366,9 @@ describe('MetricsClient', () => {
 
   describe('buildUpdateSettingMutation', () => {
     it('should build correct GraphQL mutation', () => {
-      const mutation = (metricsClient as any).buildUpdateSettingMutation();
+      const mutation = (
+        metricsClient as unknown as MetricsClientTestable
+      ).buildUpdateSettingMutation();
 
       expect(mutation).toContain('mutation updateMetricSetting');
       expect(mutation).toContain('$repositoryId: ID!');
@@ -399,7 +404,9 @@ describe('MetricsClient', () => {
         },
       };
 
-      const metrics = (metricsClient as any).extractMetricsFromResponse(mockResponseData);
+      const metrics = (
+        metricsClient as unknown as MetricsClientTestable
+      ).extractMetricsFromResponse(mockResponseData);
 
       expect(metrics).toHaveLength(1);
       expect(metrics[0].shortcode).toBe('LCV');
@@ -413,7 +420,9 @@ describe('MetricsClient', () => {
         repository: {},
       };
 
-      const metrics = (metricsClient as any).extractMetricsFromResponse(mockResponseData);
+      const metrics = (
+        metricsClient as unknown as MetricsClientTestable
+      ).extractMetricsFromResponse(mockResponseData);
 
       expect(metrics).toHaveLength(0);
     });
@@ -421,7 +430,9 @@ describe('MetricsClient', () => {
     it('should handle missing repository in response', () => {
       const mockResponseData = {};
 
-      const metrics = (metricsClient as any).extractMetricsFromResponse(mockResponseData);
+      const metrics = (
+        metricsClient as unknown as MetricsClientTestable
+      ).extractMetricsFromResponse(mockResponseData);
 
       expect(metrics).toHaveLength(0);
     });

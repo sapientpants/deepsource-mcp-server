@@ -5,6 +5,7 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { IssuesClient } from '../../client/issues-client.js';
+import type { IssuesClientTestable, MockDeepSourceClient } from '../test-types.js';
 
 // Mock the base client
 jest.mock('../../client/base-client.js', () => ({
@@ -24,16 +25,11 @@ jest.mock('../../client/base-client.js', () => ({
 
 describe('IssuesClient', () => {
   let issuesClient: IssuesClient;
-  let mockBaseClient: {
-    findProjectByKey: jest.Mock;
-    executeGraphQL: jest.Mock;
-    createEmptyPaginatedResponse: jest.Mock;
-    normalizePaginationParams: jest.Mock;
-  };
+  let mockBaseClient: MockDeepSourceClient;
 
   beforeEach(() => {
     issuesClient = new IssuesClient('test-api-key');
-    mockBaseClient = issuesClient as any;
+    mockBaseClient = issuesClient as unknown as MockDeepSourceClient;
   });
 
   describe('getIssues', () => {
@@ -219,7 +215,7 @@ describe('IssuesClient', () => {
 
   describe('buildIssuesQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (issuesClient as any).buildIssuesQuery();
+      const query = (issuesClient as unknown as IssuesClientTestable).buildIssuesQuery();
 
       expect(query).toContain('query getRepositoryIssues');
       expect(query).toContain('$login: String!');
@@ -264,7 +260,9 @@ describe('IssuesClient', () => {
         },
       };
 
-      const issues = (issuesClient as any).extractIssuesFromResponse(mockResponseData);
+      const issues = (issuesClient as unknown as IssuesClientTestable).extractIssuesFromResponse(
+        mockResponseData
+      );
 
       expect(issues).toHaveLength(1);
       expect(issues[0].id).toBe('occ-1'); // Uses occurrence ID as issue ID
@@ -277,7 +275,9 @@ describe('IssuesClient', () => {
         repository: {},
       };
 
-      const issues = (issuesClient as any).extractIssuesFromResponse(mockResponseData);
+      const issues = (issuesClient as unknown as IssuesClientTestable).extractIssuesFromResponse(
+        mockResponseData
+      );
 
       expect(issues).toHaveLength(0);
     });
@@ -304,7 +304,9 @@ describe('IssuesClient', () => {
         },
       };
 
-      const issues = (issuesClient as any).extractIssuesFromResponse(mockResponseData);
+      const issues = (issuesClient as unknown as IssuesClientTestable).extractIssuesFromResponse(
+        mockResponseData
+      );
 
       expect(issues).toHaveLength(0); // No occurrences means no issues
     });
@@ -314,7 +316,7 @@ describe('IssuesClient', () => {
     it('should return empty response for NoneType errors', () => {
       const error = new Error('NoneType error');
 
-      const result = (issuesClient as any).handleIssuesError(error);
+      const result = (issuesClient as unknown as IssuesClientTestable).handleIssuesError(error);
 
       expect(result.items).toHaveLength(0);
       expect(result.totalCount).toBe(0);
@@ -325,7 +327,7 @@ describe('IssuesClient', () => {
       const error = new Error('Other error');
 
       expect(() => {
-        (issuesClient as any).handleIssuesError(error);
+        (issuesClient as unknown as IssuesClientTestable).handleIssuesError(error);
       }).toThrow('Other error');
     });
   });

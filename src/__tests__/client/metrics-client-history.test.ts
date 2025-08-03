@@ -6,6 +6,7 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { MetricsClient } from '../../client/metrics-client.js';
 import { MetricShortcode, MetricKey } from '../../types/metrics.js';
+import type { MetricsClientTestable } from '../test-types.js';
 
 // Mock the base client
 jest.mock('../../client/base-client.js', () => ({
@@ -24,27 +25,27 @@ jest.mock('../../client/base-client.js', () => ({
 // Test helper class to expose private methods for testing
 class TestableMetricsClient extends MetricsClient {
   testBuildMetricHistoryQuery() {
-    return (this as any).buildMetricHistoryQuery();
+    return (this as unknown as MetricsClientTestable).buildMetricHistoryQuery();
   }
 
   testExtractHistoryFromResponse(data: unknown, params: unknown) {
-    return (this as any).extractHistoryFromResponse(data, params);
+    return (this as unknown as MetricsClientTestable).extractHistoryFromResponse(data, params);
   }
 
   testCalculateTrend(values: unknown[]) {
-    return (this as any).calculateTrend(values);
+    return (this as unknown as MetricsClientTestable).calculateTrend(values);
   }
 
   testHandleMetricsError(error: unknown) {
-    return (this as any).handleMetricsError(error);
+    return (this as unknown as MetricsClientTestable).handleMetricsError(error);
   }
 
   testExtractMetricsFromResponse(data: unknown) {
-    return (this as any).extractMetricsFromResponse(data);
+    return (this as unknown as MetricsClientTestable).extractMetricsFromResponse(data);
   }
 
   testHandleTestEnvironment(params: unknown) {
-    return (this as any).handleTestEnvironment(params);
+    return (this as unknown as MetricsClientTestable).handleTestEnvironment(params);
   }
 }
 

@@ -6,6 +6,8 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { AnalysisRunRepository } from '../analysis-run.repository.js';
 import { DeepSourceClient } from '../../../deepsource.js';
 import { DeepSourceRun } from '../../../models/runs.js';
+import type { Project } from '../../../models/projects.js';
+import type { PaginatedRunResponse } from '../../../client/runs-client.js';
 import {
   asRunId,
   asProjectKey,
@@ -127,7 +129,11 @@ describe('AnalysisRunRepository', () => {
     it('should find run by ID', async () => {
       const runId = asRunId('run-1');
       mockClient.listProjects.mockResolvedValue([
-        { key: asProjectKey('test-project'), name: 'Test Project', repository: {} as any },
+        {
+          key: asProjectKey('test-project'),
+          name: 'Test Project',
+          repository: {},
+        } as unknown as Project,
       ]);
 
       const run = await repository.findById(runId);
@@ -144,7 +150,11 @@ describe('AnalysisRunRepository', () => {
 
     it('should return null when run not found', async () => {
       mockClient.listProjects.mockResolvedValue([
-        { key: asProjectKey('test-project'), name: 'Test Project', repository: {} as any },
+        {
+          key: asProjectKey('test-project'),
+          name: 'Test Project',
+          repository: {},
+        } as unknown as Project,
       ]);
 
       const run = await repository.findById(asRunId('non-existent'));
@@ -154,21 +164,21 @@ describe('AnalysisRunRepository', () => {
 
     it('should search through multiple projects', async () => {
       mockClient.listProjects.mockResolvedValue([
-        { key: asProjectKey('project-1'), name: 'Project 1', repository: {} as any },
-        { key: asProjectKey('project-2'), name: 'Project 2', repository: {} as any },
+        { key: asProjectKey('project-1'), name: 'Project 1', repository: {} } as unknown as Project,
+        { key: asProjectKey('project-2'), name: 'Project 2', repository: {} } as unknown as Project,
       ]);
 
       // First project returns empty
       mockClient.listRuns.mockResolvedValueOnce({
         items: [],
         pageInfo: { hasNextPage: false, hasPreviousPage: false },
-      } as any);
+      } as PaginatedRunResponse);
 
       // Second project has the run
       mockClient.listRuns.mockResolvedValueOnce({
         items: [mockApiRuns[0]],
         pageInfo: { hasNextPage: false, hasPreviousPage: false },
-      } as any);
+      } as PaginatedRunResponse);
 
       const run = await repository.findById(asRunId('run-1'));
 
@@ -178,7 +188,11 @@ describe('AnalysisRunRepository', () => {
 
     it('should handle pagination when searching', async () => {
       mockClient.listProjects.mockResolvedValue([
-        { key: asProjectKey('test-project'), name: 'Test Project', repository: {} as any },
+        {
+          key: asProjectKey('test-project'),
+          name: 'Test Project',
+          repository: {},
+        } as unknown as Project,
       ]);
 
       // First page doesn't have the run
@@ -189,13 +203,13 @@ describe('AnalysisRunRepository', () => {
           hasPreviousPage: false,
           endCursor: 'cursor-1',
         },
-      } as any);
+      } as PaginatedRunResponse);
 
       // Second page has the run
       mockClient.listRuns.mockResolvedValueOnce({
         items: [mockApiRuns[0]],
         pageInfo: { hasNextPage: false, hasPreviousPage: true },
-      } as any);
+      } as PaginatedRunResponse);
 
       const run = await repository.findById(asRunId('run-1'));
 
@@ -235,7 +249,7 @@ describe('AnalysisRunRepository', () => {
       mockClient.listRuns.mockResolvedValue({
         items: [],
         pageInfo: { hasNextPage: false, hasPreviousPage: false },
-      } as any);
+      } as PaginatedRunResponse);
 
       const result = await repository.findByProject(asProjectKey('test-project'), {
         page: 1,
@@ -278,7 +292,7 @@ describe('AnalysisRunRepository', () => {
       mockClient.listRuns.mockResolvedValue({
         items: [],
         pageInfo: { hasNextPage: false, hasPreviousPage: false },
-      } as any);
+      } as PaginatedRunResponse);
 
       const run = await repository.findMostRecent(asProjectKey('test-project'));
 
@@ -319,7 +333,7 @@ describe('AnalysisRunRepository', () => {
           hasPreviousPage: false,
           endCursor: 'cursor-1',
         },
-      } as any);
+      } as PaginatedRunResponse);
 
       // Second page has the commit
       const runOnPage2 = {
@@ -330,7 +344,7 @@ describe('AnalysisRunRepository', () => {
       mockClient.listRuns.mockResolvedValueOnce({
         items: [runOnPage2],
         pageInfo: { hasNextPage: false, hasPreviousPage: true },
-      } as any);
+      } as PaginatedRunResponse);
 
       const run = await repository.findByCommit(projectKey, commitOid);
 
@@ -376,7 +390,7 @@ describe('AnalysisRunRepository', () => {
       mockClient.listRuns.mockResolvedValue({
         items: moreRuns,
         pageInfo: { hasNextPage: false, hasPreviousPage: false },
-      } as any);
+      } as PaginatedRunResponse);
 
       const result = await repository.findByStatus(asProjectKey('test-project'), 'SUCCESS', {
         page: 2,
@@ -420,13 +434,13 @@ describe('AnalysisRunRepository', () => {
           hasPreviousPage: false,
           endCursor: 'cursor-1',
         },
-      } as any);
+      } as PaginatedRunResponse);
 
       // Second page has runs before start date
       mockClient.listRuns.mockResolvedValueOnce({
         items: [mockApiRuns[2]], // This is from 2024-01-13
         pageInfo: { hasNextPage: true, hasPreviousPage: true },
-      } as any);
+      } as PaginatedRunResponse);
 
       const result = await repository.findByDateRange(projectKey, startDate, endDate, {
         page: 1,
@@ -475,13 +489,13 @@ describe('AnalysisRunRepository', () => {
           hasPreviousPage: false,
           endCursor: 'cursor-1',
         },
-      } as any);
+      } as PaginatedRunResponse);
 
       // Second page
       mockClient.listRuns.mockResolvedValueOnce({
         items: Array(50).fill(mockApiRuns[0]),
         pageInfo: { hasNextPage: false, hasPreviousPage: true },
-      } as any);
+      } as PaginatedRunResponse);
 
       const count = await repository.countByProject(projectKey);
 

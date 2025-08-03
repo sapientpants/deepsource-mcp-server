@@ -219,7 +219,7 @@ describe('Project Aggregate', () => {
         ...validParams,
         status: 'ACTIVE' as const,
         configuration: {
-          ...validParams.configuration!,
+          ...validParams.configuration,
           isActivated: true,
         },
         createdAt: new Date(),
@@ -266,7 +266,7 @@ describe('Project Aggregate', () => {
       const inactiveParams = {
         ...validParams,
         configuration: {
-          ...validParams.configuration!,
+          ...validParams.configuration,
           isActivated: false,
         },
       };

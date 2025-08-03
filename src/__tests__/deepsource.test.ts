@@ -2,6 +2,7 @@ import nock from 'nock';
 import { jest } from '@jest/globals';
 import { AxiosError } from 'axios';
 import { DeepSourceClient } from '../deepsource';
+import type { DeepSourceClientStatic } from './test-types.js';
 
 // Mock the DeepSourceClient's methods for specific tests
 const originalGetIssues = DeepSourceClient.prototype.getIssues;
@@ -2470,10 +2471,15 @@ describe('DeepSourceClient', () => {
     describe('edge case coverage for vulnerability processing', () => {
       it('should handle non-array edges in iterateVulnerabilities by testing directly', () => {
         // Test the iterateVulnerabilities method directly with a non-array input
-        const loggerWarnSpy = jest.spyOn((DeepSourceClient as any).logger, 'warn');
+        const loggerWarnSpy = jest.spyOn(
+          (DeepSourceClient as unknown as DeepSourceClientStatic).logger,
+          'warn'
+        );
 
         // Call the static method directly with non-array data
-        const generator = (DeepSourceClient as any).iterateVulnerabilities('not-an-array');
+        const generator = (
+          DeepSourceClient as unknown as DeepSourceClientStatic
+        ).iterateVulnerabilities('not-an-array');
         const results = Array.from(generator);
 
         expect(results).toEqual([]);
@@ -2487,13 +2493,17 @@ describe('DeepSourceClient', () => {
 
       it('should handle max iterations exceeded in iterateVulnerabilities', () => {
         // Create a spy on the logger.warn method
-        const loggerWarnSpy = jest.spyOn((DeepSourceClient as any).logger, 'warn');
+        const loggerWarnSpy = jest.spyOn(
+          (DeepSourceClient as unknown as DeepSourceClientStatic).logger,
+          'warn'
+        );
 
         // Override MAX_ITERATIONS temporarily for testing
-        const originalMaxIterations = (DeepSourceClient as any).MAX_ITERATIONS;
+        const originalMaxIterations = (DeepSourceClient as unknown as DeepSourceClientStatic)
+          .MAX_ITERATIONS;
 
         try {
-          (DeepSourceClient as any).MAX_ITERATIONS = 0; // Set very low for testing
+          (DeepSourceClient as unknown as DeepSourceClientStatic).MAX_ITERATIONS = 0; // Set very low for testing
 
           // Create many vulnerability edges to exceed the max iterations
           const manyEdges = Array.from({ length: 3 }, (_, i) => ({
@@ -2535,7 +2545,9 @@ describe('DeepSourceClient', () => {
           }));
 
           // Call iterateVulnerabilities directly
-          const generator = (DeepSourceClient as any).iterateVulnerabilities(manyEdges);
+          const generator = (
+            DeepSourceClient as unknown as DeepSourceClientStatic
+          ).iterateVulnerabilities(manyEdges);
           const results = Array.from(generator);
 
           // With MAX_ITERATIONS=0, the first iteration processes (0 <= 0), second iteration breaks (1 > 0)
@@ -2545,19 +2557,24 @@ describe('DeepSourceClient', () => {
           );
         } finally {
           // Restore original MAX_ITERATIONS
-          (DeepSourceClient as any).MAX_ITERATIONS = originalMaxIterations;
+          (DeepSourceClient as unknown as DeepSourceClientStatic).MAX_ITERATIONS =
+            originalMaxIterations;
           loggerWarnSpy.mockRestore();
         }
       });
 
       it('should handle error in processVulnerabilities', () => {
         // Create a spy on the logger.warn method
-        const loggerWarnSpy = jest.spyOn((DeepSourceClient as any).logger, 'warn');
+        const loggerWarnSpy = jest.spyOn(
+          (DeepSourceClient as unknown as DeepSourceClientStatic).logger,
+          'warn'
+        );
 
         // Mock isValidVulnerabilityNode to throw an error for the first call
-        const originalIsValidVulnNode = (DeepSourceClient as any).isValidVulnerabilityNode;
+        const originalIsValidVulnNode = (DeepSourceClient as unknown as DeepSourceClientStatic)
+          .isValidVulnerabilityNode;
         let callCount = 0;
-        (DeepSourceClient as any).isValidVulnerabilityNode = jest
+        (DeepSourceClient as unknown as DeepSourceClientStatic).isValidVulnerabilityNode = jest
           .fn()
           .mockImplementation((node) => {
             callCount++;
@@ -2615,7 +2632,9 @@ describe('DeepSourceClient', () => {
 
         try {
           // Call iterateVulnerabilities directly with edges that will cause an error
-          const generator = (DeepSourceClient as any).iterateVulnerabilities(edgesWithOneError);
+          const generator = (
+            DeepSourceClient as unknown as DeepSourceClientStatic
+          ).iterateVulnerabilities(edgesWithOneError);
           const results = Array.from(generator);
 
           // Should continue processing despite the error and return the valid vulnerability
@@ -2629,7 +2648,8 @@ describe('DeepSourceClient', () => {
           );
         } finally {
           // Restore original method
-          (DeepSourceClient as any).isValidVulnerabilityNode = originalIsValidVulnNode;
+          (DeepSourceClient as unknown as DeepSourceClientStatic).isValidVulnerabilityNode =
+            originalIsValidVulnNode;
           loggerWarnSpy.mockRestore();
         }
       });
@@ -2638,7 +2658,7 @@ describe('DeepSourceClient', () => {
         // This test targets the specific line 2430 which is the fallback to handleGraphQLError
         // We need to mock handleVulnerabilityError to not handle the error (i.e., isError returns false)
         const handleGraphQLErrorSpy = jest
-          .spyOn(DeepSourceClient as any, 'handleGraphQLError')
+          .spyOn(DeepSourceClient as unknown as DeepSourceClientStatic, 'handleGraphQLError')
           .mockReturnValue({
             items: [],
             pageInfo: {
@@ -2650,7 +2670,9 @@ describe('DeepSourceClient', () => {
             totalCount: 0,
           });
 
-        const isErrorSpy = jest.spyOn(DeepSourceClient as any, 'isError').mockReturnValue(false); // This will make the error not be handled by handleVulnerabilityError
+        const isErrorSpy = jest
+          .spyOn(DeepSourceClient as unknown as DeepSourceClientStatic, 'isError')
+          .mockReturnValue(false); // This will make the error not be handled by handleVulnerabilityError
 
         // Create a test scenario where the dependency vulnerabilities method throws an error
         const mockClient = {
@@ -2658,7 +2680,7 @@ describe('DeepSourceClient', () => {
         };
 
         const client = new DeepSourceClient(API_KEY);
-        (client as any).client = mockClient;
+        (client as unknown as { client: unknown }).client = mockClient;
 
         // This should hit the fallback line 2430
         return client.getDependencyVulnerabilities('any-project').then((result) => {

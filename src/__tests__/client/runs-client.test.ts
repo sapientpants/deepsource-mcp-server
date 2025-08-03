@@ -6,6 +6,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { RunsClient } from '../../client/runs-client.js';
 import { asBranchName } from '../../types/branded.js';
+import type { RunsClientTestable, MockDeepSourceClient } from '../test-types.js';
 
 // Mock the base client
 jest.mock('../../client/base-client.js', () => ({
@@ -25,16 +26,11 @@ jest.mock('../../client/base-client.js', () => ({
 
 describe('RunsClient', () => {
   let runsClient: RunsClient;
-  let mockBaseClient: {
-    findProjectByKey: jest.Mock;
-    executeGraphQL: jest.Mock;
-    createEmptyPaginatedResponse: jest.Mock;
-    normalizePaginationParams: jest.Mock;
-  };
+  let mockBaseClient: MockDeepSourceClient;
 
   beforeEach(() => {
     runsClient = new RunsClient('test-api-key');
-    mockBaseClient = runsClient as any;
+    mockBaseClient = runsClient as unknown as MockDeepSourceClient;
   });
 
   describe('listRuns', () => {
@@ -518,7 +514,7 @@ describe('RunsClient', () => {
 
   describe('buildRunsQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (runsClient as any).buildRunsQuery();
+      const query = (runsClient as unknown as RunsClientTestable).buildRunsQuery();
 
       expect(query).toContain('query getRepositoryRuns');
       expect(query).toContain('$login: String!');
@@ -531,7 +527,7 @@ describe('RunsClient', () => {
 
   describe('buildRunByUidQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (runsClient as any).buildRunByUidQuery();
+      const query = (runsClient as unknown as RunsClientTestable).buildRunByUidQuery();
 
       expect(query).toContain('query getRunByUid');
       expect(query).toContain('$runUid: UUID!');
@@ -541,7 +537,7 @@ describe('RunsClient', () => {
 
   describe('buildRunByCommitQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (runsClient as any).buildRunByCommitQuery();
+      const query = (runsClient as unknown as RunsClientTestable).buildRunByCommitQuery();
 
       expect(query).toContain('query getRunByCommit');
       expect(query).toContain('$commitOid: String!');
@@ -582,7 +578,9 @@ describe('RunsClient', () => {
         },
       };
 
-      const runs = (runsClient as any).extractRunsFromResponse(mockResponseData);
+      const runs = (runsClient as unknown as RunsClientTestable).extractRunsFromResponse(
+        mockResponseData
+      );
 
       expect(runs).toHaveLength(1);
       expect(runs[0].runUid).toBe('f47ac10b-58cc-4372-a567-0e02b2c3d479');
@@ -595,7 +593,9 @@ describe('RunsClient', () => {
         repository: {},
       };
 
-      const runs = (runsClient as any).extractRunsFromResponse(mockResponseData);
+      const runs = (runsClient as unknown as RunsClientTestable).extractRunsFromResponse(
+        mockResponseData
+      );
 
       expect(runs).toHaveLength(0);
     });
@@ -615,7 +615,9 @@ describe('RunsClient', () => {
         },
       };
 
-      const run = (runsClient as any).extractSingleRunFromResponse(mockResponseData);
+      const run = (runsClient as unknown as RunsClientTestable).extractSingleRunFromResponse(
+        mockResponseData
+      );
 
       expect(run).not.toBeNull();
       expect(run.runUid).toBe('f47ac10b-58cc-4372-a567-0e02b2c3d479');
@@ -634,7 +636,9 @@ describe('RunsClient', () => {
         },
       };
 
-      const run = (runsClient as any).extractSingleRunFromResponse(mockResponseData);
+      const run = (runsClient as unknown as RunsClientTestable).extractSingleRunFromResponse(
+        mockResponseData
+      );
 
       expect(run).not.toBeNull();
       expect(run.runUid).toBe('f47ac10b-58cc-4372-a567-0e02b2c3d479');
@@ -643,7 +647,9 @@ describe('RunsClient', () => {
     it('should return null when no run data available', () => {
       const mockResponseData = {};
 
-      const run = (runsClient as any).extractSingleRunFromResponse(mockResponseData);
+      const run = (runsClient as unknown as RunsClientTestable).extractSingleRunFromResponse(
+        mockResponseData
+      );
 
       expect(run).toBeNull();
     });
@@ -672,7 +678,7 @@ describe('RunsClient', () => {
         },
       };
 
-      const run = (runsClient as any).mapRunNode(mockNode);
+      const run = (runsClient as unknown as RunsClientTestable).mapRunNode(mockNode);
 
       expect(run.id).toBe('run-node-1');
       expect(run.runUid).toBe('f47ac10b-58cc-4372-a567-0e02b2c3d479');
@@ -694,7 +700,7 @@ describe('RunsClient', () => {
         repository: null,
       };
 
-      const run = (runsClient as any).mapRunNode(mockNode);
+      const run = (runsClient as unknown as RunsClientTestable).mapRunNode(mockNode);
 
       expect(run.id).toBe('');
       expect(run.runUid).toBe('');
@@ -710,7 +716,7 @@ describe('RunsClient', () => {
     it('should return empty response for NoneType errors', () => {
       const error = new Error('NoneType error');
 
-      const result = (runsClient as any).handleRunsError(error);
+      const result = (runsClient as unknown as RunsClientTestable).handleRunsError(error);
 
       expect(result.items).toHaveLength(0);
       expect(result.totalCount).toBe(0);
@@ -721,7 +727,7 @@ describe('RunsClient', () => {
       const error = new Error('Other error');
 
       expect(() => {
-        (runsClient as any).handleRunsError(error);
+        (runsClient as unknown as RunsClientTestable).handleRunsError(error);
       }).toThrow('Other error');
     });
   });

@@ -124,7 +124,7 @@ export class Project extends AggregateRoot<ProjectKey> {
   private static isValidUrl(url: string): boolean {
     try {
       // URL constructor is available in Node.js
-      void new globalThis.URL(url);
+      new globalThis.URL(url);
       return true;
     } catch {
       return false;

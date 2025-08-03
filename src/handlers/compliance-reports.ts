@@ -61,7 +61,7 @@ export function createComplianceReportHandlerWithRepo(deps: ComplianceReportHand
       });
 
       const reportData = {
-        key: domainReport.projectKey + ':' + domainReport.reportType,
+        key: `${domainReport.projectKey}:${domainReport.reportType}`,
         title: `${domainReport.reportType} Compliance Report`,
         currentValue: domainReport.summary.complianceScore.value,
         status:

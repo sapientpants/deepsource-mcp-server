@@ -4,8 +4,7 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { ComplianceReportRepository } from '../compliance-report.repository.js';
-import { DeepSourceClient } from '../../../deepsource.js';
-import { ComplianceReport as ApiComplianceReport } from '../../../deepsource.js';
+import { DeepSourceClient, ComplianceReport as ApiComplianceReport } from '../../../deepsource.js';
 import { ReportType } from '../../../types/report-types.js';
 import { asProjectKey } from '../../../types/branded.js';
 import { ComplianceReport } from '../../../domain/aggregates/compliance-report/compliance-report.aggregate.js';
@@ -82,7 +81,7 @@ describe('ComplianceReportRepository', () => {
           isPrivate: false,
           isActivated: true,
         },
-      } as any,
+      } as unknown as import('../../../models/projects.js').Project,
     ]);
 
     // Mock listRuns to provide repository ID
@@ -95,7 +94,7 @@ describe('ComplianceReportRepository', () => {
       ],
       pageInfo: { hasNextPage: false },
       totalCount: 1,
-    } as any);
+    } as import('../../../client/runs-client.js').PaginatedRunResponse);
 
     mockClient.getComplianceReport.mockResolvedValue(mockApiReport);
 
@@ -411,9 +410,12 @@ describe('ComplianceReportRepository', () => {
       const projectKey = asProjectKey('test-project');
       const report = await repository.findByProjectAndType(projectKey, ReportType.OWASP_TOP_10);
 
-      await expect(repository.save(report!)).rejects.toThrow(
-        'Save operation is not supported by DeepSource API'
-      );
+      expect(report).not.toBeNull();
+      if (report) {
+        await expect(repository.save(report)).rejects.toThrow(
+          'Save operation is not supported by DeepSource API'
+        );
+      }
     });
   });
 

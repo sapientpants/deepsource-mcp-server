@@ -5,6 +5,7 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { SecurityClient } from '../../client/security-client.js';
+import type { SecurityClientTestable, MockDeepSourceClient } from '../test-types.js';
 
 // Mock the base client
 jest.mock('../../client/base-client.js', () => ({
@@ -24,11 +25,11 @@ jest.mock('../../client/base-client.js', () => ({
 
 describe('SecurityClient', () => {
   let securityClient: SecurityClient;
-  let mockBaseClient: any;
+  let mockBaseClient: MockDeepSourceClient;
 
   beforeEach(() => {
     securityClient = new SecurityClient('test-api-key');
-    mockBaseClient = securityClient as any;
+    mockBaseClient = securityClient as unknown as MockDeepSourceClient;
   });
 
   describe('getComplianceReport', () => {
@@ -345,7 +346,9 @@ describe('SecurityClient', () => {
 
   describe('buildComplianceReportQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (securityClient as any).buildComplianceReportQuery();
+      const query = (
+        securityClient as unknown as SecurityClientTestable
+      ).buildComplianceReportQuery();
 
       expect(query).toContain('query getComplianceReports');
       expect(query).toContain('$login: String!');
@@ -357,7 +360,9 @@ describe('SecurityClient', () => {
 
   describe('buildVulnerabilitiesQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (securityClient as any).buildVulnerabilitiesQuery();
+      const query = (
+        securityClient as unknown as SecurityClientTestable
+      ).buildVulnerabilitiesQuery();
 
       expect(query).toContain('query getDependencyVulnerabilities');
       expect(query).toContain('$login: String!');
@@ -389,11 +394,9 @@ describe('SecurityClient', () => {
         },
       };
 
-      const report = (securityClient as any).extractComplianceReportFromResponse(
-        mockResponseData,
-        'OWASP_TOP_10',
-        'owaspTop10'
-      );
+      const report = (
+        securityClient as unknown as SecurityClientTestable
+      ).extractComplianceReportFromResponse(mockResponseData, 'OWASP_TOP_10', 'owaspTop10');
 
       expect(report).not.toBeNull();
       expect(report.reportType).toBe('OWASP_TOP_10');
@@ -410,11 +413,9 @@ describe('SecurityClient', () => {
         },
       };
 
-      const report = (securityClient as any).extractComplianceReportFromResponse(
-        mockResponseData,
-        'OWASP_TOP_10',
-        'owaspTop10'
-      );
+      const report = (
+        securityClient as unknown as SecurityClientTestable
+      ).extractComplianceReportFromResponse(mockResponseData, 'OWASP_TOP_10', 'owaspTop10');
 
       expect(report).toBeNull();
     });
@@ -422,11 +423,9 @@ describe('SecurityClient', () => {
     it('should handle missing repository in response', () => {
       const mockResponseData = {};
 
-      const report = (securityClient as any).extractComplianceReportFromResponse(
-        mockResponseData,
-        'OWASP_TOP_10',
-        'owaspTop10'
-      );
+      const report = (
+        securityClient as unknown as SecurityClientTestable
+      ).extractComplianceReportFromResponse(mockResponseData, 'OWASP_TOP_10', 'owaspTop10');
 
       expect(report).toBeNull();
     });
@@ -464,9 +463,9 @@ describe('SecurityClient', () => {
         },
       };
 
-      const vulnerabilities = (securityClient as any).extractVulnerabilitiesFromResponse(
-        mockResponseData
-      );
+      const vulnerabilities = (
+        securityClient as unknown as SecurityClientTestable
+      ).extractVulnerabilitiesFromResponse(mockResponseData);
 
       expect(vulnerabilities).toHaveLength(1);
       expect(vulnerabilities[0].vulnerability.identifier).toBe('CVE-2023-1234');
@@ -478,9 +477,9 @@ describe('SecurityClient', () => {
         repository: {},
       };
 
-      const vulnerabilities = (securityClient as any).extractVulnerabilitiesFromResponse(
-        mockResponseData
-      );
+      const vulnerabilities = (
+        securityClient as unknown as SecurityClientTestable
+      ).extractVulnerabilitiesFromResponse(mockResponseData);
 
       expect(vulnerabilities).toHaveLength(0);
     });
