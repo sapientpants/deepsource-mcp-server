@@ -243,6 +243,11 @@ export function adaptToDomainQualityMetricsParams(params: unknown): DomainQualit
   };
 }
 
+/**
+ * Adapts raw parameters to domain update metric threshold parameters
+ * @param params - Raw parameters from the MCP request
+ * @returns Typed domain parameters for updating metric thresholds
+ */
 export function adaptToDomainUpdateMetricThresholdParams(
   params: unknown
 ): DomainUpdateMetricThresholdParams {
@@ -256,6 +261,11 @@ export function adaptToDomainUpdateMetricThresholdParams(
   };
 }
 
+/**
+ * Adapts raw parameters to domain update metric setting parameters
+ * @param params - Raw parameters from the MCP request
+ * @returns Typed domain parameters for updating metric settings
+ */
 export function adaptToDomainUpdateMetricSettingParams(
   params: unknown
 ): DomainUpdateMetricSettingParams {
@@ -269,6 +279,11 @@ export function adaptToDomainUpdateMetricSettingParams(
   };
 }
 
+/**
+ * Adapts raw parameters to domain compliance report parameters
+ * @param params - Raw parameters from the MCP request
+ * @returns Typed domain parameters for compliance reports
+ */
 export function adaptToDomainComplianceReportParams(params: unknown): DomainComplianceReportParams {
   const typedParams = params as Record<string, unknown>;
   return {
@@ -277,6 +292,11 @@ export function adaptToDomainComplianceReportParams(params: unknown): DomainComp
   };
 }
 
+/**
+ * Adapts raw parameters to domain project issues parameters
+ * @param params - Raw parameters from the MCP request
+ * @returns Typed domain parameters for project issues
+ */
 export function adaptToDomainProjectIssuesParams(params: unknown): DomainProjectIssuesParams {
   const typedParams = params as Record<string, unknown>;
   return {
@@ -293,6 +313,11 @@ export function adaptToDomainProjectIssuesParams(params: unknown): DomainProject
   };
 }
 
+/**
+ * Adapts raw parameters to domain dependency vulnerabilities parameters
+ * @param params - Raw parameters from the MCP request
+ * @returns Typed domain parameters for dependency vulnerabilities
+ */
 export function adaptToDomainDependencyVulnerabilitiesParams(
   params: unknown
 ): DomainDependencyVulnerabilitiesParams {
@@ -306,6 +331,11 @@ export function adaptToDomainDependencyVulnerabilitiesParams(
   };
 }
 
+/**
+ * Adapts raw parameters to domain project runs parameters
+ * @param params - Raw parameters from the MCP request
+ * @returns Typed domain parameters for project runs
+ */
 export function adaptToDomainProjectRunsParams(params: unknown): DomainProjectRunsParams {
   const typedParams = params as Record<string, unknown>;
   return {
@@ -320,6 +350,11 @@ export function adaptToDomainProjectRunsParams(params: unknown): DomainProjectRu
   };
 }
 
+/**
+ * Adapts raw parameters to domain run parameters
+ * @param params - Raw parameters from the MCP request
+ * @returns Typed domain parameters for a specific run
+ */
 export function adaptToDomainRunParams(params: unknown): DomainRunParams {
   const typedParams = params as Record<string, unknown>;
   return {
@@ -331,6 +366,11 @@ export function adaptToDomainRunParams(params: unknown): DomainRunParams {
   };
 }
 
+/**
+ * Adapts raw parameters to domain recent run issues parameters
+ * @param params - Raw parameters from the MCP request
+ * @returns Typed domain parameters for recent run issues
+ */
 export function adaptToDomainRecentRunIssuesParams(params: unknown): DomainRecentRunIssuesParams {
   const typedParams = params as Record<string, unknown>;
   return {

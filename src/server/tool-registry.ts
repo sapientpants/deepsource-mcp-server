@@ -120,7 +120,7 @@ export class ToolRegistry {
             // If it's an error response, handle appropriately
             if (result.isError) {
               const errorContent = result.content[0];
-              if (errorContent && errorContent.type === 'text') {
+              if (errorContent?.type === 'text') {
                 let errorData;
                 try {
                   errorData = JSON.parse(errorContent.text);
@@ -134,7 +134,7 @@ export class ToolRegistry {
 
             // Parse the JSON content for structured response
             const textContent = result.content[0];
-            if (textContent && textContent.type === 'text') {
+            if (textContent?.type === 'text') {
               let parsedData;
               try {
                 parsedData = JSON.parse(textContent.text);
@@ -176,7 +176,7 @@ export class ToolRegistry {
           let structuredError = {};
           try {
             const errorContent = errorResponse.content[0];
-            if (errorContent && errorContent.type === 'text') {
+            if (errorContent?.type === 'text') {
               structuredError = JSON.parse(errorContent.text);
             }
           } catch {
