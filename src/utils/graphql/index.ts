@@ -5,3 +5,4 @@
 
 export * from './queries.js';
 export * from './processor.js';
+export * from './query-builder.js';

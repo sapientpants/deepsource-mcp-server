@@ -1,17 +1,16 @@
 /**
  * Tests for GraphQL query execution and response handling in DeepSourceClient
  */
-import type { DeepSourceClient } from '../deepsource';
-import { DeepSourceClient as DeepSourceClientClass } from '../deepsource';
+import { DeepSourceClient, type DeepSourceClient as DeepSourceClientType } from '../deepsource';
 import nock from 'nock';
 describe('DeepSourceClient GraphQL Query Execution', () => {
   const API_KEY = 'test-api-key';
   const API_URL = 'https://api.deepsource.io';
 
-  let client: DeepSourceClient;
+  let client: DeepSourceClientType;
 
   beforeEach(() => {
-    client = new DeepSourceClientClass(API_KEY);
+    client = new DeepSourceClient(API_KEY);
     nock.cleanAll();
   });
 

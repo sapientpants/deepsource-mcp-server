@@ -34,7 +34,8 @@ export default [
         vars: 'all', 
         args: 'after-used', 
         ignoreRestSiblings: false,
-        varsIgnorePattern: '^(MetricShortcode|MetricKey|MetricThresholdStatus|MetricDirection|ReportType|ReportStatus|LogLevel|ErrorCategory|VulnerabilitySeverity|PackageVersionType|VulnerabilityReachability|VulnerabilityFixability|AnalysisRunStatus|z)$'
+        varsIgnorePattern: '^(MetricShortcode|MetricKey|MetricThresholdStatus|MetricDirection|ReportType|ReportStatus|LogLevel|ErrorCategory|VulnerabilitySeverity|PackageVersionType|VulnerabilityReachability|VulnerabilityFixability|AnalysisRunStatus|MCPErrorCode|MCPErrorCategory|ToolCategory|z)$',
+        argsIgnorePattern: '^_'
       }]
     },
   },
@@ -50,6 +51,8 @@ export default [
         afterEach: 'readonly',
         afterAll: 'readonly',
         jest: 'readonly',
+        setTimeout: 'readonly',
+        global: 'readonly',
       },
     },
     rules: {
@@ -58,7 +61,8 @@ export default [
         vars: 'all', 
         args: 'after-used', 
         ignoreRestSiblings: false,
-        varsIgnorePattern: '^(jest)$'
+        varsIgnorePattern: '^(jest)$',
+        argsIgnorePattern: '^_'
       }]
     }
   },

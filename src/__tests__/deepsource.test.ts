@@ -2,6 +2,7 @@ import nock from 'nock';
 import { jest } from '@jest/globals';
 import { AxiosError } from 'axios';
 import { DeepSourceClient } from '../deepsource';
+import type { DeepSourceClientStatic } from './test-types.js';
 
 // Mock the DeepSourceClient's methods for specific tests
 const originalGetIssues = DeepSourceClient.prototype.getIssues;
@@ -494,7 +495,7 @@ describe('DeepSourceClient', () => {
                         edges: [
                           {
                             node: {
-                              name: 'test-repo',
+                              name: 'test-project',
                               defaultBranch: 'main',
                               dsn: 'test-project',
                               isPrivate: false,
@@ -548,7 +549,7 @@ describe('DeepSourceClient', () => {
                         edges: [
                           {
                             node: {
-                              name: 'test-repo',
+                              name: 'test-project',
                               defaultBranch: 'main',
                               dsn: 'different-project', // This doesn't match our request
                               isPrivate: false,
@@ -1257,7 +1258,7 @@ describe('DeepSourceClient', () => {
                         edges: [
                           {
                             node: {
-                              name: 'test-repo',
+                              name: 'test-project',
                               defaultBranch: 'main',
                               dsn: 'test-project',
                               isPrivate: false,
@@ -2244,7 +2245,7 @@ describe('DeepSourceClient', () => {
                         edges: [
                           {
                             node: {
-                              name: 'test-repo',
+                              name: 'test-project',
                               defaultBranch: 'main',
                               dsn: 'test-project',
                               isPrivate: false,
@@ -2386,7 +2387,7 @@ describe('DeepSourceClient', () => {
                         edges: [
                           {
                             node: {
-                              name: 'test-repo',
+                              name: 'test-project',
                               defaultBranch: 'main',
                               dsn: 'test-project',
                               isPrivate: false,
@@ -2438,7 +2439,7 @@ describe('DeepSourceClient', () => {
                         edges: [
                           {
                             node: {
-                              name: 'test-repo',
+                              name: 'test-project',
                               defaultBranch: 'main',
                               dsn: 'test-project',
                               isPrivate: false,
@@ -2465,6 +2466,232 @@ describe('DeepSourceClient', () => {
       await expect(client.getDependencyVulnerabilities('test-project')).rejects.toThrow(
         'GraphQL Errors: GraphQL error message'
       );
+    });
+
+    describe('edge case coverage for vulnerability processing', () => {
+      it('should handle non-array edges in iterateVulnerabilities by testing directly', () => {
+        // Test the iterateVulnerabilities method directly with a non-array input
+        const loggerWarnSpy = jest.spyOn(
+          (DeepSourceClient as unknown as DeepSourceClientStatic).logger,
+          'warn'
+        );
+
+        // Call the static method directly with non-array data
+        const generator = (
+          DeepSourceClient as unknown as DeepSourceClientStatic
+        ).iterateVulnerabilities('not-an-array');
+        const results = Array.from(generator);
+
+        expect(results).toEqual([]);
+        expect(loggerWarnSpy).toHaveBeenCalledWith(
+          'Invalid edges data: expected an array but got',
+          'string'
+        );
+
+        loggerWarnSpy.mockRestore();
+      });
+
+      it('should handle max iterations exceeded in iterateVulnerabilities', () => {
+        // Create a spy on the logger.warn method
+        const loggerWarnSpy = jest.spyOn(
+          (DeepSourceClient as unknown as DeepSourceClientStatic).logger,
+          'warn'
+        );
+
+        // Override MAX_ITERATIONS temporarily for testing
+        const originalMaxIterations = (DeepSourceClient as unknown as DeepSourceClientStatic)
+          .MAX_ITERATIONS;
+
+        try {
+          (DeepSourceClient as unknown as DeepSourceClientStatic).MAX_ITERATIONS = 0; // Set very low for testing
+
+          // Create many vulnerability edges to exceed the max iterations
+          const manyEdges = Array.from({ length: 3 }, (_, i) => ({
+            node: {
+              id: `vuln${i}`,
+              reachability: 'REACHABLE',
+              fixability: 'FIXABLE',
+              package: {
+                id: `pkg${i}`,
+                ecosystem: 'NPM',
+                name: `package${i}`,
+                purl: `pkg:npm/package${i}@1.0.0`,
+              },
+              packageVersion: {
+                id: `ver${i}`,
+                version: '1.0.0',
+                versionType: 'EXACT',
+              },
+              vulnerability: {
+                id: `CVE-2023-000${i}`,
+                identifier: `CVE-2023-000${i}`,
+                aliases: [],
+                summary: `Test vulnerability ${i}`,
+                details: `Detailed description of vulnerability ${i}`,
+                publishedAt: '2023-01-01T00:00:00Z',
+                updatedAt: '2023-01-01T00:00:00Z',
+                withdrawnAt: null,
+                severity: 'HIGH',
+                cvssV3Vector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H',
+                cvssV3BaseScore: 9.8,
+                cvssV3Severity: 'CRITICAL',
+                epssScore: 0.5,
+                epssPercentile: 0.8,
+                introducedVersions: ['0.0.0'],
+                fixedVersions: ['1.0.1'],
+                referenceUrls: [`https://example.com/vuln${i}`],
+              },
+            },
+          }));
+
+          // Call iterateVulnerabilities directly
+          const generator = (
+            DeepSourceClient as unknown as DeepSourceClientStatic
+          ).iterateVulnerabilities(manyEdges);
+          const results = Array.from(generator);
+
+          // With MAX_ITERATIONS=0, the first iteration processes (0 <= 0), second iteration breaks (1 > 0)
+          expect(results.length).toBe(1); // One item should be processed before breaking
+          expect(loggerWarnSpy).toHaveBeenCalledWith(
+            'Exceeded maximum iteration count (0). Stopping processing.'
+          );
+        } finally {
+          // Restore original MAX_ITERATIONS
+          (DeepSourceClient as unknown as DeepSourceClientStatic).MAX_ITERATIONS =
+            originalMaxIterations;
+          loggerWarnSpy.mockRestore();
+        }
+      });
+
+      it('should handle error in processVulnerabilities', () => {
+        // Create a spy on the logger.warn method
+        const loggerWarnSpy = jest.spyOn(
+          (DeepSourceClient as unknown as DeepSourceClientStatic).logger,
+          'warn'
+        );
+
+        // Mock isValidVulnerabilityNode to throw an error for the first call
+        const originalIsValidVulnNode = (DeepSourceClient as unknown as DeepSourceClientStatic)
+          .isValidVulnerabilityNode;
+        let callCount = 0;
+        (DeepSourceClient as unknown as DeepSourceClientStatic).isValidVulnerabilityNode = jest
+          .fn()
+          .mockImplementation((node) => {
+            callCount++;
+            if (callCount === 1) {
+              throw new Error('Simulated validation error');
+            }
+            return originalIsValidVulnNode(node);
+          });
+
+        // Create edges where the first one will trigger the error
+        const edgesWithOneError = [
+          {
+            node: {
+              id: 'error-vuln', // This will trigger the mocked error
+            },
+          },
+          {
+            node: {
+              id: 'valid-vuln',
+              reachability: 'REACHABLE',
+              fixability: 'FIXABLE',
+              package: {
+                id: 'pkg1',
+                ecosystem: 'NPM',
+                name: 'test-package',
+                purl: 'pkg:npm/test-package@1.0.0',
+              },
+              packageVersion: {
+                id: 'ver1',
+                version: '1.0.0',
+                versionType: 'EXACT',
+              },
+              vulnerability: {
+                id: 'CVE-2023-0001',
+                identifier: 'CVE-2023-0001',
+                aliases: [],
+                summary: 'Test vulnerability',
+                details: 'Detailed description',
+                publishedAt: '2023-01-01T00:00:00Z',
+                updatedAt: '2023-01-01T00:00:00Z',
+                withdrawnAt: null,
+                severity: 'HIGH',
+                cvssV3Vector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H',
+                cvssV3BaseScore: 8.5,
+                cvssV3Severity: 'HIGH',
+                epssScore: 0.5,
+                epssPercentile: 0.8,
+                introducedVersions: ['0.0.0'],
+                fixedVersions: ['1.0.1'],
+                referenceUrls: ['https://example.com/vuln'],
+              },
+            },
+          },
+        ];
+
+        try {
+          // Call iterateVulnerabilities directly with edges that will cause an error
+          const generator = (
+            DeepSourceClient as unknown as DeepSourceClientStatic
+          ).iterateVulnerabilities(edgesWithOneError);
+          const results = Array.from(generator);
+
+          // Should continue processing despite the error and return the valid vulnerability
+          expect(results).toHaveLength(1); // Only the valid vulnerability should be returned
+          expect(results[0].id).toBe('valid-vuln');
+
+          // Should log the error but continue processing
+          expect(loggerWarnSpy).toHaveBeenCalledWith(
+            'Error processing vulnerability edge:',
+            expect.any(Error)
+          );
+        } finally {
+          // Restore original method
+          (DeepSourceClient as unknown as DeepSourceClientStatic).isValidVulnerabilityNode =
+            originalIsValidVulnNode;
+          loggerWarnSpy.mockRestore();
+        }
+      });
+
+      it('should fallback to handleGraphQLError when non-Error objects are thrown', () => {
+        // This test targets the specific line 2430 which is the fallback to handleGraphQLError
+        // We need to mock handleVulnerabilityError to not handle the error (i.e., isError returns false)
+        const handleGraphQLErrorSpy = jest
+          .spyOn(DeepSourceClient as unknown as DeepSourceClientStatic, 'handleGraphQLError')
+          .mockReturnValue({
+            items: [],
+            pageInfo: {
+              hasNextPage: false,
+              hasPreviousPage: false,
+              startCursor: null,
+              endCursor: null,
+            },
+            totalCount: 0,
+          });
+
+        const isErrorSpy = jest
+          .spyOn(DeepSourceClient as unknown as DeepSourceClientStatic, 'isError')
+          .mockReturnValue(false); // This will make the error not be handled by handleVulnerabilityError
+
+        // Create a test scenario where the dependency vulnerabilities method throws an error
+        const mockClient = {
+          post: jest.fn().mockRejectedValue('not an error object'),
+        };
+
+        const client = new DeepSourceClient(API_KEY);
+        (client as unknown as { client: unknown }).client = mockClient;
+
+        // This should hit the fallback line 2430
+        return client.getDependencyVulnerabilities('any-project').then((result) => {
+          expect(result.items).toEqual([]);
+          expect(handleGraphQLErrorSpy).toHaveBeenCalled();
+          expect(isErrorSpy).toHaveBeenCalled();
+
+          handleGraphQLErrorSpy.mockRestore();
+          isErrorSpy.mockRestore();
+        });
+      });
     });
   });
 });

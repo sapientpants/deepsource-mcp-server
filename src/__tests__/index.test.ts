@@ -3,7 +3,6 @@
  */
 
 import { describe, it, expect, beforeAll, jest } from '@jest/globals';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 // Mock the projects handler
 jest.mock('../handlers/projects.js', () => ({
@@ -42,11 +41,11 @@ describe('index.ts module', () => {
 
   it('should export an mcpServer instance', () => {
     expect(indexModule.mcpServer).toBeDefined();
-    expect(indexModule.mcpServer).toBeInstanceOf(McpServer);
+    expect(indexModule.mcpServer.current).toBeDefined();
   });
 
   it('should have a server with appropriate methods', () => {
-    expect(typeof indexModule.mcpServer.tool).toBe('function');
-    expect(typeof indexModule.mcpServer.connect).toBe('function');
+    expect(typeof indexModule.mcpServer.current.getRegisteredTools).toBe('function');
+    expect(typeof indexModule.getMcpServer).toBe('function');
   });
 });

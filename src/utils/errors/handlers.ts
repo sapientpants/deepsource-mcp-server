@@ -180,7 +180,7 @@ export function handleNetworkError(error: unknown): ClassifiedError | null {
   const errorCode = error.code;
 
   // Return the appropriate classified error based on the error code
-  return errorCode && errorCodeHandlers[errorCode] ? errorCodeHandlers[errorCode]() : null;
+  return errorCode ? (errorCodeHandlers[errorCode]?.() ?? null) : null;
 }
 
 /**

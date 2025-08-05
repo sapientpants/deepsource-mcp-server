@@ -73,7 +73,9 @@ describe('Configuration Management', () => {
     it('should throw error when API key is not set', () => {
       delete process.env.DEEPSOURCE_API_KEY;
 
-      expect(() => getConfig()).toThrow('DEEPSOURCE_API_KEY environment variable is not set');
+      expect(() => getConfig()).toThrow(
+        'Configuration error: DeepSource API key is required but not configured'
+      );
     });
 
     it('should throw error when request timeout is negative', () => {
@@ -154,7 +156,9 @@ describe('Configuration Management', () => {
     it('should throw error when API key is not set', () => {
       delete process.env.DEEPSOURCE_API_KEY;
 
-      expect(() => getApiKey()).toThrow('DEEPSOURCE_API_KEY environment variable is not set');
+      expect(() => getApiKey()).toThrow(
+        'Configuration error: DeepSource API key is required but not configured'
+      );
     });
 
     it('should return API key even if it contains special characters', () => {

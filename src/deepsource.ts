@@ -18,6 +18,18 @@ import {
   MetricHistoryResponse,
   MetricHistoryValue,
 } from './types/metrics.js';
+import {
+  asGraphQLNodeId,
+  asRunId,
+  asCommitOid,
+  asBranchName,
+  asAnalyzerShortcode,
+  GraphQLNodeId,
+  RunId,
+  CommitOid,
+  BranchName,
+  AnalyzerShortcode,
+} from './types/branded.js';
 
 /**
  * @fileoverview DeepSource API client for interacting with the DeepSource service.
@@ -161,7 +173,7 @@ export interface DeepSourceIssue {
  * @public
  */
 export interface OccurrenceDistributionByAnalyzer {
-  analyzerShortcode: string;
+  analyzerShortcode: AnalyzerShortcode;
   introduced: number;
 }
 
@@ -205,11 +217,11 @@ export type AnalysisRunStatus =
  * @public
  */
 export interface DeepSourceRun {
-  id: string;
-  runUid: string;
-  commitOid: string;
-  branchName: string;
-  baseOid: string;
+  id: GraphQLNodeId;
+  runUid: RunId;
+  commitOid: CommitOid;
+  branchName: BranchName;
+  baseOid: CommitOid;
   status: AnalysisRunStatus;
   createdAt: string;
   updatedAt: string;
@@ -217,7 +229,7 @@ export interface DeepSourceRun {
   summary: RunSummary;
   repository: {
     name: string;
-    id: string;
+    id: GraphQLNodeId;
   };
 }
 
@@ -561,7 +573,7 @@ export class DeepSourceClient {
    * @private
    */
   private static isErrorWithMessage(error: unknown, substring: string): error is Error {
-    return this.isError(error) && error.message?.includes(substring);
+    return DeepSourceClient.isError(error) && error.message?.includes(substring);
   }
 
   /**
@@ -599,7 +611,7 @@ export class DeepSourceClient {
    */
   private static handleGraphQLSpecificError(error: unknown): never | false {
     if (
-      this.isAxiosErrorWithCriteria(error) &&
+      DeepSourceClient.isAxiosErrorWithCriteria(error) &&
       typeof error.response?.data === 'object' &&
       error.response.data && // Add null check
       'errors' in error.response.data
@@ -627,7 +639,7 @@ export class DeepSourceClient {
    * @private
    */
   private static handleNetworkError(error: unknown): never | false {
-    if (this.isAxiosErrorWithCriteria(error, undefined, 'ECONNREFUSED')) {
+    if (DeepSourceClient.isAxiosErrorWithCriteria(error, undefined, 'ECONNREFUSED')) {
       throw createClassifiedError(
         'Connection error: Unable to connect to DeepSource API',
         ErrorCategory.NETWORK,
@@ -635,7 +647,7 @@ export class DeepSourceClient {
       );
     }
 
-    if (this.isAxiosErrorWithCriteria(error, undefined, 'ETIMEDOUT')) {
+    if (DeepSourceClient.isAxiosErrorWithCriteria(error, undefined, 'ETIMEDOUT')) {
       throw createClassifiedError(
         'Timeout error: DeepSource API request timed out',
         ErrorCategory.TIMEOUT,
@@ -653,7 +665,7 @@ export class DeepSourceClient {
    * @private
    */
   private static handleHttpStatusError(error: unknown): never | false {
-    if (this.isAxiosErrorWithCriteria(error, 401)) {
+    if (DeepSourceClient.isAxiosErrorWithCriteria(error, 401)) {
       throw createClassifiedError(
         'Authentication error: Invalid or expired API key',
         ErrorCategory.AUTH,
@@ -661,7 +673,7 @@ export class DeepSourceClient {
       );
     }
 
-    if (this.isAxiosErrorWithCriteria(error, 429)) {
+    if (DeepSourceClient.isAxiosErrorWithCriteria(error, 429)) {
       throw createClassifiedError(
         'Rate limit exceeded: Too many requests to DeepSource API',
         ErrorCategory.RATE_LIMIT,
@@ -1109,11 +1121,11 @@ export class DeepSourceClient {
 
       for (const { node: run } of repoRuns) {
         runs.push({
-          id: run.id,
-          runUid: run.runUid,
-          commitOid: run.commitOid,
-          branchName: run.branchName,
-          baseOid: run.baseOid,
+          id: asGraphQLNodeId(run.id),
+          runUid: asRunId(run.runUid),
+          commitOid: asCommitOid(run.commitOid),
+          branchName: asBranchName(run.branchName),
+          baseOid: asCommitOid(run.baseOid),
           status: run.status,
           createdAt: run.createdAt,
           updatedAt: run.updatedAt,
@@ -1122,12 +1134,18 @@ export class DeepSourceClient {
             occurrencesIntroduced: run.summary?.occurrencesIntroduced ?? 0,
             occurrencesResolved: run.summary?.occurrencesResolved ?? 0,
             occurrencesSuppressed: run.summary?.occurrencesSuppressed ?? 0,
-            occurrenceDistributionByAnalyzer: run.summary?.occurrenceDistributionByAnalyzer ?? [],
+            occurrenceDistributionByAnalyzer:
+              run.summary?.occurrenceDistributionByAnalyzer?.map(
+                (dist: Record<string, unknown>) => ({
+                  analyzerShortcode: asAnalyzerShortcode(dist.analyzerShortcode as string),
+                  introduced: dist.introduced as number,
+                })
+              ) ?? [],
             occurrenceDistributionByCategory: run.summary?.occurrenceDistributionByCategory ?? [],
           },
           repository: {
             name: run.repository?.name ?? '',
-            id: run.repository?.id ?? '',
+            id: asGraphQLNodeId(run.repository?.id ?? ''),
           },
         });
       }
@@ -1204,11 +1222,11 @@ export class DeepSourceClient {
       }
 
       return {
-        id: run.id,
-        runUid: run.runUid,
-        commitOid: run.commitOid,
-        branchName: run.branchName,
-        baseOid: run.baseOid,
+        id: asGraphQLNodeId(run.id),
+        runUid: asRunId(run.runUid),
+        commitOid: asCommitOid(run.commitOid),
+        branchName: asBranchName(run.branchName),
+        baseOid: asCommitOid(run.baseOid),
         status: run.status,
         createdAt: run.createdAt,
         updatedAt: run.updatedAt,
@@ -1217,12 +1235,16 @@ export class DeepSourceClient {
           occurrencesIntroduced: run.summary?.occurrencesIntroduced ?? 0,
           occurrencesResolved: run.summary?.occurrencesResolved ?? 0,
           occurrencesSuppressed: run.summary?.occurrencesSuppressed ?? 0,
-          occurrenceDistributionByAnalyzer: run.summary?.occurrenceDistributionByAnalyzer ?? [],
+          occurrenceDistributionByAnalyzer:
+            run.summary?.occurrenceDistributionByAnalyzer?.map((dist: Record<string, unknown>) => ({
+              analyzerShortcode: asAnalyzerShortcode(dist.analyzerShortcode as string),
+              introduced: dist.introduced as number,
+            })) ?? [],
           occurrenceDistributionByCategory: run.summary?.occurrenceDistributionByCategory ?? [],
         },
         repository: {
           name: run.repository?.name ?? '',
-          id: run.repository?.id ?? '',
+          id: asGraphQLNodeId(run.repository?.id ?? ''),
         },
       };
     } catch (error) {

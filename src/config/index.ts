@@ -4,6 +4,7 @@
  */
 
 import { createLogger } from '../utils/logging/logger.js';
+import { MCPErrorFactory } from '../utils/error-handling/index.js';
 
 const logger = createLogger('DeepSourceMCP:Config');
 
@@ -34,11 +35,15 @@ const defaultConfig: Partial<DeepSourceConfig> = {
 
 /**
  * Validates the configuration
- * @throws Error if configuration is invalid
+ * @throws MCPError if configuration is invalid
  */
 function validateConfig(config: Partial<DeepSourceConfig>): DeepSourceConfig {
   if (!config.apiKey) {
-    throw new Error('DEEPSOURCE_API_KEY environment variable is not set');
+    throw MCPErrorFactory.configuration('DeepSource API key is required but not configured', {
+      environmentVariable: 'DEEPSOURCE_API_KEY',
+      documentation:
+        'Please set the DEEPSOURCE_API_KEY environment variable with your DeepSource API key',
+    });
   }
 
   // Validate timeout is a positive number
@@ -46,7 +51,10 @@ function validateConfig(config: Partial<DeepSourceConfig>): DeepSourceConfig {
     config.requestTimeout &&
     (typeof config.requestTimeout !== 'number' || config.requestTimeout <= 0)
   ) {
-    throw new Error('Request timeout must be a positive number');
+    throw MCPErrorFactory.configuration('Request timeout must be a positive number', {
+      provided: config.requestTimeout,
+      environmentVariable: 'DEEPSOURCE_REQUEST_TIMEOUT',
+    });
   }
 
   return config as DeepSourceConfig;
@@ -70,7 +78,7 @@ function loadConfigFromEnv(): Partial<DeepSourceConfig> {
 /**
  * Gets the current configuration
  * @returns The validated configuration
- * @throws Error if configuration is invalid
+ * @throws MCPError if configuration is invalid
  */
 export function getConfig(): DeepSourceConfig {
   const envConfig = loadConfigFromEnv();
@@ -102,7 +110,7 @@ export function hasApiKey(): boolean {
 /**
  * Gets the API key from configuration
  * @returns The API key
- * @throws Error if API key is not set
+ * @throws MCPError if API key is not set
  */
 export function getApiKey(): string {
   const config = getConfig();
