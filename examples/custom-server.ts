@@ -72,7 +72,7 @@ async function createCustomServer() {
   const originalHandler = customHealthCheckTool.handler;
   customHealthCheckTool.handler = async (params) => {
     const result = await originalHandler(params);
-    if (result.content && result.content[0] && result.content[0].type === 'text') {
+    if (result.content?.[0]?.type === 'text') {
       const data = JSON.parse(result.content[0].text);
       data.registeredTools = server.getRegisteredTools();
       result.content[0].text = JSON.stringify(data);
