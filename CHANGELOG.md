@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.3.0] - 2025-08-05
+- Major architectural improvements with Domain-Driven Design (DDD) implementation
+- Improved test coverage from 88.84% to 90.27%
+- Added comprehensive error handling system with MCP-specific error types
+- Implemented new tool registry system with dependency injection
+- Added enhanced tool registry with automatic tool discovery and metadata support
+- Created domain aggregates for Project, AnalysisRun, QualityMetrics, and ComplianceReport
+- Added value objects for type-safe domain modeling (ThresholdValue, MetricValue, CoveragePercentage, IssueCount)
+- Implemented repository pattern with mappers for clean separation of concerns
+- Added GraphQL query builder for improved API interaction
+- Created comprehensive test suites for all new components
+- Fixed all DeepSource analyzer issues (JS-0323, JS-0331, JS-R1004, JS-0105, JS-W1044)
+- Improved TypeScript type safety by eliminating all `any` types
+- Added handler factory pattern for consistent handler implementation
+- Created adapters for backward compatibility with existing code
+- Added extensive documentation for new architectural patterns
+- Implemented proper error handling with categorized MCP errors
+- Added support for tool categorization and tagging
+- Created example tool demonstrating enhanced plugin format
+- Improved code organization following SOLID and DRY principles
+
 ## [v1.2.2] - 2025-07-28
 - Updated all dependencies to their latest versions
   - @modelcontextprotocol/sdk: 1.12.3 → 1.17.0
