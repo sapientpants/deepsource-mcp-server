@@ -347,6 +347,124 @@ describe('EnhancedToolRegistry', () => {
     });
   });
 
+  describe('reloadTool', () => {
+    it('should return false for non-discovered tool', async () => {
+      const tool: EnhancedToolDefinition = {
+        name: 'regular-tool',
+        description: 'A regular tool',
+        handler: jest.fn(),
+      };
+
+      registry.registerEnhancedTool(tool);
+
+      const result = await registry.reloadTool('regular-tool');
+      expect(result).toBe(false);
+    });
+
+    it('should handle reload errors gracefully', async () => {
+      // Mock a discovered tool by directly setting the internal map
+      const mockRegistry = registry as unknown as {
+        discoveredTools: Map<string, string>;
+        loadToolFromFile: jest.Mock;
+      };
+
+      mockRegistry.discoveredTools.set('discovered-tool', '/path/to/tool.js');
+      mockRegistry.loadToolFromFile = jest.fn().mockRejectedValue(new Error('Load failed'));
+
+      // Mock require.resolve and require.cache
+      const originalRequire = global.require;
+      global.require = {
+        ...originalRequire,
+        resolve: jest.fn().mockReturnValue('/resolved/path'),
+        cache: {},
+      } as typeof require;
+
+      const result = await registry.reloadTool('discovered-tool');
+      expect(result).toBe(false);
+
+      // Restore require
+      global.require = originalRequire;
+    });
+
+    it('should successfully reload a discovered tool', async () => {
+      // Mock a discovered tool
+      const mockRegistry = registry as unknown as {
+        discoveredTools: Map<string, string>;
+        loadToolFromFile: jest.Mock;
+      };
+
+      mockRegistry.discoveredTools.set('reloadable-tool', '/path/to/tool.js');
+      mockRegistry.loadToolFromFile = jest.fn().mockResolvedValue('reloadable-tool');
+
+      // Mock require.resolve and require.cache
+      const mockCache = { '/resolved/path': {} };
+      const originalRequire = global.require;
+      global.require = {
+        ...originalRequire,
+        resolve: jest.fn().mockReturnValue('/resolved/path'),
+        cache: mockCache,
+      } as typeof require;
+
+      const result = await registry.reloadTool('reloadable-tool');
+      expect(result).toBe(true);
+      expect(mockRegistry.loadToolFromFile).toHaveBeenCalledWith('/path/to/tool.js', {});
+
+      // Restore require
+      global.require = originalRequire;
+    });
+
+    it('should return false when reloaded tool has different name', async () => {
+      // Mock a discovered tool
+      const mockRegistry = registry as unknown as {
+        discoveredTools: Map<string, string>;
+        loadToolFromFile: jest.Mock;
+      };
+
+      mockRegistry.discoveredTools.set('original-tool', '/path/to/tool.js');
+      mockRegistry.loadToolFromFile = jest.fn().mockResolvedValue('different-tool');
+
+      // Mock require.resolve and require.cache
+      const originalRequire = global.require;
+      global.require = {
+        ...originalRequire,
+        resolve: jest.fn().mockReturnValue('/resolved/path'),
+        cache: {},
+      } as typeof require;
+
+      const result = await registry.reloadTool('original-tool');
+      expect(result).toBe(false);
+
+      // Restore require
+      global.require = originalRequire;
+    });
+  });
+
+  describe('discoverTools', () => {
+    it('should handle empty directories gracefully', async () => {
+      const fs = jest.requireMock('fs');
+      fs.promises.readdir.mockResolvedValue([]);
+
+      const result = await registry.discoverTools({
+        directories: ['./empty-dir'],
+        patterns: ['*.tool.js'],
+      });
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle scan directory errors', async () => {
+      const fs = jest.requireMock('fs');
+      fs.promises.readdir.mockRejectedValue(new Error('Permission denied'));
+
+      const result = await registry.discoverTools({
+        directories: ['./error-dir'],
+        patterns: ['*.tool.js'],
+      });
+
+      expect(result).toEqual([]);
+    });
+  });
+
   describe('createEnhancedToolRegistry', () => {
     it('should create an enhanced tool registry instance', () => {
       const instance = createEnhancedToolRegistry(mockServer, mockDeps);

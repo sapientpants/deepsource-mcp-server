@@ -33,12 +33,20 @@ jest.mock('../../config/index.js', () => ({
 jest.mock('../../server/tool-helpers.js', () => ({
   logToolInvocation: jest.fn(),
   logToolResult: jest.fn(),
-  logAndFormatError: jest.fn((error: unknown, toolName: string) => {
+  logAndFormatError: jest.fn((error: unknown, _toolName: string) => {
     if (error instanceof Error) {
-      return `${toolName} error: ${error.message}`;
+      return `${error.message}`;
     }
-    return `${toolName} error: ${String(error)}`;
+    return `${String(error)}`;
   }),
+}));
+
+// Mock error formatter
+jest.mock('../../utils/error-handling/mcp-error-formatter.js', () => ({
+  createErrorResponse: jest.fn((_error: unknown) => ({
+    content: [{ type: 'text', text: JSON.stringify({ error: 'formatted error' }) }],
+    isError: true,
+  })),
 }));
 
 describe('ToolRegistry', () => {
@@ -509,6 +517,38 @@ describe('ToolRegistry', () => {
       const result = await registeredHandler({}, {});
 
       expect(result.content).toEqual([]);
+    });
+
+    it('should handle error response parsing failure', async () => {
+      // Mock createErrorResponse to return malformed JSON that will fail to parse
+      const { createErrorResponse } = jest.requireMock(
+        '../../utils/error-handling/mcp-error-formatter.js'
+      );
+      createErrorResponse.mockReturnValueOnce({
+        content: [{ type: 'text', text: 'malformed{json}' }],
+        isError: true,
+      });
+
+      const tool: ToolDefinition = {
+        name: 'parse_error_tool',
+        description: 'Tool that causes error response parsing to fail',
+        handler: async () => {
+          throw new Error('Test error for parsing failure');
+        },
+      };
+
+      registry.registerTool(tool);
+
+      const registeredHandler = mockServer.registerTool.mock.calls[0][2];
+      const result = await registeredHandler({}, {});
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toBe('Test error for parsing failure');
+      // The actual structured content that gets set when JSON parsing fails
+      expect(result.structuredContent).toEqual({
+        code: 'HANDLER_ERROR',
+        message: 'Test error for parsing failure',
+      });
     });
   });
 });
