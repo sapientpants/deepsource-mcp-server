@@ -6,6 +6,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { MetricsClient } from '../../client/metrics-client.js';
 import type { MetricsClientTestable } from '../test-types.js';
+import { TestableMetricsClient } from '../utils/test-utils.js';
 
 // Mock the base client
 jest.mock('../../client/base-client.js', () => ({
@@ -340,7 +341,7 @@ describe('MetricsClient', () => {
 
   describe('buildQualityMetricsQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (MetricsClient as any).buildQualityMetricsQuery();
+      const query = TestableMetricsClient.testBuildQualityMetricsQuery();
 
       expect(query).toContain('query getQualityMetrics');
       expect(query).toContain('$login: String!');
@@ -352,7 +353,7 @@ describe('MetricsClient', () => {
 
   describe('buildUpdateThresholdMutation', () => {
     it('should build correct GraphQL mutation', () => {
-      const mutation = (MetricsClient as any).buildUpdateThresholdMutation();
+      const mutation = TestableMetricsClient.testBuildUpdateThresholdMutation();
 
       expect(mutation).toContain('mutation updateMetricThreshold');
       expect(mutation).toContain('$repositoryId: ID!');
@@ -364,7 +365,7 @@ describe('MetricsClient', () => {
 
   describe('buildUpdateSettingMutation', () => {
     it('should build correct GraphQL mutation', () => {
-      const mutation = (MetricsClient as any).buildUpdateSettingMutation();
+      const mutation = TestableMetricsClient.testBuildUpdateSettingMutation();
 
       expect(mutation).toContain('mutation updateMetricSetting');
       expect(mutation).toContain('$repositoryId: ID!');

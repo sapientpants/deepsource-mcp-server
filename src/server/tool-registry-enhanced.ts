@@ -394,7 +394,7 @@ export class EnhancedToolRegistry extends ToolRegistry {
     try {
       // Clear the module cache
       const resolvedPath = require.resolve(filePath);
-      delete require.cache[resolvedPath];
+      Reflect.deleteProperty(require.cache, resolvedPath);
 
       // Reload the tool
       const reloadedName = await this.loadToolFromFile(filePath, {});

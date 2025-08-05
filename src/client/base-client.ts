@@ -216,7 +216,7 @@ export class BaseDeepSourceClient {
    * @returns Normalized pagination parameters
    * @protected
    */
-  protected normalizePaginationParams(params: PaginationParams): PaginationParams {
+  protected static normalizePaginationParams(params: PaginationParams): PaginationParams {
     const normalizedParams = { ...params };
 
     // Ensure offset is a non-negative integer or undefined
@@ -266,7 +266,7 @@ export class BaseDeepSourceClient {
    * @returns An empty paginated response
    * @protected
    */
-  protected createEmptyPaginatedResponse<T>(): PaginatedResponse<T> {
+  protected static createEmptyPaginatedResponse<T>(): PaginatedResponse<T> {
     return {
       items: [],
       pageInfo: {

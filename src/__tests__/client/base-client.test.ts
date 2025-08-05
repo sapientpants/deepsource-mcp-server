@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import { describe, it, expect, beforeEach, afterAll, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterAll } from '@jest/globals';
 import nock from 'nock';
 import { BaseDeepSourceClient } from '../../client/base-client';
 import { GraphQLResponse } from '../../types/graphql-responses';
@@ -23,13 +23,14 @@ class TestableBaseClient extends BaseDeepSourceClient {
   }
 
   testNormalizePaginationParams(params: unknown) {
-    return this.normalizePaginationParams(params);
+    return BaseDeepSourceClient.normalizePaginationParams(params);
   }
 
   testCreateEmptyPaginatedResponse<T>() {
-    return this.createEmptyPaginatedResponse<T>();
+    return BaseDeepSourceClient.createEmptyPaginatedResponse<T>();
   }
 
+  // skipcq: JS-0105 - Test helper method calling static method
   testExtractErrorMessages(errors: Array<{ message: string }>) {
     return BaseDeepSourceClient.extractErrorMessages(errors);
   }

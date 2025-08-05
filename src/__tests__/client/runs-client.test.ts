@@ -7,14 +7,13 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { RunsClient } from '../../client/runs-client.js';
 import { asBranchName } from '../../types/branded.js';
 import type { RunsClientTestable, MockDeepSourceClient } from '../test-types.js';
+import { TestableRunsClient } from '../utils/test-utils.js';
 
 // Mock the base client
 jest.mock('../../client/base-client.js', () => ({
   BaseDeepSourceClient: jest.fn().mockImplementation(() => ({
     findProjectByKey: jest.fn(),
     executeGraphQL: jest.fn(),
-    createEmptyPaginatedResponse: jest.fn(),
-    normalizePaginationParams: jest.fn(),
     logger: {
       info: jest.fn(),
       error: jest.fn(),
@@ -224,10 +223,8 @@ describe('RunsClient', () => {
         after: 'cursor123',
       });
 
-      expect(mockBaseClient.normalizePaginationParams).toHaveBeenCalledWith({
-        first: 10,
-        after: 'cursor123',
-      });
+      // The normalizePaginationParams is now a static method and its behavior
+      // is tested separately in base-client tests
     });
   });
 
@@ -514,7 +511,7 @@ describe('RunsClient', () => {
 
   describe('buildRunsQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (RunsClient as any).buildRunsQuery();
+      const query = TestableRunsClient.testBuildRunsQuery();
 
       expect(query).toContain('query getRepositoryRuns');
       expect(query).toContain('$login: String!');
@@ -527,7 +524,7 @@ describe('RunsClient', () => {
 
   describe('buildRunByUidQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (RunsClient as any).buildRunByUidQuery();
+      const query = TestableRunsClient.testBuildRunByUidQuery();
 
       expect(query).toContain('query getRunByUid');
       expect(query).toContain('$runUid: UUID!');
@@ -537,7 +534,7 @@ describe('RunsClient', () => {
 
   describe('buildRunByCommitQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (RunsClient as any).buildRunByCommitQuery();
+      const query = TestableRunsClient.testBuildRunByCommitQuery();
 
       expect(query).toContain('query getRunByCommit');
       expect(query).toContain('$commitOid: String!');
@@ -678,7 +675,7 @@ describe('RunsClient', () => {
         },
       };
 
-      const run = (RunsClient as any).mapRunNode(mockNode);
+      const run = TestableRunsClient.testMapRunNode(mockNode);
 
       expect(run.id).toBe('run-node-1');
       expect(run.runUid).toBe('f47ac10b-58cc-4372-a567-0e02b2c3d479');
@@ -700,7 +697,7 @@ describe('RunsClient', () => {
         repository: null,
       };
 
-      const run = (RunsClient as any).mapRunNode(mockNode);
+      const run = TestableRunsClient.testMapRunNode(mockNode);
 
       expect(run.id).toBe('');
       expect(run.runUid).toBe('');

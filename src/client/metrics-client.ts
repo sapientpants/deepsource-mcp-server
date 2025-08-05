@@ -149,7 +149,7 @@ export class MetricsClient extends BaseDeepSourceClient {
       });
 
       // Handle test environment separately
-      const testResult = this.handleTestEnvironment(params);
+      const testResult = MetricsClient.handleTestEnvironment(params);
       if (testResult !== undefined) {
         return testResult;
       }
@@ -444,7 +444,7 @@ export class MetricsClient extends BaseDeepSourceClient {
    * Handles test environment scenarios
    * @private
    */
-  private handleTestEnvironment(
+  private static handleTestEnvironment(
     params: MetricHistoryParams
   ): MetricHistoryResponse | null | undefined {
     if (process.env.NODE_ENV !== 'test') {

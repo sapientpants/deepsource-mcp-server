@@ -59,10 +59,10 @@ export class RunsClient extends BaseDeepSourceClient {
 
       const project = await this.findProjectByKey(projectKey);
       if (!project) {
-        return this.createEmptyPaginatedResponse<DeepSourceRun>();
+        return BaseDeepSourceClient.createEmptyPaginatedResponse<DeepSourceRun>();
       }
 
-      const normalizedParams = this.normalizePaginationParams(params);
+      const normalizedParams = BaseDeepSourceClient.normalizePaginationParams(params);
       const query = RunsClient.buildRunsQuery();
 
       const response = await this.executeGraphQL(query, {

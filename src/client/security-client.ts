@@ -65,11 +65,11 @@ export class SecurityClient extends BaseDeepSourceClient {
 
       const project = await this.findProjectByKey(projectKey);
       if (!project) {
-        return this.createEmptyPaginatedResponse<VulnerabilityOccurrence>();
+        return BaseDeepSourceClient.createEmptyPaginatedResponse<VulnerabilityOccurrence>();
       }
 
-      const normalizedParams = this.normalizePaginationParams(params);
-      const query = this.buildVulnerabilitiesQuery();
+      const normalizedParams = BaseDeepSourceClient.normalizePaginationParams(params);
+      const query = SecurityClient.buildVulnerabilitiesQuery();
 
       const response = await this.executeGraphQL(query, {
         login: project.repository.login,
@@ -173,7 +173,7 @@ export class SecurityClient extends BaseDeepSourceClient {
    * Builds GraphQL query for dependency vulnerabilities
    * @private
    */
-  private buildVulnerabilitiesQuery(): string {
+  private static buildVulnerabilitiesQuery(): string {
     return `
       query getDependencyVulnerabilities(
         $login: String!
@@ -424,7 +424,7 @@ export class SecurityClient extends BaseDeepSourceClient {
       const complianceScore =
         totalIssues === 0
           ? 100
-          : Math.max(0, 100 - (totalCritical * 10 + totalMajor * 5 + totalMinor * 1));
+          : Math.max(0, 100 - (totalCritical * 10 + totalMajor * 5 + totalMinor));
 
       return {
         reportType,

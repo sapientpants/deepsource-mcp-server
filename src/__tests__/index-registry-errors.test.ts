@@ -29,7 +29,9 @@ describe('Index Registry Error Handlers', () => {
     });
 
     // Mock console.error
-    mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {
+      // Empty mock to suppress console errors during tests
+    });
 
     // Set required env
     process.env.DEEPSOURCE_API_KEY = 'test-key';

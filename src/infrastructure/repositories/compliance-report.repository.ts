@@ -383,6 +383,7 @@ export class ComplianceReportRepository implements IComplianceReportRepository {
    * @param report - The report to save
    * @throws Error indicating the operation is not supported
    */
+  // skipcq: JS-0105 - Repository method required by interface contract
   async save(report: ComplianceReport): Promise<void> {
     logger.warn('Attempted to save compliance report', { id: report.id });
 
@@ -401,6 +402,7 @@ export class ComplianceReportRepository implements IComplianceReportRepository {
    * @param id - The report ID to delete
    * @throws Error indicating the operation is not supported
    */
+  // skipcq: JS-0105 - Repository method required by interface contract
   async delete(id: string): Promise<void> {
     logger.warn('Attempted to delete compliance report', { id });
 

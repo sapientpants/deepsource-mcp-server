@@ -4,6 +4,10 @@
 
 import { DeepSourceClient, MetricShortcode, ReportType } from '../../deepsource.js';
 import { MetricDirection, MetricKey } from '../../types/metrics.js';
+import { SecurityClient } from '../../client/security-client.js';
+import { MetricsClient } from '../../client/metrics-client.js';
+import { RunsClient } from '../../client/runs-client.js';
+import { IssuesClient } from '../../client/issues-client.js';
 
 /**
  * TestableDeepSourceClient extends DeepSourceClient to expose private methods for testing.
@@ -292,5 +296,129 @@ export class TestableDeepSourceClient extends DeepSourceClient {
   static testValidateNumber(value: unknown): number | null {
     // @ts-expect-error Accessing private method for testing
     return DeepSourceClient.validateNumber(value);
+  }
+}
+
+/**
+ * TestableSecurityClient extends SecurityClient to expose private methods for testing.
+ */
+export class TestableSecurityClient extends SecurityClient {
+  /**
+   * Test method for buildComplianceReportQuery private static method
+   */
+  static testBuildComplianceReportQuery(): string {
+    // @ts-expect-error Accessing private method for testing
+    return SecurityClient.buildComplianceReportQuery();
+  }
+
+  /**
+   * Test method for buildVulnerabilitiesQuery private static method
+   */
+  static testBuildVulnerabilitiesQuery(): string {
+    // @ts-expect-error Accessing private method for testing
+    return SecurityClient.buildVulnerabilitiesQuery();
+  }
+}
+
+/**
+ * TestableMetricsClient extends MetricsClient to expose private methods for testing.
+ */
+export class TestableMetricsClient extends MetricsClient {
+  /**
+   * Test method for buildQualityMetricsQuery private static method
+   */
+  static testBuildQualityMetricsQuery(): string {
+    // @ts-expect-error Accessing private method for testing
+    return MetricsClient.buildQualityMetricsQuery();
+  }
+
+  /**
+   * Test method for buildUpdateThresholdMutation private static method
+   */
+  static testBuildUpdateThresholdMutation(): string {
+    // @ts-expect-error Accessing private method for testing
+    return MetricsClient.buildUpdateThresholdMutation();
+  }
+
+  /**
+   * Test method for buildUpdateSettingMutation private static method
+   */
+  static testBuildUpdateSettingMutation(): string {
+    // @ts-expect-error Accessing private method for testing
+    return MetricsClient.buildUpdateSettingMutation();
+  }
+
+  /**
+   * Test method for buildMetricHistoryQuery private static method
+   */
+  static testBuildMetricHistoryQuery(): string {
+    // @ts-expect-error Accessing private method for testing
+    return MetricsClient.buildMetricHistoryQuery();
+  }
+
+  /**
+   * Test method for calculateTrend private static method
+   */
+  static testCalculateTrend(values: unknown[]): unknown {
+    // @ts-expect-error Accessing private method for testing
+    return MetricsClient.calculateTrend(values);
+  }
+
+  /**
+   * Test method for handleTestEnvironment private static method
+   */
+  static testHandleTestEnvironment(params: unknown): unknown {
+    // @ts-expect-error Accessing private method for testing
+    return MetricsClient.handleTestEnvironment(params);
+  }
+}
+
+/**
+ * TestableRunsClient extends RunsClient to expose private methods for testing.
+ */
+export class TestableRunsClient extends RunsClient {
+  /**
+   * Test method for buildRunsQuery private static method
+   */
+  static testBuildRunsQuery(): string {
+    // @ts-expect-error Accessing private method for testing
+    return RunsClient.buildRunsQuery();
+  }
+
+  /**
+   * Test method for buildRunByUidQuery private static method
+   */
+  static testBuildRunByUidQuery(): string {
+    // @ts-expect-error Accessing private method for testing
+    return RunsClient.buildRunByUidQuery();
+  }
+
+  /**
+   * Test method for buildRunByCommitQuery private static method
+   */
+  static testBuildRunByCommitQuery(): string {
+    // @ts-expect-error Accessing private method for testing
+    return RunsClient.buildRunByCommitQuery();
+  }
+
+  /**
+   * Test method for mapRunNode private static method
+   */
+  static testMapRunNode(node: unknown): unknown {
+    // @ts-expect-error Accessing private method for testing
+    return RunsClient.mapRunNode(node);
+  }
+}
+
+/**
+ * TestableIssuesClient extends IssuesClient to expose private methods for testing.
+ */
+export class TestableIssuesClient extends IssuesClient {
+  /**
+   * Test method for buildIssuesQuery private static method
+   */
+  static testBuildIssuesQuery(): string {
+    // @ts-expect-error Accessing private method for testing
+    return IssuesClient.buildIssuesQuery();
   }
 }

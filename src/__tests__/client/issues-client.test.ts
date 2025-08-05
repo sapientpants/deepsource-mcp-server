@@ -6,6 +6,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { IssuesClient } from '../../client/issues-client.js';
 import type { IssuesClientTestable, MockDeepSourceClient } from '../test-types.js';
+import { TestableIssuesClient } from '../utils/test-utils.js';
 
 // Mock the base client
 jest.mock('../../client/base-client.js', () => ({
@@ -204,18 +205,14 @@ describe('IssuesClient', () => {
         first: 10,
       });
 
-      expect(mockBaseClient.normalizePaginationParams).toHaveBeenCalledWith({
-        analyzerIn: ['javascript'],
-        tags: ['security'],
-        path: '/src/',
-        first: 10,
-      });
+      // The normalizePaginationParams is now a static method and its behavior
+      // is tested separately in base-client tests
     });
   });
 
   describe('buildIssuesQuery', () => {
     it('should build correct GraphQL query', () => {
-      const query = (IssuesClient as any).buildIssuesQuery();
+      const query = TestableIssuesClient.testBuildIssuesQuery();
 
       expect(query).toContain('query getRepositoryIssues');
       expect(query).toContain('$login: String!');

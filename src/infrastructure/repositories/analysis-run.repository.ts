@@ -554,6 +554,7 @@ export class AnalysisRunRepository implements IAnalysisRunRepository {
    * @param run - The run to save
    * @throws Error indicating the operation is not supported
    */
+  // skipcq: JS-0105 - Repository method required by interface contract
   async save(run: AnalysisRun): Promise<void> {
     logger.warn('Attempted to save run', {
       runId: run.runId,
@@ -576,6 +577,7 @@ export class AnalysisRunRepository implements IAnalysisRunRepository {
    * @param id - The run ID to delete
    * @throws Error indicating the operation is not supported
    */
+  // skipcq: JS-0105 - Repository method required by interface contract
   async delete(id: RunId): Promise<void> {
     logger.warn('Attempted to delete run', { runId: id });
 

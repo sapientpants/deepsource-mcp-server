@@ -35,10 +35,10 @@ export class IssuesClient extends BaseDeepSourceClient {
 
       const project = await this.findProjectByKey(projectKey);
       if (!project) {
-        return this.createEmptyPaginatedResponse<DeepSourceIssue>();
+        return BaseDeepSourceClient.createEmptyPaginatedResponse<DeepSourceIssue>();
       }
 
-      const normalizedParams = this.normalizePaginationParams(params);
+      const normalizedParams = BaseDeepSourceClient.normalizePaginationParams(params);
       const query = IssuesClient.buildIssuesQuery();
 
       const response = await this.executeGraphQL(query, {

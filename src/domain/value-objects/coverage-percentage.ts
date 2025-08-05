@@ -32,6 +32,8 @@ interface CoveragePercentageProps {
  * ```
  */
 export class CoveragePercentage extends ValueObject<CoveragePercentageProps> {
+  // Private constructor enforces factory pattern - instances must be created via static methods
+  // skipcq: JS-0358 - This constructor is necessary to prevent direct instantiation
   private constructor(props: CoveragePercentageProps) {
     super(props);
   }

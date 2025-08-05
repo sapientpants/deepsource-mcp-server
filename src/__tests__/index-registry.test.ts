@@ -306,7 +306,9 @@ describe('Index Registry Implementation', () => {
       });
 
       // Mock console.error
-      mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+      mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {
+        // Empty mock to suppress console errors during tests
+      });
 
       // Save and set environment
       originalProcessEnv = { ...process.env };
@@ -357,7 +359,9 @@ describe('Index Registry Implementation', () => {
       it('should create registry and register all tools', async () => {
         const mockServer = new McpServer({ name: 'test', version: '1.0.0' });
 
-        jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation(() => {});
+        jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation(() => {
+          // Empty mock implementation for tool registration
+        });
         jest
           .spyOn(ToolRegistry.prototype, 'getToolNames')
           .mockReturnValue([
@@ -383,7 +387,9 @@ describe('Index Registry Implementation', () => {
       it('should log tool configuration', async () => {
         const mockServer = new McpServer({ name: 'test', version: '1.0.0' });
 
-        jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation(() => {});
+        jest.spyOn(ToolRegistry.prototype, 'registerTool').mockImplementation(() => {
+          // Empty mock implementation for tool registration
+        });
         jest.spyOn(ToolRegistry.prototype, 'getToolNames').mockReturnValue(['test-tool']);
 
         const { createAndConfigureToolRegistry } = await import('../index-registry.js');

@@ -124,6 +124,7 @@ export class Project extends AggregateRoot<ProjectKey> {
   private static isValidUrl(url: string): boolean {
     try {
       // URL constructor is available in Node.js
+      // skipcq: JS-R1002 - URL constructor is used for validation, object is intentionally not used
       new globalThis.URL(url);
       return true;
     } catch {

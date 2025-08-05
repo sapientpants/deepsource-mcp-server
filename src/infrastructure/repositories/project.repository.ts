@@ -209,6 +209,7 @@ export class ProjectRepository implements IProjectRepository {
    * @param project - The project to save
    * @throws Error indicating the operation is not supported
    */
+  // skipcq: JS-0105 - Repository method required by interface contract
   async save(project: Project): Promise<void> {
     logger.warn('Attempted to save project', {
       key: project.key,
@@ -231,6 +232,7 @@ export class ProjectRepository implements IProjectRepository {
    * @param key - The project key to delete
    * @throws Error indicating the operation is not supported
    */
+  // skipcq: JS-0105 - Repository method required by interface contract
   async delete(key: ProjectKey): Promise<void> {
     logger.warn('Attempted to delete project', { key });
 

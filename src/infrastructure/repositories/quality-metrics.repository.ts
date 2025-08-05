@@ -400,6 +400,7 @@ export class QualityMetricsRepository implements IQualityMetricsRepository {
    * @param id - The metrics ID to delete
    * @throws Error indicating the operation is not supported
    */
+  // skipcq: JS-0105 - Repository method required by interface contract
   async delete(id: string): Promise<void> {
     logger.warn('Attempted to delete metrics', { id });
 

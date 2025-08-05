@@ -7,6 +7,7 @@ import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals
 import { MetricsClient } from '../../client/metrics-client.js';
 import { MetricShortcode, MetricKey } from '../../types/metrics.js';
 import type { MetricsClientTestable } from '../test-types.js';
+import { TestableMetricsClient as TestableMetricsClientUtil } from '../utils/test-utils.js';
 
 // Mock the base client
 jest.mock('../../client/base-client.js', () => ({
@@ -24,18 +25,20 @@ jest.mock('../../client/base-client.js', () => ({
 
 // Test helper class to expose private methods for testing
 class TestableMetricsClient extends MetricsClient {
+  // skipcq: JS-0105 - Test helper method calling static method
   testBuildMetricHistoryQuery() {
     // buildMetricHistoryQuery is now a static method
-    return (MetricsClient as any).buildMetricHistoryQuery();
+    return TestableMetricsClientUtil.testBuildMetricHistoryQuery();
   }
 
   testExtractHistoryFromResponse(data: unknown, params: unknown) {
     return (this as unknown as MetricsClientTestable).extractHistoryFromResponse(data, params);
   }
 
+  // skipcq: JS-0105 - Test helper method calling static method
   testCalculateTrend(values: unknown[]) {
     // calculateTrend is now a static method
-    return (MetricsClient as any).calculateTrend(values);
+    return TestableMetricsClientUtil.testCalculateTrend(values);
   }
 
   testHandleMetricsError(error: unknown) {
@@ -47,7 +50,8 @@ class TestableMetricsClient extends MetricsClient {
   }
 
   testHandleTestEnvironment(params: unknown) {
-    return (this as unknown as MetricsClientTestable).handleTestEnvironment(params);
+    // handleTestEnvironment is now a static method
+    return TestableMetricsClientUtil.testHandleTestEnvironment(params);
   }
 }
 
