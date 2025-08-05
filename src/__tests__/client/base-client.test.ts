@@ -22,10 +22,12 @@ class TestableBaseClient extends BaseDeepSourceClient {
     return this.findProjectByKey(projectKey);
   }
 
+  // skipcq: JS-0105 - Test helper method calling static method
   testNormalizePaginationParams(params: unknown) {
     return BaseDeepSourceClient.normalizePaginationParams(params);
   }
 
+  // skipcq: JS-0105 - Test helper method calling static method
   testCreateEmptyPaginatedResponse<T>() {
     return BaseDeepSourceClient.createEmptyPaginatedResponse<T>();
   }

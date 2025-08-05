@@ -49,6 +49,7 @@ class TestableMetricsClient extends MetricsClient {
     return (this as unknown as MetricsClientTestable).extractMetricsFromResponse(data);
   }
 
+  // skipcq: JS-0105 - Test helper method calling static method
   testHandleTestEnvironment(params: unknown) {
     // handleTestEnvironment is now a static method
     return TestableMetricsClientUtil.testHandleTestEnvironment(params);
