@@ -121,10 +121,6 @@ describe('ValueObject', () => {
 
       // Create a new value object with the props
       class MutableTestValueObject extends ValueObject<typeof props> {
-        constructor(p: typeof props) {
-          super(p);
-        }
-
         getPropsValue(): string {
           return this.props.value;
         }

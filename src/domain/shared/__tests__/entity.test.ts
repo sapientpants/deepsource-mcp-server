@@ -43,11 +43,7 @@ class TestEntity extends Entity<TestId> {
 /**
  * Another test entity for comparison
  */
-class AnotherTestEntity extends Entity<TestId> {
-  constructor(id: TestId) {
-    super(id);
-  }
-}
+class AnotherTestEntity extends Entity<TestId> {}
 
 describe('Entity', () => {
   const createTestId = (value: string): TestId => value as TestId;
@@ -136,11 +132,7 @@ describe('Entity', () => {
       // Number ID type
       type NumberId = number & { readonly __brand: unique symbol };
 
-      class NumberIdEntity extends Entity<NumberId> {
-        constructor(id: NumberId) {
-          super(id);
-        }
-      }
+      class NumberIdEntity extends Entity<NumberId> {}
 
       const numId = 123 as NumberId;
       const numEntity = new NumberIdEntity(numId);
@@ -152,11 +144,7 @@ describe('Entity', () => {
       // Complex ID type
       type ComplexId = { projectKey: string; runId: string } & { readonly __brand: unique symbol };
 
-      class ComplexIdEntity extends Entity<ComplexId> {
-        constructor(id: ComplexId) {
-          super(id);
-        }
-      }
+      class ComplexIdEntity extends Entity<ComplexId> {}
 
       const complexId = { projectKey: 'proj-1', runId: 'run-1' } as ComplexId;
       const complexEntity = new ComplexIdEntity(complexId);
