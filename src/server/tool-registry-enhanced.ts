@@ -304,7 +304,7 @@ export class EnhancedToolRegistry extends ToolRegistry {
     }
 
     if (filters.excludeTags && filters.excludeTags.length > 0) {
-      if (metadata.tags && metadata.tags.some((tag) => filters.excludeTags?.includes(tag))) {
+      if (metadata.tags?.some((tag) => filters.excludeTags?.includes(tag))) {
         return false;
       }
     }
@@ -344,7 +344,7 @@ export class EnhancedToolRegistry extends ToolRegistry {
   getToolsByTag(tag: string): string[] {
     const tools: string[] = [];
     for (const [name, metadata] of this.toolMetadata.entries()) {
-      if (metadata.tags && metadata.tags.includes(tag)) {
+      if (metadata.tags?.includes(tag)) {
         tools.push(name);
       }
     }

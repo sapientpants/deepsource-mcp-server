@@ -169,7 +169,7 @@ export class GraphQLQueryBuilder {
     const indentStr = '  '.repeat(indent);
     const fields = selections.map((sel) => {
       // Handle fragment spreads
-      if (sel.name && sel.name.startsWith('...')) {
+      if (sel.name?.startsWith('...')) {
         return `${indentStr}${sel.name}`;
       }
 
