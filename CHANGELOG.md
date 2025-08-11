@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.3.1] - 2025-08-11
+- Updated dependencies to latest versions
+  - @modelcontextprotocol/sdk: 1.17.1 → 1.17.2
+  - @eslint/js: 9.32.0 → 9.33.0
+  - @types/node: 24.1.0 → 24.2.1
+  - @typescript-eslint/eslint-plugin: 8.38.0 → 8.39.0
+  - @typescript-eslint/parser: 8.38.0 → 8.39.0
+  - eslint: 9.32.0 → 9.33.0
+  - eslint-plugin-prettier: 5.5.3 → 5.5.4
+  - lint-staged: 16.1.4 → 16.1.5
+  - nock: 14.0.7 → 14.0.9
+  - typescript: 5.8.3 → 5.9.2
+- Fixed ESLint warnings by removing unused eslint-disable directives
+
 ## [v1.3.0] - 2025-08-05
 - Major architectural improvements with Domain-Driven Design (DDD) implementation
 - Improved test coverage from 88.84% to 90.27%
