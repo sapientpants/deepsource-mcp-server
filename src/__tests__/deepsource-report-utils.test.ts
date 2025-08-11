@@ -19,9 +19,7 @@ describe('DeepSource Report Utility Methods', () => {
   describe('extractReportData', () => {
     // We need to access the private static method
     const extractReportData = (DeepSourceClient as Record<string, unknown>).extractReportData as (
-      // eslint-disable-next-line no-unused-vars
       _response: unknown,
-      // eslint-disable-next-line no-unused-vars
       _reportType: ReportType
     ) => Record<string, unknown> | null;
 
@@ -159,7 +157,6 @@ describe('DeepSource Report Utility Methods', () => {
   describe('getReportField', () => {
     // We need to access the private static method
     const getReportField = (DeepSourceClient as Record<string, unknown>).getReportField as (
-      // eslint-disable-next-line no-unused-vars
       _reportType: ReportType
     ) => string;
 
@@ -211,10 +208,7 @@ describe('DeepSource Report Utility Methods', () => {
   describe('getTitleForReportType', () => {
     // We need to access the private static method
     const getTitleForReportType = (DeepSourceClient as Record<string, unknown>)
-      .getTitleForReportType as (
-      // eslint-disable-next-line no-unused-vars
-      _reportType: ReportType
-    ) => string;
+      .getTitleForReportType as (_reportType: ReportType) => string;
 
     it('should return correct title for OWASP_TOP_10', () => {
       const title = getTitleForReportType(ReportType.OWASP_TOP_10);
