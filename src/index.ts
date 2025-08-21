@@ -73,8 +73,16 @@ async function main(): Promise<void> {
   }
 }
 
-// Run the main function
-main().catch((error) => {
-  logger.error('Unhandled error in main', error);
-  process.exit(1);
-});
+// Run the main function only when not in test mode
+/* istanbul ignore if */
+if (process.env.NODE_ENV !== 'test') {
+  main().catch((error) => {
+    logger.error('Unhandled error in main', error);
+    process.exit(1);
+  });
+} else {
+  // In test mode, just initialize the server without starting it
+  initializeServer().catch((error) => {
+    logger.error('Failed to initialize server in test mode', error);
+  });
+}

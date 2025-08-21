@@ -29,4 +29,7 @@ export default {
     '!src/**/*.test.ts',
   ],
   coverageReporters: ['text', 'lcov'],
+  resetModules: true,
+  clearMocks: true,
+  restoreMocks: true
 }; 
