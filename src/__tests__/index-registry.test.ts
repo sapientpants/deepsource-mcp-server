@@ -145,7 +145,7 @@ const {
 } = await import('../adapters/handler-adapters.js');
 
 describe('Registry-based MCP Server Integration', () => {
-  let registry: ToolRegistry;
+  let registry: any;
   let mockMcpServer: any;
 
   beforeEach(() => {
