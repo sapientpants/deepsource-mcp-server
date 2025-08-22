@@ -104,9 +104,19 @@ jest.unstable_mockModule('../handlers/base/handler.factory.js', () => ({
 
 // Mock the ToolRegistry class
 class MockToolRegistry {
-  private tools: any[] = [];
+  private tools: Array<{
+    name: string;
+    description: string;
+    inputSchema?: Record<string, unknown>;
+    handler: jest.MockedFunction<() => Promise<unknown>>;
+  }> = [];
 
-  registerTool(tool: any) {
+  registerTool(tool: {
+    name: string;
+    description: string;
+    inputSchema?: Record<string, unknown>;
+    handler: jest.MockedFunction<() => Promise<unknown>>;
+  }) {
     if (this.tools.find((t) => t.name === tool.name)) {
       throw new Error(`Tool ${tool.name} is already registered`);
     }
@@ -117,7 +127,14 @@ class MockToolRegistry {
     return this.tools;
   }
 
-  registerWithMcpServer(server: any) {
+  registerWithMcpServer(server: {
+    registerTool: (_config: {
+      name: string;
+      description: string;
+      inputSchema?: unknown;
+      handler: unknown;
+    }) => void;
+  }) {
     this.tools.forEach((tool) => {
       server.registerTool({
         name: tool.name,
@@ -145,8 +162,11 @@ const {
 } = await import('../adapters/handler-adapters.js');
 
 describe('Registry-based MCP Server Integration', () => {
-  let registry: any;
-  let mockMcpServer: any;
+  let registry: MockToolRegistry;
+  let mockMcpServer: {
+    registerTool: jest.MockedFunction<() => void>;
+    connect: jest.MockedFunction<() => Promise<void>>;
+  };
 
   beforeEach(() => {
     // Create fresh instances for each test
@@ -155,7 +175,7 @@ describe('Registry-based MCP Server Integration', () => {
       connect: jest.fn().mockResolvedValue(undefined),
     };
     (McpServer as jest.MockedFunction<typeof McpServer>).mockImplementation(
-      () => mockMcpServer as any
+      () => mockMcpServer as ReturnType<typeof McpServer>
     );
     registry = new ToolRegistry();
     jest.clearAllMocks();
@@ -199,7 +219,7 @@ describe('Registry-based MCP Server Integration', () => {
     });
 
     it('should register tools with MCP server', () => {
-      const server = new McpServer('test-server', '1.0.0') as any;
+      const server = new McpServer('test-server', '1.0.0') as ReturnType<typeof McpServer>;
       const tool = {
         name: 'test-tool',
         description: 'A test tool',

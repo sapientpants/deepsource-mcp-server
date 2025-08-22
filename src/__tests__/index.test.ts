@@ -66,7 +66,16 @@ const { describe, it, expect, beforeAll, afterAll } = await import('@jest/global
 
 describe('index.ts module', () => {
   // Import the module
-  let indexModule: any;
+  let indexModule: {
+    mcpServer: {
+      current: {
+        getRegisteredTools: () => string[];
+        getMcpServer: () => unknown;
+        start?: () => Promise<void>;
+      };
+    };
+    getMcpServer: () => unknown;
+  };
   let originalEnv: typeof process.env;
 
   beforeAll(async () => {

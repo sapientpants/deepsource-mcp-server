@@ -119,7 +119,16 @@ jest.unstable_mockModule('../server/mcp-server.js', () => ({
 const { describe, it, expect, beforeEach, afterEach } = await import('@jest/globals');
 
 describe('Index.ts MCP Server Comprehensive Tests', () => {
-  let indexModule: any;
+  let indexModule: {
+    mcpServer: {
+      current: {
+        getRegisteredTools: () => string[];
+        getMcpServer?: () => unknown;
+        start?: () => Promise<void>;
+      };
+    };
+    getMcpServer?: () => unknown;
+  };
   let originalEnv: typeof process.env;
 
   beforeEach(() => {
