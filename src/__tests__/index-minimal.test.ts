@@ -4,41 +4,77 @@
  * this ensures the module can be imported successfully
  */
 
-import { describe, it, expect, beforeAll, afterAll, jest } from '@jest/globals';
+import { jest } from '@jest/globals';
 
-// Minimal mocks to allow the module to load
-jest.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
+// Use unstable_mockModule for ES modules - set up all mocks before imports
+jest.unstable_mockModule('@modelcontextprotocol/sdk/server/mcp.js', () => ({
   McpServer: jest.fn().mockImplementation(() => ({
     registerTool: jest.fn(),
     connect: jest.fn(),
+    setRequestHandler: jest.fn(),
   })),
 }));
 
-jest.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
+jest.unstable_mockModule('@modelcontextprotocol/sdk/server/stdio.js', () => ({
   StdioServerTransport: jest.fn(),
 }));
 
+jest.unstable_mockModule('../utils/logging/logger.js', () => ({
+  createLogger: jest.fn(() => ({
+    info: jest.fn(),
+    debug: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+  })),
+}));
+
+jest.unstable_mockModule('../server/mcp-server.js', () => ({
+  DeepSourceMCPServer: {
+    create: jest.fn().mockResolvedValue({
+      getRegisteredTools: jest.fn().mockReturnValue([]),
+      getMcpServer: jest.fn().mockReturnValue({
+        registerTool: jest.fn(),
+      }),
+      start: jest.fn(),
+    }),
+  },
+}));
+
+// Import test utilities after all mocks are set
+const { describe, it, expect, beforeAll, afterAll } = await import('@jest/globals');
+
 describe('index.ts module loading', () => {
   let originalEnv: typeof process.env;
+  let indexModule: {
+    mcpServer: {
+      current: {
+        getRegisteredTools?: () => string[];
+        getMcpServer?: () => unknown;
+      };
+    };
+  };
 
-  beforeAll(() => {
+  beforeAll(async () => {
     originalEnv = { ...process.env };
     process.env.DEEPSOURCE_API_KEY = 'test-key';
     process.env.NODE_ENV = 'test';
+
+    // Import the module after mocking
+    indexModule = await import('../index.js');
   });
 
   afterAll(() => {
     process.env = originalEnv;
+    jest.resetModules();
   });
 
-  it('should load without errors', async () => {
-    const module = await import('../index.js');
-    expect(module).toBeDefined();
-    expect(module.mcpServer).toBeDefined();
+  it('should load without errors', () => {
+    expect(indexModule).toBeDefined();
+    expect(indexModule.mcpServer).toBeDefined();
   });
 
-  it('should export mcpServer', async () => {
-    const { mcpServer } = await import('../index.js');
+  it('should export mcpServer', () => {
+    const { mcpServer } = indexModule;
     expect(mcpServer).toBeDefined();
     expect(mcpServer.current).toBeDefined();
   });
