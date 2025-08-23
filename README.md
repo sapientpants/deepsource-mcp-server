@@ -471,11 +471,14 @@ pnpm test
 
 ### Development Commands
 
+**Note**: MCP servers communicate via stdio and cannot be run standalone. Use `pnpm run inspect` for interactive debugging.
+
 | Command | Description |
 |---------|-------------|
 | `pnpm install` | Install dependencies |
 | `pnpm run build` | Build TypeScript code |
-| `pnpm run dev` | Start with auto-reload |
+| `pnpm run watch` | Build in watch mode |
+| `pnpm run inspect` | Debug with MCP Inspector |
 | `pnpm test` | Run all tests |
 | `pnpm test:watch` | Run tests in watch mode |
 | `pnpm test:coverage` | Generate coverage report |

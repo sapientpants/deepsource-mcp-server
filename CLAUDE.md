@@ -8,33 +8,37 @@ This repository is a Model Context Protocol (MCP) server that integrates with De
 
 ## Development Commands
 
+### Understanding MCP Servers
+MCP servers are not standalone services - they communicate via stdio with MCP clients (like Claude Desktop). The server cannot be run directly with `node` or `npm start` in a meaningful way. Instead, use:
+- **Production**: Configure in Claude Desktop or use `npx deepsource-mcp-server`
+- **Development**: Use `pnpm run inspect` with the MCP Inspector tool
+- **Testing**: Run the test suite with `pnpm test`
+
 ### Quick Start
 ```bash
 # Install dependencies
 pnpm install
 
-# Build and start
+# Build the server
 pnpm run build
-pnpm run start
 
-# Development mode with auto-reload
-pnpm run dev
+# Debug with MCP Inspector (recommended for development)
+pnpm run inspect
 ```
 
-### Building & Running
+### Building & Debugging
 ```bash
 pnpm run build          # Compile TypeScript to JavaScript
 pnpm run watch          # Watch mode - rebuild on changes
 pnpm run clean          # Remove build artifacts (dist/)
 
-# Running the server
-pnpm run start          # Start the compiled server
-pnpm run start:registry # Start the registry server
-pnpm run dev            # Development mode with auto-reload
-pnpm run dev:registry   # Registry dev mode with auto-reload
+# Debugging with MCP Inspector
+pnpm run inspect        # Launch MCP Inspector to test the server interactively
 
-# Debugging
-pnpm run inspect        # Debug with MCP inspector tool
+# Internal testing commands (for maintainers only)
+# These run the server without an MCP client - mainly for testing initialization
+pnpm run test:server           # Test compiled server initialization
+pnpm run test:server:dev       # Test server in development mode
 ```
 
 ### Testing
