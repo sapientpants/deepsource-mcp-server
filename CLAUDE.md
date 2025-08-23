@@ -63,8 +63,8 @@ pnpm run lint           # Run ESLint
 pnpm run lint:fix       # Auto-fix ESLint issues
 
 # Formatting
-pnpm run format         # Format all code with Prettier
-pnpm run format:check   # Check if code is formatted
+pnpm run format         # Check if code is formatted
+pnpm run format:fix     # Format all code with Prettier
 
 # Combined checks
 pnpm run validate       # Run type check + lint + tests
