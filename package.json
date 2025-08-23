@@ -37,7 +37,6 @@
     "format": "prettier --check \"src/**/*.ts\"",
     "format:fix": "prettier --write \"src/**/*.ts\"",
     "check-types": "tsc --noEmit",
-    "validate": "pnpm run check-types && pnpm run lint && pnpm run test",
     "ci": "pnpm run format && pnpm run lint && pnpm run check-types && pnpm run build && pnpm run test:coverage",
     "inspect": "npx @modelcontextprotocol/inspector@latest node dist/index.js",
     "prepare": "husky"
