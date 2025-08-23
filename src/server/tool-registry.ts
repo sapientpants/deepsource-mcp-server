@@ -100,7 +100,7 @@ export class ToolRegistry {
             const parseResult = tool.inputSchema.safeParse(params);
             if (!parseResult.success) {
               logger.error(`Input validation failed for tool ${tool.name}`, {
-                errors: parseResult.error.errors,
+                errors: parseResult.error.issues,
               });
               throw new Error(`Invalid input: ${parseResult.error.message}`);
             }
