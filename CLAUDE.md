@@ -6,69 +6,90 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This repository is a Model Context Protocol (MCP) server that integrates with DeepSource's code quality analysis platform. It serves as a bridge between DeepSource's GraphQL API and MCP-compatible AI assistants like Claude, providing access to code quality metrics and analysis results.
 
-## Common Commands
+## Development Commands
 
-### Running a Single Test
-```bash
-# Run a single test file
-NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest src/__tests__/specific-test.test.ts
-
-# Run tests matching a pattern
-NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest --testNamePattern="should handle errors"
-
-# Run tests with verbose output for debugging
-NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest --verbose src/__tests__/specific-test.test.ts
-```
-
-### Development Commands
+### Quick Start
 ```bash
 # Install dependencies
 pnpm install
 
-# Build the TypeScript code
+# Build and start
 pnpm run build
-
-# Start the server
 pnpm run start
 
-# Start in development mode with auto-reload
+# Development mode with auto-reload
 pnpm run dev
+```
 
-# Run all tests
-pnpm run test
+### Building & Running
+```bash
+pnpm run build          # Compile TypeScript to JavaScript
+pnpm run watch          # Watch mode - rebuild on changes
+pnpm run clean          # Remove build artifacts (dist/)
 
-# Run tests with watching
-pnpm run test:watch
+# Running the server
+pnpm run start          # Start the compiled server
+pnpm run start:registry # Start the registry server
+pnpm run dev            # Development mode with auto-reload
+pnpm run dev:registry   # Registry dev mode with auto-reload
 
-# Run tests with coverage
-pnpm run test:coverage
+# Debugging
+pnpm run inspect        # Debug with MCP inspector tool
+```
 
-# Run ESLint
-pnpm run lint
+### Testing
+```bash
+# Basic testing
+pnpm run test           # Run all tests
+pnpm run test:watch     # Run tests in watch mode
+pnpm run test:coverage  # Run tests with coverage report
 
-# Fix linting issues automatically
-pnpm run lint:fix
+# Run specific tests
+pnpm test -- src/__tests__/specific-test.test.ts
+pnpm test -- --testNamePattern="should handle errors"
+pnpm test -- --verbose src/__tests__/specific-test.test.ts
 
-# Format code with Prettier
-pnpm run format
+# Run tests for a specific file pattern
+pnpm test -- client      # Test all client files
+pnpm test -- handler     # Test all handler files
+```
 
-# Check code formatting
-pnpm run format:check
+### Code Quality
+```bash
+# Type checking
+pnpm run check-types    # Type check without building
 
-# Type check without emitting files
-pnpm run check-types
+# Linting
+pnpm run lint           # Run ESLint
+pnpm run lint:fix       # Auto-fix ESLint issues
 
-# Run the full CI check (format, lint, type check, build, test)
-pnpm run ci
+# Formatting
+pnpm run format         # Format all code with Prettier
+pnpm run format:check   # Check if code is formatted
 
-# Validate codebase (type check, lint, test)
-pnpm run validate
+# Combined checks
+pnpm run validate       # Run type check + lint + tests
+pnpm run ci            # Full CI pipeline (format, lint, type, build, test)
+```
 
-# Inspect MCP server with inspector
-pnpm run inspect
+### Troubleshooting Commands
+```bash
+# Clean install (removes node_modules and lockfile)
+rm -rf node_modules pnpm-lock.yaml && pnpm install
 
-# Clean build artifacts
-pnpm run clean
+# Clear Jest cache
+pnpm test -- --clearCache
+
+# Debug test failures
+pnpm test -- --detectOpenHandles  # Find async leaks
+pnpm test -- --runInBand          # Run tests serially
+pnpm test -- --maxWorkers=1       # Use single worker
+
+# Check for outdated dependencies
+pnpm outdated
+
+# Update dependencies (interactive)
+pnpm update -i
 ```
 
 ## Architecture Overview
