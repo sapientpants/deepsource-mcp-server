@@ -27,12 +27,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "ci": "pnpm run format:check && pnpm run lint && pnpm run check-types && pnpm run build && pnpm run test:coverage",
-    "test:server": "node --experimental-specifier-resolution=node dist/index.js",
-    "test:server:registry": "node --experimental-specifier-resolution=node dist/index-registry.js",
-    "test:server:dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "test:server:registry:dev": "ts-node-dev --respawn --transpile-only src/index-registry.ts",
     "watch": "tsc -w",
+    "clean": "rm -rf dist",
     "test": "NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest",
     "test:watch": "NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest --watch",
     "test:coverage": "NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest --coverage",
@@ -41,10 +37,10 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "check-types": "tsc --noEmit",
-    "prepare": "husky",
     "validate": "pnpm run check-types && pnpm run lint && pnpm run test",
+    "ci": "pnpm run format:check && pnpm run lint && pnpm run check-types && pnpm run build && pnpm run test:coverage",
     "inspect": "npx @modelcontextprotocol/inspector@latest node dist/index.js",
-    "clean": "rm -rf dist"
+    "prepare": "husky"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

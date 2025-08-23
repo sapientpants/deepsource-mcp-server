@@ -34,11 +34,6 @@ pnpm run clean          # Remove build artifacts (dist/)
 
 # Debugging with MCP Inspector
 pnpm run inspect        # Launch MCP Inspector to test the server interactively
-
-# Internal testing commands (for maintainers only)
-# These run the server without an MCP client - mainly for testing initialization
-pnpm run test:server           # Test compiled server initialization
-pnpm run test:server:dev       # Test server in development mode
 ```
 
 ### Testing
