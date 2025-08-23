@@ -6,69 +6,88 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This repository is a Model Context Protocol (MCP) server that integrates with DeepSource's code quality analysis platform. It serves as a bridge between DeepSource's GraphQL API and MCP-compatible AI assistants like Claude, providing access to code quality metrics and analysis results.
 
-## Common Commands
+## Development Commands
 
-### Running a Single Test
-```bash
-# Run a single test file
-NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest src/__tests__/specific-test.test.ts
+### Understanding MCP Servers
+MCP servers are not standalone services - they communicate via stdio with MCP clients (like Claude Desktop). The server cannot be run directly with `node` or `npm start` in a meaningful way. Instead, use:
+- **Production**: Configure in Claude Desktop or use `npx deepsource-mcp-server`
+- **Development**: Use `pnpm run inspect` with the MCP Inspector tool
+- **Testing**: Run the test suite with `pnpm test`
 
-# Run tests matching a pattern
-NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest --testNamePattern="should handle errors"
-
-# Run tests with verbose output for debugging
-NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest --verbose src/__tests__/specific-test.test.ts
-```
-
-### Development Commands
+### Quick Start
 ```bash
 # Install dependencies
 pnpm install
 
-# Build the TypeScript code
+# Build the server
 pnpm run build
 
-# Start the server
-pnpm run start
-
-# Start in development mode with auto-reload
-pnpm run dev
-
-# Run all tests
-pnpm run test
-
-# Run tests with watching
-pnpm run test:watch
-
-# Run tests with coverage
-pnpm run test:coverage
-
-# Run ESLint
-pnpm run lint
-
-# Fix linting issues automatically
-pnpm run lint:fix
-
-# Format code with Prettier
-pnpm run format
-
-# Check code formatting
-pnpm run format:check
-
-# Type check without emitting files
-pnpm run check-types
-
-# Run the full CI check (format, lint, type check, build, test)
-pnpm run ci
-
-# Validate codebase (type check, lint, test)
-pnpm run validate
-
-# Inspect MCP server with inspector
+# Debug with MCP Inspector (recommended for development)
 pnpm run inspect
+```
 
-# Clean build artifacts
-pnpm run clean
+### Building & Debugging
+```bash
+pnpm run build          # Compile TypeScript to JavaScript
+pnpm run watch          # Watch mode - rebuild on changes
+pnpm run clean          # Remove build artifacts (dist/)
+
+# Debugging with MCP Inspector
+pnpm run inspect        # Launch MCP Inspector to test the server interactively
+```
+
+### Testing
+```bash
+# Basic testing
+pnpm run test           # Run all tests
+pnpm run test:watch     # Run tests in watch mode
+pnpm run test:coverage  # Run tests with coverage report
+
+# Run specific tests
+pnpm test -- src/__tests__/specific-test.test.ts
+pnpm test -- --testNamePattern="should handle errors"
+pnpm test -- --verbose src/__tests__/specific-test.test.ts
+
+# Run tests for a specific file pattern
+pnpm test -- client      # Test all client files
+pnpm test -- handler     # Test all handler files
+```
+
+### Code Quality
+```bash
+# Type checking
+pnpm run check-types    # Type check without building
+
+# Linting
+pnpm run lint           # Run ESLint
+pnpm run lint:fix       # Auto-fix ESLint issues
+
+# Formatting
+pnpm run format         # Check if code is formatted
+pnpm run format:fix     # Format all code with Prettier
+
+# Full CI pipeline
+pnpm run ci            # Run format, lint, type check, build, and test coverage
+```
+
+### Troubleshooting Commands
+```bash
+# Clean install (removes node_modules and lockfile)
+rm -rf node_modules pnpm-lock.yaml && pnpm install
+
+# Clear Jest cache
+pnpm test -- --clearCache
+
+# Debug test failures
+pnpm test -- --detectOpenHandles  # Find async leaks
+pnpm test -- --runInBand          # Run tests serially
+pnpm test -- --maxWorkers=1       # Use single worker
+
+# Check for outdated dependencies
+pnpm outdated
+
+# Update dependencies (interactive)
+pnpm update -i
 ```
 
 ## Architecture Overview
