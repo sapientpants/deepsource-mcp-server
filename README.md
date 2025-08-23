@@ -478,6 +478,7 @@ pnpm test
 | `pnpm install` | Install dependencies |
 | `pnpm run build` | Build TypeScript code |
 | `pnpm run watch` | Build in watch mode |
+| `pnpm run clean` | Remove build artifacts |
 | `pnpm run inspect` | Debug with MCP Inspector |
 | `pnpm test` | Run all tests |
 | `pnpm test:watch` | Run tests in watch mode |
