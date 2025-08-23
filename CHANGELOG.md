@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.3.2] - 2025-08-23
+- Added commitlint support for conventional commits
+- Upgraded to Node 22 LTS (minimum version requirement)
+- Fixed TypeScript type safety issues by replacing `any` types with proper types
+- Fixed linting errors in index-registry test
+- Fixed index-registry test failures causing CI issues
+- Fixed Jest ES module mocking issues for local test execution
+- Updated dependencies to latest versions:
+  - @commitlint/cli: ^19.8.1
+  - @commitlint/config-conventional: ^19.8.1
+  - @modelcontextprotocol/sdk: 1.17.2 → 1.17.3
+  - @typescript-eslint/eslint-plugin: 8.39.0 → 8.40.0
+  - @typescript-eslint/parser: 8.39.0 → 8.40.0
+  - husky: 9.1.6 → 9.1.7
+  - ts-jest: 29.4.0 → 29.4.1
+- Improved build process reliability
+
 ## [v1.3.1] - 2025-08-11
 - Updated dependencies to latest versions
   - @modelcontextprotocol/sdk: 1.17.1 → 1.17.2
