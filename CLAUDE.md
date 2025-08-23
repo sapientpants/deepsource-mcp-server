@@ -219,17 +219,48 @@ export class NewClient extends BaseClient {
 
 #### Error Handling Pattern
 ```typescript
-try {
-  const result = await operation();
-  return result;
-} catch (error) {
-  const classified = classifyError(error);
-  logger.error('Operation failed', classified);
-  throw createClassifiedError(
-    ErrorCategory.API_ERROR,
-    'User-friendly message',
-    error
-  );
+import { classifyGraphQLError, createClassifiedError, ErrorCategory } from './utils/errors';
+import { logger } from './utils/logger';
+
+// Complete error handling with classification
+async function handleOperation(params: OperationParams): Promise<Result> {
+  try {
+    const result = await performOperation(params);
+    return result;
+  } catch (error) {
+    // Classify the error based on its type
+    const errorCategory = classifyGraphQLError(error);
+    
+    // Log with appropriate level based on severity
+    if (errorCategory === ErrorCategory.NETWORK_ERROR) {
+      logger.warn('Transient network error, will retry', { error, params });
+    } else {
+      logger.error('Operation failed', { error, category: errorCategory });
+    }
+    
+    // Create properly formatted error for the user
+    throw createClassifiedError(
+      errorCategory,
+      getUserFriendlyMessage(errorCategory),
+      error
+    );
+  }
+}
+
+// Helper for user-friendly messages
+function getUserFriendlyMessage(category: ErrorCategory): string {
+  switch (category) {
+    case ErrorCategory.AUTHENTICATION_ERROR:
+      return 'Authentication failed. Please check your API key.';
+    case ErrorCategory.RATE_LIMIT_ERROR:
+      return 'Rate limit exceeded. Please try again later.';
+    case ErrorCategory.NETWORK_ERROR:
+      return 'Network error occurred. Please check your connection.';
+    case ErrorCategory.VALIDATION_ERROR:
+      return 'Invalid input provided. Please check your parameters.';
+    default:
+      return 'An unexpected error occurred. Please try again.';
+  }
 }
 ```
 
