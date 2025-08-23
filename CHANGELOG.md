@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.4.0] - 2025-08-23
+
+### Breaking Changes
+- Removed misleading `start`, `dev`, and related test:server commands that don't work with MCP servers
+- Renamed `format` and `format:check` commands for consistency with lint commands:
+  - `format` now checks formatting (was `format:check`)
+  - `format:fix` now fixes formatting (was `format`)
+
+### Changed
+- Updated dependencies to latest versions:
+  - zod: 3.25.76 → 4.1.0 (major version upgrade)
+  - @modelcontextprotocol/sdk: 1.17.3 → 1.17.4
+  - @eslint/js: 9.33.0 → 9.34.0
+  - eslint: 9.33.0 → 9.34.0
+- Removed redundant `validate` script (use `ci` instead)
+
+### Fixed
+- Fixed Zod v4 breaking change by updating error property access from `.errors` to `.issues`
+- Fixed MCP server documentation to clarify stdio communication requirements
+
+### Documentation
+- Significantly improved CLAUDE.md with better architecture overview and focused guidelines
+- Reorganized and enhanced development commands documentation
+- Added comprehensive error handling patterns with complete examples
+- Added missing `clean` command to README
+- Clarified that MCP servers cannot be run standalone
+
 ## [v1.3.2] - 2025-08-23
 - Added commitlint support for conventional commits
 - Upgraded to Node 22 LTS (minimum version requirement)
