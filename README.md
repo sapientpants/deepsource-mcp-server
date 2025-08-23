@@ -448,7 +448,7 @@ type RunState =
 
 ### Prerequisites
 
-* Node.js 20 or higher
+* Node.js 22 or higher
 * pnpm 10.7.0 or higher
 * Docker (optional, for container builds)
 
@@ -539,9 +539,49 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
 4. Run tests (`pnpm test`)
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
+5. Commit your changes using conventional commits (see below)
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
+
+### Commit Message Convention
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/) to ensure consistent commit messages. Commits are validated using commitlint.
+
+#### Format
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+#### Types
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation only changes
+- `style`: Changes that don't affect code meaning (formatting, etc)
+- `refactor`: Code change that neither fixes a bug nor adds a feature
+- `perf`: Performance improvements
+- `test`: Adding missing tests or correcting existing tests
+- `build`: Changes that affect the build system or dependencies
+- `ci`: Changes to CI configuration files and scripts
+- `chore`: Other changes that don't modify src or test files
+- `revert`: Reverts a previous commit
+
+#### Examples
+```bash
+# Feature
+git commit -m "feat: add support for filtering issues by severity"
+
+# Bug fix with scope
+git commit -m "fix(api): handle null response from DeepSource API"
+
+# Breaking change
+git commit -m "feat!: change API response format
+
+BREAKING CHANGE: Response format now uses camelCase instead of snake_case"
+```
 
 ### Code Standards
 
