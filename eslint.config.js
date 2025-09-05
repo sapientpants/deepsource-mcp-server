@@ -1,69 +1,118 @@
-import js from '@eslint/js';
-import * as tseslint from '@typescript-eslint/eslint-plugin';
-import tsparser from '@typescript-eslint/parser';
-import prettier from 'eslint-plugin-prettier';
+// @ts-check
+import tseslint from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
+import eslintConfigPrettier from 'eslint-config-prettier';
+import * as jsonc from 'eslint-plugin-jsonc';
+import jsoncParser from 'jsonc-eslint-parser';
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/** @type {import('eslint').Linter.FlatConfig[]} */
 export default [
+  // Ignore patterns
   {
     ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'jest.config.js', 'examples/**']
   },
-  js.configs.recommended,
+  // Base configuration for all JS/TS files
   {
-    files: ['**/*.ts'],
+    files: ['**/*.{ts,tsx,js}'],
     languageOptions: {
-      parser: tsparser,
+      parser: tsParser,
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
       },
-      globals: {
-        process: 'readonly',
-        console: 'readonly',
-        module: 'readonly',
-        require: 'readonly',
+    },
+    plugins: { '@typescript-eslint': tseslint },
+    rules: {
+      ...tseslint.configs['recommended'].rules,
+      'no-console': 'warn',
+      'no-debugger': 'error',
+    },
+  },
+  // Type-aware rules for TypeScript files only
+  {
+    files: ['src/**/*.ts', 'tests/**/*.ts'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 2024,
+        sourceType: 'module',
+        project: true,
+        tsconfigRootDir: __dirname,
       },
+    },
+    rules: {
+      ...tseslint.configs['recommended-type-checked'].rules,
+    },
+  },
+  // JSON/JSONC/JSON5 linting configuration
+  {
+    files: ['**/*.json', '**/*.json5', '**/*.jsonc'],
+    languageOptions: {
+      parser: jsoncParser,
     },
     plugins: {
-      '@typescript-eslint': tseslint,
-      prettier: prettier,
+      jsonc,
     },
     rules: {
-      'prettier/prettier': 'error',
-      // Allow export of enums and types without using them directly in the file
-      'no-unused-vars': ['error', { 
-        vars: 'all', 
-        args: 'after-used', 
-        ignoreRestSiblings: false,
-        varsIgnorePattern: '^(MetricShortcode|MetricKey|MetricThresholdStatus|MetricDirection|ReportType|ReportStatus|LogLevel|ErrorCategory|VulnerabilitySeverity|PackageVersionType|VulnerabilityReachability|VulnerabilityFixability|AnalysisRunStatus|MCPErrorCode|MCPErrorCategory|ToolCategory|z)$',
-        argsIgnorePattern: '^_'
-      }]
+      ...jsonc.configs['recommended-with-json'].rules,
+      'jsonc/sort-keys': 'off', // Keep keys in logical order, not alphabetical
+      'jsonc/indent': ['error', 2], // Enforce 2-space indentation in JSON files
+      'jsonc/key-spacing': 'error', // Enforce consistent spacing between keys and values
+      'jsonc/comma-dangle': ['error', 'never'], // No trailing commas in JSON
+      'jsonc/quotes': ['error', 'double'], // Enforce double quotes in JSON
+      'jsonc/quote-props': ['error', 'always'], // Always quote property names
+      'jsonc/no-comments': 'off', // Allow comments in JSONC files
     },
   },
+  // Specific rules for package.json
   {
-    files: ['**/*.test.ts'],
-    languageOptions: {
-      globals: {
-        describe: 'readonly',
-        it: 'readonly',
-        expect: 'readonly',
-        beforeEach: 'readonly',
-        beforeAll: 'readonly',
-        afterEach: 'readonly',
-        afterAll: 'readonly',
-        jest: 'readonly',
-        setTimeout: 'readonly',
-        global: 'readonly',
-      },
-    },
+    files: ['**/package.json'],
     rules: {
-      // Allow jest import in test files even if not directly used
-      'no-unused-vars': ['error', { 
-        vars: 'all', 
-        args: 'after-used', 
-        ignoreRestSiblings: false,
-        varsIgnorePattern: '^(jest)$',
-        argsIgnorePattern: '^_'
-      }]
-    }
+      'jsonc/sort-keys': [
+        'error',
+        {
+          pathPattern: '^$', // Root object
+          order: [
+            'name',
+            'version',
+            'description',
+            'keywords',
+            'author',
+            'license',
+            'repository',
+            'bugs',
+            'homepage',
+            'private',
+            'type',
+            'main',
+            'module',
+            'exports',
+            'files',
+            'bin',
+            'packageManager',
+            'engines',
+            'scripts',
+            'lint-staged',
+            'dependencies',
+            'devDependencies',
+            'peerDependencies',
+            'optionalDependencies',
+          ],
+        },
+      ],
+    },
   },
-]; 
+  // Specific rules for tsconfig files
+  {
+    files: ['**/tsconfig*.json'],
+    rules: {
+      'jsonc/no-comments': 'off', // Allow comments in tsconfig files
+    },
+  },
+  // Keep Prettier last
+  eslintConfigPrettier,
+];
