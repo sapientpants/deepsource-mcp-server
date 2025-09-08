@@ -18,10 +18,6 @@ on:
         description: 'pnpm version (should match package.json packageManager)'
         type: string
         default: '10.15.0' # UPDATE: When upgrading pnpm
-    secrets:
-      SONAR_TOKEN:
-        description: 'SonarCloud authentication token'
-        required: false
 
 # EXAMPLE USAGE:
 # jobs:
@@ -106,11 +102,6 @@ jobs:
         # FAILS IF: Tests fail or coverage below 80% (when coverage enabled)
         # To debug: Check test output and coverage/index.html
         run: pnpm test:coverage
-
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Upload coverage
         # Make coverage reports available for review
