@@ -99,7 +99,17 @@ export class ToolRegistry {
       tool.name,
       toolConfig,
 
-      async (params: Record<string, unknown>): Promise<McpResponse> => {
+      async (params: Record<string, unknown>, _extra: unknown): Promise<McpResponse> => {
+        // _extra parameter required by MCP SDK but not used
+        void _extra;
+        logger.info(`===== TOOL INVOCATION START: ${tool.name} =====`);
+        logger.info(`Tool ${tool.name} received params:`, {
+          params,
+          paramsType: typeof params,
+          paramsKeys: params ? Object.keys(params) : [],
+          paramsStringified: JSON.stringify(params),
+          hasInputSchema: !!tool.inputSchema,
+        });
         try {
           logger.debug(`Tool ${tool.name} invoked`, {
             params,
@@ -130,7 +140,18 @@ export class ToolRegistry {
           }
 
           // Execute handler
+          logger.info(`About to execute handler for ${tool.name} with validated params:`, {
+            validatedParams,
+            handlerType: typeof tool.handler,
+          });
+
           const result = await tool.handler(validatedParams);
+
+          logger.info(`Handler for ${tool.name} returned result:`, {
+            resultType: typeof result,
+            isApiResponse: isApiResponse(result),
+            result: result,
+          });
 
           logToolResult(tool.name, result);
 
@@ -166,18 +187,30 @@ export class ToolRegistry {
                 hasData: parsedData !== null && parsedData !== undefined,
               });
 
-              return {
+              const finalResponse = {
                 content: result.content,
                 structuredContent: parsedData as Record<string, unknown>,
                 isError: false,
               } as McpResponse;
+
+              logger.info(`===== TOOL INVOCATION SUCCESS: ${tool.name} =====`, {
+                responseType: 'ApiResponse',
+                finalResponse,
+              });
+
+              return finalResponse;
             }
+
+            logger.info(`===== TOOL INVOCATION SUCCESS: ${tool.name} =====`, {
+              responseType: 'ApiResponse-passthrough',
+              result,
+            });
 
             return result as unknown as McpResponse;
           }
 
           // For non-ApiResponse results, wrap them
-          return {
+          const wrappedResponse = {
             content: [
               {
                 type: 'text',
@@ -187,7 +220,20 @@ export class ToolRegistry {
             structuredContent: result as Record<string, unknown>,
             isError: false,
           } as McpResponse;
+
+          logger.info(`===== TOOL INVOCATION SUCCESS: ${tool.name} =====`, {
+            responseType: 'wrapped',
+            wrappedResponse,
+          });
+
+          return wrappedResponse;
         } catch (error) {
+          logger.error(`===== TOOL INVOCATION ERROR: ${tool.name} =====`, {
+            error,
+            errorMessage: error instanceof Error ? error.message : String(error),
+            errorStack: error instanceof Error ? error.stack : undefined,
+          });
+
           const errorMessage = logAndFormatError(error, tool.name);
           const errorResponse = createErrorResponse(error, `Failed to execute ${tool.name}`);
 
@@ -202,7 +248,7 @@ export class ToolRegistry {
             structuredError = { error: errorMessage };
           }
 
-          return {
+          const finalErrorResponse = {
             content: [
               {
                 type: 'text',
@@ -212,6 +258,12 @@ export class ToolRegistry {
             structuredContent: structuredError as Record<string, unknown>,
             isError: true,
           } as McpResponse;
+
+          logger.error(`===== TOOL INVOCATION FAILED: ${tool.name} =====`, {
+            finalErrorResponse,
+          });
+
+          return finalErrorResponse;
         }
       }
     );

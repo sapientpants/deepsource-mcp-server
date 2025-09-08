@@ -38,10 +38,22 @@ const logger = createLogger('ToolRegistration');
  */
 const TOOL_HANDLERS: Record<string, (params: unknown) => Promise<unknown>> = {
   projects: async (params: unknown) => {
-    logger.debug('Projects handler called with params:', { params, type: typeof params });
-    // Params currently unused but may be used for future filtering
-    void params;
-    return handleProjects();
+    logger.info('=== PROJECTS HANDLER START ===');
+    logger.info('Projects handler called with params:', { params, type: typeof params });
+    try {
+      // Params currently unused but may be used for future filtering
+      void params;
+      const result = await handleProjects();
+      logger.info('=== PROJECTS HANDLER SUCCESS ===', { result });
+      return result;
+    } catch (error) {
+      logger.error('=== PROJECTS HANDLER ERROR ===', {
+        error,
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      throw error;
+    }
   },
   quality_metrics: async (params: unknown) => {
     const typedParams = params as Record<string, unknown>;
