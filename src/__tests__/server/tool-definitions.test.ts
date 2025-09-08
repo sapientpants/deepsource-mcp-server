@@ -24,8 +24,9 @@ describe('Tool Definitions', () => {
       expect(projectsToolSchema.description).toContain('List all available DeepSource projects');
     });
 
-    it('should have no input schema', () => {
-      expect(projectsToolSchema.inputSchema).toBeUndefined();
+    it('should have empty input schema', () => {
+      expect(projectsToolSchema.inputSchema).toBeDefined();
+      expect(projectsToolSchema.inputSchema.parse({})).toEqual({});
     });
 
     it('should have output schema', () => {
@@ -416,8 +417,9 @@ describe('Tool Definitions', () => {
     });
 
     it('should handle very long project keys', () => {
-      // projectsToolSchema has no input schema
-      expect(projectsToolSchema.inputSchema).toBeUndefined();
+      // projectsToolSchema has empty input schema
+      expect(projectsToolSchema.inputSchema).toBeDefined();
+      expect(projectsToolSchema.inputSchema.parse({})).toEqual({});
     });
 
     it('should handle special characters in strings', () => {

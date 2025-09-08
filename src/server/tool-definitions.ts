@@ -13,6 +13,7 @@ export const projectsToolSchema = {
   name: 'projects',
   description:
     'List all available DeepSource projects. Returns a list of project objects with "key" and "name" properties.',
+  inputSchema: z.object({}),
   outputSchema: z.object({
     projects: z.array(
       z.object({
