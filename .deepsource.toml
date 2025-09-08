@@ -36,5 +36,3 @@ enabled = true
   [analyzers.meta]
   plugins = ["react"]
   dialect = "typescript"
-  # Skip issues in test files
-  skip_doc_coverage = ["test_*", "**/__tests__/**", "**/*.test.ts", "**/*.spec.ts"]
