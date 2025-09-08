@@ -3,26 +3,10 @@
  * This file adds coverage for the previously untested security-client.ts
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SecurityClient } from '../../client/security-client.js';
 import type { SecurityClientTestable, MockDeepSourceClient } from '../test-types.js';
 import { TestableSecurityClient } from '../utils/test-utils.js';
-
-// Mock the base client
-jest.mock('../../client/base-client.js', () => ({
-  BaseDeepSourceClient: jest.fn().mockImplementation(() => ({
-    findProjectByKey: jest.fn(),
-    executeGraphQL: jest.fn(),
-    createEmptyPaginatedResponse: jest.fn(),
-    normalizePaginationParams: jest.fn(),
-    logger: {
-      info: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-      warn: jest.fn(),
-    },
-  })),
-}));
 
 describe('SecurityClient', () => {
   let securityClient: SecurityClient;
@@ -31,6 +15,18 @@ describe('SecurityClient', () => {
   beforeEach(() => {
     securityClient = new SecurityClient('test-api-key');
     mockBaseClient = securityClient as unknown as MockDeepSourceClient;
+
+    // Mock the methods we need
+    (mockBaseClient as any).findProjectByKey = vi.fn();
+    (mockBaseClient as any).executeGraphQL = vi.fn();
+    (mockBaseClient as any).createEmptyPaginatedResponse = vi.fn();
+    (mockBaseClient as any).normalizePaginationParams = vi.fn();
+    (mockBaseClient as any).logger = {
+      info: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+      warn: vi.fn(),
+    };
   });
 
   describe('getComplianceReport', () => {
@@ -73,13 +69,13 @@ describe('SecurityClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any);
+      (mockBaseClient as any).executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any);
 
       const result = await securityClient.getComplianceReport('test-project', 'OWASP_TOP_10');
 
-      expect(mockBaseClient.findProjectByKey).toHaveBeenCalledWith('test-project');
-      expect(mockBaseClient.executeGraphQL).toHaveBeenCalledWith(
+      expect((mockBaseClient as any).findProjectByKey).toHaveBeenCalledWith('test-project');
+      expect((mockBaseClient as any).executeGraphQL).toHaveBeenCalledWith(
         expect.stringContaining('query getComplianceReports'),
         expect.objectContaining({
           login: 'test-org',
@@ -98,7 +94,7 @@ describe('SecurityClient', () => {
     });
 
     it('should return null when project not found', async () => {
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(null);
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(null as any);
 
       const result = await securityClient.getComplianceReport(
         'nonexistent-project',
@@ -117,8 +113,10 @@ describe('SecurityClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest.fn().mockRejectedValue(new Error('GraphQL error'));
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any);
+      vi.spyOn(mockBaseClient as any, 'executeGraphQL').mockRejectedValue(
+        new Error('GraphQL error')
+      );
 
       await expect(
         securityClient.getComplianceReport('test-project', 'OWASP_TOP_10')
@@ -138,8 +136,8 @@ describe('SecurityClient', () => {
         data: null,
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any);
+      (mockBaseClient as any).executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any);
 
       const result = await securityClient.getComplianceReport('test-project', 'OWASP_TOP_10');
 
@@ -163,8 +161,8 @@ describe('SecurityClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any);
+      (mockBaseClient as any).executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any);
 
       const result = await securityClient.getComplianceReport('test-project', 'OWASP_TOP_10');
 
@@ -241,17 +239,17 @@ describe('SecurityClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.normalizePaginationParams = jest.fn().mockReturnValue({
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any);
+      (mockBaseClient as any).normalizePaginationParams = vi.fn().mockReturnValue({
         first: 20,
         after: null,
       });
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      (mockBaseClient as any).executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any);
 
       const result = await securityClient.getDependencyVulnerabilities('test-project');
 
-      expect(mockBaseClient.findProjectByKey).toHaveBeenCalledWith('test-project');
-      expect(mockBaseClient.executeGraphQL).toHaveBeenCalledWith(
+      expect((mockBaseClient as any).findProjectByKey).toHaveBeenCalledWith('test-project');
+      expect((mockBaseClient as any).executeGraphQL).toHaveBeenCalledWith(
         expect.stringContaining('query getDependencyVulnerabilities'),
         expect.objectContaining({
           login: 'test-org',
@@ -268,8 +266,8 @@ describe('SecurityClient', () => {
     });
 
     it('should return empty response when project not found', async () => {
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(null);
-      mockBaseClient.createEmptyPaginatedResponse = jest.fn().mockReturnValue({
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(null as any);
+      (mockBaseClient as any).createEmptyPaginatedResponse = vi.fn().mockReturnValue({
         items: [],
         pageInfo: { hasNextPage: false, hasPreviousPage: false },
         totalCount: 0,
@@ -290,11 +288,13 @@ describe('SecurityClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.normalizePaginationParams = jest.fn().mockReturnValue({
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any);
+      (mockBaseClient as any).normalizePaginationParams = vi.fn().mockReturnValue({
         first: 20,
       });
-      mockBaseClient.executeGraphQL = jest.fn().mockRejectedValue(new Error('GraphQL error'));
+      vi.spyOn(mockBaseClient as any, 'executeGraphQL').mockRejectedValue(
+        new Error('GraphQL error')
+      );
 
       await expect(securityClient.getDependencyVulnerabilities('test-project')).rejects.toThrow(
         'GraphQL error'
@@ -326,12 +326,12 @@ describe('SecurityClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.normalizePaginationParams = jest.fn().mockReturnValue({
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any);
+      (mockBaseClient as any).normalizePaginationParams = vi.fn().mockReturnValue({
         first: 10,
         after: 'cursor123',
       });
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      (mockBaseClient as any).executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any);
 
       await securityClient.getDependencyVulnerabilities('test-project', {
         first: 10,

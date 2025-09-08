@@ -88,8 +88,6 @@ export class RunsClient extends BaseDeepSourceClient {
         pageInfo: {
           hasNextPage: false, // Simplified for now
           hasPreviousPage: false,
-          startCursor: undefined,
-          endCursor: undefined,
         },
         totalCount: runs.length,
       };
@@ -162,10 +160,13 @@ export class RunsClient extends BaseDeepSourceClient {
 
       // Paginate through runs to find the most recent for the specific branch
       while (hasNextPage) {
-        const runs = await this.listRuns(projectKey, {
+        const params: { first: number; after?: string } = {
           first: 50,
-          after,
-        });
+        };
+        if (after !== undefined) {
+          params.after = after;
+        }
+        const runs = await this.listRuns(projectKey, params);
 
         for (const run of runs.items) {
           if (run.branchName === branchName) {
@@ -450,8 +451,6 @@ export class RunsClient extends BaseDeepSourceClient {
         pageInfo: {
           hasNextPage: false,
           hasPreviousPage: false,
-          startCursor: undefined,
-          endCursor: undefined,
         },
         totalCount: 0,
       };

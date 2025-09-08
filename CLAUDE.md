@@ -9,12 +9,15 @@ This repository is a Model Context Protocol (MCP) server that integrates with De
 ## Development Commands
 
 ### Understanding MCP Servers
+
 MCP servers are not standalone services - they communicate via stdio with MCP clients (like Claude Desktop). The server cannot be run directly with `node` or `npm start` in a meaningful way. Instead, use:
+
 - **Production**: Configure in Claude Desktop or use `npx deepsource-mcp-server`
 - **Development**: Use `pnpm run inspect` with the MCP Inspector tool
 - **Testing**: Run the test suite with `pnpm test`
 
 ### Quick Start
+
 ```bash
 # Install dependencies
 pnpm install
@@ -27,6 +30,7 @@ pnpm run inspect
 ```
 
 ### Building & Debugging
+
 ```bash
 pnpm run build          # Compile TypeScript to JavaScript
 pnpm run watch          # Watch mode - rebuild on changes
@@ -37,6 +41,7 @@ pnpm run inspect        # Launch MCP Inspector to test the server interactively
 ```
 
 ### Testing
+
 ```bash
 # Basic testing
 pnpm run test           # Run all tests
@@ -54,6 +59,7 @@ pnpm test -- handler     # Test all handler files
 ```
 
 ### Code Quality
+
 ```bash
 # Type checking
 pnpm run check-types    # Type check without building
@@ -71,6 +77,7 @@ pnpm run ci            # Run format, lint, type check, build, and test coverage
 ```
 
 ### Troubleshooting Commands
+
 ```bash
 # Clean install (removes node_modules and lockfile)
 rm -rf node_modules pnpm-lock.yaml && pnpm install
@@ -142,26 +149,34 @@ User Request → MCP Protocol → Tool Registry → Handler → Client → Graph
 ## Key Architectural Patterns
 
 ### Modular Client Architecture
+
 The client layer uses inheritance and composition:
+
 - Base client handles common operations (auth, errors, retries)
 - Specialized clients extend base for domain-specific operations
 - Each client is responsible for a single domain (projects, issues, etc.)
 
 ### Handler Pattern
+
 Handlers decouple MCP tools from business logic:
+
 - Each handler focuses on one tool's functionality
 - Dependencies injected via factory pattern
 - Testable in isolation with mock dependencies
 
 ### Type Safety
+
 Extensive use of TypeScript features for safety:
+
 - Branded types prevent mixing similar primitives
 - Discriminated unions for exhaustive state handling
 - Zod schemas for runtime validation
 - Type predicates for safe type narrowing
 
 ### Error Handling
+
 Structured error categorization:
+
 - `ErrorCategory` enum for classification
 - Error factory creates consistent error objects
 - GraphQL errors mapped to appropriate categories
@@ -204,6 +219,7 @@ Structured error categorization:
 ### Common Patterns
 
 #### Creating a New Handler
+
 ```typescript
 // 1. Define in handlers/new-tool.ts
 export async function handleNewTool(
@@ -220,11 +236,12 @@ registry.registerTool({
   name: 'new_tool',
   description: 'Tool description',
   inputSchema: zodSchema,
-  handler: async (args) => handleNewTool(args, handlerDeps)
+  handler: async (args) => handleNewTool(args, handlerDeps),
 });
 ```
 
 #### Adding a Client Method
+
 ```typescript
 // Extend appropriate base client
 export class NewClient extends BaseClient {
@@ -237,6 +254,7 @@ export class NewClient extends BaseClient {
 ```
 
 #### Error Handling Pattern
+
 ```typescript
 import { classifyGraphQLError, createClassifiedError, ErrorCategory } from './utils/errors';
 import { logger } from './utils/logger';
@@ -249,20 +267,16 @@ async function handleOperation(params: OperationParams): Promise<Result> {
   } catch (error) {
     // Classify the error based on its type
     const errorCategory = classifyGraphQLError(error);
-    
+
     // Log with appropriate level based on severity
     if (errorCategory === ErrorCategory.NETWORK_ERROR) {
       logger.warn('Transient network error, will retry', { error, params });
     } else {
       logger.error('Operation failed', { error, category: errorCategory });
     }
-    
+
     // Create properly formatted error for the user
-    throw createClassifiedError(
-      errorCategory,
-      getUserFriendlyMessage(errorCategory),
-      error
-    );
+    throw createClassifiedError(errorCategory, getUserFriendlyMessage(errorCategory), error);
   }
 }
 
@@ -288,6 +302,7 @@ function getUserFriendlyMessage(category: ErrorCategory): string {
 This project uses [Conventional Commits](https://www.conventionalcommits.org/) with commitlint validation.
 
 ### Format
+
 ```
 <type>[optional scope]: <description>
 
@@ -297,6 +312,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) w
 ```
 
 ### Types
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -310,6 +326,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) w
 - `revert`: Revert previous commit
 
 ### Examples
+
 ```bash
 git commit -m "feat: add support for filtering issues by severity"
 git commit -m "fix(api): handle null response from DeepSource API"
@@ -334,6 +351,7 @@ git commit -m "test: add coverage for pagination edge cases"
 ### Pagination
 
 The API uses Relay-style cursor pagination:
+
 - `first`/`after` for forward pagination
 - `last`/`before` for backward pagination
 - Cursors are opaque strings
@@ -361,6 +379,7 @@ The API uses Relay-style cursor pagination:
 ### DeepSource Issue Prevention
 
 Most common issues to avoid:
+
 - **JS-0323**: Never use `any` type
 - **JS-0331**: Omit unnecessary type declarations
 - **JS-R1004**: Avoid template literals without interpolation

@@ -1,41 +1,41 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { jest, beforeEach, describe, expect, it } from '@jest/globals';
+import { vi, beforeEach, describe, expect, it } from 'vitest';
 
 // Mock the logger module
-jest.unstable_mockModule('../utils/logger.js', () => ({
+vi.mock('../utils/logger.js', () => ({
   defaultLogger: {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   },
-  createLogger: jest.fn(() => ({
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+  createLogger: vi.fn(() => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   })),
 }));
 
 // Mock axios module before any imports
-jest.unstable_mockModule('axios', () => ({
+vi.mock('axios', () => ({
   default: {
-    create: jest.fn(() => ({
+    create: vi.fn(() => ({
       interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() },
+        request: { use: vi.fn() },
+        response: { use: vi.fn() },
       },
-      post: jest.fn(),
+      post: vi.fn(),
     })),
   },
 }));
 
 // Import axios to get the mocked version
 const axios = await import('axios');
-const mockAxios = axios.default as jest.Mocked<typeof axios.default>;
+const mockAxios = axios.default as any;
 
 // Import DeepSourceClient after mocking
 const { DeepSourceClient } = await import('../deepsource.js');
@@ -51,24 +51,24 @@ describe('DeepSourceClient - findMostRecentRun', () => {
   let mockAxiosInstance: Record<string, unknown>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Set up mocked axios instance
     mockAxiosInstance = {
       interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() },
+        request: { use: vi.fn() },
+        response: { use: vi.fn() },
       },
-      post: jest.fn(),
+      post: vi.fn(),
     };
 
-    (mockAxios.create as jest.Mock).mockReturnValue(mockAxiosInstance);
+    (mockAxios.create as any).mockReturnValue(mockAxiosInstance);
 
     // Create client instance
     client = new DeepSourceClient({ apiKey: 'test-key' });
 
     // Mock listProjects to return a valid project (needed by listRuns)
-    jest.spyOn(client, 'listProjects').mockResolvedValue([
+    vi.spyOn(client, 'listProjects').mockResolvedValue([
       {
         name: 'Test Project',
         key: 'test-key',
@@ -176,7 +176,7 @@ describe('DeepSourceClient - findMostRecentRun', () => {
       };
 
       // Mock the response
-      (mockAxiosInstance.post as jest.Mock).mockResolvedValueOnce(mockResponse);
+      (mockAxiosInstance.post as any).mockResolvedValueOnce(mockResponse);
 
       // Execute the private method using type assertion
       const findMostRecentRun = (
@@ -276,7 +276,7 @@ describe('DeepSourceClient - findMostRecentRun', () => {
       };
 
       // Mock the responses in order
-      (mockAxiosInstance.post as jest.Mock)
+      (mockAxiosInstance.post as any)
         .mockResolvedValueOnce(firstPageResponse)
         .mockResolvedValueOnce(secondPageResponse);
 
@@ -313,7 +313,7 @@ describe('DeepSourceClient - findMostRecentRun', () => {
       };
 
       // Mock the response
-      (mockAxiosInstance.post as jest.Mock).mockResolvedValueOnce(mockResponse);
+      (mockAxiosInstance.post as any).mockResolvedValueOnce(mockResponse);
 
       // Execute and expect error
       const findMostRecentRun = (
@@ -392,7 +392,7 @@ describe('DeepSourceClient - findMostRecentRun', () => {
       };
 
       // Mock the response
-      (mockAxiosInstance.post as jest.Mock).mockResolvedValueOnce(mockResponse);
+      (mockAxiosInstance.post as any).mockResolvedValueOnce(mockResponse);
 
       // Execute
       const findMostRecentRun = (

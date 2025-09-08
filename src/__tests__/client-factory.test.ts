@@ -1,8 +1,8 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { DeepSourceClientFactory } from '../client/factory.js';
 import { ProjectsClient } from '../client/projects-client.js';
 import { IssuesClient } from '../client/issues-client.js';
@@ -16,7 +16,6 @@ describe('DeepSourceClientFactory', () => {
   describe('constructor', () => {
     it('should throw an error if API key is not provided', () => {
       expect(() => {
-        // @ts-expect-error - Testing with empty API key
         const factory = new DeepSourceClientFactory('');
         return factory; // Return factory to prevent unused variable warning
       }).toThrow('DeepSource API key is required');
@@ -72,13 +71,13 @@ describe('DeepSourceClientFactory', () => {
 
       // Mock the listProjects method
       const mockProjectsClient = {
-        listProjects: jest.fn().mockResolvedValue([]),
+        listProjects: vi.fn<() => Promise<never[]>>().mockResolvedValue([]),
       };
 
       // Override getProjectsClient to return our mock
-      jest
-        .spyOn(factory, 'getProjectsClient')
-        .mockReturnValue(mockProjectsClient as unknown as ProjectsClient);
+      vi.spyOn(factory, 'getProjectsClient').mockReturnValue(
+        mockProjectsClient as unknown as ProjectsClient
+      );
 
       const result = await factory.testConnection();
 
@@ -91,13 +90,15 @@ describe('DeepSourceClientFactory', () => {
 
       // Mock the listProjects method
       const mockProjectsClient = {
-        listProjects: jest.fn().mockRejectedValue(new Error('Connection error')),
+        listProjects: vi
+          .fn<() => Promise<never[]>>()
+          .mockRejectedValue(new Error('Connection error')),
       };
 
       // Override getProjectsClient to return our mock
-      jest
-        .spyOn(factory, 'getProjectsClient')
-        .mockReturnValue(mockProjectsClient as unknown as ProjectsClient);
+      vi.spyOn(factory, 'getProjectsClient').mockReturnValue(
+        mockProjectsClient as unknown as ProjectsClient
+      );
 
       const result = await factory.testConnection();
 

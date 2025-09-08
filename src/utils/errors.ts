@@ -8,7 +8,7 @@
  * @enum {string}
  */
 // This enum is part of the public API and is used by consumers, even if not all values are used in this file
-/* eslint-disable no-unused-vars */
+
 export enum ErrorCategory {
   /** Error related to authentication or authorization */
   AUTH = 'AUTH',
@@ -31,7 +31,6 @@ export enum ErrorCategory {
   /** Other uncategorized errors */
   OTHER = 'OTHER',
 }
-/* eslint-enable no-unused-vars */
 
 /**
  * Enriched error with additional metadata
@@ -72,7 +71,9 @@ export function createClassifiedError(
   const error = new Error(message) as ClassifiedError;
   error.category = category;
   error.originalError = originalError;
-  error.metadata = metadata;
+  if (metadata !== undefined) {
+    error.metadata = metadata;
+  }
   return error;
 }
 

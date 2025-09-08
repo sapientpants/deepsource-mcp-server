@@ -2,7 +2,7 @@
  * Unit tests for handler functions - focuses on testing basic functionality
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 describe('Handler Functions Unit Tests', () => {
   let originalEnv: typeof process.env;

@@ -1,21 +1,27 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { describe, it, expect, beforeEach, afterAll } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import nock from 'nock';
-import { BaseDeepSourceClient } from '../../client/base-client';
-import { GraphQLResponse } from '../../types/graphql-responses';
+import { BaseDeepSourceClient } from '../../client/base-client.js';
+import { GraphQLResponse } from '../../types/graphql-responses.js';
 
 // Extend the BaseDeepSourceClient to expose the protected methods
 class TestableBaseClient extends BaseDeepSourceClient {
   // Expose protected methods for testing
-  async testExecuteGraphQL<T>(query: string): Promise<GraphQLResponse<T>> {
-    return this.executeGraphQL(query);
+  async testExecuteGraphQL<T>(
+    query: string,
+    variables?: Record<string, unknown>
+  ): Promise<GraphQLResponse<T>> {
+    return this.executeGraphQL(query, variables);
   }
 
-  async testExecuteGraphQLMutation<T>(mutation: string): Promise<T> {
-    return this.executeGraphQLMutation(mutation);
+  async testExecuteGraphQLMutation<T>(
+    mutation: string,
+    variables?: Record<string, unknown>
+  ): Promise<T> {
+    return this.executeGraphQLMutation(mutation, variables);
   }
 
   async testFindProjectByKey(projectKey: string) {
@@ -23,7 +29,7 @@ class TestableBaseClient extends BaseDeepSourceClient {
   }
 
   // skipcq: JS-0105 - Test helper method calling static method
-  testNormalizePaginationParams(params: unknown) {
+  testNormalizePaginationParams(params: Record<string, unknown>) {
     return BaseDeepSourceClient.normalizePaginationParams(params);
   }
 
@@ -53,17 +59,19 @@ describe('BaseDeepSourceClient', () => {
   describe('constructor', () => {
     it('should throw an error when API key is not provided', () => {
       expect(() => new BaseDeepSourceClient('')).toThrow('DeepSource API key is required');
-      // @ts-expect-error - Testing invalid input
-      expect(() => new BaseDeepSourceClient(null)).toThrow('DeepSource API key is required');
-      // @ts-expect-error - Testing invalid input
-      expect(() => new BaseDeepSourceClient(undefined)).toThrow('DeepSource API key is required');
+      expect(() => new BaseDeepSourceClient(null as unknown as string)).toThrow(
+        'DeepSource API key is required'
+      );
+      expect(() => new BaseDeepSourceClient(undefined as unknown as string)).toThrow(
+        'DeepSource API key is required'
+      );
     });
   });
 
   describe('executeGraphQL', () => {
     it('should execute a GraphQL query successfully', async () => {
       // Setup
-      const client = new TestableBaseClient(API_KEY, { baseURL: `${API_URL}/graphql/` });
+      const client = new TestableBaseClient(API_KEY);
       const query = 'query { viewer { email } }';
       const mockResponseData = {
         data: {
@@ -85,7 +93,7 @@ describe('BaseDeepSourceClient', () => {
 
     it('should throw an error when GraphQL response contains errors', async () => {
       // Setup
-      const client = new TestableBaseClient(API_KEY, { baseURL: `${API_URL}/graphql/` });
+      const client = new TestableBaseClient(API_KEY);
       const query = 'query { invalidField }';
       const mockErrors = [{ message: "Field invalidField doesn't exist" }];
 
@@ -98,7 +106,7 @@ describe('BaseDeepSourceClient', () => {
 
     it('should handle network errors', async () => {
       // Setup
-      const client = new TestableBaseClient(API_KEY, { baseURL: `${API_URL}/graphql/` });
+      const client = new TestableBaseClient(API_KEY);
       const query = 'query { viewer { email } }';
 
       // Mock network error
@@ -112,7 +120,7 @@ describe('BaseDeepSourceClient', () => {
 
     it('should handle HTTP error responses', async () => {
       // Setup
-      const client = new TestableBaseClient(API_KEY, { baseURL: `${API_URL}/graphql/` });
+      const client = new TestableBaseClient(API_KEY);
       const query = 'query { viewer { email } }';
 
       // Mock HTTP error
@@ -126,7 +134,7 @@ describe('BaseDeepSourceClient', () => {
   describe('executeGraphQLMutation', () => {
     it('should execute a GraphQL mutation successfully', async () => {
       // Setup
-      const client = new TestableBaseClient(API_KEY, { baseURL: `${API_URL}/graphql/` });
+      const client = new TestableBaseClient(API_KEY);
       const mutation = 'mutation { updateProject(id: "123") { id } }';
       const mockResponseData = {
         data: {
@@ -148,7 +156,7 @@ describe('BaseDeepSourceClient', () => {
 
     it('should throw an error when GraphQL mutation response contains errors', async () => {
       // Setup
-      const client = new TestableBaseClient(API_KEY, { baseURL: `${API_URL}/graphql/` });
+      const client = new TestableBaseClient(API_KEY);
       const mutation = 'mutation { updateProject(id: "123") { id } }';
       const mockErrors = [{ message: 'Permission denied' }];
 
@@ -162,7 +170,6 @@ describe('BaseDeepSourceClient', () => {
     it('should handle timeout errors', async () => {
       // Setup
       const client = new TestableBaseClient(API_KEY, {
-        baseURL: `${API_URL}/graphql/`,
         timeout: 100, // Very short timeout
       });
       const mutation = 'mutation { updateProject(id: "123") { id } }';

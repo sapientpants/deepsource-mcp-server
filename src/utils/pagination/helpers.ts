@@ -21,8 +21,6 @@ export function createEmptyPaginatedResponse<T>(): PaginatedResponse<T> {
     pageInfo: {
       hasNextPage: false,
       hasPreviousPage: false,
-      startCursor: undefined,
-      endCursor: undefined,
     },
     totalCount: 0,
   };
@@ -92,18 +90,18 @@ export function normalizePaginationParams<T extends PaginationParams>(params: T)
   if (normalizedParams.before) {
     // When fetching backwards with 'before', prioritize 'last'
     normalizedParams.last = normalizedParams.last ?? normalizedParams.first ?? 10;
-    normalizedParams.first = undefined;
+    delete normalizedParams.first;
   } else if (normalizedParams.last) {
     // If 'last' is provided without 'before', log a warning but still use 'last'
     logPaginationWarning(
       `Non-standard pagination: Using "last=${normalizedParams.last}" without "before" cursor is not recommended`
     );
     // Keep normalizedParams.last as is
-    normalizedParams.first = undefined;
+    delete normalizedParams.first;
   } else {
     // Default or forward pagination with 'after', prioritize 'first'
     normalizedParams.first = normalizedParams.first ?? 10;
-    normalizedParams.last = undefined;
+    delete normalizedParams.last;
   }
 
   return normalizedParams;

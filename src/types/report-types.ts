@@ -9,7 +9,7 @@
  * and is referenced in API functions like getComplianceReport() and handleDeepsourceComplianceReport().
  * @public
  */
-/* eslint-disable no-unused-vars */
+
 export enum ReportType {
   // Compliance-specific report types
   OWASP_TOP_10 = 'OWASP_TOP_10',
@@ -23,7 +23,6 @@ export enum ReportType {
   ISSUES_PREVENTED = 'ISSUES_PREVENTED',
   ISSUES_AUTOFIXED = 'ISSUES_AUTOFIXED',
 }
-/* eslint-enable no-unused-vars */
 
 /**
  * Report status indicating whether the report is passing, failing, or not applicable
@@ -31,10 +30,9 @@ export enum ReportType {
  * and is referenced in handleDeepsourceComplianceReport().
  * @public
  */
-/* eslint-disable no-unused-vars */
+
 export enum ReportStatus {
   PASSING = 'PASSING',
   FAILING = 'FAILING',
   NOOP = 'NOOP',
 }
-/* eslint-enable no-unused-vars */

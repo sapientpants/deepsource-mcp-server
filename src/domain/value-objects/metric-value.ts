@@ -175,7 +175,7 @@ export class MetricValue extends ValueObject<MetricValueProps> {
   /**
    * Returns a string representation of the metric value
    */
-  toString(): string {
+  override toString(): string {
     return this.props.displayValue;
   }
 }

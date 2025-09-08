@@ -2,7 +2,7 @@
  * @fileoverview Tests for AggregateRoot base class
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { AggregateRoot } from '../aggregate-root.js';
 
 /**

@@ -77,10 +77,12 @@ export async function runEnhancedServer(): Promise<void> {
  * Registers core DeepSource tools with the enhanced registry
  * @param registry - Enhanced tool registry
  */
-function registerCoreTools(_registry: EnhancedToolRegistry): void {
+function registerCoreTools(registry: EnhancedToolRegistry): void {
   // This is a simplified version for demonstration
   // In a real implementation, you would properly type each tool
-  logger.info('Core tools registration available in production implementation');
+  logger.info(
+    `Core tools registration available in production implementation. Registry initialized: ${registry ? 'yes' : 'no'}`
+  );
 }
 
 // Run the server if this is the main module

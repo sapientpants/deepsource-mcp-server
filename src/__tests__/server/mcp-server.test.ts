@@ -2,72 +2,54 @@
  * @fileoverview Tests for MCP Server module
  */
 
-import { jest } from '@jest/globals';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { DeepSourceMCPServer, createDeepSourceMCPServer } from '../../server/mcp-server.js';
 
-// Create a shared mock logger instance
-const mockLogger = {
-  info: jest.fn(),
-  debug: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-};
-
 // Mock dependencies
-jest.mock('../../utils/logging/logger.js', () => ({
-  createLogger: jest.fn(() => mockLogger),
-  defaultLogger: mockLogger,
-  Logger: jest.fn(() => mockLogger),
-  LogLevel: {
-    DEBUG: 'DEBUG',
-    INFO: 'INFO',
-    WARN: 'WARN',
-    ERROR: 'ERROR',
-  },
+vi.mock('../../utils/logging/logger.js', () => {
+  const mockLogger = {
+    info: vi.fn(),
+    debug: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  };
+  return {
+    createLogger: vi.fn(() => mockLogger),
+    defaultLogger: mockLogger,
+    Logger: vi.fn(() => mockLogger),
+    LogLevel: {
+      DEBUG: 'DEBUG',
+      INFO: 'INFO',
+      WARN: 'WARN',
+      ERROR: 'ERROR',
+    },
+  };
+});
+
+vi.mock('../../server/tool-registration.js', () => ({
+  registerDeepSourceTools: vi.fn(),
 }));
 
-// Mock registerDeepSourceTools
-const mockRegisterDeepSourceTools = jest.fn();
-
-jest.mock('../../server/tool-registration.js', () => ({
-  registerDeepSourceTools: mockRegisterDeepSourceTools,
+vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
+  McpServer: vi.fn().mockImplementation(() => ({
+    connect: vi.fn().mockResolvedValue(undefined),
+    registerTool: vi.fn(),
+    tool: vi.fn(),
+  })),
 }));
 
-// Mock McpServer
-const mockMcpServer = {
-  connect: jest.fn().mockResolvedValue(undefined),
-  registerTool: jest.fn(),
-  tool: jest.fn(),
-};
-
-jest.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
-  McpServer: jest.fn().mockImplementation(() => mockMcpServer),
-}));
-
-// Mock StdioServerTransport
-const MockStdioServerTransport = jest.fn().mockImplementation(() => ({
-  start: jest.fn(),
-  close: jest.fn(),
-}));
-
-jest.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
-  StdioServerTransport: MockStdioServerTransport,
+vi.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
+  StdioServerTransport: vi.fn().mockImplementation(() => ({
+    start: vi.fn(),
+    close: vi.fn(),
+  })),
 }));
 
 describe('DeepSourceMCPServer', () => {
   let server: DeepSourceMCPServer;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    // Reset mock implementations
-    mockMcpServer.connect.mockClear();
-    mockMcpServer.registerTool.mockClear();
-    mockMcpServer.tool.mockClear();
-    mockRegisterDeepSourceTools.mockClear();
-    mockLogger.info.mockClear();
-    mockLogger.debug.mockClear();
-    mockLogger.warn.mockClear();
-    mockLogger.error.mockClear();
+    vi.clearAllMocks();
     // Set up mock API key for tests
     process.env.DEEPSOURCE_API_KEY = 'test-api-key';
   });
@@ -133,7 +115,7 @@ describe('DeepSourceMCPServer', () => {
       server = new DeepSourceMCPServer();
       // Spy on the actual mcpServer instance
       const mcpServer = server.getMcpServer();
-      const connectSpy = jest.spyOn(mcpServer, 'connect').mockResolvedValue(undefined);
+      const connectSpy = vi.spyOn(mcpServer, 'connect').mockResolvedValue(undefined);
 
       await server.connect();
       expect(connectSpy).toHaveBeenCalled();
@@ -147,7 +129,7 @@ describe('DeepSourceMCPServer', () => {
 
       // Mock the internal mcpServer's connect method
       const mcpServer = server.getMcpServer();
-      const connectSpy = jest.spyOn(mcpServer, 'connect').mockResolvedValue(undefined);
+      const connectSpy = vi.spyOn(mcpServer, 'connect').mockResolvedValue(undefined);
 
       // First connection should succeed
       await server.connect();
@@ -166,11 +148,12 @@ describe('DeepSourceMCPServer', () => {
     });
 
     it('should use provided transport', async () => {
-      const customTransport = new MockStdioServerTransport();
+      const { StdioServerTransport } = await import('@modelcontextprotocol/sdk/server/stdio.js');
+      const customTransport = new StdioServerTransport();
       server = new DeepSourceMCPServer();
       // Spy on the actual mcpServer instance
       const mcpServer = server.getMcpServer();
-      const connectSpy = jest.spyOn(mcpServer, 'connect').mockResolvedValue(undefined);
+      const connectSpy = vi.spyOn(mcpServer, 'connect').mockResolvedValue(undefined);
 
       await server.connect(customTransport);
       expect(connectSpy).toHaveBeenCalledWith(customTransport);
@@ -182,7 +165,7 @@ describe('DeepSourceMCPServer', () => {
       server = new DeepSourceMCPServer();
       // Spy on the actual mcpServer instance
       const mcpServer = server.getMcpServer();
-      const connectSpy = jest.spyOn(mcpServer, 'connect').mockResolvedValue(undefined);
+      const connectSpy = vi.spyOn(mcpServer, 'connect').mockResolvedValue(undefined);
 
       await server.start();
       expect(connectSpy).toHaveBeenCalled();
@@ -207,7 +190,7 @@ describe('DeepSourceMCPServer', () => {
       server = new DeepSourceMCPServer();
       const newDeps = {};
       const registry = server.getToolRegistry();
-      registry.updateDefaultDeps = jest.fn();
+      registry.updateDefaultDeps = vi.fn();
 
       server.updateHandlerDeps(newDeps);
       expect(registry.updateDefaultDeps).toHaveBeenCalledWith(newDeps);
@@ -218,7 +201,7 @@ describe('DeepSourceMCPServer', () => {
     it('should return registered tool names', () => {
       server = new DeepSourceMCPServer({ autoRegisterTools: false });
       const registry = server.getToolRegistry();
-      registry.getToolNames = jest.fn().mockReturnValue(['tool1', 'tool2']);
+      registry.getToolNames = vi.fn().mockReturnValue(['tool1', 'tool2']);
 
       const tools = server.getRegisteredTools();
       expect(tools).toEqual(['tool1', 'tool2']);

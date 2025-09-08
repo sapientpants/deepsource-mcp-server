@@ -64,8 +64,6 @@ export class IssuesClient extends BaseDeepSourceClient {
         pageInfo: {
           hasNextPage: false, // Simplified for now - would need cursor-based pagination
           hasPreviousPage: false,
-          startCursor: undefined,
-          endCursor: undefined,
         },
         totalCount: issues.length,
       };
@@ -196,8 +194,6 @@ export class IssuesClient extends BaseDeepSourceClient {
         pageInfo: {
           hasNextPage: false,
           hasPreviousPage: false,
-          startCursor: undefined,
-          endCursor: undefined,
         },
         totalCount: 0,
       };

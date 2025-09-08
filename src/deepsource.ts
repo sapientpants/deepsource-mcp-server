@@ -61,7 +61,7 @@ export type {
  * and is referenced in API functions like getComplianceReport() and handleDeepsourceComplianceReport().
  * @public
  */
-/* eslint-disable no-unused-vars */
+
 export enum ReportType {
   // Compliance-specific report types
   OWASP_TOP_10 = 'OWASP_TOP_10',
@@ -75,7 +75,6 @@ export enum ReportType {
   ISSUES_PREVENTED = 'ISSUES_PREVENTED',
   ISSUES_AUTOFIXED = 'ISSUES_AUTOFIXED',
 }
-/* eslint-enable no-unused-vars */
 
 /**
  * Report status indicating whether the report is passing, failing, or not applicable
@@ -83,13 +82,12 @@ export enum ReportType {
  * and is referenced in handleDeepsourceComplianceReport().
  * @public
  */
-/* eslint-disable no-unused-vars */
+
 export enum ReportStatus {
   PASSING = 'PASSING',
   FAILING = 'FAILING',
   NOOP = 'NOOP',
 }
-/* eslint-enable no-unused-vars */
 
 /**
  * Trend information for reports
@@ -777,14 +775,19 @@ export class DeepSourceClient {
    * @private
    */
   private static createEmptyPaginatedResponse<T>(): PaginatedResponse<T> {
+    const pageInfo: {
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+      startCursor?: string;
+      endCursor?: string;
+    } = {
+      hasNextPage: false,
+      hasPreviousPage: false,
+    };
+
     return {
       items: [],
-      pageInfo: {
-        hasNextPage: false,
-        hasPreviousPage: false,
-        startCursor: undefined,
-        endCursor: undefined,
-      },
+      pageInfo,
       totalCount: 0,
     };
   }
@@ -859,18 +862,18 @@ export class DeepSourceClient {
     if (normalizedParams.before) {
       // When fetching backwards with 'before', prioritize 'last'
       normalizedParams.last = normalizedParams.last ?? normalizedParams.first ?? 10;
-      normalizedParams.first = undefined;
+      delete normalizedParams.first;
     } else if (normalizedParams.last) {
       // If 'last' is provided without 'before', log a warning but still use 'last'
       DeepSourceClient.logPaginationWarning(
         `Non-standard pagination: Using "last=${normalizedParams.last}" without "before" cursor is not recommended`
       );
       // Keep normalizedParams.last as is
-      normalizedParams.first = undefined;
+      delete normalizedParams.first;
     } else {
       // Default or forward pagination with 'after', prioritize 'first'
       normalizedParams.first = normalizedParams.first ?? 10;
-      normalizedParams.last = undefined;
+      delete normalizedParams.last;
     }
 
     return normalizedParams;
@@ -1269,10 +1272,11 @@ export class DeepSourceClient {
     let hasNextPage = true;
 
     while (hasNextPage) {
-      const runs = await this.listRuns(projectKey, {
-        first: 50,
-        after: cursor,
-      });
+      const runParams: RunFilterParams = { first: 50 };
+      if (cursor) {
+        runParams.after = cursor;
+      }
+      const runs = await this.listRuns(projectKey, runParams);
 
       // Check each run in this page
       for (const run of runs.items) {
@@ -1531,14 +1535,19 @@ export class DeepSourceClient {
         `Retrieved ${allIssues.length} total issues from run ${mostRecentRun.runUid}`
       );
 
+      const pageInfo: {
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        startCursor?: string;
+        endCursor?: string;
+      } = {
+        hasNextPage: false,
+        hasPreviousPage: false,
+      };
+
       return {
         items: allIssues,
-        pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: false,
-          startCursor: undefined,
-          endCursor: undefined,
-        },
+        pageInfo,
         totalCount: allIssues.length,
         run: mostRecentRun,
       };
@@ -1673,14 +1682,20 @@ export class DeepSourceClient {
    * @private
    */
   private static mapPackageData(packageData: Record<string, unknown>): Package {
-    return {
+    const result: Package = {
       // Required fields with fallbacks to empty strings
       id: DeepSourceClient.validateString(packageData.id),
       ecosystem: DeepSourceClient.validateString(packageData.ecosystem),
       name: DeepSourceClient.validateString(packageData.name),
-      // Optional URL field
-      purl: DeepSourceClient.validateNullableString(packageData.purl) ?? undefined,
     };
+
+    // Optional URL field
+    const purl = DeepSourceClient.validateNullableString(packageData.purl);
+    if (purl) {
+      result.purl = purl;
+    }
+
+    return result;
   }
 
   /**
@@ -1690,15 +1705,18 @@ export class DeepSourceClient {
    * @private
    */
   private static mapPackageVersionData(versionData: Record<string, unknown>): PackageVersion {
-    return {
+    const result: PackageVersion = {
       // Required fields with fallbacks to empty strings
       id: DeepSourceClient.validateString(versionData.id),
       version: DeepSourceClient.validateString(versionData.version),
-      // Optional enum field with validation
-      versionType: DeepSourceClient.isValidVersionType(versionData.versionType)
-        ? versionData.versionType
-        : undefined,
     };
+
+    // Optional enum field with validation
+    if (DeepSourceClient.isValidVersionType(versionData.versionType)) {
+      result.versionType = versionData.versionType as PackageVersionType;
+    }
+
+    return result;
   }
 
   /**
@@ -1877,7 +1895,7 @@ export class DeepSourceClient {
       return typeof value === 'string' && validSeverities.includes(value as VulnerabilitySeverity);
     };
 
-    return {
+    const result: Vulnerability = {
       // Required fields with fallbacks to empty strings
       id: DeepSourceClient.validateString(vulnData.id),
       identifier: DeepSourceClient.validateString(vulnData.identifier),
@@ -1888,49 +1906,82 @@ export class DeepSourceClient {
       fixedVersions: DeepSourceClient.validateArray(vulnData.fixedVersions),
       referenceUrls: DeepSourceClient.validateArray(vulnData.referenceUrls),
 
-      // Optional string fields that can be undefined
-      summary: DeepSourceClient.validateNullableString(vulnData.summary) ?? undefined,
-      details: DeepSourceClient.validateNullableString(vulnData.details) ?? undefined,
-
       // Required date fields with fallbacks
       publishedAt: DeepSourceClient.validateString(vulnData.publishedAt),
       updatedAt: DeepSourceClient.validateString(vulnData.updatedAt),
 
-      // Optional date field that can be undefined
-      withdrawnAt: DeepSourceClient.validateNullableString(vulnData.withdrawnAt) ?? undefined,
-
       // Severity with validation
       severity: isValidSeverity(vulnData.severity) ? vulnData.severity : 'NONE',
-
-      // CVSSv2 fields with validation
-      cvssV2Vector: DeepSourceClient.validateNullableString(vulnData.cvssV2Vector) ?? undefined,
-      cvssV2BaseScore:
-        typeof vulnData.cvssV2BaseScore === 'number' ? vulnData.cvssV2BaseScore : undefined,
-      cvssV2Severity: isValidSeverity(vulnData.cvssV2Severity)
-        ? vulnData.cvssV2Severity
-        : undefined,
-
-      // CVSSv3 fields with validation
-      cvssV3Vector: DeepSourceClient.validateNullableString(vulnData.cvssV3Vector) ?? undefined,
-      cvssV3BaseScore:
-        typeof vulnData.cvssV3BaseScore === 'number' ? vulnData.cvssV3BaseScore : undefined,
-      cvssV3Severity: isValidSeverity(vulnData.cvssV3Severity)
-        ? vulnData.cvssV3Severity
-        : undefined,
-
-      // CVSSv4 fields with validation
-      cvssV4Vector: DeepSourceClient.validateNullableString(vulnData.cvssV4Vector) ?? undefined,
-      cvssV4BaseScore:
-        typeof vulnData.cvssV4BaseScore === 'number' ? vulnData.cvssV4BaseScore : undefined,
-      cvssV4Severity: isValidSeverity(vulnData.cvssV4Severity)
-        ? vulnData.cvssV4Severity
-        : undefined,
-
-      // EPSS fields with validation
-      epssScore: typeof vulnData.epssScore === 'number' ? vulnData.epssScore : undefined,
-      epssPercentile:
-        typeof vulnData.epssPercentile === 'number' ? vulnData.epssPercentile : undefined,
     };
+
+    // Optional string fields
+    const summary = DeepSourceClient.validateNullableString(vulnData.summary);
+    if (summary) {
+      result.summary = summary;
+    }
+
+    const details = DeepSourceClient.validateNullableString(vulnData.details);
+    if (details) {
+      result.details = details;
+    }
+
+    const withdrawnAt = DeepSourceClient.validateNullableString(vulnData.withdrawnAt);
+    if (withdrawnAt) {
+      result.withdrawnAt = withdrawnAt;
+    }
+
+    // CVSSv2 fields with validation
+    const cvssV2Vector = DeepSourceClient.validateNullableString(vulnData.cvssV2Vector);
+    if (cvssV2Vector) {
+      result.cvssV2Vector = cvssV2Vector;
+    }
+
+    if (typeof vulnData.cvssV2BaseScore === 'number') {
+      result.cvssV2BaseScore = vulnData.cvssV2BaseScore;
+    }
+
+    if (isValidSeverity(vulnData.cvssV2Severity)) {
+      result.cvssV2Severity = vulnData.cvssV2Severity;
+    }
+
+    // CVSSv3 fields with validation
+    const cvssV3Vector = DeepSourceClient.validateNullableString(vulnData.cvssV3Vector);
+    if (cvssV3Vector) {
+      result.cvssV3Vector = cvssV3Vector;
+    }
+
+    if (typeof vulnData.cvssV3BaseScore === 'number') {
+      result.cvssV3BaseScore = vulnData.cvssV3BaseScore;
+    }
+
+    if (isValidSeverity(vulnData.cvssV3Severity)) {
+      result.cvssV3Severity = vulnData.cvssV3Severity;
+    }
+
+    // CVSSv4 fields with validation
+    const cvssV4Vector = DeepSourceClient.validateNullableString(vulnData.cvssV4Vector);
+    if (cvssV4Vector) {
+      result.cvssV4Vector = cvssV4Vector;
+    }
+
+    if (typeof vulnData.cvssV4BaseScore === 'number') {
+      result.cvssV4BaseScore = vulnData.cvssV4BaseScore;
+    }
+
+    if (isValidSeverity(vulnData.cvssV4Severity)) {
+      result.cvssV4Severity = vulnData.cvssV4Severity;
+    }
+
+    // EPSS fields with validation
+    if (typeof vulnData.epssScore === 'number') {
+      result.epssScore = vulnData.epssScore;
+    }
+
+    if (typeof vulnData.epssPercentile === 'number') {
+      result.epssPercentile = vulnData.epssPercentile;
+    }
+
+    return result;
   }
 
   /**
@@ -2124,7 +2175,7 @@ export class DeepSourceClient {
   private static getNestedProperty<T>(
     obj: unknown,
     propPath: string[],
-    // eslint-disable-next-line no-unused-vars
+
     validator?: (value: unknown) => boolean
   ): T | undefined {
     // Start with the root object
@@ -2194,15 +2245,30 @@ export class DeepSourceClient {
     );
 
     // Create the page info object with type-safe property access
-    const pageInfo = pageInfoData
-      ? {
-          hasNextPage: Boolean(pageInfoData.hasNextPage),
-          hasPreviousPage: Boolean(pageInfoData.hasPreviousPage),
-          startCursor:
-            typeof pageInfoData.startCursor === 'string' ? pageInfoData.startCursor : undefined,
-          endCursor:
-            typeof pageInfoData.endCursor === 'string' ? pageInfoData.endCursor : undefined,
-        }
+    const pageInfo: {
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+      startCursor?: string;
+      endCursor?: string;
+    } = pageInfoData
+      ? (() => {
+          const info: {
+            hasNextPage: boolean;
+            hasPreviousPage: boolean;
+            startCursor?: string;
+            endCursor?: string;
+          } = {
+            hasNextPage: Boolean(pageInfoData.hasNextPage),
+            hasPreviousPage: Boolean(pageInfoData.hasPreviousPage),
+          };
+          if (typeof pageInfoData.startCursor === 'string') {
+            info.startCursor = pageInfoData.startCursor;
+          }
+          if (typeof pageInfoData.endCursor === 'string') {
+            info.endCursor = pageInfoData.endCursor;
+          }
+          return info;
+        })()
       : {
           hasNextPage: false,
           hasPreviousPage: false,
@@ -2419,14 +2485,27 @@ export class DeepSourceClient {
       const { vulnerabilities, pageInfo, totalCount } =
         DeepSourceClient.processVulnerabilityResponse(response);
 
+      const responsePageInfo: {
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        startCursor?: string;
+        endCursor?: string;
+      } = {
+        hasNextPage: pageInfo.hasNextPage,
+        hasPreviousPage: pageInfo.hasPreviousPage,
+      };
+
+      if (pageInfo.startCursor !== undefined) {
+        responsePageInfo.startCursor = pageInfo.startCursor;
+      }
+
+      if (pageInfo.endCursor !== undefined) {
+        responsePageInfo.endCursor = pageInfo.endCursor;
+      }
+
       return {
         items: vulnerabilities,
-        pageInfo: {
-          hasNextPage: pageInfo.hasNextPage,
-          hasPreviousPage: pageInfo.hasPreviousPage,
-          startCursor: pageInfo.startCursor,
-          endCursor: pageInfo.endCursor,
-        },
+        pageInfo: responsePageInfo,
         totalCount,
       };
     } catch (error) {
@@ -2718,21 +2797,30 @@ export class DeepSourceClient {
         return null;
       }
 
-      return {
+      const report: ComplianceReport = {
         key: reportType,
         title:
           typeof reportData.title === 'string'
             ? reportData.title
             : DeepSourceClient.getTitleForReportType(reportType),
-        currentValue:
-          typeof reportData.currentValue === 'number' ? reportData.currentValue : undefined,
-        status:
-          typeof reportData.status === 'string' ? (reportData.status as ReportStatus) : undefined,
         securityIssueStats: Array.isArray(reportData.securityIssueStats)
           ? (reportData.securityIssueStats as SecurityIssueStat[])
           : [],
-        trends: Array.isArray(reportData.trends) ? (reportData.trends as ReportTrend[]) : undefined,
       };
+
+      if (typeof reportData.currentValue === 'number') {
+        report.currentValue = reportData.currentValue;
+      }
+
+      if (typeof reportData.status === 'string') {
+        report.status = reportData.status as ReportStatus;
+      }
+
+      if (Array.isArray(reportData.trends)) {
+        report.trends = reportData.trends as ReportTrend[];
+      }
+
+      return report;
     } catch (error) {
       if (
         DeepSourceClient.isError(error) &&
@@ -3241,8 +3329,13 @@ export class DeepSourceClient {
     }
 
     // Get the first and last values for comparison
-    const firstValue = values[0].value;
-    const lastValue = values[values.length - 1].value;
+    const firstValue = values[0]?.value;
+    const lastValue = values[values.length - 1]?.value;
+
+    // Ensure we have valid values
+    if (firstValue === undefined || lastValue === undefined) {
+      return true; // Not enough valid data to determine trend
+    }
 
     // Calculate the change
     const change = lastValue - firstValue;

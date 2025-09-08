@@ -2,17 +2,17 @@
  * @fileoverview Tests for tool helper functions
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 // Mock logger
 const mockLogger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  error: jest.fn(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  error: vi.fn(),
 };
 
-jest.unstable_mockModule('../../utils/logging/logger.js', () => ({
-  createLogger: jest.fn(() => mockLogger),
+vi.mock('../../utils/logging/logger.js', () => ({
+  createLogger: vi.fn(() => mockLogger),
 }));
 
 // Import after mocking
@@ -21,7 +21,7 @@ const { parseErrorMessage, formatError, logToolInvocation, logToolResult, logAnd
 
 describe('Tool Helpers', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('parseErrorMessage', () => {

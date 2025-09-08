@@ -1,8 +1,8 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import nock from 'nock';
 import { DeepSourceClient, MetricShortcode } from '../deepsource';
 import { MetricDirection, MetricKey } from '../types/metrics';
@@ -136,18 +136,22 @@ describe('DeepSourceClient Historical Data Processing', () => {
       };
 
       // Mock the validateAndGetMetricInfo method to return our mock data
-      jest
-        .spyOn(client as unknown as Record<string, unknown>, 'validateAndGetMetricInfo')
-        .mockResolvedValue({
-          project: mockProject,
-          metric: mockMetric,
-          metricItem: mockMetricItem,
-        });
+      vi;
+      vi.spyOn(
+        client as unknown as Record<string, unknown>,
+        'validateAndGetMetricInfo'
+      ).mockResolvedValue({
+        project: mockProject,
+        metric: mockMetric,
+        metricItem: mockMetricItem,
+      });
 
       // Mock the fetchHistoricalValues method to return mock history data
-      jest
-        .spyOn(client as unknown as Record<string, unknown>, 'fetchHistoricalValues')
-        .mockResolvedValue(mockHistoryValues);
+      vi;
+      vi.spyOn(
+        client as unknown as Record<string, unknown>,
+        'fetchHistoricalValues'
+      ).mockResolvedValue(mockHistoryValues);
 
       // Mock the createMetricHistoryResponse method to return a test response
       const mockResponse = {
@@ -161,12 +165,11 @@ describe('DeepSourceClient Historical Data Processing', () => {
         values: mockHistoryValues,
       };
 
-      jest
-        .spyOn(
-          DeepSourceClient as unknown as Record<string, unknown>,
-          'createMetricHistoryResponse'
-        )
-        .mockReturnValue(mockResponse);
+      vi;
+      vi.spyOn(
+        DeepSourceClient as unknown as Record<string, unknown>,
+        'createMetricHistoryResponse'
+      ).mockReturnValue(mockResponse);
 
       // Call the method under test
       const result = await client.testProcessRegularMetricHistory(mockParams);
@@ -283,7 +286,7 @@ describe('DeepSourceClient Historical Data Processing', () => {
         },
       ];
 
-      const processHistoricalDataSpy = jest
+      const processHistoricalDataSpy = vi
         .spyOn(DeepSourceClient as unknown as Record<string, unknown>, 'processHistoricalData')
         .mockImplementation(() => mockHistoryValues);
 
@@ -409,7 +412,7 @@ describe('DeepSourceClient Historical Data Processing', () => {
       };
 
       // Spy on the actual post method to verify query and variables (line 3018)
-      const postSpy = jest.spyOn(client['client'], 'post');
+      const postSpy = vi.spyOn(client['client'], 'post');
 
       // Mock the processHistoricalData method to return expected values (line 3035)
       const mockHistoryValues = [
@@ -424,7 +427,7 @@ describe('DeepSourceClient Historical Data Processing', () => {
       ];
 
       // Spy on the processHistoricalData method to verify it's called with the right params
-      const processHistoricalDataSpy = jest
+      const processHistoricalDataSpy = vi
         .spyOn(DeepSourceClient as unknown as Record<string, unknown>, 'processHistoricalData')
         .mockImplementation(() => mockHistoryValues);
 
@@ -583,11 +586,11 @@ describe('DeepSourceClient Historical Data Processing', () => {
       // We need to mock calculateTrendDirection by directly overriding it
       // to avoid the issue with spyOn
       const originalCalculateTrendDirection = DeepSourceClient['calculateTrendDirection'];
-      DeepSourceClient['calculateTrendDirection'] = jest.fn().mockReturnValue(true);
+      DeepSourceClient['calculateTrendDirection'] = vi.fn().mockReturnValue(true);
 
       // Create a custom implementation of createMetricHistoryResponse that uses our DDP metric data
       const originalCreateMetricHistoryResponse = DeepSourceClient['createMetricHistoryResponse'];
-      DeepSourceClient['createMetricHistoryResponse'] = jest.fn().mockImplementation(() => ({
+      DeepSourceClient['createMetricHistoryResponse'] = vi.fn().mockImplementation(() => ({
         shortcode: MetricShortcode.DDP,
         metricKey: MetricKey.AGGREGATE,
         name: 'Duplicate Code Percentage',

@@ -2,7 +2,7 @@
  * @fileoverview Tests for QualityMetrics aggregate
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { QualityMetrics } from '../quality-metrics.aggregate.js';
 import type {
   CreateQualityMetricsParams,

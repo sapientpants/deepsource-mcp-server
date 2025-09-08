@@ -3,25 +3,11 @@
  * This file adds coverage for the previously untested runs-client.ts
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { RunsClient } from '../../client/runs-client.js';
 import { asBranchName } from '../../types/branded.js';
 import type { RunsClientTestable, MockDeepSourceClient } from '../test-types.js';
 import { TestableRunsClient } from '../utils/test-utils.js';
-
-// Mock the base client
-jest.mock('../../client/base-client.js', () => ({
-  BaseDeepSourceClient: jest.fn().mockImplementation(() => ({
-    findProjectByKey: jest.fn(),
-    executeGraphQL: jest.fn(),
-    logger: {
-      info: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-      warn: jest.fn(),
-    },
-  })),
-}));
 
 describe('RunsClient', () => {
   let runsClient: RunsClient;
@@ -30,6 +16,16 @@ describe('RunsClient', () => {
   beforeEach(() => {
     runsClient = new RunsClient('test-api-key');
     mockBaseClient = runsClient as unknown as MockDeepSourceClient;
+
+    // Mock the methods we need
+    (mockBaseClient as any).findProjectByKey = vi.fn();
+    (mockBaseClient as any).executeGraphQL = vi.fn();
+    (mockBaseClient as any).logger = {
+      info: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+      warn: vi.fn(),
+    };
   });
 
   describe('listRuns', () => {
@@ -103,12 +99,12 @@ describe('RunsClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.normalizePaginationParams = jest.fn().mockReturnValue({
+      mockBaseClient.findProjectByKey = vi.fn().mockResolvedValue(mockProject);
+      mockBaseClient.normalizePaginationParams = vi.fn().mockReturnValue({
         first: 20,
         after: null,
       });
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockBaseClient.executeGraphQL = vi.fn().mockResolvedValue(mockResponse);
 
       const result = await runsClient.listRuns('test-project');
 
@@ -123,16 +119,16 @@ describe('RunsClient', () => {
       );
 
       expect(result.items).toHaveLength(2);
-      expect(result.items[0].runUid).toBe('f47ac10b-58cc-4372-a567-0e02b2c3d479');
-      expect(result.items[0].status).toBe('SUCCESS');
+      expect(result.items[0]?.runUid).toBe('f47ac10b-58cc-4372-a567-0e02b2c3d479');
+      expect(result.items[0]?.status).toBe('SUCCESS');
       expect(result.items[0].branchName).toBe('main');
       expect(result.items[1].status).toBe('RUNNING');
       expect(result.items[1].branchName).toBe('feature-branch');
     });
 
     it('should return empty response when project not found', async () => {
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(null);
-      mockBaseClient.createEmptyPaginatedResponse = jest.fn().mockReturnValue({
+      mockBaseClient.findProjectByKey = vi.fn().mockResolvedValue(null as any);
+      (mockBaseClient as any).createEmptyPaginatedResponse = vi.fn().mockReturnValue({
         items: [],
         pageInfo: { hasNextPage: false, hasPreviousPage: false },
         totalCount: 0,
@@ -153,11 +149,11 @@ describe('RunsClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.normalizePaginationParams = jest.fn().mockReturnValue({
+      mockBaseClient.findProjectByKey = vi.fn().mockResolvedValue(mockProject);
+      mockBaseClient.normalizePaginationParams = vi.fn().mockReturnValue({
         first: 20,
       });
-      mockBaseClient.executeGraphQL = jest.fn().mockRejectedValue(new Error('GraphQL error'));
+      mockBaseClient.executeGraphQL = vi.fn().mockRejectedValue(new Error('GraphQL error'));
 
       await expect(runsClient.listRuns('test-project')).rejects.toThrow('GraphQL error');
     });
@@ -175,11 +171,11 @@ describe('RunsClient', () => {
         data: null,
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.normalizePaginationParams = jest.fn().mockReturnValue({
+      mockBaseClient.findProjectByKey = vi.fn().mockResolvedValue(mockProject);
+      mockBaseClient.normalizePaginationParams = vi.fn().mockReturnValue({
         first: 20,
       });
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockBaseClient.executeGraphQL = vi.fn().mockResolvedValue(mockResponse);
 
       await expect(runsClient.listRuns('test-project')).rejects.toThrow(
         'No data received from GraphQL API'
@@ -211,12 +207,12 @@ describe('RunsClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.normalizePaginationParams = jest.fn().mockReturnValue({
+      mockBaseClient.findProjectByKey = vi.fn().mockResolvedValue(mockProject);
+      mockBaseClient.normalizePaginationParams = vi.fn().mockReturnValue({
         first: 10,
         after: 'cursor123',
       });
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockBaseClient.executeGraphQL = vi.fn().mockResolvedValue(mockResponse);
 
       await runsClient.listRuns('test-project', {
         first: 10,
@@ -256,7 +252,7 @@ describe('RunsClient', () => {
         },
       };
 
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockBaseClient.executeGraphQL = vi.fn().mockResolvedValue(mockResponse);
 
       const result = await runsClient.getRun(mockUuid);
 
@@ -300,7 +296,7 @@ describe('RunsClient', () => {
         },
       };
 
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockBaseClient.executeGraphQL = vi.fn().mockResolvedValue(mockResponse);
 
       const result = await runsClient.getRun(mockCommitOid);
 
@@ -321,7 +317,7 @@ describe('RunsClient', () => {
         data: null,
       };
 
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockBaseClient.executeGraphQL = vi.fn().mockResolvedValue(mockResponse);
 
       const result = await runsClient.getRun('nonexistent-run-id');
 
@@ -329,7 +325,7 @@ describe('RunsClient', () => {
     });
 
     it('should return null for NoneType errors', async () => {
-      mockBaseClient.executeGraphQL = jest.fn().mockRejectedValue(new Error('NoneType error'));
+      mockBaseClient.executeGraphQL = vi.fn().mockRejectedValue(new Error('NoneType error'));
 
       const result = await runsClient.getRun('nonexistent-run-id');
 
@@ -337,7 +333,7 @@ describe('RunsClient', () => {
     });
 
     it('should return null for not found errors', async () => {
-      mockBaseClient.executeGraphQL = jest.fn().mockRejectedValue(new Error('Run not found'));
+      mockBaseClient.executeGraphQL = vi.fn().mockRejectedValue(new Error('Run not found'));
 
       const result = await runsClient.getRun('nonexistent-run-id');
 
@@ -345,7 +341,7 @@ describe('RunsClient', () => {
     });
 
     it('should re-throw other errors', async () => {
-      mockBaseClient.executeGraphQL = jest.fn().mockRejectedValue(new Error('Server error'));
+      mockBaseClient.executeGraphQL = vi.fn().mockRejectedValue(new Error('Server error'));
 
       await expect(runsClient.getRun('some-run-id')).rejects.toThrow('Server error');
     });
@@ -382,7 +378,7 @@ describe('RunsClient', () => {
       };
 
       // Mock the listRuns method
-      runsClient.listRuns = jest.fn().mockResolvedValue(mockRuns);
+      runsClient.listRuns = vi.fn().mockResolvedValue(mockRuns as any);
 
       const result = await runsClient.findMostRecentRunForBranch('test-project', 'main');
 
@@ -409,7 +405,7 @@ describe('RunsClient', () => {
         totalCount: 1,
       };
 
-      runsClient.listRuns = jest.fn().mockResolvedValue(mockRuns);
+      runsClient.listRuns = vi.fn().mockResolvedValue(mockRuns as any);
 
       await expect(runsClient.findMostRecentRunForBranch('test-project', 'main')).rejects.toThrow(
         "No runs found for branch 'main' in project 'test-project'"
@@ -445,7 +441,7 @@ describe('RunsClient', () => {
         totalCount: 2,
       };
 
-      runsClient.listRuns = jest
+      runsClient.listRuns = vi
         .fn()
         .mockResolvedValueOnce(mockRunsPage1)
         .mockResolvedValueOnce(mockRunsPage2);
@@ -479,7 +475,7 @@ describe('RunsClient', () => {
         status: 'SUCCESS',
       };
 
-      runsClient.findMostRecentRunForBranch = jest.fn().mockResolvedValue(mockRun);
+      runsClient.findMostRecentRunForBranch = vi.fn().mockResolvedValue(mockRun as any);
 
       const result = await runsClient.getRecentRunIssues('test-project', asBranchName('main'));
 
@@ -489,7 +485,7 @@ describe('RunsClient', () => {
     });
 
     it('should return empty response when no run found', async () => {
-      runsClient.findMostRecentRunForBranch = jest.fn().mockResolvedValue(null);
+      runsClient.findMostRecentRunForBranch = vi.fn().mockResolvedValue(null as any);
 
       const result = await runsClient.getRecentRunIssues('test-project', asBranchName('main'));
 
@@ -499,7 +495,7 @@ describe('RunsClient', () => {
     });
 
     it('should handle errors from findMostRecentRunForBranch', async () => {
-      runsClient.findMostRecentRunForBranch = jest
+      runsClient.findMostRecentRunForBranch = vi
         .fn()
         .mockRejectedValue(new Error('Branch not found'));
 

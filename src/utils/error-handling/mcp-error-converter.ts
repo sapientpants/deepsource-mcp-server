@@ -2,7 +2,7 @@
  * @fileoverview Converts various error types to MCP-compliant errors
  */
 
-import { MCPError, MCPErrorCode, MCPErrorCategory } from './mcp-errors.js';
+import { MCPError, MCPErrorCode, MCPErrorCategory, MCPErrorInfo } from './mcp-errors.js';
 import { createServerError } from './mcp-error-factory.js';
 import { handleApiError } from '../errors/handlers.js';
 import { ClassifiedError } from '../errors/types.js';
@@ -125,15 +125,23 @@ function fromDeepSourceError(error: ClassifiedError): MCPError {
     OTHER: MCPErrorCode.INTERNAL_ERROR,
   };
 
-  return new MCPError({
+  const mcpErrorInfo: MCPErrorInfo = {
     code: codeMap[error.category] || MCPErrorCode.INTERNAL_ERROR,
     category: categoryMap[error.category] || MCPErrorCategory.SERVER_ERROR,
     message: error.message,
-    cause: error.originalError instanceof Error ? error.originalError : undefined,
-    details: error.metadata,
     retryable: ['NETWORK', 'TIMEOUT', 'RATE_LIMIT', 'SERVER'].includes(error.category),
     userFriendly: ['AUTH', 'NOT_FOUND', 'RATE_LIMIT', 'TIMEOUT'].includes(error.category),
-  });
+  };
+
+  if (error.originalError instanceof Error) {
+    mcpErrorInfo.cause = error.originalError;
+  }
+
+  if (error.metadata) {
+    mcpErrorInfo.details = error.metadata;
+  }
+
+  return new MCPError(mcpErrorInfo);
 }
 
 /**

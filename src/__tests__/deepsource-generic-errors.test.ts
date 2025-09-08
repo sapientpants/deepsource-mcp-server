@@ -1,8 +1,8 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { expect } from '@jest/globals';
+import { expect } from 'vitest';
 import { DeepSourceClient } from '../deepsource.js';
 
 describe('DeepSourceClient generic error handling', () => {

@@ -193,7 +193,7 @@ export class CoveragePercentage extends ValueObject<CoveragePercentageProps> {
   /**
    * Returns a formatted string representation
    */
-  toString(): string {
+  override toString(): string {
     return `${this.props.value.toFixed(this.props.decimalPlaces)}%`;
   }
 

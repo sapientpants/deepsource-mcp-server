@@ -131,9 +131,9 @@ export class BaseDeepSourceClient {
         errorMessage: error instanceof Error ? error.message : String(error),
         errorResponse: (error as Record<string, unknown>)?.response
           ? {
-              status: (error as Record<string, Record<string, unknown>>).response.status,
-              statusText: (error as Record<string, Record<string, unknown>>).response.statusText,
-              data: (error as Record<string, Record<string, unknown>>).response.data,
+              status: (error as Record<string, Record<string, unknown>>).response?.status,
+              statusText: (error as Record<string, Record<string, unknown>>).response?.statusText,
+              data: (error as Record<string, Record<string, unknown>>).response?.data,
             }
           : 'No response data available',
         query: query.substring(0, 100) + (query.length > 100 ? '...' : ''),
@@ -217,42 +217,52 @@ export class BaseDeepSourceClient {
    * @protected
    */
   protected static normalizePaginationParams(params: PaginationParams): PaginationParams {
-    const normalizedParams = { ...params };
+    const normalizedParams: PaginationParams = {};
 
     // Ensure offset is a non-negative integer or undefined
-    if (normalizedParams.offset !== undefined) {
-      normalizedParams.offset = Math.max(0, Math.floor(Number(normalizedParams.offset)));
+    if (params.offset !== undefined) {
+      normalizedParams.offset = Math.max(0, Math.floor(Number(params.offset)));
     }
 
     // Ensure first is a positive integer or undefined
-    if (normalizedParams.first !== undefined) {
-      normalizedParams.first = Math.max(1, Math.floor(Number(normalizedParams.first)));
+    if (params.first !== undefined) {
+      normalizedParams.first = Math.max(1, Math.floor(Number(params.first)));
     }
 
     // Ensure last is a positive integer or undefined
-    if (normalizedParams.last !== undefined) {
-      normalizedParams.last = Math.max(1, Math.floor(Number(normalizedParams.last)));
+    if (params.last !== undefined) {
+      normalizedParams.last = Math.max(1, Math.floor(Number(params.last)));
     }
 
     // Ensure after and before are strings if provided
-    if (normalizedParams.after !== undefined && typeof normalizedParams.after !== 'string') {
-      normalizedParams.after = String(normalizedParams.after ?? '');
+    if (params.after !== undefined) {
+      if (typeof params.after === 'string') {
+        normalizedParams.after = params.after;
+      } else {
+        normalizedParams.after = String(params.after);
+      }
     }
 
-    if (normalizedParams.before !== undefined && typeof normalizedParams.before !== 'string') {
-      normalizedParams.before = String(normalizedParams.before ?? '');
+    if (params.before !== undefined) {
+      if (typeof params.before === 'string') {
+        normalizedParams.before = params.before;
+      } else {
+        normalizedParams.before = String(params.before);
+      }
     }
 
     // Handle cursor-based pagination precedence
     if (normalizedParams.before) {
       // When fetching backwards with 'before', prioritize 'last'
-      normalizedParams.last = normalizedParams.last ?? normalizedParams.first ?? 10;
+      const lastValue = normalizedParams.last ?? normalizedParams.first ?? 10;
+      normalizedParams.last = lastValue;
       // Clear 'first' and 'after' to avoid conflicts
       delete normalizedParams.first;
       delete normalizedParams.after;
     } else if (normalizedParams.after) {
       // When fetching forwards with 'after', prioritize 'first'
-      normalizedParams.first = normalizedParams.first ?? 10;
+      const firstValue = normalizedParams.first ?? 10;
+      normalizedParams.first = firstValue;
       // Clear 'last' and 'before' to avoid conflicts
       delete normalizedParams.last;
       delete normalizedParams.before;
@@ -272,8 +282,6 @@ export class BaseDeepSourceClient {
       pageInfo: {
         hasNextPage: false,
         hasPreviousPage: false,
-        startCursor: undefined,
-        endCursor: undefined,
       },
       totalCount: 0,
     };

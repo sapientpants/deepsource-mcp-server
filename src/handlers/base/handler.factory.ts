@@ -24,7 +24,7 @@ import { getApiKey } from '../../config/index.js';
  */
 export function createBaseHandlerFactory<TParams = unknown, TResult = ApiResponse>(
   handlerName: string,
-  // eslint-disable-next-line no-unused-vars
+
   handlerLogic: (deps: BaseHandlerDeps, params: TParams) => Promise<TResult>
 ): HandlerFactory<BaseHandlerDeps, TParams, TResult> {
   return (deps: BaseHandlerDeps): HandlerFunction<TParams, TResult> => {
@@ -128,9 +128,13 @@ export function createErrorResponse(
       errorData = {
         code: error.code,
         message: error.message,
-        details: 'details' in error ? (error.details as Record<string, unknown>) : undefined,
-        suggestions: 'suggestions' in error ? (error.suggestions as string[]) : undefined,
       };
+      if ('details' in error && error.details) {
+        errorData.details = error.details as Record<string, unknown>;
+      }
+      if ('suggestions' in error && error.suggestions) {
+        errorData.suggestions = error.suggestions as string[];
+      }
     } else {
       // Generic error
       errorData = {

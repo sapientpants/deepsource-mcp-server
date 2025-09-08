@@ -2,7 +2,7 @@
  * @fileoverview Tests for ComplianceReportMapper
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { ComplianceReportMapper } from '../compliance-report.mapper.js';
 import { ComplianceReport as ApiComplianceReport } from '../../../deepsource.js';
 import { ReportType } from '../../../types/report-types.js';

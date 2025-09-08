@@ -1,5 +1,5 @@
 import nock from 'nock';
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { DeepSourceClient, ReportType } from '../deepsource';
 import { handleDeepsourceComplianceReport } from '../handlers';
 
@@ -180,12 +180,12 @@ describe('DeepSource Compliance Reports', () => {
       // We're specifically testing the error handling in the getComplianceReport method,
       // so we bypass this validation step
       // @ts-expect-error - accessing private method
-      jest.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {
+      vi.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {
         // Intentionally empty - validation is not relevant to this error handling test
       });
 
       // Mock the client's post method to throw a NoneType error
-      jest.spyOn(customClient['client'], 'post').mockImplementation(() => {
+      vi.spyOn(customClient['client'], 'post').mockImplementation(() => {
         throw new Error('NoneType object has no attribute get');
       });
 
@@ -204,12 +204,12 @@ describe('DeepSource Compliance Reports', () => {
       // We're specifically testing the error handling in the getComplianceReport method,
       // so we bypass this validation step
       // @ts-expect-error - accessing private method
-      jest.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {
+      vi.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {
         // Intentionally empty - validation is not relevant to this error handling test
       });
 
       // Mock the client's post method to throw a not found error
-      jest.spyOn(customClient['client'], 'post').mockImplementation(() => {
+      vi.spyOn(customClient['client'], 'post').mockImplementation(() => {
         throw new Error('Repository not found in database');
       });
 

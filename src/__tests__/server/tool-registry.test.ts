@@ -2,7 +2,7 @@
  * @fileoverview Tests for the ToolRegistry class
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { ToolRegistry, ToolDefinition } from '../../server/tool-registry.js';
@@ -12,28 +12,28 @@ import { DeepSourceClientFactory } from '../../client/factory.js';
 import { Logger } from '../../utils/logging/logger.js';
 
 // Mock the MCP server
-jest.mock('@modelcontextprotocol/sdk/server/mcp.js');
+vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 
 // Mock the logger
-jest.mock('../../utils/logging/logger.js', () => ({
-  createLogger: jest.fn(() => ({
-    info: jest.fn(),
-    debug: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+vi.mock('../../utils/logging/logger.js', () => ({
+  createLogger: vi.fn(() => ({
+    info: vi.fn(),
+    debug: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   })),
 }));
 
 // Mock the config
-jest.mock('../../config/index.js', () => ({
-  getApiKey: jest.fn(() => 'test-api-key'),
+vi.mock('../../config/index.js', () => ({
+  getApiKey: vi.fn(() => 'test-api-key'),
 }));
 
 // Mock tool helpers
-jest.mock('../../server/tool-helpers.js', () => ({
-  logToolInvocation: jest.fn(),
-  logToolResult: jest.fn(),
-  logAndFormatError: jest.fn((error: unknown, _toolName: string) => {
+vi.mock('../../server/tool-helpers.js', () => ({
+  logToolInvocation: vi.fn(),
+  logToolResult: vi.fn(),
+  logAndFormatError: vi.fn((error: unknown, _toolName: string) => {
     if (error instanceof Error) {
       return `${error.message}`;
     }
@@ -42,38 +42,38 @@ jest.mock('../../server/tool-helpers.js', () => ({
 }));
 
 // Mock error formatter
-jest.mock('../../utils/error-handling/mcp-error-formatter.js', () => ({
-  createErrorResponse: jest.fn((_error: unknown) => ({
+vi.mock('../../utils/error-handling/mcp-error-formatter.js', () => ({
+  createErrorResponse: vi.fn((_error: unknown) => ({
     content: [{ type: 'text', text: JSON.stringify({ error: 'formatted error' }) }],
     isError: true,
   })),
 }));
 
 describe('ToolRegistry', () => {
-  let mockServer: jest.Mocked<McpServer>;
+  let mockServer: any;
   let registry: ToolRegistry;
   let mockDeps: BaseHandlerDeps;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create mock server
     mockServer = {
-      registerTool: jest.fn(),
-    } as unknown as jest.Mocked<McpServer>;
+      registerTool: vi.fn(),
+    } as unknown as any;
 
     // Create mock dependencies without calling createDefaultHandlerDeps
     mockDeps = {
       clientFactory: {
-        createClient: jest.fn(),
+        createClient: vi.fn(),
       } as DeepSourceClientFactory,
       logger: {
-        info: jest.fn(),
-        debug: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn(),
+        info: vi.fn(),
+        debug: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
       },
-      getApiKey: jest.fn(() => 'test-api-key'),
+      getApiKey: vi.fn(() => 'test-api-key'),
     };
 
     // Create registry instance
@@ -173,7 +173,7 @@ describe('ToolRegistry', () => {
         message: z.string(),
       });
 
-      const mockHandler = jest.fn(async (params: { message: string }) => ({
+      const mockHandler = vi.fn(async (params: { message: string }) => ({
         content: [{ type: 'text' as const, text: `Echo: ${params.message}` }],
       }));
 
@@ -286,8 +286,8 @@ describe('ToolRegistry', () => {
       const result = await registeredHandler({}, {});
 
       expect(result.isError).toBe(true);
-      // The error is thrown and caught, producing the actual error message
-      expect(result.content[0].text).toBe('DeepSource API Error: API failed');
+      // The error content is the raw JSON string that was in the ApiResponse
+      expect(result.content[0].text).toBe('{"error":"API failed"}');
     });
 
     it('should handle non-ApiResponse results', async () => {
@@ -434,7 +434,7 @@ describe('ToolRegistry', () => {
       const newDeps = {
         clientFactory: {} as DeepSourceClientFactory,
         logger: {} as Logger,
-        getApiKey: jest.fn(),
+        getApiKey: vi.fn(),
       };
       registry.updateDefaultDeps(newDeps);
       // No error thrown means success
@@ -521,8 +521,8 @@ describe('ToolRegistry', () => {
 
     it('should handle error response parsing failure', async () => {
       // Mock createErrorResponse to return malformed JSON that will fail to parse
-      const { createErrorResponse } = jest.requireMock(
-        '../../utils/error-handling/mcp-error-formatter.js'
+      const { createErrorResponse } = vi.mocked(
+        await import('../../utils/error-handling/mcp-error-formatter.js')
       );
       createErrorResponse.mockReturnValueOnce({
         content: [{ type: 'text', text: 'malformed{json}' }],

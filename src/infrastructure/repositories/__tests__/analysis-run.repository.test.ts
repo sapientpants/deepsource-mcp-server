@@ -2,7 +2,7 @@
  * @fileoverview Tests for AnalysisRunRepository
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from 'vitest';
 import { AnalysisRunRepository } from '../analysis-run.repository.js';
 import { DeepSourceClient } from '../../../deepsource.js';
 import { DeepSourceRun } from '../../../models/runs.js';
@@ -19,32 +19,32 @@ import { AnalysisRun } from '../../../domain/aggregates/analysis-run/analysis-ru
 import { PaginatedResponse } from '../../../utils/pagination/types.js';
 
 // Mock the DeepSourceClient
-jest.mock('../../../deepsource.js');
+vi.mock('../../../deepsource.js');
 
 // Mock the logger
-jest.mock('../../../utils/logging/logger.js', () => ({
-  createLogger: jest.fn(() => ({
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+vi.mock('../../../utils/logging/logger.js', () => ({
+  createLogger: vi.fn(() => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   })),
 }));
 
 describe('AnalysisRunRepository', () => {
   let repository: AnalysisRunRepository;
-  let mockClient: jest.Mocked<DeepSourceClient>;
+  let mockClient: anyed<DeepSourceClient>;
   let mockApiRuns: DeepSourceRun[];
 
   beforeEach(() => {
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create mock DeepSourceClient
     mockClient = {
-      listProjects: jest.fn(),
-      listRuns: jest.fn(),
-    } as unknown as jest.Mocked<DeepSourceClient>;
+      listProjects: vi.fn(),
+      listRuns: vi.fn(),
+    } as unknown as anyed<DeepSourceClient>;
 
     // Create test data
     mockApiRuns = [

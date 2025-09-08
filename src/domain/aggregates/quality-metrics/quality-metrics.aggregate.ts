@@ -382,8 +382,13 @@ export class QualityMetrics extends AggregateRoot<string> {
       return null;
     }
 
-    const firstValue = recentHistory[0].value.value;
-    const lastValue = recentHistory[recentHistory.length - 1].value.value;
+    const firstValue = recentHistory[0]?.value.value;
+    const lastValue = recentHistory[recentHistory.length - 1]?.value.value;
+
+    if (firstValue === undefined || lastValue === undefined) {
+      return null;
+    }
+
     const changePercentage = ((lastValue - firstValue) / firstValue) * 100;
 
     let direction: 'IMPROVING' | 'DEGRADING' | 'STABLE';

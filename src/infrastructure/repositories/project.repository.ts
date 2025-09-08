@@ -24,7 +24,6 @@ const logger = createLogger('ProjectRepository');
  * This ensures fresh data retrieval on every request as per requirements.
  */
 export class ProjectRepository implements IProjectRepository {
-  // eslint-disable-next-line no-unused-vars
   constructor(private readonly projectsClient: ProjectsClient) {
     // projectsClient is stored for use in methods
   }

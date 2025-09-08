@@ -2,7 +2,7 @@
  * @fileoverview Tests for ProjectRepository
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from 'vitest';
 import { ProjectRepository } from '../project.repository.js';
 import { ProjectsClient } from '../../../client/projects-client.js';
 import { DeepSourceProject } from '../../../models/projects.js';
@@ -10,31 +10,31 @@ import { asProjectKey } from '../../../types/branded.js';
 import { Project } from '../../../domain/aggregates/project/project.aggregate.js';
 
 // Mock the ProjectsClient
-jest.mock('../../../client/projects-client.js');
+vi.mock('../../../client/projects-client.js');
 
 // Mock the logger
-jest.mock('../../../utils/logging/logger.js', () => ({
-  createLogger: jest.fn(() => ({
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+vi.mock('../../../utils/logging/logger.js', () => ({
+  createLogger: vi.fn(() => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   })),
 }));
 
 describe('ProjectRepository', () => {
   let repository: ProjectRepository;
-  let mockProjectsClient: jest.Mocked<ProjectsClient>;
+  let mockProjectsClient: anyed<ProjectsClient>;
   let mockApiProjects: DeepSourceProject[];
 
   beforeEach(() => {
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create mock ProjectsClient with mocked methods
     mockProjectsClient = {
-      listProjects: jest.fn(),
-    } as unknown as jest.Mocked<ProjectsClient>;
+      listProjects: vi.fn(),
+    } as unknown as anyed<ProjectsClient>;
 
     // Create test data
     mockApiProjects = [

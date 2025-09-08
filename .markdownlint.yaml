@@ -93,3 +93,7 @@ MD049:
 # MD050/strong-style - Strong style
 MD050:
   style: 'asterisk' # Use ** for bold
+
+# MD029/ol-prefix - Ordered list item prefix
+# Disabled as we have continuing numbered lists across code blocks
+MD029: false

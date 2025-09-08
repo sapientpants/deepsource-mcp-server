@@ -31,7 +31,6 @@ const logger = createLogger('ComplianceReportRepository');
  * retrieval on every request as per requirements.
  */
 export class ComplianceReportRepository implements IComplianceReportRepository {
-  // eslint-disable-next-line no-unused-vars
   constructor(private readonly client: DeepSourceClient) {
     // client is stored for use in methods
   }
@@ -52,7 +51,7 @@ export class ComplianceReportRepository implements IComplianceReportRepository {
     // Get repository ID from runs query (similar to QualityMetricsRepository)
     try {
       const runs = await this.client.listRuns(projectKey, { first: 1 });
-      if (runs.items.length > 0 && runs.items[0].repository?.id) {
+      if (runs.items.length > 0 && runs.items[0]?.repository?.id) {
         return runs.items[0].repository.id;
       }
 

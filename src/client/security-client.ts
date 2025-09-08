@@ -4,7 +4,11 @@
  */
 
 import { BaseDeepSourceClient } from './base-client.js';
-import { VulnerabilityOccurrence, VulnerabilitySeverity } from '../models/security.js';
+import {
+  VulnerabilityOccurrence,
+  VulnerabilitySeverity,
+  Vulnerability,
+} from '../models/security.js';
 import { PaginatedResponse, PaginationParams } from '../utils/pagination/types.js';
 import { isErrorWithMessage } from '../utils/errors/handlers.js';
 import { ReportType } from '../deepsource.js';
@@ -93,8 +97,6 @@ export class SecurityClient extends BaseDeepSourceClient {
         pageInfo: {
           hasNextPage: false, // Simplified for now
           hasPreviousPage: false,
-          startCursor: undefined,
-          endCursor: undefined,
         },
         totalCount: vulnerabilities.length,
       };
@@ -341,31 +343,37 @@ export class SecurityClient extends BaseDeepSourceClient {
         id: String(packageVersion.id ?? ''),
         version: String(packageVersion.version ?? ''),
       },
-      vulnerability: {
-        id: String(vulnerability.id ?? ''),
-        identifier: String(vulnerability.identifier ?? ''),
-        aliases: Array.isArray(vulnerability.aliases) ? (vulnerability.aliases as string[]) : [],
-        summary: String(vulnerability.summary ?? ''),
-        details: String(vulnerability.details ?? ''),
-        publishedAt: String(vulnerability.publishedAt ?? new Date().toISOString()),
-        updatedAt: String(vulnerability.updatedAt ?? new Date().toISOString()),
-        severity: String(vulnerability.severity ?? 'NONE') as VulnerabilitySeverity,
-        cvssV3BaseScore: vulnerability.cvssV3BaseScore
-          ? Number(vulnerability.cvssV3BaseScore)
-          : undefined,
-        cvssV2BaseScore: vulnerability.cvssV2BaseScore
-          ? Number(vulnerability.cvssV2BaseScore)
-          : undefined,
-        introducedVersions: Array.isArray(vulnerability.introducedVersions)
-          ? (vulnerability.introducedVersions as string[])
-          : [],
-        fixedVersions: Array.isArray(vulnerability.fixedVersions)
-          ? (vulnerability.fixedVersions as string[])
-          : [],
-        referenceUrls: Array.isArray(vulnerability.referenceUrls)
-          ? (vulnerability.referenceUrls as string[])
-          : [],
-      },
+      vulnerability: (() => {
+        const vuln: Record<string, unknown> = {
+          id: String(vulnerability.id ?? ''),
+          identifier: String(vulnerability.identifier ?? ''),
+          aliases: Array.isArray(vulnerability.aliases) ? (vulnerability.aliases as string[]) : [],
+          summary: String(vulnerability.summary ?? ''),
+          details: String(vulnerability.details ?? ''),
+          publishedAt: String(vulnerability.publishedAt ?? new Date().toISOString()),
+          updatedAt: String(vulnerability.updatedAt ?? new Date().toISOString()),
+          severity: String(vulnerability.severity ?? 'NONE') as VulnerabilitySeverity,
+          introducedVersions: Array.isArray(vulnerability.introducedVersions)
+            ? (vulnerability.introducedVersions as string[])
+            : [],
+          fixedVersions: Array.isArray(vulnerability.fixedVersions)
+            ? (vulnerability.fixedVersions as string[])
+            : [],
+          referenceUrls: Array.isArray(vulnerability.referenceUrls)
+            ? (vulnerability.referenceUrls as string[])
+            : [],
+        }; // Return vulnerability object
+
+        if (vulnerability.cvssV3BaseScore) {
+          vuln.cvssV3BaseScore = Number(vulnerability.cvssV3BaseScore);
+        }
+
+        if (vulnerability.cvssV2BaseScore) {
+          vuln.cvssV2BaseScore = Number(vulnerability.cvssV2BaseScore);
+        }
+
+        return vuln as unknown as Vulnerability;
+      })(),
       reachability: 'UNKNOWN' as const,
       fixability: 'UNFIXABLE' as const,
     };
@@ -497,8 +505,6 @@ export class SecurityClient extends BaseDeepSourceClient {
         pageInfo: {
           hasNextPage: false,
           hasPreviousPage: false,
-          startCursor: undefined,
-          endCursor: undefined,
         },
         totalCount: 0,
       };

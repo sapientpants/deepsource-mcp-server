@@ -50,12 +50,13 @@ export const createDependencyVulnerabilitiesHandler = createBaseHandlerFactory(
       projectKey,
     });
 
-    const vulnerabilities = await client.getDependencyVulnerabilities(projectKey, {
-      first,
-      after,
-      last,
-      before,
-    });
+    const params: { first?: number; after?: string; last?: number; before?: string } = {};
+    if (first !== undefined) params.first = first;
+    if (after !== undefined) params.after = after;
+    if (last !== undefined) params.last = last;
+    if (before !== undefined) params.before = before;
+
+    const vulnerabilities = await client.getDependencyVulnerabilities(projectKey, params);
 
     deps.logger.info('Successfully fetched dependency vulnerabilities', {
       count: vulnerabilities.items.length,

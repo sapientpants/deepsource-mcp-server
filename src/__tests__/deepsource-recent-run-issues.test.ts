@@ -1,41 +1,41 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { jest, beforeEach, describe, expect, it } from '@jest/globals';
+import { vi, beforeEach, describe, expect, it } from 'vitest';
 
 // Mock the logger module
-jest.unstable_mockModule('../utils/logger.js', () => ({
+vi.mock('../utils/logger.js', () => ({
   defaultLogger: {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   },
-  createLogger: jest.fn(() => ({
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+  createLogger: vi.fn(() => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   })),
 }));
 
 // Mock axios module before any imports
-jest.unstable_mockModule('axios', () => ({
+vi.mock('axios', () => ({
   default: {
-    create: jest.fn(() => ({
+    create: vi.fn(() => ({
       interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() },
+        request: { use: vi.fn() },
+        response: { use: vi.fn() },
       },
-      post: jest.fn(),
+      post: vi.fn(),
     })),
   },
 }));
 
 // Import axios to get the mocked version
 const axios = await import('axios');
-const mockAxios = axios.default as jest.Mocked<typeof axios.default>;
+const mockAxios = axios.default as any;
 
 // Import DeepSourceClient after mocking
 const { DeepSourceClient } = await import('../deepsource.js');
@@ -45,24 +45,24 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
   let mockAxiosInstance: Record<string, unknown>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Set up mocked axios instance
     mockAxiosInstance = {
       interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() },
+        request: { use: vi.fn() },
+        response: { use: vi.fn() },
       },
-      post: jest.fn(),
+      post: vi.fn(),
     };
 
-    (mockAxios.create as jest.Mock).mockReturnValue(mockAxiosInstance);
+    (mockAxios.create as any).mockReturnValue(mockAxiosInstance);
 
     // Create client instance
     client = new DeepSourceClient({ apiKey: 'test-key' });
 
     // Mock listProjects to return test project
-    jest.spyOn(client, 'listProjects').mockResolvedValue([
+    vi.spyOn(client, 'listProjects').mockResolvedValue([
       {
         name: 'Test Project',
         key: 'test-project',
@@ -80,30 +80,32 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
   describe('getRecentRunIssues', () => {
     it('should successfully retrieve issues from the most recent run', async () => {
       // Mock the findMostRecentRun method
-      jest
-        .spyOn(client as unknown as { findMostRecentRun: jest.Mock }, 'findMostRecentRun')
-        .mockResolvedValue({
-          id: 'run1',
-          runUid: 'run-uid-1',
-          commitOid: 'commit1',
-          branchName: 'main',
-          baseOid: 'base1',
-          status: 'SUCCESS' as const,
-          createdAt: '2023-01-02T00:00:00Z',
-          updatedAt: '2023-01-02T00:00:00Z',
-          finishedAt: '2023-01-02T00:00:00Z',
-          summary: {
-            occurrencesIntroduced: 5,
-            occurrencesResolved: 3,
-            occurrencesSuppressed: 0,
-            occurrenceDistributionByAnalyzer: [],
-            occurrenceDistributionByCategory: [],
-          },
-          repository: {
-            id: 'repo1',
-            name: 'Test Project',
-          },
-        });
+      vi;
+      vi.spyOn(
+        client as unknown as { findMostRecentRun: any },
+        'findMostRecentRun'
+      ).mockResolvedValue({
+        id: 'run1',
+        runUid: 'run-uid-1',
+        commitOid: 'commit1',
+        branchName: 'main',
+        baseOid: 'base1',
+        status: 'SUCCESS' as const,
+        createdAt: '2023-01-02T00:00:00Z',
+        updatedAt: '2023-01-02T00:00:00Z',
+        finishedAt: '2023-01-02T00:00:00Z',
+        summary: {
+          occurrencesIntroduced: 5,
+          occurrencesResolved: 3,
+          occurrencesSuppressed: 0,
+          occurrenceDistributionByAnalyzer: [],
+          occurrenceDistributionByCategory: [],
+        },
+        repository: {
+          id: 'repo1',
+          name: 'Test Project',
+        },
+      });
 
       // Mock the initial checks fetch response
       const checksListResponse = {
@@ -194,7 +196,7 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
 
     it('should handle project not found error', async () => {
       // Mock listProjects to return empty array
-      jest.spyOn(client, 'listProjects').mockResolvedValue([]);
+      vi.spyOn(client, 'listProjects').mockResolvedValue([]);
 
       // Execute and expect error
       await expect(client.getRecentRunIssues('non-existent', 'main')).rejects.toThrow(
@@ -204,11 +206,13 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
 
     it('should handle no runs found for branch', async () => {
       // Mock findMostRecentRun to throw the expected error
-      jest
-        .spyOn(client as unknown as { findMostRecentRun: jest.Mock }, 'findMostRecentRun')
-        .mockRejectedValue(
-          new Error("No runs found for branch 'non-existent-branch' in project 'test-project'")
-        );
+      vi;
+      vi.spyOn(
+        client as unknown as { findMostRecentRun: any },
+        'findMostRecentRun'
+      ).mockRejectedValue(
+        new Error("No runs found for branch 'non-existent-branch' in project 'test-project'")
+      );
 
       // Execute and expect error
       await expect(
@@ -218,30 +222,32 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
 
     it('should handle GraphQL errors in checks fetch', async () => {
       // Mock findMostRecentRun to succeed
-      jest
-        .spyOn(client as unknown as { findMostRecentRun: jest.Mock }, 'findMostRecentRun')
-        .mockResolvedValue({
-          id: 'run1',
-          runUid: 'run-uid-1',
-          commitOid: 'commit1',
-          branchName: 'main',
-          baseOid: 'base1',
-          status: 'SUCCESS' as const,
-          createdAt: '2023-01-02T00:00:00Z',
-          updatedAt: '2023-01-02T00:00:00Z',
-          finishedAt: '2023-01-02T00:00:00Z',
-          summary: {
-            occurrencesIntroduced: 5,
-            occurrencesResolved: 3,
-            occurrencesSuppressed: 0,
-            occurrenceDistributionByAnalyzer: [],
-            occurrenceDistributionByCategory: [],
-          },
-          repository: {
-            id: 'repo1',
-            name: 'Test Project',
-          },
-        });
+      vi;
+      vi.spyOn(
+        client as unknown as { findMostRecentRun: any },
+        'findMostRecentRun'
+      ).mockResolvedValue({
+        id: 'run1',
+        runUid: 'run-uid-1',
+        commitOid: 'commit1',
+        branchName: 'main',
+        baseOid: 'base1',
+        status: 'SUCCESS' as const,
+        createdAt: '2023-01-02T00:00:00Z',
+        updatedAt: '2023-01-02T00:00:00Z',
+        finishedAt: '2023-01-02T00:00:00Z',
+        summary: {
+          occurrencesIntroduced: 5,
+          occurrencesResolved: 3,
+          occurrencesSuppressed: 0,
+          occurrenceDistributionByAnalyzer: [],
+          occurrenceDistributionByCategory: [],
+        },
+        repository: {
+          id: 'repo1',
+          name: 'Test Project',
+        },
+      });
 
       // Mock error response
       const errorResponse = {
@@ -261,30 +267,32 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
 
     it('should handle GraphQL errors in occurrences fetch', async () => {
       // Mock findMostRecentRun to succeed
-      jest
-        .spyOn(client as unknown as { findMostRecentRun: jest.Mock }, 'findMostRecentRun')
-        .mockResolvedValue({
-          id: 'run1',
-          runUid: 'run-uid-1',
-          commitOid: 'commit1',
-          branchName: 'main',
-          baseOid: 'base1',
-          status: 'SUCCESS' as const,
-          createdAt: '2023-01-02T00:00:00Z',
-          updatedAt: '2023-01-02T00:00:00Z',
-          finishedAt: '2023-01-02T00:00:00Z',
-          summary: {
-            occurrencesIntroduced: 5,
-            occurrencesResolved: 3,
-            occurrencesSuppressed: 0,
-            occurrenceDistributionByAnalyzer: [],
-            occurrenceDistributionByCategory: [],
-          },
-          repository: {
-            id: 'repo1',
-            name: 'Test Project',
-          },
-        });
+      vi;
+      vi.spyOn(
+        client as unknown as { findMostRecentRun: any },
+        'findMostRecentRun'
+      ).mockResolvedValue({
+        id: 'run1',
+        runUid: 'run-uid-1',
+        commitOid: 'commit1',
+        branchName: 'main',
+        baseOid: 'base1',
+        status: 'SUCCESS' as const,
+        createdAt: '2023-01-02T00:00:00Z',
+        updatedAt: '2023-01-02T00:00:00Z',
+        finishedAt: '2023-01-02T00:00:00Z',
+        summary: {
+          occurrencesIntroduced: 5,
+          occurrencesResolved: 3,
+          occurrencesSuppressed: 0,
+          occurrenceDistributionByAnalyzer: [],
+          occurrenceDistributionByCategory: [],
+        },
+        repository: {
+          id: 'repo1',
+          name: 'Test Project',
+        },
+      });
 
       // Mock the initial checks fetch response
       const checksListResponse = {
@@ -331,30 +339,32 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
 
     it('should handle missing node data in occurrences response', async () => {
       // Mock findMostRecentRun to succeed
-      jest
-        .spyOn(client as unknown as { findMostRecentRun: jest.Mock }, 'findMostRecentRun')
-        .mockResolvedValue({
-          id: 'run1',
-          runUid: 'run-uid-1',
-          commitOid: 'commit1',
-          branchName: 'main',
-          baseOid: 'base1',
-          status: 'SUCCESS' as const,
-          createdAt: '2023-01-02T00:00:00Z',
-          updatedAt: '2023-01-02T00:00:00Z',
-          finishedAt: '2023-01-02T00:00:00Z',
-          summary: {
-            occurrencesIntroduced: 5,
-            occurrencesResolved: 3,
-            occurrencesSuppressed: 0,
-            occurrenceDistributionByAnalyzer: [],
-            occurrenceDistributionByCategory: [],
-          },
-          repository: {
-            id: 'repo1',
-            name: 'Test Project',
-          },
-        });
+      vi;
+      vi.spyOn(
+        client as unknown as { findMostRecentRun: any },
+        'findMostRecentRun'
+      ).mockResolvedValue({
+        id: 'run1',
+        runUid: 'run-uid-1',
+        commitOid: 'commit1',
+        branchName: 'main',
+        baseOid: 'base1',
+        status: 'SUCCESS' as const,
+        createdAt: '2023-01-02T00:00:00Z',
+        updatedAt: '2023-01-02T00:00:00Z',
+        finishedAt: '2023-01-02T00:00:00Z',
+        summary: {
+          occurrencesIntroduced: 5,
+          occurrencesResolved: 3,
+          occurrencesSuppressed: 0,
+          occurrenceDistributionByAnalyzer: [],
+          occurrenceDistributionByCategory: [],
+        },
+        repository: {
+          id: 'repo1',
+          name: 'Test Project',
+        },
+      });
 
       // Mock the initial checks fetch response
       const checksListResponse = {

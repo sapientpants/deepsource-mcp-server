@@ -2,7 +2,7 @@
  * @fileoverview Tests for Entity base class
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { Entity } from '../entity.js';
 
 /**

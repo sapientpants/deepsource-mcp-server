@@ -2,7 +2,7 @@
  * @fileoverview Tests for example tool plugin
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { toolSchema, handler, toolDefinition } from '../example.tool.js';
 
 describe('Example Tool', () => {
@@ -60,9 +60,9 @@ describe('Example Tool', () => {
       const result = await handler(params);
 
       expect(result.content).toHaveLength(1);
-      expect(result.content[0].type).toBe('text');
+      expect(result.content[0]?.type).toBe('text');
 
-      const responseData = JSON.parse(result.content[0].text);
+      const responseData = JSON.parse(result.content[0]!.text);
       expect(responseData.result).toBe('Hello');
       expect(responseData.metadata.messageLength).toBe(5);
       expect(responseData.metadata.repeatCount).toBe(1);
@@ -74,7 +74,7 @@ describe('Example Tool', () => {
       const result = await handler(params);
 
       expect(result.content).toHaveLength(1);
-      const responseData = JSON.parse(result.content[0].text);
+      const responseData = JSON.parse(result.content[0]!.text);
       expect(responseData.result).toBe('Test Test Test');
       expect(responseData.metadata.messageLength).toBe(4);
       expect(responseData.metadata.repeatCount).toBe(3);
@@ -85,7 +85,7 @@ describe('Example Tool', () => {
       const result = await handler(params);
 
       expect(result.content).toHaveLength(1);
-      const responseData = JSON.parse(result.content[0].text);
+      const responseData = JSON.parse(result.content[0]!.text);
       expect(responseData.result).toBe('Default');
       expect(responseData.metadata.repeatCount).toBe(1);
     });
@@ -95,7 +95,7 @@ describe('Example Tool', () => {
       const result = await handler(params);
 
       expect(result.content).toHaveLength(1);
-      const responseData = JSON.parse(result.content[0].text);
+      const responseData = JSON.parse(result.content[0]!.text);
       expect(responseData.result).toBe('');
       expect(responseData.metadata.repeatCount).toBe(0);
     });
@@ -105,7 +105,7 @@ describe('Example Tool', () => {
       const result = await handler(params);
 
       expect(result.content).toHaveLength(1);
-      const responseData = JSON.parse(result.content[0].text);
+      const responseData = JSON.parse(result.content[0]!.text);
       expect(responseData.result).toBe(' ');
       expect(responseData.metadata.messageLength).toBe(0);
       expect(responseData.metadata.repeatCount).toBe(2);
@@ -116,7 +116,7 @@ describe('Example Tool', () => {
       const result = await handler(params);
 
       expect(result.content).toHaveLength(1);
-      const responseData = JSON.parse(result.content[0].text);
+      const responseData = JSON.parse(result.content[0]!.text);
       const expectedResult = Array(10).fill('Big').join(' ');
       expect(responseData.result).toBe(expectedResult);
       expect(responseData.metadata.repeatCount).toBe(10);
@@ -147,7 +147,7 @@ describe('Example Tool', () => {
       const result = await toolDefinition.handler(params);
 
       expect(result.content).toHaveLength(1);
-      const responseData = JSON.parse(result.content[0].text);
+      const responseData = JSON.parse(result.content[0]!.text);
       expect(responseData.result).toBe('Definition Definition');
     });
   });

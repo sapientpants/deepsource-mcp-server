@@ -2,7 +2,7 @@
  * @fileoverview Tests for ComplianceReport aggregate
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ComplianceReport } from '../compliance-report.aggregate.js';
 import type {
   CreateComplianceReportParams,

@@ -2,7 +2,7 @@
  * @fileoverview Tests for MCP-compliant error handling utilities
  */
 
-import { describe, it, expect, jest } from '@jest/globals';
+import { describe, it, expect, vi } from 'vitest';
 import {
   MCPError,
   MCPErrorCode,
@@ -411,9 +411,9 @@ describe('MCPErrorFormatter', () => {
 
       expect(response.isError).toBe(true);
       expect(response.content).toHaveLength(1);
-      expect(response.content[0].type).toBe('text');
+      expect(response.content[0]?.type).toBe('text');
 
-      const responseData = JSON.parse(response.content[0].text);
+      const responseData = JSON.parse(response.content[0]!.text);
       expect(responseData).toMatchObject({
         error: 'Validation failed: Invalid email format',
         code: MCPErrorCode.VALIDATION_ERROR,
@@ -429,7 +429,7 @@ describe('MCPErrorFormatter', () => {
       const response = MCPErrorFormatter.createErrorResponse(error, 'data-fetch');
 
       expect(response.isError).toBe(true);
-      const responseData = JSON.parse(response.content[0].text);
+      const responseData = JSON.parse(response.content[0]!.text);
       expect(responseData.error).toBe('An error occurred while processing your request');
       expect(responseData.code).toBe(MCPErrorCode.INTERNAL_ERROR);
     });
@@ -438,7 +438,7 @@ describe('MCPErrorFormatter', () => {
       const response = MCPErrorFormatter.createErrorResponse('Something went wrong');
 
       expect(response.isError).toBe(true);
-      const responseData = JSON.parse(response.content[0].text);
+      const responseData = JSON.parse(response.content[0]!.text);
       expect(responseData.error).toBe('An error occurred while processing your request');
     });
 
@@ -446,7 +446,7 @@ describe('MCPErrorFormatter', () => {
       const error = MCPErrorFactory.resourceNotFound('project-123');
       const response = MCPErrorFormatter.createErrorResponse(error);
 
-      const responseData = JSON.parse(response.content[0].text);
+      const responseData = JSON.parse(response.content[0]!.text);
       expect(responseData.error).toBe('Resource not found: project-123');
     });
   });
@@ -460,7 +460,7 @@ describe('MCPErrorFormatter', () => {
       );
 
       expect(response.isError).toBe(true);
-      const responseData = JSON.parse(response.content[0].text);
+      const responseData = JSON.parse(response.content[0]!.text);
       expect(responseData.error).toBe('Validation failed: must be a valid email');
       expect(responseData.code).toBe('VALIDATION_ERROR');
       expect(responseData.category).toBe('VALIDATION_ERROR');
@@ -474,14 +474,14 @@ describe('MCPErrorFormatter', () => {
     it('should create validation error response with only field', () => {
       const response = MCPErrorFormatter.createValidationErrorResponse('is required', 'name');
 
-      const responseData = JSON.parse(response.content[0].text);
+      const responseData = JSON.parse(response.content[0]!.text);
       expect(responseData.details).toEqual({ field: 'name' });
     });
 
     it('should create validation error response with only message', () => {
       const response = MCPErrorFormatter.createValidationErrorResponse('invalid format');
 
-      const responseData = JSON.parse(response.content[0].text);
+      const responseData = JSON.parse(response.content[0]!.text);
       expect(responseData.error).toBe('Validation failed: invalid format');
       expect(responseData.details).toBeUndefined();
     });
@@ -493,7 +493,7 @@ describe('MCPErrorFormatter', () => {
         undefined
       );
 
-      const responseData = JSON.parse(response.content[0].text);
+      const responseData = JSON.parse(response.content[0]!.text);
       expect(responseData.details).toEqual({
         field: 'field',
         value: undefined,
@@ -506,7 +506,7 @@ describe('MCPErrorFormatter', () => {
       const response = MCPErrorFormatter.createNotFoundResponse('project', 'proj-123');
 
       expect(response.isError).toBe(true);
-      const responseData = JSON.parse(response.content[0].text);
+      const responseData = JSON.parse(response.content[0]!.text);
       expect(responseData.error).toBe('Resource not found: project');
       expect(responseData.code).toBe('RESOURCE_NOT_FOUND');
       expect(responseData.category).toBe('RESOURCE_ERROR');
@@ -520,7 +520,7 @@ describe('MCPErrorFormatter', () => {
     it('should create not found error response without identifier', () => {
       const response = MCPErrorFormatter.createNotFoundResponse('user');
 
-      const responseData = JSON.parse(response.content[0].text);
+      const responseData = JSON.parse(response.content[0]!.text);
       expect(responseData.error).toBe('Resource not found: user');
       expect(responseData.details).toEqual({ resource: 'user' });
     });
@@ -529,7 +529,7 @@ describe('MCPErrorFormatter', () => {
 
 describe('withMCPErrorHandling', () => {
   it('should return result when no error occurs', async () => {
-    const handler = jest.fn().mockResolvedValue({ success: true });
+    const handler = vi.fn().mockResolvedValue({ success: true });
     const wrappedHandler = withMCPErrorHandling(handler, 'test-operation');
 
     const result = await wrappedHandler({ input: 'test' });
@@ -539,7 +539,7 @@ describe('withMCPErrorHandling', () => {
   });
 
   it('should return error response when handler throws', async () => {
-    const handler = jest.fn().mockRejectedValue(new Error('Handler failed'));
+    const handler = vi.fn().mockRejectedValue(new Error('Handler failed'));
     const wrappedHandler = withMCPErrorHandling(handler, 'test-operation');
 
     const result = await wrappedHandler({ input: 'test' });
@@ -557,7 +557,7 @@ describe('withMCPErrorHandling', () => {
 
   it('should handle MCPError properly', async () => {
     const mcpError = MCPErrorFactory.validation('Invalid input');
-    const handler = jest.fn().mockRejectedValue(mcpError);
+    const handler = vi.fn().mockRejectedValue(mcpError);
     const wrappedHandler = withMCPErrorHandling(handler, 'validation-test');
 
     const result = await wrappedHandler({ input: 'invalid' });
@@ -566,7 +566,7 @@ describe('withMCPErrorHandling', () => {
       isError: true,
     });
 
-    const responseText = (result as { content: Array<{ text: string }> }).content[0].text;
+    const responseText = (result as { content: Array<{ text: string }> }).content[0]?.text!;
     const responseData = JSON.parse(responseText);
     expect(responseData.error).toBe('Validation failed: Invalid input');
     expect(responseData.code).toBe(MCPErrorCode.VALIDATION_ERROR);

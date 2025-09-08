@@ -22,6 +22,9 @@ import {
   handleDeepsourceRecentRunIssues,
   handleDeepsourceDependencyVulnerabilities,
 } from '../handlers/index.js';
+import { DeepsourceRunParams } from '../handlers/run.js';
+import { DeepsourceRecentRunIssuesParams } from '../handlers/recent-run-issues.js';
+import { DeepsourceDependencyVulnerabilitiesParams } from '../handlers/dependency-vulnerabilities.js';
 import { MetricKey } from '../types/metrics.js';
 import { AnalyzerShortcode } from '../types/branded.js';
 import { MetricShortcode } from '../models/metrics.js';
@@ -33,24 +36,46 @@ const logger = createLogger('ToolRegistration');
 /**
  * Handler mapping for tool schemas
  */
-const TOOL_HANDLERS: Record<string, (_params: unknown) => Promise<unknown>> = {
-  projects: async (_params: unknown) => handleProjects(),
+const TOOL_HANDLERS: Record<string, (params: unknown) => Promise<unknown>> = {
+  projects: async (params: unknown) => {
+    // Params currently unused but may be used for future filtering
+    void params;
+    return handleProjects();
+  },
   quality_metrics: async (params: unknown) => {
     const typedParams = params as Record<string, unknown>;
-    return handleDeepsourceQualityMetrics({
+    const metricsParams: { projectKey: string; shortcodeIn?: MetricShortcode[] } = {
       projectKey: typedParams.projectKey as string,
-      shortcodeIn: typedParams.shortcodeIn as MetricShortcode[] | undefined,
-    });
+    };
+
+    const shortcodeIn = typedParams.shortcodeIn as MetricShortcode[] | undefined;
+    if (shortcodeIn) {
+      metricsParams.shortcodeIn = shortcodeIn;
+    }
+
+    return handleDeepsourceQualityMetrics(metricsParams);
   },
   update_metric_threshold: async (params: unknown) => {
     const typedParams = params as Record<string, unknown>;
-    return handleDeepsourceUpdateMetricThreshold({
+    const thresholdParams: {
+      projectKey: string;
+      repositoryId: string;
+      metricShortcode: MetricShortcode;
+      metricKey: MetricKey;
+      thresholdValue?: number | null;
+    } = {
       projectKey: typedParams.projectKey as string,
       repositoryId: typedParams.repositoryId as string,
       metricShortcode: typedParams.metricShortcode as MetricShortcode,
       metricKey: typedParams.metricKey as MetricKey,
-      thresholdValue: typedParams.thresholdValue as number | null | undefined,
-    });
+    };
+
+    const thresholdValue = typedParams.thresholdValue as number | null | undefined;
+    if (thresholdValue !== undefined) {
+      thresholdParams.thresholdValue = thresholdValue;
+    }
+
+    return handleDeepsourceUpdateMetricThreshold(thresholdParams);
   },
   update_metric_setting: async (params: unknown) => {
     const typedParams = params as Record<string, unknown>;
@@ -71,56 +96,127 @@ const TOOL_HANDLERS: Record<string, (_params: unknown) => Promise<unknown>> = {
   },
   project_issues: async (params: unknown) => {
     const typedParams = params as Record<string, unknown>;
-    return handleDeepsourceProjectIssues({
+    const issuesParams: {
+      projectKey: string;
+      path?: string;
+      analyzerIn?: string[];
+      tags?: string[];
+      first?: number;
+      last?: number;
+      after?: string;
+      before?: string;
+    } = {
       projectKey: typedParams.projectKey as string,
-      path: typedParams.path as string | undefined,
-      analyzerIn: typedParams.analyzerIn as string[] | undefined,
-      tags: typedParams.tags as string[] | undefined,
-      first: typedParams.first as number | undefined,
-      last: typedParams.last as number | undefined,
-      after: typedParams.after as string | undefined,
-      before: typedParams.before as string | undefined,
-    });
+    };
+
+    if (typeof typedParams.path === 'string') {
+      issuesParams.path = typedParams.path;
+    }
+    if (Array.isArray(typedParams.analyzerIn)) {
+      issuesParams.analyzerIn = typedParams.analyzerIn as string[];
+    }
+    if (Array.isArray(typedParams.tags)) {
+      issuesParams.tags = typedParams.tags as string[];
+    }
+    if (typeof typedParams.first === 'number') {
+      issuesParams.first = typedParams.first;
+    }
+    if (typeof typedParams.last === 'number') {
+      issuesParams.last = typedParams.last;
+    }
+    if (typeof typedParams.after === 'string') {
+      issuesParams.after = typedParams.after;
+    }
+    if (typeof typedParams.before === 'string') {
+      issuesParams.before = typedParams.before;
+    }
+
+    return handleDeepsourceProjectIssues(issuesParams);
   },
   runs: async (params: unknown) => {
     const typedParams = params as Record<string, unknown>;
-    return handleDeepsourceProjectRuns({
+    const runsParams: {
+      projectKey: string;
+      analyzerIn: AnalyzerShortcode[];
+      first?: number;
+      last?: number;
+      after?: string;
+      before?: string;
+    } = {
       projectKey: typedParams.projectKey as string,
       analyzerIn: typedParams.analyzerIn as AnalyzerShortcode[],
-      first: typedParams.first as number | undefined,
-      last: typedParams.last as number | undefined,
-      after: typedParams.after as string | undefined,
-      before: typedParams.before as string | undefined,
-    });
+    };
+
+    if (typeof typedParams.first === 'number') {
+      runsParams.first = typedParams.first;
+    }
+    if (typeof typedParams.last === 'number') {
+      runsParams.last = typedParams.last;
+    }
+    if (typeof typedParams.after === 'string') {
+      runsParams.after = typedParams.after;
+    }
+    if (typeof typedParams.before === 'string') {
+      runsParams.before = typedParams.before;
+    }
+
+    return handleDeepsourceProjectRuns(runsParams);
   },
   run: async (params: unknown) => {
     const typedParams = params as Record<string, unknown>;
-    return handleDeepsourceRun({
+    const runParams: DeepsourceRunParams = {
       projectKey: typedParams.projectKey as string,
       runIdentifier: typedParams.runIdentifier as string,
-      isCommitOid: typedParams.isCommitOid as boolean | undefined,
-    });
+    };
+
+    if (typeof typedParams.isCommitOid === 'boolean') {
+      runParams.isCommitOid = typedParams.isCommitOid;
+    }
+
+    return handleDeepsourceRun(runParams);
   },
   recent_run_issues: async (params: unknown) => {
     const typedParams = params as Record<string, unknown>;
-    return handleDeepsourceRecentRunIssues({
+    const recentRunParams: DeepsourceRecentRunIssuesParams = {
       projectKey: typedParams.projectKey as string,
       branchName: typedParams.branchName as string,
-      first: typedParams.first as number | undefined,
-      last: typedParams.last as number | undefined,
-      after: typedParams.after as string | undefined,
-      before: typedParams.before as string | undefined,
-    });
+    };
+
+    if (typeof typedParams.first === 'number') {
+      recentRunParams.first = typedParams.first;
+    }
+    if (typeof typedParams.last === 'number') {
+      recentRunParams.last = typedParams.last;
+    }
+    if (typeof typedParams.after === 'string') {
+      recentRunParams.after = typedParams.after;
+    }
+    if (typeof typedParams.before === 'string') {
+      recentRunParams.before = typedParams.before;
+    }
+
+    return handleDeepsourceRecentRunIssues(recentRunParams);
   },
   dependency_vulnerabilities: async (params: unknown) => {
     const typedParams = params as Record<string, unknown>;
-    return handleDeepsourceDependencyVulnerabilities({
+    const vulnParams: DeepsourceDependencyVulnerabilitiesParams = {
       projectKey: typedParams.projectKey as string,
-      first: typedParams.first as number | undefined,
-      last: typedParams.last as number | undefined,
-      after: typedParams.after as string | undefined,
-      before: typedParams.before as string | undefined,
-    });
+    };
+
+    if (typeof typedParams.first === 'number') {
+      vulnParams.first = typedParams.first;
+    }
+    if (typeof typedParams.last === 'number') {
+      vulnParams.last = typedParams.last;
+    }
+    if (typeof typedParams.after === 'string') {
+      vulnParams.after = typedParams.after;
+    }
+    if (typeof typedParams.before === 'string') {
+      vulnParams.before = typedParams.before;
+    }
+
+    return handleDeepsourceDependencyVulnerabilities(vulnParams);
   },
 };
 
@@ -182,7 +278,7 @@ export function registerDeepSourceTools(registry: ToolRegistry): void {
 /**
  * Tool categories for organization
  */
-/* eslint-disable no-unused-vars */
+
 export enum ToolCategory {
   PROJECT_MANAGEMENT = 'project_management',
   CODE_QUALITY = 'code_quality',
@@ -190,7 +286,6 @@ export enum ToolCategory {
   ANALYSIS = 'analysis',
   DEPENDENCIES = 'dependencies',
 }
-/* eslint-enable no-unused-vars */
 
 /**
  * Tool metadata for categorization and filtering

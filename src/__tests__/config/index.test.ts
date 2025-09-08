@@ -2,15 +2,15 @@
  * @fileoverview Tests for configuration management
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 // Mock logger
 const mockLogger = {
-  debug: jest.fn(),
+  debug: vi.fn(),
 };
 
-jest.unstable_mockModule('../../utils/logging/logger.js', () => ({
-  createLogger: jest.fn(() => mockLogger),
+vi.mock('../../utils/logging/logger.js', () => ({
+  createLogger: vi.fn(() => mockLogger),
 }));
 
 // Import after mocking
@@ -21,7 +21,7 @@ describe('Configuration Management', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Reset env to a clean state
     process.env = { ...originalEnv };
   });
@@ -111,8 +111,8 @@ describe('Configuration Management', () => {
 
       const config = getConfig();
 
-      // Empty strings are valid string values
-      expect(config.apiBaseUrl).toBe('');
+      // Empty strings are falsy, so the default value is used
+      expect(config.apiBaseUrl).toBe('https://api.deepsource.io/graphql/');
     });
   });
 

@@ -2,7 +2,7 @@
  * @fileoverview Tests for ProjectMapper
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { ProjectMapper } from '../project.mapper.js';
 import { DeepSourceProject } from '../../../models/projects.js';
 import { asProjectKey } from '../../../types/branded.js';

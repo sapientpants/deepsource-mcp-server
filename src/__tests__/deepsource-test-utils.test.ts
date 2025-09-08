@@ -1,9 +1,9 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
 import { TestableDeepSourceClient } from './utils/test-utils';
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { DeepSourceClient, MetricShortcode } from '../deepsource';
 import { MetricKey } from '../types/metrics';
 
@@ -63,17 +63,17 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
 
       try {
         // First, test the NoneType error path
-        TestableDeepSourceClient.testIsErrorWithMessage = jest.fn().mockReturnValue(true);
+        TestableDeepSourceClient.testIsErrorWithMessage = vi.fn().mockReturnValue(true);
 
         let result = await TestableDeepSourceClient.testGetQualityMetricsWithNoneTypeError();
         expect(result).toEqual([]); // Should return empty array for NoneType errors
 
         // Now, test the non-NoneType error path that calls handleGraphQLError
-        TestableDeepSourceClient.testIsErrorWithMessage = jest.fn().mockReturnValue(false);
+        TestableDeepSourceClient.testIsErrorWithMessage = vi.fn().mockReturnValue(false);
 
         // Mock handleGraphQLError
         // @ts-expect-error Mocking private method for testing
-        DeepSourceClient.handleGraphQLError = jest.fn().mockImplementation(() => {
+        DeepSourceClient.handleGraphQLError = vi.fn().mockImplementation(() => {
           return ['mocked error response'];
         });
 
@@ -100,15 +100,15 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
 
       try {
         // Mock methods to control flow
-        TestableDeepSourceClient.testIsError = jest.fn().mockReturnValue(true);
-        TestableDeepSourceClient.testIsErrorWithMessage = jest.fn().mockReturnValue(true);
+        TestableDeepSourceClient.testIsError = vi.fn().mockReturnValue(true);
+        TestableDeepSourceClient.testIsErrorWithMessage = vi.fn().mockReturnValue(true);
 
         // Test NoneType error path
         const result = await TestableDeepSourceClient.testNoneTypeErrorHandler();
         expect(result).toEqual([]);
 
         // Test throw error path by making isErrorWithMessage return false
-        TestableDeepSourceClient.testIsErrorWithMessage = jest.fn().mockReturnValue(false);
+        TestableDeepSourceClient.testIsErrorWithMessage = vi.fn().mockReturnValue(false);
 
         // Should throw an error when NoneType is not in the message
         await expect(TestableDeepSourceClient.testNoneTypeErrorHandler()).rejects.toThrow();
@@ -206,9 +206,9 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
         metricItem: { id: 'metric-1', key: 'AGGREGATE', threshold: 80 },
       };
 
-      // Use jest.spyOn to spy on the private method
+      // Use vi.spyOn to spy on the private method
       // @ts-expect-error - Accessing private method for testing
-      const spy = jest.spyOn(client, 'validateAndGetMetricInfo').mockResolvedValue(mockResult);
+      const spy = vi.spyOn(client, 'validateAndGetMetricInfo').mockResolvedValue(mockResult);
 
       // Call the test method
       const result = await client.testValidateAndGetMetricInfo(params);
@@ -239,9 +239,9 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
       // We need to mock it since we can't directly test a private method
       const mockResult = { data: 'mock result' };
 
-      // Use jest.spyOn to spy on the private method
+      // Use vi.spyOn to spy on the private method
       // @ts-expect-error - Accessing private method for testing
-      const spy = jest.spyOn(client, 'processRegularMetricHistory').mockResolvedValue(mockResult);
+      const spy = vi.spyOn(client, 'processRegularMetricHistory').mockResolvedValue(mockResult);
 
       // Call the test method
       const result = await client.testProcessRegularMetricHistory(params);
@@ -334,7 +334,7 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
       };
 
       // Mock the axios post method
-      jest.spyOn(client['client'], 'post').mockResolvedValue({ data: mockResponse });
+      vi.spyOn(client['client'], 'post').mockResolvedValue({ data: mockResponse });
 
       // Call the test method
       const result = await client.testFetchHistoricalValues(params, project, metricItem);
@@ -350,7 +350,7 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
       expect(result[1].thresholdStatus).toBe('PASSING');
 
       // Restore the original post method
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should handle errors when fetching historical values', async () => {
@@ -379,11 +379,11 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
       };
 
       // Mock the axios post method to throw an error
-      jest.spyOn(client['client'], 'post').mockRejectedValue(new Error('API error'));
+      vi.spyOn(client['client'], 'post').mockRejectedValue(new Error('API error'));
 
       // Mock the handleGraphQLError method to control the error path
       // @ts-expect-error Mocking private static method
-      jest.spyOn(DeepSourceClient, 'handleGraphQLError').mockImplementation(() => {
+      vi.spyOn(DeepSourceClient, 'handleGraphQLError').mockImplementation(() => {
         // This will never return as handleGraphQLError should throw
         throw new Error('GraphQL error');
       });
@@ -392,7 +392,7 @@ describe('TestableDeepSourceClient Utility Methods Tests', () => {
       await expect(client.testFetchHistoricalValues(params, project, metricItem)).rejects.toThrow();
 
       // Restore the original methods
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
   });
 });

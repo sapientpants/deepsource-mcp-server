@@ -1,8 +1,8 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { DeepSourceClient } from '../deepsource.js';
 
 // Create a test subclass to expose private methods
@@ -35,18 +35,18 @@ const isValidVulnerabilityNode = DeepSourceClient['isValidVulnerabilityNode'];
 describe('DeepSourceClient validation methods', () => {
   // Create a spy for the logger
   const originalLogger = DeepSourceClient['logger'];
-  const mockWarn = jest.fn();
+  const mockWarn = vi.fn();
 
   beforeEach(() => {
     // Mock the logger's warn method
     DeepSourceClient['logger'] = {
       warn: mockWarn,
       // Add other required methods to satisfy TypeScript
-      debug: jest.fn(),
-      info: jest.fn(),
-      error: jest.fn(),
+      debug: vi.fn(),
+      info: vi.fn(),
+      error: vi.fn(),
     };
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterAll(() => {

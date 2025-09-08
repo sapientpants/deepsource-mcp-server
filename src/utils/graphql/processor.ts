@@ -55,11 +55,14 @@ export function processRunChecksResponse(response: {
   totalCount: number;
 } {
   const issues: DeepSourceIssue[] = [];
-  let pageInfo = {
+  let pageInfo: {
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    startCursor?: string;
+    endCursor?: string;
+  } = {
     hasNextPage: false,
     hasPreviousPage: false,
-    startCursor: undefined as string | undefined,
-    endCursor: undefined as string | undefined,
   };
   let totalCount = 0;
 
@@ -71,7 +74,14 @@ export function processRunChecksResponse(response: {
 
     // Aggregate page info (using the first check's pagination info for simplicity)
     if (occurrencesPageInfo) {
-      pageInfo = occurrencesPageInfo;
+      pageInfo.hasNextPage = occurrencesPageInfo.hasNextPage;
+      pageInfo.hasPreviousPage = occurrencesPageInfo.hasPreviousPage;
+      if (occurrencesPageInfo.startCursor) {
+        pageInfo.startCursor = occurrencesPageInfo.startCursor;
+      }
+      if (occurrencesPageInfo.endCursor) {
+        pageInfo.endCursor = occurrencesPageInfo.endCursor;
+      }
       totalCount += occurrencesTotalCount;
     }
 

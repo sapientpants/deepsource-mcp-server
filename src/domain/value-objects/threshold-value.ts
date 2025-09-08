@@ -153,7 +153,7 @@ export class ThresholdValue extends ValueObject<ThresholdValueProps> {
   /**
    * Returns a string representation of the threshold
    */
-  toString(): string {
+  override toString(): string {
     return `${this.props.value}${this.props.unit}`;
   }
 }

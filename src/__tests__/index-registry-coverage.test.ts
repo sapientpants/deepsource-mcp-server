@@ -2,29 +2,29 @@
  * @fileoverview Focused tests to improve index-registry.ts coverage
  */
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Set up environment before any imports
 process.env.DEEPSOURCE_API_KEY = 'test-api-key';
 
 // Mock dependencies
-jest.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
-  McpServer: jest.fn().mockImplementation(() => ({
-    registerTool: jest.fn(),
-    connect: jest.fn().mockResolvedValue(undefined),
+vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
+  McpServer: vi.fn().mockImplementation(() => ({
+    registerTool: vi.fn(),
+    connect: vi.fn().mockResolvedValue(undefined),
   })),
 }));
 
-jest.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
-  StdioServerTransport: jest.fn(),
+vi.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
+  StdioServerTransport: vi.fn(),
 }));
 
-jest.mock('../utils/logging/logger.js', () => ({
-  createLogger: jest.fn(() => ({
-    info: jest.fn(),
-    debug: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
+vi.mock('../utils/logging/logger.js', () => ({
+  createLogger: vi.fn(() => ({
+    info: vi.fn(),
+    debug: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
   })),
 }));
 
@@ -40,61 +40,61 @@ interface RegisteredTool {
 // Store registered tools - need to use a variable that persists across tests
 let registeredTools: Record<string, RegisteredTool> = {};
 
-jest.mock('../server/tool-registry.js', () => ({
-  ToolRegistry: jest.fn().mockImplementation(() => {
+vi.mock('../server/tool-registry.js', () => ({
+  ToolRegistry: vi.fn().mockImplementation(() => {
     // Create a new instance-specific tools object
     const instanceTools: Record<string, RegisteredTool> = {};
 
     return {
-      registerTool: jest.fn((tool) => {
+      registerTool: vi.fn((tool) => {
         console.log('Registering tool:', tool.name);
         instanceTools[tool.name] = tool;
         // Also store globally for test access
         registeredTools[tool.name] = tool;
       }),
-      getToolNames: jest.fn(() => Object.keys(instanceTools)),
+      getToolNames: vi.fn(() => Object.keys(instanceTools)),
     };
   }),
 }));
 
 // Mock adapters - they just pass through params
-jest.mock('../adapters/handler-adapters.js', () => ({
-  adaptQualityMetricsParams: jest.fn((p) => p),
-  adaptUpdateMetricThresholdParams: jest.fn((p) => p),
-  adaptUpdateMetricSettingParams: jest.fn((p) => p),
-  adaptComplianceReportParams: jest.fn((p) => p),
-  adaptProjectIssuesParams: jest.fn((p) => p),
-  adaptDependencyVulnerabilitiesParams: jest.fn((p) => p),
-  adaptProjectRunsParams: jest.fn((p) => p),
-  adaptRunParams: jest.fn((p) => p),
-  adaptRecentRunIssuesParams: jest.fn((p) => p),
+vi.mock('../adapters/handler-adapters.js', () => ({
+  adaptQualityMetricsParams: vi.fn((p) => p),
+  adaptUpdateMetricThresholdParams: vi.fn((p) => p),
+  adaptUpdateMetricSettingParams: vi.fn((p) => p),
+  adaptComplianceReportParams: vi.fn((p) => p),
+  adaptProjectIssuesParams: vi.fn((p) => p),
+  adaptDependencyVulnerabilitiesParams: vi.fn((p) => p),
+  adaptProjectRunsParams: vi.fn((p) => p),
+  adaptRunParams: vi.fn((p) => p),
+  adaptRecentRunIssuesParams: vi.fn((p) => p),
 }));
 
 // Mock handlers
 const mockHandlers = {
-  handleProjects: jest.fn().mockResolvedValue({ content: [] }),
-  handleDeepsourceQualityMetrics: jest.fn().mockResolvedValue({ content: [] }),
-  handleDeepsourceUpdateMetricThreshold: jest.fn().mockResolvedValue({ content: [] }),
-  handleDeepsourceUpdateMetricSetting: jest.fn().mockResolvedValue({ content: [] }),
-  handleDeepsourceComplianceReport: jest.fn().mockResolvedValue({ content: [] }),
-  handleDeepsourceProjectIssues: jest.fn().mockResolvedValue({ content: [] }),
-  handleDeepsourceDependencyVulnerabilities: jest.fn().mockResolvedValue({ content: [] }),
-  handleDeepsourceProjectRuns: jest.fn().mockResolvedValue({ content: [] }),
-  handleDeepsourceRun: jest.fn().mockResolvedValue({ content: [] }),
-  handleDeepsourceRecentRunIssues: jest.fn().mockResolvedValue({ content: [] }),
+  handleProjects: vi.fn().mockResolvedValue({ content: [] }),
+  handleDeepsourceQualityMetrics: vi.fn().mockResolvedValue({ content: [] }),
+  handleDeepsourceUpdateMetricThreshold: vi.fn().mockResolvedValue({ content: [] }),
+  handleDeepsourceUpdateMetricSetting: vi.fn().mockResolvedValue({ content: [] }),
+  handleDeepsourceComplianceReport: vi.fn().mockResolvedValue({ content: [] }),
+  handleDeepsourceProjectIssues: vi.fn().mockResolvedValue({ content: [] }),
+  handleDeepsourceDependencyVulnerabilities: vi.fn().mockResolvedValue({ content: [] }),
+  handleDeepsourceProjectRuns: vi.fn().mockResolvedValue({ content: [] }),
+  handleDeepsourceRun: vi.fn().mockResolvedValue({ content: [] }),
+  handleDeepsourceRecentRunIssues: vi.fn().mockResolvedValue({ content: [] }),
 };
 
-jest.mock('../handlers/index.js', () => mockHandlers);
+vi.mock('../handlers/index.js', () => mockHandlers);
 
 describe('Index Registry Coverage Tests', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Reset registered tools
     registeredTools = {};
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
   describe('Handler Execution Coverage', () => {

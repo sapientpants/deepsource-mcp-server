@@ -90,7 +90,7 @@ export class ToolRegistry {
       tool.name,
       toolConfig,
 
-      async (params: Record<string, unknown>, _extra: unknown): Promise<McpResponse> => {
+      async (params: Record<string, unknown>): Promise<McpResponse> => {
         try {
           logToolInvocation(tool.name, params);
 

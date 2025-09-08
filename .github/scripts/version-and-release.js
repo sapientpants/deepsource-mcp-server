@@ -50,7 +50,7 @@ async function main() {
 
       // Check if any commits require a release (feat, fix, perf, refactor)
       const hasReleasableCommits = commits.some((c) =>
-        /^(feat|fix|perf|refactor)(\(.+\))?:/.test(c),
+        /^(feat|fix|perf|refactor)(\(.+\))?:/.test(c)
       );
 
       if (!hasReleasableCommits) {

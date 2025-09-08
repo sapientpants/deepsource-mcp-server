@@ -1,5 +1,5 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
 import { RunChecksProcessor } from '../../../../utils/graphql/processors/run-checks-processor.js';

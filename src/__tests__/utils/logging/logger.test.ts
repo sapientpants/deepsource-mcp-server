@@ -1,20 +1,20 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 // Mock the fs module before importing logger
-jest.unstable_mockModule('fs', () => ({
-  appendFileSync: jest.fn(),
-  writeFileSync: jest.fn(),
-  existsSync: jest.fn(() => true),
-  mkdirSync: jest.fn(),
+vi.mock('fs', () => ({
+  appendFileSync: vi.fn(),
+  writeFileSync: vi.fn(),
+  existsSync: vi.fn(() => true),
+  mkdirSync: vi.fn(),
 }));
 
 // Import the mocked fs
 const { appendFileSync } = await import('fs');
-const mockAppendFileSync = appendFileSync as jest.MockedFunction<typeof appendFileSync>;
+const mockAppendFileSync = appendFileSync as any;
 
 // Import logger module after mocking fs
 const loggerModule = await import('../../../utils/logging/logger');
@@ -33,10 +33,10 @@ describe('Logger Module', () => {
     process.env.LOG_LEVEL = 'DEBUG';
 
     // Clear all mocks before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Reset the module-level logFileInitialized variable
-    jest.resetModules();
+    vi.resetModules();
   });
 
   afterEach(() => {
@@ -56,21 +56,21 @@ describe('Logger Module', () => {
   describe('Logger Initialization', () => {
     it('should initialize the log file when it does not exist', async () => {
       // Reset modules to reset the logFileInitialized variable
-      jest.resetModules();
+      vi.resetModules();
 
       // Re-mock fs for this test
-      jest.unstable_mockModule('fs', () => ({
-        appendFileSync: jest.fn(),
-        writeFileSync: jest.fn(),
-        existsSync: jest.fn(() => false), // Directory doesn't exist
-        mkdirSync: jest.fn(), // Will be called to create the directory
+      vi.mock('fs', () => ({
+        appendFileSync: vi.fn(),
+        writeFileSync: vi.fn(),
+        existsSync: vi.fn(() => false), // Directory doesn't exist
+        mkdirSync: vi.fn(), // Will be called to create the directory
       }));
 
       // Re-import modules
       const { appendFileSync, writeFileSync, mkdirSync } = await import('fs');
-      const mockDir = mkdirSync as jest.MockedFunction<typeof mkdirSync>;
-      const mockWrite = writeFileSync as jest.MockedFunction<typeof writeFileSync>;
-      const mockAppend = appendFileSync as jest.MockedFunction<typeof appendFileSync>;
+      const mockDir = mkdirSync as any;
+      const mockWrite = writeFileSync as any;
+      const mockAppend = appendFileSync as any;
       const loggerModule = await import('../../../utils/logging/logger');
       const { Logger } = loggerModule;
 
@@ -85,14 +85,14 @@ describe('Logger Module', () => {
 
     it('should handle cases where log file creation fails', async () => {
       // Reset modules to reset the logFileInitialized variable
-      jest.resetModules();
+      vi.resetModules();
 
       // Re-mock fs with mkdirSync that throws
-      jest.unstable_mockModule('fs', () => ({
-        appendFileSync: jest.fn(),
-        writeFileSync: jest.fn(),
-        existsSync: jest.fn(() => false),
-        mkdirSync: jest.fn(() => {
+      vi.mock('fs', () => ({
+        appendFileSync: vi.fn(),
+        writeFileSync: vi.fn(),
+        existsSync: vi.fn(() => false),
+        mkdirSync: vi.fn(() => {
           throw new Error('Permission denied');
         }),
       }));
@@ -112,20 +112,20 @@ describe('Logger Module', () => {
 
     it('should initialize the log file only once per process', async () => {
       // Reset modules to reset the logFileInitialized variable
-      jest.resetModules();
+      vi.resetModules();
 
       // Re-mock fs
-      jest.unstable_mockModule('fs', () => ({
-        appendFileSync: jest.fn(),
-        writeFileSync: jest.fn(),
-        existsSync: jest.fn(() => false),
-        mkdirSync: jest.fn(),
+      vi.mock('fs', () => ({
+        appendFileSync: vi.fn(),
+        writeFileSync: vi.fn(),
+        existsSync: vi.fn(() => false),
+        mkdirSync: vi.fn(),
       }));
 
       // Re-import modules
       const { writeFileSync, mkdirSync } = await import('fs');
-      const mockWrite = writeFileSync as jest.MockedFunction<typeof writeFileSync>;
-      const mockMkdir = mkdirSync as jest.MockedFunction<typeof mkdirSync>;
+      const mockWrite = writeFileSync as any;
+      const mockMkdir = mkdirSync as any;
       const loggerModule = await import('../../../utils/logging/logger');
       const { Logger } = loggerModule;
 
@@ -239,16 +239,16 @@ describe('Logger Module', () => {
 
       it('should handle cases where appending to log file fails', async () => {
         // Reset modules
-        jest.resetModules();
+        vi.resetModules();
 
         // Re-mock fs with appendFileSync that throws
-        jest.unstable_mockModule('fs', () => ({
-          appendFileSync: jest.fn(() => {
+        vi.mock('fs', () => ({
+          appendFileSync: vi.fn(() => {
             throw new Error('Disk full');
           }),
-          writeFileSync: jest.fn(),
-          existsSync: jest.fn(() => true),
-          mkdirSync: jest.fn(),
+          writeFileSync: vi.fn(),
+          existsSync: vi.fn(() => true),
+          mkdirSync: vi.fn(),
         }));
 
         // Re-import modules
@@ -310,11 +310,11 @@ describe('Logger Module', () => {
 
       it('should handle circular reference objects', async () => {
         // Reset modules
-        jest.resetModules();
+        vi.resetModules();
 
         // Re-import modules
         const { appendFileSync } = await import('fs');
-        const mockAppendFile = appendFileSync as jest.MockedFunction<typeof appendFileSync>;
+        const mockAppendFile = appendFileSync as any;
         const loggerModule = await import('../../../utils/logging/logger');
         const { Logger } = loggerModule;
 
@@ -327,7 +327,7 @@ describe('Logger Module', () => {
 
         // Mock JSON.stringify to throw an error for circular references
         const originalStringify = JSON.stringify;
-        JSON.stringify = jest.fn().mockImplementation(() => {
+        JSON.stringify = vi.fn().mockImplementation(() => {
           throw new Error('Converting circular structure to JSON');
         });
 
@@ -379,7 +379,7 @@ describe('Logger Module', () => {
       logger.error('Error message');
 
       expect(mockAppendFileSync).toHaveBeenCalledTimes(4);
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       // When LOG_LEVEL is INFO, debug should be skipped
       process.env.LOG_LEVEL = 'INFO';
@@ -390,7 +390,7 @@ describe('Logger Module', () => {
       logger.error('Error message');
 
       expect(mockAppendFileSync).toHaveBeenCalledTimes(3);
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       // When LOG_LEVEL is WARN, debug and info should be skipped
       process.env.LOG_LEVEL = 'WARN';
@@ -401,7 +401,7 @@ describe('Logger Module', () => {
       logger.error('Error message');
 
       expect(mockAppendFileSync).toHaveBeenCalledTimes(2);
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       // When LOG_LEVEL is ERROR, only error should work
       process.env.LOG_LEVEL = 'ERROR';
@@ -479,14 +479,14 @@ describe('Logger Module', () => {
 
     it('should create parent directories correctly', async () => {
       // Reset modules
-      jest.resetModules();
+      vi.resetModules();
 
       // Re-mock fs
-      jest.unstable_mockModule('fs', () => ({
-        appendFileSync: jest.fn(),
-        writeFileSync: jest.fn(),
-        existsSync: jest.fn(() => false),
-        mkdirSync: jest.fn(),
+      vi.mock('fs', () => ({
+        appendFileSync: vi.fn(),
+        writeFileSync: vi.fn(),
+        existsSync: vi.fn(() => false),
+        mkdirSync: vi.fn(),
       }));
 
       // Re-import modules

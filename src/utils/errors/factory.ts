@@ -31,7 +31,9 @@ export function createClassifiedError(
   const error = new Error(message) as ClassifiedError;
   error.category = category;
   error.originalError = originalError;
-  error.metadata = metadata;
+  if (metadata !== undefined) {
+    error.metadata = metadata;
+  }
   return error;
 }
 

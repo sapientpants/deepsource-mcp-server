@@ -3,51 +3,51 @@
  * This test suite focuses on module integration and handler mocking validation
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 // Mock all dependencies BEFORE any imports - using unstable_mockModule for ES modules
-jest.unstable_mockModule('@modelcontextprotocol/sdk/server/mcp.js', () => ({
-  McpServer: jest.fn().mockImplementation(() => ({
-    registerTool: jest.fn(),
-    connect: jest.fn(),
-    setRequestHandler: jest.fn(),
+vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
+  McpServer: vi.fn().mockImplementation(() => ({
+    registerTool: vi.fn(),
+    connect: vi.fn(),
+    setRequestHandler: vi.fn(),
   })),
 }));
 
-jest.unstable_mockModule('@modelcontextprotocol/sdk/server/stdio.js', () => ({
-  StdioServerTransport: jest.fn(),
+vi.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
+  StdioServerTransport: vi.fn(),
 }));
 
-jest.unstable_mockModule('../utils/logging/logger.js', () => ({
-  createLogger: jest.fn(() => ({
-    info: jest.fn(),
-    debug: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
+vi.mock('../utils/logging/logger.js', () => ({
+  createLogger: vi.fn(() => ({
+    info: vi.fn(),
+    debug: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
   })),
 }));
 
-jest.unstable_mockModule('../server/tool-registry.js', () => ({
-  ToolRegistry: jest.fn().mockImplementation(() => ({
-    registerTool: jest.fn(),
-    getTools: jest.fn().mockReturnValue([]),
+vi.mock('../server/tool-registry.js', () => ({
+  ToolRegistry: vi.fn().mockImplementation(() => ({
+    registerTool: vi.fn(),
+    getTools: vi.fn().mockReturnValue([]),
   })),
 }));
 
-jest.unstable_mockModule('../handlers/base/handler.factory.js', () => ({
-  createDefaultHandlerDeps: jest.fn(() => ({
+vi.mock('../handlers/base/handler.factory.js', () => ({
+  createDefaultHandlerDeps: vi.fn(() => ({
     client: {},
     logger: {
-      info: jest.fn(),
-      debug: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn(),
+      info: vi.fn(),
+      debug: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
     },
   })),
 }));
 
-jest.unstable_mockModule('../server/tool-registration.js', () => ({
-  registerDeepSourceTools: jest
+vi.mock('../server/tool-registration.js', () => ({
+  registerDeepSourceTools: vi
     .fn()
     .mockReturnValue([
       'projects',
@@ -64,36 +64,34 @@ jest.unstable_mockModule('../server/tool-registration.js', () => ({
 }));
 
 const mockHandlers = {
-  handleProjects: jest.fn().mockResolvedValue({ content: [], isError: false }),
-  handleDeepsourceQualityMetrics: jest.fn().mockResolvedValue({ content: [], isError: false }),
-  handleDeepsourceUpdateMetricThreshold: jest
-    .fn()
-    .mockResolvedValue({ content: [], isError: false }),
-  handleDeepsourceUpdateMetricSetting: jest.fn().mockResolvedValue({ content: [], isError: false }),
-  handleDeepsourceComplianceReport: jest.fn().mockResolvedValue({ content: [], isError: false }),
-  handleDeepsourceProjectIssues: jest.fn().mockResolvedValue({ content: [], isError: false }),
-  handleDeepsourceProjectRuns: jest.fn().mockResolvedValue({ content: [], isError: false }),
-  handleDeepsourceRun: jest.fn().mockResolvedValue({ content: [], isError: false }),
-  handleDeepsourceRecentRunIssues: jest.fn().mockResolvedValue({ content: [], isError: false }),
-  handleDeepsourceDependencyVulnerabilities: jest
+  handleProjects: vi.fn().mockResolvedValue({ content: [], isError: false }),
+  handleDeepsourceQualityMetrics: vi.fn().mockResolvedValue({ content: [], isError: false }),
+  handleDeepsourceUpdateMetricThreshold: vi.fn().mockResolvedValue({ content: [], isError: false }),
+  handleDeepsourceUpdateMetricSetting: vi.fn().mockResolvedValue({ content: [], isError: false }),
+  handleDeepsourceComplianceReport: vi.fn().mockResolvedValue({ content: [], isError: false }),
+  handleDeepsourceProjectIssues: vi.fn().mockResolvedValue({ content: [], isError: false }),
+  handleDeepsourceProjectRuns: vi.fn().mockResolvedValue({ content: [], isError: false }),
+  handleDeepsourceRun: vi.fn().mockResolvedValue({ content: [], isError: false }),
+  handleDeepsourceRecentRunIssues: vi.fn().mockResolvedValue({ content: [], isError: false }),
+  handleDeepsourceDependencyVulnerabilities: vi
     .fn()
     .mockResolvedValue({ content: [], isError: false }),
 };
 
-jest.unstable_mockModule('../handlers/index.js', () => mockHandlers);
+vi.mock('../handlers/index.js', () => mockHandlers);
 
 const mockToolHelpers = {
-  logToolInvocation: jest.fn(),
-  logToolResult: jest.fn(),
-  logAndFormatError: jest.fn().mockReturnValue('Formatted error message'),
+  logToolInvocation: vi.fn(),
+  logToolResult: vi.fn(),
+  logAndFormatError: vi.fn().mockReturnValue('Formatted error message'),
 };
 
-jest.unstable_mockModule('../server/tool-helpers.js', () => mockToolHelpers);
+vi.mock('../server/tool-helpers.js', () => mockToolHelpers);
 
-jest.unstable_mockModule('../server/mcp-server.js', () => ({
+vi.mock('../server/mcp-server.js', () => ({
   DeepSourceMCPServer: {
-    create: jest.fn().mockResolvedValue({
-      getRegisteredTools: jest
+    create: vi.fn().mockResolvedValue({
+      getRegisteredTools: vi
         .fn()
         .mockReturnValue([
           'projects',
@@ -107,16 +105,16 @@ jest.unstable_mockModule('../server/mcp-server.js', () => ({
           'update_metric_setting',
           'compliance_report',
         ]),
-      getMcpServer: jest.fn().mockReturnValue({
-        registerTool: jest.fn(),
+      getMcpServer: vi.fn().mockReturnValue({
+        registerTool: vi.fn(),
       }),
-      start: jest.fn(),
+      start: vi.fn(),
     }),
   },
 }));
 
 // Import test utilities after all mocks are set
-const { describe, it, expect, beforeEach, afterEach } = await import('@jest/globals');
+const { describe, it, expect, beforeEach, afterEach } = await import('vitest');
 
 describe('Index.ts MCP Server Comprehensive Tests', () => {
   let indexModule: {
@@ -132,11 +130,11 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
   let originalEnv: typeof process.env;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Module Import and Server Creation', () => {
@@ -146,7 +144,7 @@ describe('Index.ts MCP Server Comprehensive Tests', () => {
       process.env.DEEPSOURCE_API_KEY = 'test-api-key';
 
       // Clear module cache and reimport
-      jest.resetModules();
+      vi.resetModules();
       indexModule = await import('../index.js');
     });
 

@@ -1,16 +1,16 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 // import * as fs from 'fs'; - not used directly, only through jest mocks
 
 // Mock the fs module before importing Logger
-jest.unstable_mockModule('fs', () => ({
-  appendFileSync: jest.fn(),
-  writeFileSync: jest.fn(),
-  existsSync: jest.fn(() => true),
-  mkdirSync: jest.fn(),
+vi.mock('fs', () => ({
+  appendFileSync: vi.fn(),
+  writeFileSync: vi.fn(),
+  existsSync: vi.fn(() => true),
+  mkdirSync: vi.fn(),
 }));
 
 // Now import the mocked fs and Logger module
@@ -19,8 +19,8 @@ const loggerModule = await import('../utils/logger.js');
 const { Logger, createLogger, defaultLogger } = loggerModule;
 
 // Type the mocks
-const mockAppendFileSync = appendFileSync as jest.MockedFunction<typeof appendFileSync>;
-const mockExistsSync = existsSync as jest.MockedFunction<typeof existsSync>;
+const mockAppendFileSync = appendFileSync as any;
+const mockExistsSync = existsSync as any;
 
 describe('Logger', () => {
   // Environment backup
@@ -34,10 +34,10 @@ describe('Logger', () => {
     process.env.LOG_FILE = '/tmp/test.log';
 
     // Clear all mocks before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Reset the module-level logFileInitialized variable by reimporting the module
-    jest.resetModules();
+    vi.resetModules();
   });
 
   afterEach(() => {
@@ -299,22 +299,26 @@ describe('Logger', () => {
       process.env.LOG_LEVEL = 'DEBUG';
 
       // Clear the require cache for logger to reset module state
-      jest.resetModules();
+      vi.resetModules();
 
       // Mock the fs module with a mkdirSync that throws an error
-      jest.unstable_mockModule('fs', () => ({
-        appendFileSync: jest.fn(),
-        writeFileSync: jest.fn(),
-        existsSync: jest.fn(() => false),
-        mkdirSync: jest.fn(() => {
-          throw new Error('Permission denied');
-        }),
+      const mockMkdirSync = vi.fn(() => {
+        throw new Error('Permission denied');
+      });
+      const mockWriteFileSync = vi.fn();
+      const mockAppendFileSync = vi.fn();
+      const mockExistsSync = vi.fn(() => false);
+
+      vi.doMock('fs', () => ({
+        appendFileSync: mockAppendFileSync,
+        writeFileSync: mockWriteFileSync,
+        existsSync: mockExistsSync,
+        mkdirSync: mockMkdirSync,
       }));
 
       // Re-import the modules after mocking
       const loggerModule = await import('../utils/logger.js');
       const { Logger } = loggerModule;
-      const { mkdirSync: mockMkdirSync } = await import('fs');
 
       const logger = new Logger('TestContext');
 
@@ -330,20 +334,24 @@ describe('Logger', () => {
       process.env.LOG_LEVEL = 'DEBUG';
 
       // Clear the require cache for logger to reset module state
-      jest.resetModules();
+      vi.resetModules();
 
       // Mock the fs module to simulate a directory that doesn't exist
-      jest.unstable_mockModule('fs', () => ({
-        appendFileSync: jest.fn(),
-        writeFileSync: jest.fn(),
-        existsSync: jest.fn(() => false), // Directory doesn't exist
-        mkdirSync: jest.fn(), // Will be called to create the directory
+      const mockMkdirSync = vi.fn();
+      const mockWriteFileSync = vi.fn();
+      const mockAppendFileSync = vi.fn();
+      const mockExistsSync = vi.fn(() => false);
+
+      vi.doMock('fs', () => ({
+        appendFileSync: mockAppendFileSync,
+        writeFileSync: mockWriteFileSync,
+        existsSync: mockExistsSync,
+        mkdirSync: mockMkdirSync,
       }));
 
       // Re-import the modules after mocking
       const loggerModule = await import('../utils/logger.js');
       const { Logger } = loggerModule;
-      const { mkdirSync: mockMkdirSync, writeFileSync: mockWriteFileSync } = await import('fs');
 
       const logger = new Logger('TestContext');
 
@@ -368,7 +376,7 @@ describe('Logger', () => {
 
       // Mock JSON.stringify to throw
       const originalStringify = JSON.stringify;
-      JSON.stringify = jest.fn().mockImplementation(() => {
+      JSON.stringify = vi.fn().mockImplementation(() => {
         throw new Error('Circular reference');
       });
 

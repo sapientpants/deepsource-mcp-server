@@ -2,7 +2,7 @@
  * @fileoverview Tests for MetricValue value object
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { MetricValue } from '../metric-value.js';
 
 describe('MetricValue', () => {

@@ -2,101 +2,101 @@
  * @fileoverview Integration tests for the registry-based MCP server implementation
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 // Mock MCP SDK modules FIRST using unstable_mockModule
-jest.unstable_mockModule('@modelcontextprotocol/sdk/server/mcp.js', () => ({
-  McpServer: jest.fn().mockImplementation(() => ({
-    registerTool: jest.fn(),
-    connect: jest.fn().mockResolvedValue(undefined),
+vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
+  McpServer: vi.fn().mockImplementation(() => ({
+    registerTool: vi.fn(),
+    connect: vi.fn().mockResolvedValue(undefined),
   })),
 }));
 
-jest.unstable_mockModule('@modelcontextprotocol/sdk/server/stdio.js', () => ({
-  StdioServerTransport: jest.fn().mockImplementation(() => ({})),
+vi.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
+  StdioServerTransport: vi.fn().mockImplementation(() => ({})),
 }));
 
 // Mock logger
-jest.unstable_mockModule('../utils/logging/logger.js', () => ({
-  createLogger: jest.fn(() => ({
-    info: jest.fn(),
-    debug: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
+vi.mock('../utils/logging/logger.js', () => ({
+  createLogger: vi.fn(() => ({
+    info: vi.fn(),
+    debug: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
   })),
 }));
 
 // Mock the handlers
-jest.unstable_mockModule('../handlers/index.js', () => ({
-  handleProjects: jest.fn().mockResolvedValue({
+vi.mock('../handlers/index.js', () => ({
+  handleProjects: vi.fn().mockResolvedValue({
     content: [{ type: 'text', text: JSON.stringify([{ key: 'test', name: 'Test Project' }]) }],
   }),
-  handleDeepsourceQualityMetrics: jest.fn().mockResolvedValue({
+  handleDeepsourceQualityMetrics: vi.fn().mockResolvedValue({
     content: [{ type: 'text', text: JSON.stringify({ metrics: [] }) }],
   }),
-  handleDeepsourceUpdateMetricThreshold: jest.fn().mockResolvedValue({
+  handleDeepsourceUpdateMetricThreshold: vi.fn().mockResolvedValue({
     content: [{ type: 'text', text: JSON.stringify({ ok: true }) }],
   }),
-  handleDeepsourceUpdateMetricSetting: jest.fn().mockResolvedValue({
+  handleDeepsourceUpdateMetricSetting: vi.fn().mockResolvedValue({
     content: [{ type: 'text', text: JSON.stringify({ success: true }) }],
   }),
-  handleDeepsourceComplianceReport: jest.fn().mockResolvedValue({
+  handleDeepsourceComplianceReport: vi.fn().mockResolvedValue({
     content: [{ type: 'text', text: JSON.stringify({ report: {} }) }],
   }),
-  handleDeepsourceProjectIssues: jest.fn().mockResolvedValue({
+  handleDeepsourceProjectIssues: vi.fn().mockResolvedValue({
     content: [{ type: 'text', text: JSON.stringify({ issues: [] }) }],
   }),
-  handleDeepsourceProjectRuns: jest.fn().mockResolvedValue({
+  handleDeepsourceProjectRuns: vi.fn().mockResolvedValue({
     content: [{ type: 'text', text: JSON.stringify({ runs: [] }) }],
   }),
-  handleDeepsourceRun: jest.fn().mockResolvedValue({
+  handleDeepsourceRun: vi.fn().mockResolvedValue({
     content: [{ type: 'text', text: JSON.stringify({ run: {} }) }],
   }),
-  handleDeepsourceRecentRunIssues: jest.fn().mockResolvedValue({
+  handleDeepsourceRecentRunIssues: vi.fn().mockResolvedValue({
     content: [{ type: 'text', text: JSON.stringify({ issues: [] }) }],
   }),
-  handleDeepsourceDependencyVulnerabilities: jest.fn().mockResolvedValue({
+  handleDeepsourceDependencyVulnerabilities: vi.fn().mockResolvedValue({
     content: [{ type: 'text', text: JSON.stringify({ vulnerabilities: [] }) }],
   }),
 }));
 
 // Mock the server/tool-helpers
-jest.unstable_mockModule('../server/tool-helpers.js', () => ({
-  logToolInvocation: jest.fn(),
-  logToolResult: jest.fn(),
-  logAndFormatError: jest.fn().mockReturnValue('Formatted error'),
+vi.mock('../server/tool-helpers.js', () => ({
+  logToolInvocation: vi.fn(),
+  logToolResult: vi.fn(),
+  logAndFormatError: vi.fn().mockReturnValue('Formatted error'),
 }));
 
 // Mock the handler-adapters
-jest.unstable_mockModule('../adapters/handler-adapters.js', () => ({
-  adaptQualityMetricsParams: jest.fn((params) => params),
-  adaptUpdateMetricThresholdParams: jest.fn((params) => params),
-  adaptComplianceReportParams: jest.fn((params) => params),
-  adaptProjectIssuesParams: jest.fn((params) => params),
+vi.mock('../adapters/handler-adapters.js', () => ({
+  adaptQualityMetricsParams: vi.fn((params) => params),
+  adaptUpdateMetricThresholdParams: vi.fn((params) => params),
+  adaptComplianceReportParams: vi.fn((params) => params),
+  adaptProjectIssuesParams: vi.fn((params) => params),
 }));
 
 // Mock zod for schema validation
-jest.unstable_mockModule('zod', () => ({
+vi.mock('zod', () => ({
   z: {
-    object: jest.fn(() => ({ safeParse: jest.fn(() => ({ success: true, data: {} })) })),
-    string: jest.fn(() => ({})),
-    number: jest.fn(() => ({})),
-    boolean: jest.fn(() => ({})),
-    array: jest.fn(() => ({})),
-    optional: jest.fn(() => ({})),
+    object: vi.fn(() => ({ safeParse: vi.fn(() => ({ success: true, data: {} })) })),
+    string: vi.fn(() => ({})),
+    number: vi.fn(() => ({})),
+    boolean: vi.fn(() => ({})),
+    array: vi.fn(() => ({})),
+    optional: vi.fn(() => ({})),
   },
 }));
 
 // Mock handler base modules
-jest.unstable_mockModule('../handlers/base/handler.interface.js', () => ({
+vi.mock('../handlers/base/handler.interface.js', () => ({
   HandlerFunction: {},
   BaseHandlerDeps: {},
 }));
 
-jest.unstable_mockModule('../handlers/base/handler.factory.js', () => ({
-  createDefaultHandlerDeps: jest.fn(),
-  isApiResponse: jest.fn(() => false),
-  createErrorResponse: jest.fn((error) => ({
+vi.mock('../handlers/base/handler.factory.js', () => ({
+  createDefaultHandlerDeps: vi.fn(),
+  isApiResponse: vi.fn(() => false),
+  createErrorResponse: vi.fn((error) => ({
     content: [{ type: 'text', text: `Error: ${error.message}` }],
     isError: true,
   })),
@@ -108,14 +108,14 @@ class MockToolRegistry {
     name: string;
     description: string;
     inputSchema?: Record<string, unknown>;
-    handler: jest.MockedFunction<() => Promise<unknown>>;
+    handler: MockedFunction<(...args: any[]) => Promise<unknown>>;
   }> = [];
 
   registerTool(tool: {
     name: string;
     description: string;
     inputSchema?: Record<string, unknown>;
-    handler: jest.MockedFunction<() => Promise<unknown>>;
+    handler: MockedFunction<(...args: any[]) => Promise<unknown>>;
   }) {
     if (this.tools.find((t) => t.name === tool.name)) {
       throw new Error(`Tool ${tool.name} is already registered`);
@@ -146,12 +146,12 @@ class MockToolRegistry {
   }
 }
 
-jest.unstable_mockModule('../server/tool-registry.js', () => ({
+vi.mock('../server/tool-registry.js', () => ({
   ToolRegistry: MockToolRegistry,
 }));
 
 // Now import test utilities and modules after mocks are set
-const { describe, it, expect, beforeEach, afterEach } = await import('@jest/globals');
+const { describe, it, expect, beforeEach, afterEach } = await import('vitest');
 const { McpServer } = await import('@modelcontextprotocol/sdk/server/mcp.js');
 const { ToolRegistry } = await import('../server/tool-registry.js');
 const {
@@ -164,25 +164,23 @@ const {
 describe('Registry-based MCP Server Integration', () => {
   let registry: MockToolRegistry;
   let mockMcpServer: {
-    registerTool: jest.MockedFunction<() => void>;
-    connect: jest.MockedFunction<() => Promise<void>>;
+    registerTool: any;
+    connect: MockedFunction<(...args: any[]) => Promise<void>>;
   };
 
   beforeEach(() => {
     // Create fresh instances for each test
     mockMcpServer = {
-      registerTool: jest.fn(),
-      connect: jest.fn().mockResolvedValue(undefined),
+      registerTool: vi.fn(),
+      connect: vi.fn().mockResolvedValue(undefined),
     };
-    (McpServer as jest.MockedFunction<typeof McpServer>).mockImplementation(
-      () => mockMcpServer as ReturnType<typeof McpServer>
-    );
+    (McpServer as any).mockImplementation(() => mockMcpServer as ReturnType<typeof McpServer>);
     registry = new ToolRegistry();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('ToolRegistry', () => {
@@ -196,7 +194,7 @@ describe('Registry-based MCP Server Integration', () => {
             param: { type: 'string' },
           },
         },
-        handler: jest.fn().mockResolvedValue({ success: true }),
+        handler: vi.fn().mockResolvedValue({ success: true }),
       };
 
       registry.registerTool(tool);
@@ -210,7 +208,7 @@ describe('Registry-based MCP Server Integration', () => {
       const tool = {
         name: 'test-tool',
         description: 'A test tool',
-        handler: jest.fn(),
+        handler: vi.fn(),
       };
 
       registry.registerTool(tool);
@@ -223,7 +221,7 @@ describe('Registry-based MCP Server Integration', () => {
       const tool = {
         name: 'test-tool',
         description: 'A test tool',
-        handler: jest.fn(),
+        handler: vi.fn(),
       };
 
       registry.registerTool(tool);
@@ -290,7 +288,7 @@ describe('Registry-based MCP Server Integration', () => {
 
   describe('End-to-End Tool Registration', () => {
     it('should handle successful tool execution', async () => {
-      const handler = jest.fn().mockResolvedValue({
+      const handler = vi.fn().mockResolvedValue({
         content: [{ type: 'text', text: 'Success' }],
       });
 
@@ -320,7 +318,7 @@ describe('Registry-based MCP Server Integration', () => {
     });
 
     it('should handle tool execution errors', async () => {
-      const handler = jest.fn().mockRejectedValue(new Error('Tool error'));
+      const handler = vi.fn().mockRejectedValue(new Error('Tool error'));
 
       const tool = {
         name: 'test-tool',
@@ -338,7 +336,7 @@ describe('Registry-based MCP Server Integration', () => {
 
   describe('Schema Validation', () => {
     it('should validate input schema when provided', async () => {
-      const handler = jest.fn().mockResolvedValue({ success: true });
+      const handler = vi.fn().mockResolvedValue({ success: true });
 
       const tool = {
         name: 'test-tool',

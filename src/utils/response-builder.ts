@@ -151,10 +151,16 @@ export function parseToolResponse<T = unknown>(
   validator?: (data: unknown) => data is T
 ): T {
   if (response.isError) {
+    if (!response.content || !response.content[0]) {
+      throw new Error('Error response has no content');
+    }
     const errorData = JSON.parse(response.content[0].text);
     throw new Error(errorData.error || 'Unknown error');
   }
 
+  if (!response.content || !response.content[0]) {
+    throw new Error('Response has no content');
+  }
   const data = JSON.parse(response.content[0].text);
 
   if (validator && !validator(data)) {

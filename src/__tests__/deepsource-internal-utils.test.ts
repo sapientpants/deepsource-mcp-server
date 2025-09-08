@@ -1,5 +1,5 @@
 import { DeepSourceClient } from '../deepsource';
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 // Import types from metrics.ts
 import { MetricDirection } from '../types/metrics';
@@ -530,7 +530,7 @@ describe('DeepSource Internal Utilities', () => {
       // Create a situation where GraphQL handler returns true instead of throwing
       // This would trigger the unreachable code at line 811
       // @ts-expect-error - Accessing private static method for testing
-      DeepSourceClient.handleGraphQLSpecificError = jest.fn().mockReturnValue(true);
+      DeepSourceClient.handleGraphQLSpecificError = vi.fn().mockReturnValue(true);
 
       const error = new Error('Test GraphQL error');
 
@@ -544,9 +544,9 @@ describe('DeepSource Internal Utilities', () => {
       // but Network handler returns true instead of throwing
       // This would trigger the unreachable code at line 815
       // @ts-expect-error - Accessing private static method for testing
-      DeepSourceClient.handleGraphQLSpecificError = jest.fn().mockReturnValue(false);
+      DeepSourceClient.handleGraphQLSpecificError = vi.fn().mockReturnValue(false);
       // @ts-expect-error - Accessing private static method for testing
-      DeepSourceClient.handleNetworkError = jest.fn().mockReturnValue(true);
+      DeepSourceClient.handleNetworkError = vi.fn().mockReturnValue(true);
 
       const error = new Error('Test network error');
 
@@ -560,11 +560,11 @@ describe('DeepSource Internal Utilities', () => {
       // but HTTP Status handler returns true instead of throwing
       // This would trigger the unreachable code at line 819
       // @ts-expect-error - Accessing private static method for testing
-      DeepSourceClient.handleGraphQLSpecificError = jest.fn().mockReturnValue(false);
+      DeepSourceClient.handleGraphQLSpecificError = vi.fn().mockReturnValue(false);
       // @ts-expect-error - Accessing private static method for testing
-      DeepSourceClient.handleNetworkError = jest.fn().mockReturnValue(false);
+      DeepSourceClient.handleNetworkError = vi.fn().mockReturnValue(false);
       // @ts-expect-error - Accessing private static method for testing
-      DeepSourceClient.handleHttpStatusError = jest.fn().mockReturnValue(true);
+      DeepSourceClient.handleHttpStatusError = vi.fn().mockReturnValue(true);
 
       const error = new Error('Test HTTP status error');
 
@@ -576,11 +576,11 @@ describe('DeepSource Internal Utilities', () => {
     it('should throw classified error for standard Error objects', () => {
       // All handlers return false, but the error is a standard Error
       // @ts-expect-error - Accessing private static method for testing
-      DeepSourceClient.handleGraphQLSpecificError = jest.fn().mockReturnValue(false);
+      DeepSourceClient.handleGraphQLSpecificError = vi.fn().mockReturnValue(false);
       // @ts-expect-error - Accessing private static method for testing
-      DeepSourceClient.handleNetworkError = jest.fn().mockReturnValue(false);
+      DeepSourceClient.handleNetworkError = vi.fn().mockReturnValue(false);
       // @ts-expect-error - Accessing private static method for testing
-      DeepSourceClient.handleHttpStatusError = jest.fn().mockReturnValue(false);
+      DeepSourceClient.handleHttpStatusError = vi.fn().mockReturnValue(false);
 
       const error = new Error('Standard Error');
 
@@ -593,11 +593,11 @@ describe('DeepSource Internal Utilities', () => {
       // All handlers return false, and the "error" is not an Error object
       // This would trigger line 829
       // @ts-expect-error - Accessing private static method for testing
-      DeepSourceClient.handleGraphQLSpecificError = jest.fn().mockReturnValue(false);
+      DeepSourceClient.handleGraphQLSpecificError = vi.fn().mockReturnValue(false);
       // @ts-expect-error - Accessing private static method for testing
-      DeepSourceClient.handleNetworkError = jest.fn().mockReturnValue(false);
+      DeepSourceClient.handleNetworkError = vi.fn().mockReturnValue(false);
       // @ts-expect-error - Accessing private static method for testing
-      DeepSourceClient.handleHttpStatusError = jest.fn().mockReturnValue(false);
+      DeepSourceClient.handleHttpStatusError = vi.fn().mockReturnValue(false);
 
       const nonError = {}; // A non-Error object without a message property
 

@@ -2,7 +2,7 @@
  * @fileoverview Tests for AnalysisRun aggregate
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { AnalysisRun } from '../analysis-run.aggregate.js';
 import type {
   CreateAnalysisRunParams,

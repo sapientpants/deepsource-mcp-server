@@ -84,8 +84,10 @@ export class DeepSourceMCPServer {
       this.registerDefaultTools();
     }
 
-    // Set transport
-    this.transport = this.config.transport;
+    // Set transport if provided
+    if (this.config.transport) {
+      this.transport = this.config.transport;
+    }
   }
 
   /**

@@ -1,28 +1,28 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import type { DeepSourceIssue } from '../models/issues';
 import type { PaginatedResult } from '../utils/pagination/types';
 
 // Create mock logger
 const mockLogger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
 };
 
 // Mock modules before importing the implementation
-jest.unstable_mockModule('../utils/logging/logger', () => ({
-  createLogger: jest.fn(() => mockLogger),
+vi.mock('../utils/logging/logger', () => ({
+  createLogger: vi.fn(() => mockLogger),
 }));
 
 // Mock the DeepSource client
-const mockGetIssues = jest.fn();
-jest.unstable_mockModule('../deepsource', () => ({
-  DeepSourceClient: jest.fn().mockImplementation(() => ({
+const mockGetIssues = vi.fn();
+vi.mock('../deepsource', () => ({
+  DeepSourceClient: vi.fn().mockImplementation(() => ({
     getIssues: mockGetIssues,
   })),
   ReportType: {
@@ -55,7 +55,7 @@ describe('Project Issues Handler', () => {
     process.env.DEEPSOURCE_API_KEY = 'test-api-key';
 
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {

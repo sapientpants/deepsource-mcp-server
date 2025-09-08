@@ -55,7 +55,7 @@ export interface RepositoryInstances {
  */
 export class RepositoryFactory {
   private readonly config: RepositoryConfig;
-  private cachedInstances?: RepositoryInstances;
+  private cachedInstances: RepositoryInstances | undefined;
 
   constructor(config: RepositoryConfig) {
     this.config = config;

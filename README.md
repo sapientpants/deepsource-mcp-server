@@ -29,13 +29,13 @@ A Model Context Protocol (MCP) server that integrates with DeepSource to provide
 
 The DeepSource MCP Server enables AI assistants like Claude to interact with DeepSource's code quality analysis capabilities through the Model Context Protocol. This integration allows AI assistants to:
 
-* Retrieve code metrics and analysis results
-* Access and filter issues by analyzer, path, or tags
-* Check quality status and set thresholds
-* Analyze project quality over time
-* Access security compliance reports (OWASP, SANS, MISRA-C)
-* Monitor dependency vulnerabilities
-* Manage quality gates and thresholds
+- Retrieve code metrics and analysis results
+- Access and filter issues by analyzer, path, or tags
+- Check quality status and set thresholds
+- Analyze project quality over time
+- Access security compliance reports (OWASP, SANS, MISRA-C)
+- Monitor dependency vulnerabilities
+- Manage quality gates and thresholds
 
 ## Quick Start
 
@@ -106,10 +106,15 @@ For containerized environments:
     "deepsource": {
       "command": "docker",
       "args": [
-        "run", "-i", "--rm",
-        "-e", "DEEPSOURCE_API_KEY",
-        "-e", "LOG_FILE=/tmp/deepsource-mcp.log",
-        "-v", "/tmp:/tmp",
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "DEEPSOURCE_API_KEY",
+        "-e",
+        "LOG_FILE=/tmp/deepsource-mcp.log",
+        "-v",
+        "/tmp:/tmp",
         "sapientpants/deepsource-mcp-server"
       ],
       "env": {
@@ -144,11 +149,11 @@ For development or customization:
 
 ### Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DEEPSOURCE_API_KEY` | Yes | - | Your DeepSource API key for authentication |
-| `LOG_FILE` | No | - | Path to log file. If not set, no logs are written |
-| `LOG_LEVEL` | No | `DEBUG` | Minimum log level: `DEBUG`, `INFO`, `WARN`, `ERROR` |
+| Variable             | Required | Default | Description                                         |
+| -------------------- | -------- | ------- | --------------------------------------------------- |
+| `DEEPSOURCE_API_KEY` | Yes      | -       | Your DeepSource API key for authentication          |
+| `LOG_FILE`           | No       | -       | Path to log file. If not set, no logs are written   |
+| `LOG_LEVEL`          | No       | `DEBUG` | Minimum log level: `DEBUG`, `INFO`, `WARN`, `ERROR` |
 
 ### Performance Considerations
 
@@ -165,6 +170,7 @@ List all available DeepSource projects.
 **Parameters**: None
 
 **Example Response**:
+
 ```json
 [
   {
@@ -178,29 +184,32 @@ List all available DeepSource projects.
 
 Get issues from a DeepSource project with filtering and pagination.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectKey` | string | Yes | The unique identifier for the DeepSource project |
-| `first` | number | No | Number of items to return (forward pagination) |
-| `after` | string | No | Cursor for forward pagination |
-| `last` | number | No | Number of items to return (backward pagination) |
-| `before` | string | No | Cursor for backward pagination |
-| `path` | string | No | Filter issues by file path |
-| `analyzerIn` | string[] | No | Filter by analyzers (e.g., ["python", "javascript"]) |
-| `tags` | string[] | No | Filter by issue tags |
+| Parameter    | Type     | Required | Description                                          |
+| ------------ | -------- | -------- | ---------------------------------------------------- |
+| `projectKey` | string   | Yes      | The unique identifier for the DeepSource project     |
+| `first`      | number   | No       | Number of items to return (forward pagination)       |
+| `after`      | string   | No       | Cursor for forward pagination                        |
+| `last`       | number   | No       | Number of items to return (backward pagination)      |
+| `before`     | string   | No       | Cursor for backward pagination                       |
+| `path`       | string   | No       | Filter issues by file path                           |
+| `analyzerIn` | string[] | No       | Filter by analyzers (e.g., ["python", "javascript"]) |
+| `tags`       | string[] | No       | Filter by issue tags                                 |
 
 **Example Response**:
+
 ```json
 {
-  "issues": [{
-    "id": "T2NjdXJyZW5jZTpnZHlqdnlxZ2E=",
-    "title": "Avoid using hardcoded credentials",
-    "shortcode": "PY-D100",
-    "category": "SECURITY",
-    "severity": "CRITICAL",
-    "file_path": "src/config.py",
-    "line_number": 42
-  }],
+  "issues": [
+    {
+      "id": "T2NjdXJyZW5jZTpnZHlqdnlxZ2E=",
+      "title": "Avoid using hardcoded credentials",
+      "shortcode": "PY-D100",
+      "category": "SECURITY",
+      "severity": "CRITICAL",
+      "file_path": "src/config.py",
+      "line_number": 42
+    }
+  ],
   "totalCount": 15,
   "pageInfo": {
     "hasNextPage": true,
@@ -213,57 +222,60 @@ Get issues from a DeepSource project with filtering and pagination.
 
 List analysis runs for a project with filtering.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectKey` | string | Yes | The unique identifier for the DeepSource project |
-| `first` | number | No | Number of items to return (forward pagination) |
-| `after` | string | No | Cursor for forward pagination |
-| `last` | number | No | Number of items to return (backward pagination) |
-| `before` | string | No | Cursor for backward pagination |
-| `analyzerIn` | string[] | No | Filter by analyzers |
+| Parameter    | Type     | Required | Description                                      |
+| ------------ | -------- | -------- | ------------------------------------------------ |
+| `projectKey` | string   | Yes      | The unique identifier for the DeepSource project |
+| `first`      | number   | No       | Number of items to return (forward pagination)   |
+| `after`      | string   | No       | Cursor for forward pagination                    |
+| `last`       | number   | No       | Number of items to return (backward pagination)  |
+| `before`     | string   | No       | Cursor for backward pagination                   |
+| `analyzerIn` | string[] | No       | Filter by analyzers                              |
 
 ### 4. run
 
 Get details of a specific analysis run.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectKey` | string | Yes | The unique identifier for the DeepSource project |
-| `runIdentifier` | string | Yes | The runUid (UUID) or commitOid (commit hash) |
-| `isCommitOid` | boolean | No | Whether runIdentifier is a commit hash (default: false) |
+| Parameter       | Type    | Required | Description                                             |
+| --------------- | ------- | -------- | ------------------------------------------------------- |
+| `projectKey`    | string  | Yes      | The unique identifier for the DeepSource project        |
+| `runIdentifier` | string  | Yes      | The runUid (UUID) or commitOid (commit hash)            |
+| `isCommitOid`   | boolean | No       | Whether runIdentifier is a commit hash (default: false) |
 
 ### 5. recent_run_issues
 
 Get issues from the most recent analysis run on a branch.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectKey` | string | Yes | The unique identifier for the DeepSource project |
-| `branchName` | string | Yes | The branch name |
-| `first` | number | No | Number of items to return |
-| `after` | string | No | Cursor for forward pagination |
+| Parameter    | Type   | Required | Description                                      |
+| ------------ | ------ | -------- | ------------------------------------------------ |
+| `projectKey` | string | Yes      | The unique identifier for the DeepSource project |
+| `branchName` | string | Yes      | The branch name                                  |
+| `first`      | number | No       | Number of items to return                        |
+| `after`      | string | No       | Cursor for forward pagination                    |
 
 ### 6. dependency_vulnerabilities
 
 Get security vulnerabilities in project dependencies.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectKey` | string | Yes | The unique identifier for the DeepSource project |
-| `first` | number | No | Number of items to return |
-| `after` | string | No | Cursor for forward pagination |
+| Parameter    | Type   | Required | Description                                      |
+| ------------ | ------ | -------- | ------------------------------------------------ |
+| `projectKey` | string | Yes      | The unique identifier for the DeepSource project |
+| `first`      | number | No       | Number of items to return                        |
+| `after`      | string | No       | Cursor for forward pagination                    |
 
 **Example Response**:
+
 ```json
 {
-  "vulnerabilities": [{
-    "id": "VUL-001",
-    "package": "requests",
-    "version": "2.25.0",
-    "severity": "HIGH",
-    "cve": "CVE-2021-12345",
-    "description": "Remote code execution vulnerability"
-  }],
+  "vulnerabilities": [
+    {
+      "id": "VUL-001",
+      "package": "requests",
+      "version": "2.25.0",
+      "severity": "HIGH",
+      "cve": "CVE-2021-12345",
+      "description": "Remote code execution vulnerability"
+    }
+  ],
   "totalCount": 3
 }
 ```
@@ -272,12 +284,13 @@ Get security vulnerabilities in project dependencies.
 
 Get code quality metrics with optional filtering.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectKey` | string | Yes | The unique identifier for the DeepSource project |
-| `shortcodeIn` | string[] | No | Filter by metric codes (see below) |
+| Parameter     | Type     | Required | Description                                      |
+| ------------- | -------- | -------- | ------------------------------------------------ |
+| `projectKey`  | string   | Yes      | The unique identifier for the DeepSource project |
+| `shortcodeIn` | string[] | No       | Filter by metric codes (see below)               |
 
 **Available Metrics**:
+
 - `LCV` - Line Coverage
 - `BCV` - Branch Coverage
 - `DCV` - Documentation Coverage
@@ -290,36 +303,37 @@ Get code quality metrics with optional filtering.
 
 Update the threshold for a quality metric.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectKey` | string | Yes | The unique identifier for the DeepSource project |
-| `repositoryId` | string | Yes | The GraphQL repository ID |
-| `metricShortcode` | string | Yes | The metric shortcode (e.g., "LCV") |
-| `metricKey` | string | Yes | The language or context key |
-| `thresholdValue` | number\|null | No | New threshold value, or null to remove |
+| Parameter         | Type         | Required | Description                                      |
+| ----------------- | ------------ | -------- | ------------------------------------------------ |
+| `projectKey`      | string       | Yes      | The unique identifier for the DeepSource project |
+| `repositoryId`    | string       | Yes      | The GraphQL repository ID                        |
+| `metricShortcode` | string       | Yes      | The metric shortcode (e.g., "LCV")               |
+| `metricKey`       | string       | Yes      | The language or context key                      |
+| `thresholdValue`  | number\|null | No       | New threshold value, or null to remove           |
 
 ### 9. update_metric_setting
 
 Update metric reporting and enforcement settings.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectKey` | string | Yes | The unique identifier for the DeepSource project |
-| `repositoryId` | string | Yes | The GraphQL repository ID |
-| `metricShortcode` | string | Yes | The metric shortcode |
-| `isReported` | boolean | Yes | Whether to report this metric |
-| `isThresholdEnforced` | boolean | Yes | Whether to enforce thresholds |
+| Parameter             | Type    | Required | Description                                      |
+| --------------------- | ------- | -------- | ------------------------------------------------ |
+| `projectKey`          | string  | Yes      | The unique identifier for the DeepSource project |
+| `repositoryId`        | string  | Yes      | The GraphQL repository ID                        |
+| `metricShortcode`     | string  | Yes      | The metric shortcode                             |
+| `isReported`          | boolean | Yes      | Whether to report this metric                    |
+| `isThresholdEnforced` | boolean | Yes      | Whether to enforce thresholds                    |
 
 ### 10. compliance_report
 
 Get security compliance reports.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `projectKey` | string | Yes | The unique identifier for the DeepSource project |
-| `reportType` | string | Yes | Type of report (see below) |
+| Parameter    | Type   | Required | Description                                      |
+| ------------ | ------ | -------- | ------------------------------------------------ |
+| `projectKey` | string | Yes      | The unique identifier for the DeepSource project |
+| `reportType` | string | Yes      | Type of report (see below)                       |
 
 **Available Report Types**:
+
 - `OWASP_TOP_10` - Web application security vulnerabilities
 - `SANS_TOP_25` - Most dangerous software errors
 - `MISRA_C` - Guidelines for safety-critical C code
@@ -340,6 +354,7 @@ Track your project's quality metrics over time:
 ```
 
 This combines multiple tools to:
+
 1. Get recent runs for the main branch
 2. Retrieve coverage metrics for each run
 3. Display the trend
@@ -353,6 +368,7 @@ Implement quality gates for CI/CD:
 ```
 
 This will:
+
 1. Update the line coverage threshold to 80%
 2. Configure enforcement for the threshold
 3. Check current critical security issues
@@ -366,6 +382,7 @@ Comprehensive security analysis:
 ```
 
 This performs:
+
 1. Dependency vulnerability scan
 2. Code security issue analysis
 3. OWASP Top 10 compliance check
@@ -380,6 +397,7 @@ Get AI-powered code review insights:
 ```
 
 This will:
+
 1. Find the most recent run on the branch
 2. Filter for critical and high severity issues
 3. Group by file and issue type
@@ -394,6 +412,7 @@ Track team code quality metrics:
 ```
 
 This aggregates:
+
 1. Coverage metrics per project
 2. Issue counts by severity
 3. Trends over the last month
@@ -430,6 +449,7 @@ The DeepSource MCP Server uses modern TypeScript patterns for maintainability an
 ### Type Safety Features
 
 #### Branded Types
+
 ```typescript
 // Prevent mixing different ID types
 type ProjectKey = string & { readonly __brand: 'ProjectKey' };
@@ -437,6 +457,7 @@ type RunId = string & { readonly __brand: 'RunId' };
 ```
 
 #### Discriminated Unions
+
 ```typescript
 type RunState =
   | { status: 'PENDING'; queuePosition?: number }
@@ -448,9 +469,9 @@ type RunState =
 
 ### Prerequisites
 
-* Node.js 22 or higher
-* pnpm 10.7.0 or higher
-* Docker (optional, for container builds)
+- Node.js 22 or higher
+- pnpm 10.7.0 or higher
+- Docker (optional, for container builds)
 
 ### Setup
 
@@ -473,49 +494,57 @@ pnpm test
 
 **Note**: MCP servers communicate via stdio and cannot be run standalone. Use `pnpm run inspect` for interactive debugging.
 
-| Command | Description |
-|---------|-------------|
-| `pnpm install` | Install dependencies |
-| `pnpm run build` | Build TypeScript code |
-| `pnpm run watch` | Build in watch mode |
-| `pnpm run clean` | Remove build artifacts |
-| `pnpm run inspect` | Debug with MCP Inspector |
-| `pnpm test` | Run all tests |
-| `pnpm test:watch` | Run tests in watch mode |
-| `pnpm test:coverage` | Generate coverage report |
-| `pnpm run lint` | Check for linting issues |
-| `pnpm run lint:fix` | Fix linting issues |
-| `pnpm run format` | Check code formatting |
-| `pnpm run format:fix` | Fix code formatting |
+| Command                | Description              |
+| ---------------------- | ------------------------ |
+| `pnpm install`         | Install dependencies     |
+| `pnpm run build`       | Build TypeScript code    |
+| `pnpm run watch`       | Build in watch mode      |
+| `pnpm run clean`       | Remove build artifacts   |
+| `pnpm run inspect`     | Debug with MCP Inspector |
+| `pnpm test`            | Run all tests            |
+| `pnpm test:watch`      | Run tests in watch mode  |
+| `pnpm test:coverage`   | Generate coverage report |
+| `pnpm run lint`        | Check for linting issues |
+| `pnpm run lint:fix`    | Fix linting issues       |
+| `pnpm run format`      | Check code formatting    |
+| `pnpm run format:fix`  | Fix code formatting      |
 | `pnpm run check-types` | TypeScript type checking |
-| `pnpm run ci` | Run full CI pipeline |
+| `pnpm run ci`          | Run full CI pipeline     |
 
 ## Troubleshooting & FAQ
 
 ### Common Issues
 
 #### Authentication Error
+
 ```
 Error: Invalid API key or unauthorized access
 ```
+
 **Solution**: Verify your `DEEPSOURCE_API_KEY` is correct and has necessary permissions.
 
 #### No Projects Found
+
 ```
 Error: No projects found
 ```
+
 **Solution**: Ensure your API key has access to at least one project in DeepSource.
 
 #### Rate Limit Exceeded
+
 ```
 Error: API rate limit exceeded
 ```
+
 **Solution**: The server implements automatic retry. Wait a moment or reduce request frequency.
 
 #### Pagination Cursor Invalid
+
 ```
 Error: Invalid cursor for pagination
 ```
+
 **Solution**: Cursors expire. Start a new pagination sequence from the beginning.
 
 ### FAQ
@@ -554,6 +583,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 This project uses [Conventional Commits](https://www.conventionalcommits.org/) to ensure consistent commit messages. Commits are validated using commitlint.
 
 #### Format
+
 ```
 <type>[optional scope]: <description>
 
@@ -563,6 +593,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) t
 ```
 
 #### Types
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation only changes
@@ -576,6 +607,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) t
 - `revert`: Reverts a previous commit
 
 #### Examples
+
 ```bash
 # Feature
 git commit -m "feat: add support for filtering issues by severity"

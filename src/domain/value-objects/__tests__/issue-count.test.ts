@@ -2,7 +2,7 @@
  * @fileoverview Tests for IssueCount value object
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { IssueCount } from '../issue-count.js';
 
 describe('IssueCount', () => {

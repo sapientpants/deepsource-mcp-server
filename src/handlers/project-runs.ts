@@ -177,13 +177,20 @@ export const createProjectRunsHandler = createBaseHandlerFactory(
       hasAnalyzerFilter: Boolean(analyzerIn),
     });
 
-    const runs = await client.listRuns(projectKey, {
-      analyzerIn: analyzerIn as AnalyzerShortcode[],
-      first,
-      after,
-      last,
-      before,
-    });
+    const params: {
+      analyzerIn?: AnalyzerShortcode[];
+      first?: number;
+      after?: string;
+      last?: number;
+      before?: string;
+    } = {};
+    if (analyzerIn !== undefined) params.analyzerIn = analyzerIn as AnalyzerShortcode[];
+    if (first !== undefined) params.first = first;
+    if (after !== undefined) params.after = after;
+    if (last !== undefined) params.last = last;
+    if (before !== undefined) params.before = before;
+
+    const runs = await client.listRuns(projectKey, params);
 
     deps.logger.info('Successfully fetched project runs', {
       count: runs.items.length,
@@ -267,8 +274,13 @@ export async function handleDeepsourceProjectRuns(
 
   // If the domain handler returned an error response, throw an error for backward compatibility
   if (result.isError) {
-    const errorData = JSON.parse(result.content[0].text);
-    throw new Error(errorData.error);
+    const firstContent = result.content[0];
+    if (firstContent) {
+      const errorData = JSON.parse(firstContent.text);
+      throw new Error(errorData.error);
+    } else {
+      throw new Error('Unknown project runs error');
+    }
   }
 
   return result;

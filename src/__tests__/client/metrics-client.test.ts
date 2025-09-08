@@ -3,39 +3,32 @@
  * This file adds coverage for the previously untested metrics-client.ts
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MetricsClient } from '../../client/metrics-client.js';
+import { MetricShortcode, MetricKey } from '../../types/metrics.js';
 import type { MetricsClientTestable } from '../test-types.js';
 import { TestableMetricsClient } from '../utils/test-utils.js';
 
-// Mock the base client
-jest.mock('../../client/base-client.js', () => ({
-  BaseDeepSourceClient: jest.fn().mockImplementation(() => ({
-    findProjectByKey: jest.fn(),
-    executeGraphQL: jest.fn(),
-    logger: {
-      info: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-      warn: jest.fn(),
-    },
-  })),
-}));
-
 describe('MetricsClient', () => {
   let metricsClient: MetricsClient;
-  let mockExecuteGraphQL: jest.Mock;
-  let mockFindProjectByKey: jest.Mock;
+  let mockExecuteGraphQL: any;
+  let mockFindProjectByKey: any;
 
   beforeEach(() => {
     metricsClient = new MetricsClient('test-api-key');
     // Access the protected methods through the prototype
-    mockExecuteGraphQL = jest.fn();
-    mockFindProjectByKey = jest.fn();
+    mockExecuteGraphQL = vi.fn();
+    mockFindProjectByKey = vi.fn();
 
     // Replace the methods on the instance
-    (metricsClient as unknown as Record<string, unknown>).executeGraphQL = mockExecuteGraphQL;
-    (metricsClient as unknown as Record<string, unknown>).findProjectByKey = mockFindProjectByKey;
+    (metricsClient as unknown as Record<string, any>).executeGraphQL = mockExecuteGraphQL;
+    (metricsClient as unknown as Record<string, any>).findProjectByKey = mockFindProjectByKey;
+    (metricsClient as unknown as Record<string, any>).logger = {
+      info: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+      warn: vi.fn(),
+    };
   });
 
   describe('getQualityMetrics', () => {
@@ -53,7 +46,7 @@ describe('MetricsClient', () => {
           repository: {
             metrics: [
               {
-                shortcode: 'LCV',
+                shortcode: MetricShortcode.LCV,
                 name: 'Line Coverage',
                 description: 'Percentage of lines covered by tests',
                 direction: 'UPWARD',
@@ -62,7 +55,7 @@ describe('MetricsClient', () => {
                 isThresholdEnforced: true,
                 items: [
                   {
-                    key: 'AGGREGATE',
+                    key: MetricKey.AGGREGATE,
                     value: 85.5,
                     thresholdValue: 80.0,
                     thresholdStatus: 'PASS',
@@ -79,7 +72,7 @@ describe('MetricsClient', () => {
                 isThresholdEnforced: true,
                 items: [
                   {
-                    key: 'AGGREGATE',
+                    key: MetricKey.AGGREGATE,
                     value: 92.1,
                     thresholdValue: 85.0,
                     thresholdStatus: 'PASS',
@@ -91,8 +84,8 @@ describe('MetricsClient', () => {
         },
       };
 
-      mockFindProjectByKey.mockResolvedValue(mockProject);
-      mockExecuteGraphQL.mockResolvedValue(mockResponse);
+      (mockFindProjectByKey as any).mockResolvedValue(mockProject);
+      (mockExecuteGraphQL as any).mockResolvedValue(mockResponse);
 
       const result = await metricsClient.getQualityMetrics('test-project');
 
@@ -107,14 +100,14 @@ describe('MetricsClient', () => {
       );
 
       expect(result).toHaveLength(2);
-      expect(result[0].shortcode).toBe('LCV');
-      expect(result[0].items[0].latestValue).toBe(85.5);
-      expect(result[1].shortcode).toBe('BCV');
-      expect(result[1].items[0].latestValue).toBe(92.1);
+      expect(result[0]?.shortcode).toBe(MetricShortcode.LCV);
+      expect(result[0]?.items[0]?.latestValue).toBe(85.5);
+      expect(result[1]?.shortcode).toBe('BCV');
+      expect(result[1]?.items[0]?.latestValue).toBe(92.1);
     });
 
     it('should return empty array when project not found', async () => {
-      mockFindProjectByKey.mockResolvedValue(null);
+      (mockFindProjectByKey as any).mockResolvedValue(null);
 
       const result = await metricsClient.getQualityMetrics('nonexistent-project');
 
@@ -131,7 +124,7 @@ describe('MetricsClient', () => {
       };
 
       mockFindProjectByKey.mockResolvedValue(mockProject);
-      mockExecuteGraphQL.mockRejectedValue(new Error('GraphQL error'));
+      (mockExecuteGraphQL as any).mockRejectedValue(new Error('GraphQL error'));
 
       await expect(metricsClient.getQualityMetrics('test-project')).rejects.toThrow(
         'GraphQL error'
@@ -151,8 +144,8 @@ describe('MetricsClient', () => {
         data: null,
       };
 
-      mockFindProjectByKey.mockResolvedValue(mockProject);
-      mockExecuteGraphQL.mockResolvedValue(mockResponse);
+      (mockFindProjectByKey as any).mockResolvedValue(mockProject);
+      (mockExecuteGraphQL as any).mockResolvedValue(mockResponse);
 
       await expect(metricsClient.getQualityMetrics('test-project')).rejects.toThrow(
         'No data received from GraphQL API'
@@ -173,7 +166,7 @@ describe('MetricsClient', () => {
           repository: {
             metrics: [
               {
-                shortcode: 'LCV',
+                shortcode: MetricShortcode.LCV,
                 name: 'Line Coverage',
                 description: 'Percentage of lines covered by tests',
                 direction: 'UPWARD',
@@ -182,7 +175,7 @@ describe('MetricsClient', () => {
                 isThresholdEnforced: true,
                 items: [
                   {
-                    key: 'AGGREGATE',
+                    key: MetricKey.AGGREGATE,
                     value: 85.5,
                     thresholdValue: 80.0,
                     thresholdStatus: 'PASS',
@@ -194,22 +187,22 @@ describe('MetricsClient', () => {
         },
       };
 
-      mockFindProjectByKey.mockResolvedValue(mockProject);
-      mockExecuteGraphQL.mockResolvedValue(mockResponse);
+      (mockFindProjectByKey as any).mockResolvedValue(mockProject);
+      (mockExecuteGraphQL as any).mockResolvedValue(mockResponse);
 
       const result = await metricsClient.getQualityMetrics('test-project', {
-        shortcodeIn: ['LCV'],
+        shortcodeIn: [MetricShortcode.LCV],
       });
 
       expect(mockExecuteGraphQL).toHaveBeenCalledWith(
         expect.stringContaining('query getQualityMetrics'),
         expect.objectContaining({
-          shortcodeIn: ['LCV'],
+          shortcodeIn: [MetricShortcode.LCV],
         })
       );
 
       expect(result).toHaveLength(1);
-      expect(result[0].shortcode).toBe('LCV');
+      expect(result[0]?.shortcode).toBe(MetricShortcode.LCV);
     });
   });
 
@@ -223,12 +216,12 @@ describe('MetricsClient', () => {
         },
       };
 
-      mockExecuteGraphQL.mockResolvedValue(mockResponse);
+      (mockExecuteGraphQL as any).mockResolvedValue(mockResponse);
 
       const result = await metricsClient.setMetricThreshold({
         repositoryId: 'repo-123',
-        metricShortcode: 'LCV',
-        metricKey: 'AGGREGATE',
+        metricShortcode: MetricShortcode.LCV,
+        metricKey: MetricKey.AGGREGATE,
         thresholdValue: 80.0,
       });
 
@@ -236,8 +229,8 @@ describe('MetricsClient', () => {
         expect.stringContaining('mutation updateMetricThreshold'),
         expect.objectContaining({
           repositoryId: 'repo-123',
-          metricShortcode: 'LCV',
-          metricKey: 'AGGREGATE',
+          metricShortcode: MetricShortcode.LCV,
+          metricKey: MetricKey.AGGREGATE,
           thresholdValue: 80.0,
         })
       );
@@ -246,13 +239,13 @@ describe('MetricsClient', () => {
     });
 
     it('should handle threshold update errors', async () => {
-      mockExecuteGraphQL.mockRejectedValue(new Error('Update failed'));
+      (mockExecuteGraphQL as any).mockRejectedValue(new Error('Update failed'));
 
       await expect(
         metricsClient.setMetricThreshold({
           repositoryId: 'repo-123',
-          metricShortcode: 'LCV',
-          metricKey: 'AGGREGATE',
+          metricShortcode: MetricShortcode.LCV,
+          metricKey: MetricKey.AGGREGATE,
           thresholdValue: 80.0,
         })
       ).rejects.toThrow('Update failed');
@@ -263,13 +256,13 @@ describe('MetricsClient', () => {
         data: null,
       };
 
-      mockExecuteGraphQL.mockResolvedValue(mockResponse);
+      (mockExecuteGraphQL as any).mockResolvedValue(mockResponse);
 
       await expect(
         metricsClient.setMetricThreshold({
           repositoryId: 'repo-123',
-          metricShortcode: 'LCV',
-          metricKey: 'AGGREGATE',
+          metricShortcode: MetricShortcode.LCV,
+          metricKey: MetricKey.AGGREGATE,
           thresholdValue: 80.0,
         })
       ).rejects.toThrow('No data received from GraphQL API');
@@ -286,11 +279,11 @@ describe('MetricsClient', () => {
         },
       };
 
-      mockExecuteGraphQL.mockResolvedValue(mockResponse);
+      (mockExecuteGraphQL as any).mockResolvedValue(mockResponse);
 
       const result = await metricsClient.updateMetricSetting({
         repositoryId: 'repo-123',
-        metricShortcode: 'LCV',
+        metricShortcode: MetricShortcode.LCV,
         isReported: true,
         isThresholdEnforced: false,
       });
@@ -299,7 +292,7 @@ describe('MetricsClient', () => {
         expect.stringContaining('mutation updateMetricSetting'),
         expect.objectContaining({
           repositoryId: 'repo-123',
-          metricShortcode: 'LCV',
+          metricShortcode: MetricShortcode.LCV,
           isReported: true,
           isThresholdEnforced: false,
         })
@@ -309,12 +302,12 @@ describe('MetricsClient', () => {
     });
 
     it('should handle setting update errors', async () => {
-      mockExecuteGraphQL.mockRejectedValue(new Error('Setting update failed'));
+      (mockExecuteGraphQL as any).mockRejectedValue(new Error('Setting update failed'));
 
       await expect(
         metricsClient.updateMetricSetting({
           repositoryId: 'repo-123',
-          metricShortcode: 'LCV',
+          metricShortcode: MetricShortcode.LCV,
           isReported: true,
           isThresholdEnforced: false,
         })
@@ -326,12 +319,12 @@ describe('MetricsClient', () => {
         data: null,
       };
 
-      mockExecuteGraphQL.mockResolvedValue(mockResponse);
+      (mockExecuteGraphQL as any).mockResolvedValue(mockResponse);
 
       await expect(
         metricsClient.updateMetricSetting({
           repositoryId: 'repo-123',
-          metricShortcode: 'LCV',
+          metricShortcode: MetricShortcode.LCV,
           isReported: true,
           isThresholdEnforced: false,
         })
@@ -381,7 +374,7 @@ describe('MetricsClient', () => {
         repository: {
           metrics: [
             {
-              shortcode: 'LCV',
+              shortcode: MetricShortcode.LCV,
               name: 'Line Coverage',
               description: 'Percentage of lines covered by tests',
               direction: 'UPWARD',
@@ -390,7 +383,7 @@ describe('MetricsClient', () => {
               isThresholdEnforced: true,
               items: [
                 {
-                  key: 'AGGREGATE',
+                  key: MetricKey.AGGREGATE,
                   value: 85.5,
                   thresholdValue: 80.0,
                   thresholdStatus: 'PASS',
@@ -401,12 +394,10 @@ describe('MetricsClient', () => {
         },
       };
 
-      const metrics = (
-        metricsClient as unknown as MetricsClientTestable
-      ).extractMetricsFromResponse(mockResponseData);
+      const metrics = (metricsClient as any).extractMetricsFromResponse(mockResponseData) as any[];
 
       expect(metrics).toHaveLength(1);
-      expect(metrics[0].shortcode).toBe('LCV');
+      expect(metrics[0].shortcode).toBe(MetricShortcode.LCV);
       expect(metrics[0].name).toBe('Line Coverage');
       expect(metrics[0].items[0].latestValue).toBe(85.5);
       expect(metrics[0].items[0].threshold).toBe(80.0);
@@ -417,9 +408,7 @@ describe('MetricsClient', () => {
         repository: {},
       };
 
-      const metrics = (
-        metricsClient as unknown as MetricsClientTestable
-      ).extractMetricsFromResponse(mockResponseData);
+      const metrics = (metricsClient as any).extractMetricsFromResponse(mockResponseData) as any[];
 
       expect(metrics).toHaveLength(0);
     });
@@ -427,9 +416,7 @@ describe('MetricsClient', () => {
     it('should handle missing repository in response', () => {
       const mockResponseData = {};
 
-      const metrics = (
-        metricsClient as unknown as MetricsClientTestable
-      ).extractMetricsFromResponse(mockResponseData);
+      const metrics = (metricsClient as any).extractMetricsFromResponse(mockResponseData) as any[];
 
       expect(metrics).toHaveLength(0);
     });
