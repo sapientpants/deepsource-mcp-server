@@ -18,9 +18,10 @@ const { appendFileSync, existsSync } = await import('fs');
 const loggerModule = await import('../utils/logger.js');
 const { Logger, createLogger, defaultLogger } = loggerModule;
 
-// Type the mocks
-const mockAppendFileSync = appendFileSync as any;
-const mockExistsSync = existsSync as any;
+// Type the mocks with proper types
+import { MockedFunction } from 'vitest';
+const mockAppendFileSync = appendFileSync as MockedFunction<typeof appendFileSync>;
+const mockExistsSync = existsSync as MockedFunction<typeof existsSync>;
 
 describe('Logger', () => {
   // Environment backup
@@ -68,7 +69,7 @@ describe('Logger', () => {
       logger.debug('Test debug message');
 
       expect(mockAppendFileSync).toHaveBeenCalled();
-      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      const logMessage = mockAppendFileSync.mock.calls[0]?.[1] as string;
       expect(logMessage).toContain('DEBUG');
       expect(logMessage).toContain('[TestContext]');
       expect(logMessage).toContain('Test debug message');
@@ -81,7 +82,7 @@ describe('Logger', () => {
       logger.debug('Test debug message', testData);
 
       expect(mockAppendFileSync).toHaveBeenCalled();
-      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      const logMessage = mockAppendFileSync.mock.calls[0]?.[1] as string;
       expect(logMessage).toContain(JSON.stringify(testData, null, 2));
     });
 
@@ -91,7 +92,7 @@ describe('Logger', () => {
       logger.debug('Test debug message');
 
       expect(mockAppendFileSync).toHaveBeenCalled();
-      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      const logMessage = mockAppendFileSync.mock.calls[0]?.[1] as string;
       expect(logMessage).not.toContain('undefined');
     });
 
@@ -113,7 +114,7 @@ describe('Logger', () => {
       logger.info('Test info message');
 
       expect(mockAppendFileSync).toHaveBeenCalled();
-      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      const logMessage = mockAppendFileSync.mock.calls[0]?.[1] as string;
       expect(logMessage).toContain('INFO');
       expect(logMessage).toContain('[TestContext]');
       expect(logMessage).toContain('Test info message');
@@ -145,7 +146,7 @@ describe('Logger', () => {
       logger.info('Test info message', testData);
 
       expect(mockAppendFileSync).toHaveBeenCalled();
-      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      const logMessage = mockAppendFileSync.mock.calls[0]?.[1] as string;
       expect(logMessage).toContain(JSON.stringify(testData, null, 2));
     });
   });
@@ -158,7 +159,7 @@ describe('Logger', () => {
       logger.warn('Test warn message');
 
       expect(mockAppendFileSync).toHaveBeenCalled();
-      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      const logMessage = mockAppendFileSync.mock.calls[0]?.[1] as string;
       expect(logMessage).toContain('WARN');
       expect(logMessage).toContain('[TestContext]');
       expect(logMessage).toContain('Test warn message');
@@ -181,7 +182,7 @@ describe('Logger', () => {
       logger.warn('Test warn message', testData);
 
       expect(mockAppendFileSync).toHaveBeenCalled();
-      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      const logMessage = mockAppendFileSync.mock.calls[0]?.[1] as string;
       expect(logMessage).toContain(JSON.stringify(testData, null, 2));
     });
   });
@@ -194,7 +195,7 @@ describe('Logger', () => {
       logger.error('Test error message');
 
       expect(mockAppendFileSync).toHaveBeenCalled();
-      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      const logMessage = mockAppendFileSync.mock.calls[0]?.[1] as string;
       expect(logMessage).toContain('ERROR');
       expect(logMessage).toContain('[TestContext]');
       expect(logMessage).toContain('Test error message');
@@ -208,7 +209,7 @@ describe('Logger', () => {
       logger.error('Error occurred', testError);
 
       expect(mockAppendFileSync).toHaveBeenCalled();
-      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      const logMessage = mockAppendFileSync.mock.calls[0]?.[1] as string;
       expect(logMessage).toContain('Error: Test error');
     });
 
@@ -220,7 +221,7 @@ describe('Logger', () => {
       logger.error('Error with data', testData);
 
       expect(mockAppendFileSync).toHaveBeenCalled();
-      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      const logMessage = mockAppendFileSync.mock.calls[0]?.[1] as string;
       expect(logMessage).toContain(JSON.stringify(testData, null, 2));
     });
 
@@ -231,7 +232,7 @@ describe('Logger', () => {
       logger.error('Test error message');
 
       expect(mockAppendFileSync).toHaveBeenCalled();
-      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      const logMessage = mockAppendFileSync.mock.calls[0]?.[1] as string;
       expect(logMessage).not.toContain('undefined');
     });
   });
@@ -243,7 +244,7 @@ describe('Logger', () => {
       defaultLogger.debug('Test message');
 
       expect(mockAppendFileSync).toHaveBeenCalled();
-      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      const logMessage = mockAppendFileSync.mock.calls[0]?.[1] as string;
       expect(logMessage).toContain('[DeepSourceMCP]');
     });
 
@@ -254,7 +255,7 @@ describe('Logger', () => {
       customLogger.debug('Test message');
 
       expect(mockAppendFileSync).toHaveBeenCalled();
-      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      const logMessage = mockAppendFileSync.mock.calls[0]?.[1] as string;
       expect(logMessage).toContain('[CustomContext]');
     });
   });
@@ -273,7 +274,7 @@ describe('Logger', () => {
 
       // Should write to the log file
       expect(mockAppendFileSync).toHaveBeenCalledWith('/tmp/test.log', expect.any(String));
-      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      const logMessage = mockAppendFileSync.mock.calls[0]?.[1] as string;
       expect(logMessage).toContain('DEBUG');
       expect(logMessage).toContain('Test message');
     });
@@ -383,7 +384,7 @@ describe('Logger', () => {
       logger.error('Error with circular ref', circular);
 
       expect(mockAppendFileSync).toHaveBeenCalled();
-      const logMessage = mockAppendFileSync.mock.calls[0][1] as string;
+      const logMessage = mockAppendFileSync.mock.calls[0]?.[1] as string;
       expect(logMessage).toContain('[object Object]'); // This is what String() would produce
 
       // Restore JSON.stringify

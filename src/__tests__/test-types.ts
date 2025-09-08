@@ -12,6 +12,10 @@ import { SecurityClient } from '../client/security-client.js';
 import { MetricsClient } from '../client/metrics-client.js';
 import { IssuesClient } from '../client/issues-client.js';
 import { RunsClient } from '../client/runs-client.js';
+import { Logger } from '../utils/logging/logger.js';
+import { ProjectKey } from '../types/branded.js';
+import { PaginatedResponse, PaginationParams } from '../models/pagination.js';
+import { Project } from '../types/graphql-responses.js';
 
 /**
  * Type for accessing private methods of SecurityClient in tests
@@ -80,15 +84,17 @@ export interface RunsClientTestable {
  * Type for test mock with common DeepSource client methods
  */
 export interface MockDeepSourceClient {
-  findProjectByKey: jest.MockedFunction<any>;
-  executeGraphQL: jest.MockedFunction<any>;
-  createEmptyPaginatedResponse: jest.MockedFunction<any>;
-  normalizePaginationParams: jest.MockedFunction<any>;
+  findProjectByKey: jest.MockedFunction<(projectKey: ProjectKey) => Promise<Project | null>>;
+  executeGraphQL: jest.MockedFunction<
+    (query: string, variables?: Record<string, unknown>) => Promise<unknown>
+  >;
+  createEmptyPaginatedResponse: jest.MockedFunction<() => PaginatedResponse<unknown>>;
+  normalizePaginationParams: jest.MockedFunction<(params: unknown) => PaginationParams>;
   logger: {
-    info: jest.MockedFunction<any>;
-    error: jest.MockedFunction<any>;
-    debug: jest.MockedFunction<any>;
-    warn: jest.MockedFunction<any>;
+    info: jest.MockedFunction<(message: string, data?: unknown) => void>;
+    error: jest.MockedFunction<(message: string, error?: unknown) => void>;
+    debug: jest.MockedFunction<(message: string, data?: unknown) => void>;
+    warn: jest.MockedFunction<(message: string, data?: unknown) => void>;
   };
 }
 

@@ -215,9 +215,15 @@ export class ToolRegistry {
                   hasData: parsedData !== null && parsedData !== undefined,
                 });
 
+                // Wrap arrays in an object for MCP SDK compatibility
+                // Use tool-specific field names for arrays
+                const structuredData = Array.isArray(parsedData)
+                  ? { [tool.name]: parsedData }
+                  : parsedData;
+
                 const finalResponse = {
                   content: result.content,
-                  structuredContent: parsedData as Record<string, unknown>,
+                  structuredContent: structuredData as Record<string, unknown>,
                   isError: false,
                 } as McpResponse;
 
@@ -238,6 +244,10 @@ export class ToolRegistry {
             }
 
             // For non-ApiResponse results, wrap them
+            // Wrap arrays in an object for MCP SDK compatibility
+            // Use tool-specific field names for arrays
+            const structuredResult = Array.isArray(result) ? { [tool.name]: result } : result;
+
             const wrappedResponse = {
               content: [
                 {
@@ -245,7 +255,7 @@ export class ToolRegistry {
                   text: JSON.stringify(result, null, 2),
                 },
               ],
-              structuredContent: result as Record<string, unknown>,
+              structuredContent: structuredResult as Record<string, unknown>,
               isError: false,
             } as McpResponse;
 

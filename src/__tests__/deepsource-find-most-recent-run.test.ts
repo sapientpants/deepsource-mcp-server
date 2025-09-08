@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 
-import { vi, beforeEach, describe, expect, it } from 'vitest';
+import { vi, beforeEach, describe, expect, it, MockedFunction } from 'vitest';
 
 // Mock the logger module
 vi.mock('../utils/logger.js', () => ({
@@ -35,7 +35,17 @@ vi.mock('axios', () => ({
 
 // Import axios to get the mocked version
 const axios = await import('axios');
-const mockAxios = axios.default as any;
+interface MockAxios {
+  create: MockedFunction<() => MockAxiosInstance>;
+}
+interface MockAxiosInstance {
+  interceptors: {
+    request: { use: MockedFunction<unknown> };
+    response: { use: MockedFunction<unknown> };
+  };
+  post: MockedFunction<(url: string, data?: unknown, config?: unknown) => Promise<unknown>>;
+}
+const mockAxios = axios.default as MockAxios;
 
 // Import DeepSourceClient after mocking
 const { DeepSourceClient } = await import('../deepsource.js');
@@ -62,7 +72,7 @@ describe('DeepSourceClient - findMostRecentRun', () => {
       post: vi.fn(),
     };
 
-    (mockAxios.create as any).mockReturnValue(mockAxiosInstance);
+    mockAxios.create.mockReturnValue(mockAxiosInstance);
 
     // Create client instance
     client = new DeepSourceClient({ apiKey: 'test-key' });
@@ -176,7 +186,7 @@ describe('DeepSourceClient - findMostRecentRun', () => {
       };
 
       // Mock the response
-      (mockAxiosInstance.post as any).mockResolvedValueOnce(mockResponse);
+      mockAxiosInstance.post.mockResolvedValueOnce(mockResponse);
 
       // Execute the private method using type assertion
       const findMostRecentRun = (
@@ -276,7 +286,7 @@ describe('DeepSourceClient - findMostRecentRun', () => {
       };
 
       // Mock the responses in order
-      (mockAxiosInstance.post as any)
+      mockAxiosInstance.post
         .mockResolvedValueOnce(firstPageResponse)
         .mockResolvedValueOnce(secondPageResponse);
 
@@ -313,7 +323,7 @@ describe('DeepSourceClient - findMostRecentRun', () => {
       };
 
       // Mock the response
-      (mockAxiosInstance.post as any).mockResolvedValueOnce(mockResponse);
+      mockAxiosInstance.post.mockResolvedValueOnce(mockResponse);
 
       // Execute and expect error
       const findMostRecentRun = (
@@ -392,7 +402,7 @@ describe('DeepSourceClient - findMostRecentRun', () => {
       };
 
       // Mock the response
-      (mockAxiosInstance.post as any).mockResolvedValueOnce(mockResponse);
+      mockAxiosInstance.post.mockResolvedValueOnce(mockResponse);
 
       // Execute
       const findMostRecentRun = (

@@ -110,8 +110,14 @@ export function createRunHandlerWithRepo(deps: RunHandlerDeps) {
             occurrencesIntroduced: domainRun.summary.totalIntroduced.count,
             occurrencesResolved: domainRun.summary.totalResolved.count,
             occurrencesSuppressed: domainRun.summary.totalSuppressed.count,
-            occurrenceDistributionByAnalyzer: domainRun.summary.byAnalyzer,
-            occurrenceDistributionByCategory: domainRun.summary.byCategory,
+            occurrenceDistributionByAnalyzer: domainRun.summary.byAnalyzer.map((dist) => ({
+              analyzerShortcode: dist.analyzerShortcode,
+              introduced: dist.introduced.count,
+            })),
+            occurrenceDistributionByCategory: domainRun.summary.byCategory.map((dist) => ({
+              category: dist.category,
+              introduced: dist.introduced.count,
+            })),
           },
           repository: {
             name: 'Repository', // Domain aggregate doesn't store repository name directly

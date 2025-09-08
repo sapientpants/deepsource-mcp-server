@@ -2,7 +2,7 @@
  * @fileoverview Tests for handler factory functions
  */
 
-import { vi } from 'vitest';
+import { vi, MockedFunction } from 'vitest';
 import {
   createBaseHandlerFactory,
   createDefaultHandlerDeps,
@@ -41,8 +41,8 @@ describe('handler.factory', () => {
   describe('createBaseHandlerFactory', () => {
     let mockDeps: BaseHandlerDeps;
     let mockLogger: {
-      info: any;
-      error: any;
+      info: MockedFunction<(message: string, data?: unknown) => void>;
+      error: MockedFunction<(message: string, error?: unknown) => void>;
     };
 
     beforeEach(() => {

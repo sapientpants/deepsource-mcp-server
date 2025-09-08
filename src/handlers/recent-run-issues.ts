@@ -112,8 +112,14 @@ export function createRecentRunIssuesHandlerWithRepo(deps: RecentRunIssuesHandle
             occurrencesIntroduced: recentRun.summary.totalIntroduced.count,
             occurrencesResolved: recentRun.summary.totalResolved.count,
             occurrencesSuppressed: recentRun.summary.totalSuppressed.count,
-            occurrenceDistributionByAnalyzer: recentRun.summary.byAnalyzer,
-            occurrenceDistributionByCategory: recentRun.summary.byCategory,
+            occurrenceDistributionByAnalyzer: recentRun.summary.byAnalyzer.map((dist) => ({
+              analyzerShortcode: dist.analyzerShortcode,
+              introduced: dist.introduced.count,
+            })),
+            occurrenceDistributionByCategory: recentRun.summary.byCategory.map((dist) => ({
+              category: dist.category,
+              introduced: dist.introduced.count,
+            })),
           },
           repository: {
             name: 'Repository', // Domain aggregate doesn't store repository name directly

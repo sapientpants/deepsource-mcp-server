@@ -289,7 +289,7 @@ describe('QualityMetricsRepository', () => {
       // Mock some metrics as not reported
       mockClient.getQualityMetrics.mockResolvedValue([
         mockApiMetrics[0], // Reported
-        { ...mockApiMetrics[1]!, isReported: false }, // Not reported
+        { ...mockApiMetrics[1], isReported: false }, // Not reported
       ]);
 
       const reportedMetrics = await repository.findReportedMetrics(asProjectKey('test-project'));
@@ -427,7 +427,9 @@ describe('QualityMetricsRepository', () => {
       await repository.findByProject(projectKey);
 
       // Update mock data
-      mockApiMetrics[0]!.items![0]!.latestValue = 90;
+      if (mockApiMetrics[0]?.items?.[0]) {
+        mockApiMetrics[0].items[0].latestValue = 90;
+      }
 
       // Second call should get fresh data
       const metrics = await repository.findByProject(projectKey);

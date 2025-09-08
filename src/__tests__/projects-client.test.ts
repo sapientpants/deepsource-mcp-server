@@ -2,10 +2,15 @@
  * @vitest-environment node
  */
 
-import { vi } from 'vitest';
+import { vi, MockedFunction } from 'vitest';
 import { ProjectsClient } from '../client/projects-client.js';
 import { asProjectKey } from '../types/branded.js';
 import { ViewerProjectsResponse } from '../types/graphql-responses.js';
+
+// Type for accessing protected methods in tests
+interface TestableProjectsClient extends ProjectsClient {
+  executeGraphQL: (query: string, variables?: Record<string, unknown>) => Promise<unknown>;
+}
 
 describe('ProjectsClient', () => {
   const API_KEY = 'test-api-key';
@@ -77,7 +82,7 @@ describe('ProjectsClient', () => {
 
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      vi.spyOn(client as any, 'executeGraphQL').mockResolvedValue(mockResponse);
+      vi.spyOn(client as TestableProjectsClient, 'executeGraphQL').mockResolvedValue(mockResponse);
 
       const projects = await client.listProjects();
 
@@ -143,7 +148,7 @@ describe('ProjectsClient', () => {
 
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      vi.spyOn(client as any, 'executeGraphQL').mockResolvedValue(mockResponse);
+      vi.spyOn(client as TestableProjectsClient, 'executeGraphQL').mockResolvedValue(mockResponse);
 
       const projects = await client.listProjects();
 
@@ -187,7 +192,7 @@ describe('ProjectsClient', () => {
 
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      vi.spyOn(client as any, 'executeGraphQL').mockResolvedValue(mockResponse);
+      vi.spyOn(client as TestableProjectsClient, 'executeGraphQL').mockResolvedValue(mockResponse);
 
       const projects = await client.listProjects();
 
@@ -202,7 +207,9 @@ describe('ProjectsClient', () => {
     it('should handle NoneType errors by returning an empty array', async () => {
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      vi.spyOn(client as any, 'executeGraphQL').mockRejectedValue(new Error('NoneType'));
+      vi.spyOn(client as TestableProjectsClient, 'executeGraphQL').mockRejectedValue(
+        new Error('NoneType')
+      );
 
       const projects = await client.listProjects();
 
@@ -212,7 +219,9 @@ describe('ProjectsClient', () => {
     it('should handle error responses', async () => {
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      vi.spyOn(client as any, 'executeGraphQL').mockRejectedValue(new Error('Server error'));
+      vi.spyOn(client as TestableProjectsClient, 'executeGraphQL').mockRejectedValue(
+        new Error('Server error')
+      );
 
       await expect(client.listProjects()).rejects.toThrow();
     });
@@ -220,7 +229,7 @@ describe('ProjectsClient', () => {
     it('should handle GraphQL errors by returning empty array', async () => {
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      vi.spyOn(client as any, 'executeGraphQL').mockRejectedValue(
+      vi.spyOn(client as TestableProjectsClient, 'executeGraphQL').mockRejectedValue(
         new Error('GraphQL Errors: Something went wrong')
       );
 
@@ -236,7 +245,7 @@ describe('ProjectsClient', () => {
       };
 
       // Use TypeScript type assertion to access protected method
-      (client as unknown as { executeGraphQL: any }).executeGraphQL = vi
+      (client as TestableProjectsClient).executeGraphQL = vi
         .fn()
         .mockRejectedValue(errorWithResponse);
 
@@ -287,7 +296,7 @@ describe('ProjectsClient', () => {
 
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      vi.spyOn(client as any, 'executeGraphQL').mockResolvedValue(mockResponse);
+      vi.spyOn(client as TestableProjectsClient, 'executeGraphQL').mockResolvedValue(mockResponse);
 
       const projects = await client.listProjects();
 

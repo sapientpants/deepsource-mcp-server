@@ -2,7 +2,7 @@
  * @fileoverview Tests for the ToolRegistry class
  */
 
-import { vi } from 'vitest';
+import { vi, MockedFunction } from 'vitest';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { ToolRegistry, ToolDefinition } from '../../server/tool-registry.js';
@@ -50,7 +50,9 @@ vi.mock('../../utils/error-handling/mcp-error-formatter.js', () => ({
 }));
 
 describe('ToolRegistry', () => {
-  let mockServer: any;
+  let mockServer: {
+    registerTool: MockedFunction<(tool: unknown) => void>;
+  };
   let registry: ToolRegistry;
   let mockDeps: BaseHandlerDeps;
 
@@ -60,7 +62,7 @@ describe('ToolRegistry', () => {
     // Create mock server
     mockServer = {
       registerTool: vi.fn(),
-    } as unknown as any;
+    };
 
     // Create mock dependencies without calling createDefaultHandlerDeps
     mockDeps = {

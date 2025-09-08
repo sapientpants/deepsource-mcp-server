@@ -413,7 +413,9 @@ describe('MCPErrorFormatter', () => {
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
 
-      const responseData = JSON.parse(response.content[0]!.text);
+      const textContent = response.content[0]?.text;
+      expect(textContent).toBeDefined();
+      const responseData = JSON.parse(textContent!);
       expect(responseData).toMatchObject({
         error: 'Validation failed: Invalid email format',
         code: MCPErrorCode.VALIDATION_ERROR,
@@ -429,7 +431,9 @@ describe('MCPErrorFormatter', () => {
       const response = MCPErrorFormatter.createErrorResponse(error, 'data-fetch');
 
       expect(response.isError).toBe(true);
-      const responseData = JSON.parse(response.content[0]!.text);
+      const textContent = response.content[0]?.text;
+      expect(textContent).toBeDefined();
+      const responseData = JSON.parse(textContent!);
       expect(responseData.error).toBe('An error occurred while processing your request');
       expect(responseData.code).toBe(MCPErrorCode.INTERNAL_ERROR);
     });
@@ -438,7 +442,9 @@ describe('MCPErrorFormatter', () => {
       const response = MCPErrorFormatter.createErrorResponse('Something went wrong');
 
       expect(response.isError).toBe(true);
-      const responseData = JSON.parse(response.content[0]!.text);
+      const textContent = response.content[0]?.text;
+      expect(textContent).toBeDefined();
+      const responseData = JSON.parse(textContent!);
       expect(responseData.error).toBe('An error occurred while processing your request');
     });
 
@@ -446,7 +452,9 @@ describe('MCPErrorFormatter', () => {
       const error = MCPErrorFactory.resourceNotFound('project-123');
       const response = MCPErrorFormatter.createErrorResponse(error);
 
-      const responseData = JSON.parse(response.content[0]!.text);
+      const textContent = response.content[0]?.text;
+      expect(textContent).toBeDefined();
+      const responseData = JSON.parse(textContent!);
       expect(responseData.error).toBe('Resource not found: project-123');
     });
   });
@@ -460,7 +468,9 @@ describe('MCPErrorFormatter', () => {
       );
 
       expect(response.isError).toBe(true);
-      const responseData = JSON.parse(response.content[0]!.text);
+      const textContent = response.content[0]?.text;
+      expect(textContent).toBeDefined();
+      const responseData = JSON.parse(textContent!);
       expect(responseData.error).toBe('Validation failed: must be a valid email');
       expect(responseData.code).toBe('VALIDATION_ERROR');
       expect(responseData.category).toBe('VALIDATION_ERROR');
@@ -474,14 +484,18 @@ describe('MCPErrorFormatter', () => {
     it('should create validation error response with only field', () => {
       const response = MCPErrorFormatter.createValidationErrorResponse('is required', 'name');
 
-      const responseData = JSON.parse(response.content[0]!.text);
+      const textContent = response.content[0]?.text;
+      expect(textContent).toBeDefined();
+      const responseData = JSON.parse(textContent!);
       expect(responseData.details).toEqual({ field: 'name' });
     });
 
     it('should create validation error response with only message', () => {
       const response = MCPErrorFormatter.createValidationErrorResponse('invalid format');
 
-      const responseData = JSON.parse(response.content[0]!.text);
+      const textContent = response.content[0]?.text;
+      expect(textContent).toBeDefined();
+      const responseData = JSON.parse(textContent!);
       expect(responseData.error).toBe('Validation failed: invalid format');
       expect(responseData.details).toBeUndefined();
     });
@@ -493,7 +507,9 @@ describe('MCPErrorFormatter', () => {
         undefined
       );
 
-      const responseData = JSON.parse(response.content[0]!.text);
+      const textContent = response.content[0]?.text;
+      expect(textContent).toBeDefined();
+      const responseData = JSON.parse(textContent!);
       expect(responseData.details).toEqual({
         field: 'field',
         value: undefined,
@@ -506,7 +522,9 @@ describe('MCPErrorFormatter', () => {
       const response = MCPErrorFormatter.createNotFoundResponse('project', 'proj-123');
 
       expect(response.isError).toBe(true);
-      const responseData = JSON.parse(response.content[0]!.text);
+      const textContent = response.content[0]?.text;
+      expect(textContent).toBeDefined();
+      const responseData = JSON.parse(textContent!);
       expect(responseData.error).toBe('Resource not found: project');
       expect(responseData.code).toBe('RESOURCE_NOT_FOUND');
       expect(responseData.category).toBe('RESOURCE_ERROR');
@@ -520,7 +538,9 @@ describe('MCPErrorFormatter', () => {
     it('should create not found error response without identifier', () => {
       const response = MCPErrorFormatter.createNotFoundResponse('user');
 
-      const responseData = JSON.parse(response.content[0]!.text);
+      const textContent = response.content[0]?.text;
+      expect(textContent).toBeDefined();
+      const responseData = JSON.parse(textContent!);
       expect(responseData.error).toBe('Resource not found: user');
       expect(responseData.details).toEqual({ resource: 'user' });
     });
@@ -566,7 +586,9 @@ describe('withMCPErrorHandling', () => {
       isError: true,
     });
 
-    const responseText = (result as { content: Array<{ text: string }> }).content[0]?.text!;
+    const responseContent = (result as { content: Array<{ text: string }> }).content[0];
+    expect(responseContent?.text).toBeDefined();
+    const responseText = responseContent!.text;
     const responseData = JSON.parse(responseText);
     expect(responseData.error).toBe('Validation failed: Invalid input');
     expect(responseData.code).toBe(MCPErrorCode.VALIDATION_ERROR);

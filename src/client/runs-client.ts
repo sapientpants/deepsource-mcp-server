@@ -212,7 +212,8 @@ export class RunsClient extends BaseDeepSourceClient {
    */
   async getRecentRunIssues(
     projectKey: string,
-    branchName: BranchName
+    branchName: BranchName,
+    paginationParams?: { first?: number; after?: string; last?: number; before?: string }
   ): Promise<RecentRunIssuesResponse> {
     try {
       this.logger.info('Fetching recent run issues', { projectKey, branchName });
@@ -229,13 +230,35 @@ export class RunsClient extends BaseDeepSourceClient {
         };
       }
 
-      // For now, return empty issues - would need to implement run-specific issue fetching
-      // This would require additional GraphQL queries to get checks and occurrences for the specific run
+      // Now fetch the issues for this specific run
+      const runIssuesQuery = RunsClient.buildRunOccurrencesQuery();
+      const response = await this.executeGraphQL(runIssuesQuery, {
+        runUid: mostRecentRun.runUid,
+        first: paginationParams?.first ?? 100, // Use provided limit or default to 100
+      });
+
+      if (!response.data) {
+        this.logger.warn('No data received for run occurrences');
+        return {
+          run: mostRecentRun,
+          items: [],
+          pageInfo: { hasNextPage: false, hasPreviousPage: false },
+          totalCount: 0,
+        };
+      }
+
+      const issues = this.extractIssuesFromRunResponse(response.data);
+
+      this.logger.info('Successfully fetched run issues', {
+        runUid: mostRecentRun.runUid,
+        issueCount: issues.length,
+      });
+
       return {
         run: mostRecentRun,
-        items: [], // Run-specific issue fetching not yet implemented
+        items: issues,
         pageInfo: { hasNextPage: false, hasPreviousPage: false },
-        totalCount: 0,
+        totalCount: issues.length,
       };
     } catch (error) {
       this.logger.error('Error fetching recent run issues', {
@@ -432,6 +455,91 @@ export class RunsClient extends BaseDeepSourceClient {
         id: asGraphQLNodeId(String(repository.id ?? '')),
       },
     };
+  }
+
+  /**
+   * Builds GraphQL query for fetching run occurrences
+   * @private
+   */
+  private static buildRunOccurrencesQuery(): string {
+    return `
+      query getRunOccurrences($runUid: UUID!, $first: Int) {
+        run(runUid: $runUid) {
+          checks {
+            edges {
+              node {
+                analyzer {
+                  shortcode
+                }
+                occurrences(first: $first) {
+                  edges {
+                    node {
+                      id
+                      issue {
+                        id
+                        shortcode
+                        title
+                        category
+                        severity
+                      }
+                      path
+                      beginLine
+                      issueText
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+  }
+
+  /**
+   * Extracts issues from run occurrences response
+   * @private
+   */
+  private extractIssuesFromRunResponse(responseData: unknown): DeepSourceIssue[] {
+    const issues: DeepSourceIssue[] = [];
+
+    try {
+      const run = (responseData as Record<string, unknown>)?.run as Record<string, unknown>;
+      const checks =
+        ((run?.checks as Record<string, unknown>)?.edges as Array<Record<string, unknown>>) || [];
+
+      for (const checkEdge of checks) {
+        const checkNode = checkEdge?.node as Record<string, unknown>;
+        const occurrences =
+          ((checkNode?.occurrences as Record<string, unknown>)?.edges as Array<
+            Record<string, unknown>
+          >) || [];
+
+        for (const occurrenceEdge of occurrences) {
+          const occurrence = occurrenceEdge?.node as Record<string, unknown>;
+          const issue = occurrence?.issue as Record<string, unknown>;
+
+          if (occurrence && issue) {
+            issues.push({
+              id: String(occurrence.id ?? 'unknown'),
+              title: String(issue.title ?? 'Unknown Issue'),
+              shortcode: String(issue.shortcode ?? 'UNKNOWN'),
+              category: String(issue.category ?? 'UNKNOWN'),
+              severity: String(issue.severity ?? 'UNKNOWN'),
+              status: 'OPEN', // Occurrences in a run are typically open issues
+              issue_text: String(occurrence.issueText ?? ''),
+              file_path: String(occurrence.path ?? ''),
+              line_number: Number(occurrence.beginLine ?? 0),
+              tags: [], // Tags would need to be fetched separately if needed
+            });
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.error('Error extracting issues from run response', { error });
+    }
+
+    return issues;
   }
 
   /**

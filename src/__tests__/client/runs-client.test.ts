@@ -18,9 +18,9 @@ describe('RunsClient', () => {
     mockBaseClient = runsClient as unknown as MockDeepSourceClient;
 
     // Mock the methods we need
-    (mockBaseClient as any).findProjectByKey = vi.fn();
-    (mockBaseClient as any).executeGraphQL = vi.fn();
-    (mockBaseClient as any).logger = {
+    mockBaseClient.findProjectByKey = vi.fn();
+    mockBaseClient.executeGraphQL = vi.fn();
+    mockBaseClient.logger = {
       info: vi.fn(),
       error: vi.fn(),
       debug: vi.fn(),
@@ -127,8 +127,8 @@ describe('RunsClient', () => {
     });
 
     it('should return empty response when project not found', async () => {
-      mockBaseClient.findProjectByKey = vi.fn().mockResolvedValue(null as any);
-      (mockBaseClient as any).createEmptyPaginatedResponse = vi.fn().mockReturnValue({
+      mockBaseClient.findProjectByKey = vi.fn().mockResolvedValue(null);
+      mockBaseClient.createEmptyPaginatedResponse = vi.fn().mockReturnValue({
         items: [],
         pageInfo: { hasNextPage: false, hasPreviousPage: false },
         totalCount: 0,
@@ -378,7 +378,7 @@ describe('RunsClient', () => {
       };
 
       // Mock the listRuns method
-      runsClient.listRuns = vi.fn().mockResolvedValue(mockRuns as any);
+      runsClient.listRuns = vi.fn().mockResolvedValue(mockRuns);
 
       const result = await runsClient.findMostRecentRunForBranch('test-project', 'main');
 
@@ -405,7 +405,7 @@ describe('RunsClient', () => {
         totalCount: 1,
       };
 
-      runsClient.listRuns = vi.fn().mockResolvedValue(mockRuns as any);
+      runsClient.listRuns = vi.fn().mockResolvedValue(mockRuns);
 
       await expect(runsClient.findMostRecentRunForBranch('test-project', 'main')).rejects.toThrow(
         "No runs found for branch 'main' in project 'test-project'"
@@ -475,7 +475,17 @@ describe('RunsClient', () => {
         status: 'SUCCESS',
       };
 
-      runsClient.findMostRecentRunForBranch = vi.fn().mockResolvedValue(mockRun as any);
+      runsClient.findMostRecentRunForBranch = vi.fn().mockResolvedValue(mockRun);
+      mockBaseClient.executeGraphQL.mockResolvedValue({
+        data: {
+          run: {
+            occurrences: {
+              edges: [],
+              pageInfo: { hasNextPage: false, hasPreviousPage: false },
+            },
+          },
+        },
+      });
 
       const result = await runsClient.getRecentRunIssues('test-project', asBranchName('main'));
 
@@ -485,7 +495,7 @@ describe('RunsClient', () => {
     });
 
     it('should return empty response when no run found', async () => {
-      runsClient.findMostRecentRunForBranch = vi.fn().mockResolvedValue(null as any);
+      runsClient.findMostRecentRunForBranch = vi.fn().mockResolvedValue(null);
 
       const result = await runsClient.getRecentRunIssues('test-project', asBranchName('main'));
 
