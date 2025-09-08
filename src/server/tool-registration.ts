@@ -38,6 +38,7 @@ const logger = createLogger('ToolRegistration');
  */
 const TOOL_HANDLERS: Record<string, (params: unknown) => Promise<unknown>> = {
   projects: async (params: unknown) => {
+    logger.debug('Projects handler called with params:', { params, type: typeof params });
     // Params currently unused but may be used for future filtering
     void params;
     return handleProjects();
@@ -236,6 +237,12 @@ function createToolDefinition(
   },
   handler: (_params: unknown) => Promise<unknown>
 ): ToolDefinition {
+  logger.debug(`Creating tool definition for ${schema.name}`, {
+    hasInputSchema: !!schema.inputSchema,
+    inputSchemaType: typeof schema.inputSchema,
+    inputSchema: schema.inputSchema,
+  });
+
   return {
     name: schema.name,
     description: schema.description,

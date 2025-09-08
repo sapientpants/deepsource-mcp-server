@@ -70,9 +70,18 @@ export class ToolRegistry {
     }
 
     this.tools.set(tool.name, tool as ToolDefinition<unknown, unknown>);
-    logger.debug(`Registering tool: ${tool.name}`);
+    logger.debug(`Registering tool: ${tool.name}`, {
+      hasInputSchema: !!tool.inputSchema,
+      inputSchemaType: tool.inputSchema ? typeof tool.inputSchema : 'undefined',
+      inputSchemaDetails: tool.inputSchema
+        ? {
+            isZodSchema: tool.inputSchema && '_def' in (tool.inputSchema as object),
+            schemaKeys: tool.inputSchema ? Object.keys(tool.inputSchema) : [],
+          }
+        : null,
+    });
 
-    // Convert Zod schemas to MCP format
+    // MCP SDK expects Zod schemas directly
     const toolConfig: Record<string, unknown> = {
       description: tool.description,
     };
@@ -92,11 +101,21 @@ export class ToolRegistry {
 
       async (params: Record<string, unknown>): Promise<McpResponse> => {
         try {
+          logger.debug(`Tool ${tool.name} invoked`, {
+            params,
+            paramsType: typeof params,
+            hasInputSchema: !!tool.inputSchema,
+          });
           logToolInvocation(tool.name, params);
 
           // Validate input if schema provided
           let validatedParams: TInput;
           if (tool.inputSchema && params !== undefined) {
+            logger.debug(`Validating params for ${tool.name}`, {
+              schemaType: typeof tool.inputSchema,
+              hasDefProperty: '_def' in (tool.inputSchema as object),
+              hasSafeParseMethod: 'safeParse' in (tool.inputSchema as object),
+            });
             const parseResult = tool.inputSchema.safeParse(params);
             if (!parseResult.success) {
               logger.error(`Input validation failed for tool ${tool.name}`, {
