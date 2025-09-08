@@ -75,25 +75,55 @@ export class DeepSourceMCPServer {
       version: this.config.version,
     });
 
+    // Set transport FIRST (default to stdio if not provided)
+    // This must be set before registering tools
+    this.transport = this.config.transport || new StdioServerTransport();
+
     // Initialize tool registry
     const handlerDeps = this.config.handlerDeps || createDefaultHandlerDeps();
     this.toolRegistry = new ToolRegistry(this.mcpServer, handlerDeps);
 
-    // Auto-register tools if configured
+    // Auto-register tools if configured (AFTER transport is set)
     if (this.config.autoRegisterTools) {
       this.registerDefaultTools();
     }
-
-    // Set transport (default to stdio if not provided)
-    this.transport = this.config.transport || new StdioServerTransport();
   }
 
   /**
    * Registers the default DeepSource tools
    */
   private registerDefaultTools(): void {
-    logger.info('Registering default DeepSource tools');
-    registerDeepSourceTools(this.toolRegistry);
+    try {
+      logger.info('Starting registration of default DeepSource tools', {
+        mcpServerType: typeof this.mcpServer,
+        mcpServerExists: !!this.mcpServer,
+        toolRegistryExists: !!this.toolRegistry,
+      });
+
+      registerDeepSourceTools(this.toolRegistry);
+
+      const registeredTools = this.toolRegistry.getToolNames();
+      logger.info('Successfully registered DeepSource tools', {
+        registeredTools,
+        toolCount: registeredTools.length,
+      });
+
+      // Verify tools are actually registered with the MCP server
+      // The MCP server doesn't expose a direct way to query tools,
+      // but we can log what we've registered
+      logger.info('Tool registration verification', {
+        toolRegistryCount: registeredTools.length,
+        mcpServerConnected: this.isConnected,
+        transportSet: !!this.transport,
+      });
+    } catch (error) {
+      logger.error('Failed to register DeepSource tools', {
+        error,
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      throw error;
+    }
   }
 
   /**

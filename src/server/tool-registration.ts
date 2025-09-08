@@ -270,27 +270,39 @@ function createToolDefinition(
  * @param registry - The tool registry to register tools with
  */
 export function registerDeepSourceTools(registry: ToolRegistry): void {
-  logger.info('Registering DeepSource tools');
+  logger.info('=== REGISTER DEEPSOURCE TOOLS START ===');
+  logger.info('Registering DeepSource tools', {
+    toolSchemasType: typeof toolSchemas,
+    toolSchemasIsArray: Array.isArray(toolSchemas),
+    toolSchemasLength: Array.isArray(toolSchemas) ? toolSchemas.length : 'not an array',
+    toolSchemaNames: Array.isArray(toolSchemas) ? toolSchemas.map((s) => s.name) : 'not an array',
+  });
 
   const toolDefinitions: ToolDefinition[] = [];
 
   // Create tool definitions from schemas and handlers
   for (const schema of toolSchemas) {
+    logger.debug(`Processing schema: ${schema.name}`);
     const handler = TOOL_HANDLERS[schema.name];
     if (!handler) {
       logger.warn(`No handler found for tool: ${schema.name}`);
       continue;
     }
 
+    logger.debug(`Creating tool definition for: ${schema.name}`);
     const toolDef = createToolDefinition(schema, handler);
     toolDefinitions.push(toolDef);
+    logger.debug(`Successfully created tool definition for: ${schema.name}`);
   }
+
+  logger.info(`Prepared ${toolDefinitions.length} tool definitions for registration`);
 
   // Register all tools
   registry.registerTools(toolDefinitions);
 
-  logger.info(`Registered ${toolDefinitions.length} DeepSource tools`, {
-    tools: toolDefinitions.map((t) => t.name),
+  logger.info(`=== REGISTER DEEPSOURCE TOOLS COMPLETE ===`, {
+    registeredCount: toolDefinitions.length,
+    registeredTools: toolDefinitions.map((t) => t.name),
   });
 }
 

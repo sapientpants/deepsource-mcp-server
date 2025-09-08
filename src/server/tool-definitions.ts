@@ -13,15 +13,15 @@ export const projectsToolSchema = {
   name: 'projects',
   description:
     'List all available DeepSource projects. Returns a list of project objects with "key" and "name" properties.',
-  inputSchema: z.object({}),
-  outputSchema: z.object({
+  inputSchema: {},
+  outputSchema: {
     projects: z.array(
       z.object({
         key: z.string(),
         name: z.string(),
       })
     ),
-  }),
+  },
 };
 
 /**
@@ -30,14 +30,14 @@ export const projectsToolSchema = {
 export const qualityMetricsToolSchema = {
   name: 'quality_metrics',
   description: 'Get quality metrics from a DeepSource project with optional filtering',
-  inputSchema: z.object({
+  inputSchema: {
     projectKey: z.string().describe('DeepSource project key to fetch quality metrics for'),
     shortcodeIn: z
       .array(z.nativeEnum(MetricShortcode))
       .optional()
       .describe('Optional filter for specific metric shortcodes'),
-  }),
-  outputSchema: z.object({
+  },
+  outputSchema: {
     metrics: z.array(
       z.object({
         name: z.string(),
@@ -68,7 +68,7 @@ export const qualityMetricsToolSchema = {
         ),
       })
     ),
-  }),
+  },
 };
 
 /**
@@ -77,7 +77,7 @@ export const qualityMetricsToolSchema = {
 export const updateMetricThresholdToolSchema = {
   name: 'update_metric_threshold',
   description: 'Update the threshold for a specific quality metric',
-  inputSchema: z.object({
+  inputSchema: {
     projectKey: z.string().describe('DeepSource project key to identify the project'),
     repositoryId: z.string().describe('Repository GraphQL ID'),
     metricShortcode: z.nativeEnum(MetricShortcode).describe('Code for the metric to update'),
@@ -87,8 +87,8 @@ export const updateMetricThresholdToolSchema = {
       .nullable()
       .optional()
       .describe('New threshold value, or null to remove'),
-  }),
-  outputSchema: z.object({
+  },
+  outputSchema: {
     ok: z.boolean(),
     projectKey: z.string(),
     metricShortcode: z.string(),
@@ -96,7 +96,7 @@ export const updateMetricThresholdToolSchema = {
     thresholdValue: z.number().nullable().optional(),
     message: z.string(),
     next_steps: z.array(z.string()),
-  }),
+  },
 };
 
 /**
@@ -105,14 +105,14 @@ export const updateMetricThresholdToolSchema = {
 export const updateMetricSettingToolSchema = {
   name: 'update_metric_setting',
   description: 'Update the settings for a quality metric',
-  inputSchema: z.object({
+  inputSchema: {
     projectKey: z.string().describe('DeepSource project key to identify the project'),
     repositoryId: z.string().describe('Repository GraphQL ID'),
     metricShortcode: z.nativeEnum(MetricShortcode).describe('Code for the metric to update'),
     isReported: z.boolean().describe('Whether the metric should be reported'),
     isThresholdEnforced: z.boolean().describe('Whether the threshold should be enforced'),
-  }),
-  outputSchema: z.object({
+  },
+  outputSchema: {
     ok: z.boolean(),
     projectKey: z.string(),
     metricShortcode: z.string(),
@@ -122,7 +122,7 @@ export const updateMetricSettingToolSchema = {
     }),
     message: z.string(),
     next_steps: z.array(z.string()),
-  }),
+  },
 };
 
 /**
@@ -131,11 +131,11 @@ export const updateMetricSettingToolSchema = {
 export const complianceReportToolSchema = {
   name: 'compliance_report',
   description: 'Get security compliance reports from a DeepSource project',
-  inputSchema: z.object({
+  inputSchema: {
     projectKey: z.string().describe('DeepSource project key to identify the project'),
     reportType: z.nativeEnum(ReportType).describe('Type of compliance report to fetch'),
-  }),
-  outputSchema: z.object({
+  },
+  outputSchema: {
     key: z.string(),
     title: z.string(),
     currentValue: z.number().nullable(),
@@ -165,7 +165,7 @@ export const complianceReportToolSchema = {
       actions: z.array(z.string()),
       resources: z.array(z.string()),
     }),
-  }),
+  },
 };
 
 /**
@@ -174,7 +174,7 @@ export const complianceReportToolSchema = {
 export const projectIssuesToolSchema = {
   name: 'project_issues',
   description: 'Get issues from a DeepSource project with filtering capabilities',
-  inputSchema: z.object({
+  inputSchema: {
     projectKey: z.string().describe('DeepSource project key to fetch issues for'),
     path: z.string().optional().describe('Filter issues by file path'),
     analyzerIn: z.array(z.string()).optional().describe('Filter issues by analyzer shortcodes'),
@@ -189,8 +189,8 @@ export const projectIssuesToolSchema = {
       .string()
       .optional()
       .describe('Cursor to start retrieving items before (backward pagination)'),
-  }),
-  outputSchema: z.object({
+  },
+  outputSchema: {
     issues: z.array(
       z.object({
         id: z.string(),
@@ -212,7 +212,7 @@ export const projectIssuesToolSchema = {
       endCursor: z.string().nullable(),
     }),
     totalCount: z.number(),
-  }),
+  },
 };
 
 /**
@@ -221,7 +221,7 @@ export const projectIssuesToolSchema = {
 export const runsToolSchema = {
   name: 'runs',
   description: 'List analysis runs for a DeepSource project with filtering',
-  inputSchema: z.object({
+  inputSchema: {
     projectKey: z.string().describe('DeepSource project key to fetch runs for'),
     analyzerIn: z.array(z.string()).optional().describe('Filter runs by analyzer shortcodes'),
     first: z.number().optional().describe('Number of items to retrieve (forward pagination)'),
@@ -234,8 +234,8 @@ export const runsToolSchema = {
       .string()
       .optional()
       .describe('Cursor to start retrieving items before (backward pagination)'),
-  }),
-  outputSchema: z.object({
+  },
+  outputSchema: {
     runs: z.array(
       z.object({
         id: z.string(),
@@ -281,7 +281,7 @@ export const runsToolSchema = {
       endCursor: z.string().nullable(),
     }),
     totalCount: z.number(),
-  }),
+  },
 };
 
 /**
@@ -290,15 +290,15 @@ export const runsToolSchema = {
 export const runToolSchema = {
   name: 'run',
   description: 'Get a specific analysis run by its runUid or commitOid',
-  inputSchema: z.object({
+  inputSchema: {
     projectKey: z.string().describe('DeepSource project key to identify the project'),
     runIdentifier: z.string().describe('The run identifier (runUid or commitOid)'),
     isCommitOid: z
       .boolean()
       .optional()
       .describe('Flag to indicate whether the runIdentifier is a commitOid (default: false)'),
-  }),
-  outputSchema: z.object({
+  },
+  outputSchema: {
     run: z.object({
       id: z.string(),
       runUid: z.string(),
@@ -341,7 +341,7 @@ export const runToolSchema = {
       analyzers_used: z.array(z.string()),
       issue_categories: z.array(z.string()),
     }),
-  }),
+  },
 };
 
 /**
@@ -350,7 +350,7 @@ export const runToolSchema = {
 export const recentRunIssuesToolSchema = {
   name: 'recent_run_issues',
   description: 'Get issues from the most recent analysis run on a specific branch',
-  inputSchema: z.object({
+  inputSchema: {
     projectKey: z.string().describe('DeepSource project key to fetch issues for'),
     branchName: z.string().describe('Branch name to fetch the most recent run from'),
     first: z.number().optional().describe('Number of items to retrieve (forward pagination)'),
@@ -363,8 +363,8 @@ export const recentRunIssuesToolSchema = {
       .string()
       .optional()
       .describe('Cursor to start retrieving items before (backward pagination)'),
-  }),
-  outputSchema: z.object({
+  },
+  outputSchema: {
     run: z.object({
       id: z.string(),
       runUid: z.string(),
@@ -422,7 +422,7 @@ export const recentRunIssuesToolSchema = {
       endCursor: z.string().nullable(),
     }),
     totalCount: z.number(),
-  }),
+  },
 };
 
 /**
@@ -431,7 +431,7 @@ export const recentRunIssuesToolSchema = {
 export const dependencyVulnerabilitiesToolSchema = {
   name: 'dependency_vulnerabilities',
   description: 'Get dependency vulnerabilities from a DeepSource project',
-  inputSchema: z.object({
+  inputSchema: {
     projectKey: z.string().describe('DeepSource project key to fetch vulnerabilities for'),
     first: z.number().optional().describe('Number of items to retrieve (forward pagination)'),
     after: z
@@ -443,8 +443,8 @@ export const dependencyVulnerabilitiesToolSchema = {
       .string()
       .optional()
       .describe('Cursor to start retrieving items before (backward pagination)'),
-  }),
-  outputSchema: z.object({
+  },
+  outputSchema: {
     vulnerabilities: z.array(
       z.object({
         id: z.string(),
@@ -472,7 +472,7 @@ export const dependencyVulnerabilitiesToolSchema = {
       endCursor: z.string().nullable(),
     }),
     totalCount: z.number(),
-  }),
+  },
 };
 
 /**
