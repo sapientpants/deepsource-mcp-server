@@ -1,0 +1,31 @@
+# Test files
+**/__tests__/**
+**/*.test.ts
+**/*.spec.ts
+**/test-*.ts
+src/__tests__/**
+
+# Coverage reports
+coverage/**
+.nyc_output/**
+
+# Build outputs
+dist/**
+build/**
+out/**
+
+# Dependencies
+node_modules/**
+
+# Development files
+*.config.js
+*.config.ts
+jest.setup.ts
+vitest.setup.ts
+
+# Documentation
+docs/**
+*.md
+
+# Examples
+examples/**

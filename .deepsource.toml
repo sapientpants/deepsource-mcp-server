@@ -1,7 +1,28 @@
 version = 1
 
+# Exclude test files from analysis
+exclude_patterns = [
+  "**/__tests__/**",
+  "**/*.test.ts",
+  "**/*.spec.ts",
+  "**/test-*.ts",
+  "src/__tests__/**",
+  "coverage/**",
+  "dist/**",
+  "node_modules/**"
+]
+
 [[analyzers]]
 name = "test-coverage"
 
 [[analyzers]]
 name = "javascript"
+
+  [analyzers.meta]
+  plugins = ["react"]
+  
+  # Configure specific rules
+  [[analyzers.meta.rules]]
+  # Allow 'any' type in test files
+  paths = ["**/__tests__/**", "**/*.test.ts", "**/*.spec.ts"]
+  config = { "no-explicit-any" = "off" }

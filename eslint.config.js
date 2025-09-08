@@ -13,16 +13,7 @@ import jsoncParser from 'jsonc-eslint-parser';
 export default [
   // Ignore patterns
   {
-    ignores: [
-      'dist/**',
-      'node_modules/**',
-      'coverage/**',
-      'jest.config.js',
-      'examples/**',
-      '**/__tests__/**',
-      '**/*.test.ts',
-      '**/*.spec.ts',
-    ],
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'jest.config.js', 'examples/**'],
   },
   // Base configuration for all JS/TS files
   {
@@ -39,6 +30,28 @@ export default [
       ...tseslint.configs['recommended'].rules,
       'no-console': 'warn',
       'no-debugger': 'error',
+    },
+  },
+  // Relaxed rules for test files
+  {
+    files: ['**/__tests__/**/*.ts', '**/*.test.ts', '**/*.spec.ts', '**/test-types.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off', // Allow 'any' in tests for mocking
+      '@typescript-eslint/no-unsafe-assignment': 'off', // Allow unsafe assignments in tests
+      '@typescript-eslint/no-unsafe-member-access': 'off', // Allow unsafe member access in tests
+      '@typescript-eslint/no-unsafe-call': 'off', // Allow unsafe calls in tests
+      '@typescript-eslint/no-unsafe-return': 'off', // Allow unsafe returns in tests
+      '@typescript-eslint/no-unsafe-argument': 'off', // Allow unsafe arguments in tests
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern:
+            '^_|jest|describe|it|expect|beforeEach|afterEach|MockedFunction|McpServer|SecurityClient|MetricsClient|IssuesClient|RunsClient|Logger',
+        },
+      ],
+      '@typescript-eslint/no-unused-expressions': 'off', // Allow unused expressions in tests
+      'no-console': 'off', // Allow console in tests for debugging
     },
   },
   // Disabled type-aware rules to avoid configuration complexity
