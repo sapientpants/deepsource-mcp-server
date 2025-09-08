@@ -1,28 +1,40 @@
 version = 1
 
-# Exclude test files from analysis
-exclude_patterns = [
+# Define test file patterns - DeepSource will apply different rules to these files
+test_patterns = [
   "**/__tests__/**",
   "**/*.test.ts",
   "**/*.spec.ts",
   "**/test-*.ts",
-  "src/__tests__/**",
+  "src/__tests__/**"
+]
+
+# Exclude files from analysis entirely
+exclude_patterns = [
   "coverage/**",
   "dist/**",
-  "node_modules/**"
+  "build/**",
+  "out/**",
+  "node_modules/**",
+  ".nyc_output/**",
+  "*.config.js",
+  "*.config.ts",
+  "jest.setup.ts",
+  "vitest.setup.ts",
+  "docs/**",
+  "examples/**"
 ]
 
 [[analyzers]]
 name = "test-coverage"
+enabled = true
 
 [[analyzers]]
 name = "javascript"
+enabled = true
 
   [analyzers.meta]
   plugins = ["react"]
-  
-  # Configure specific rules
-  [[analyzers.meta.rules]]
-  # Allow 'any' type in test files
-  paths = ["**/__tests__/**", "**/*.test.ts", "**/*.spec.ts"]
-  config = { "no-explicit-any" = "off" }
+  dialect = "typescript"
+  # Skip issues in test files
+  skip_doc_coverage = ["test_*", "**/__tests__/**", "**/*.test.ts", "**/*.spec.ts"]
