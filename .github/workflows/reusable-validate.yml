@@ -29,6 +29,8 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # Minimal permission for checkout
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

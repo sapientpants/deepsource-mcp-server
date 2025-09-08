@@ -12,6 +12,7 @@ vi.mock('../utils/logging/logger', () => {
       info: vi.fn(),
       debug: vi.fn(),
     })),
+    __mockWarn: mockWarn, // Export for test access
   };
 });
 

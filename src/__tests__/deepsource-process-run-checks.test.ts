@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 
-import { jest, describe, expect, it } from 'vitest';
+import { vi, describe, expect, it } from 'vitest';
 
 // Mock the logger module
 vi.mock('../utils/logger.js', () => ({
