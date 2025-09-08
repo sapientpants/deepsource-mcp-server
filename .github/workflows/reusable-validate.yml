@@ -7,6 +7,9 @@
 
 name: Reusable Validate
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:
@@ -104,6 +107,13 @@ jobs:
         # FAILS IF: Tests fail or coverage below 80% (when coverage enabled)
         # To debug: Check test output and coverage/index.html
         run: pnpm test:coverage
+
+      - name: Report test coverage to DeepSource
+        uses: deepsourcelabs/test-coverage-action@v1.1.3
+        with:
+          key: javascript
+          coverage-file: coverage/lcov.info
+          dsn: ${{ secrets.DEEPSOURCE_DSN }}
 
       - name: Upload coverage
         # Make coverage reports available for review

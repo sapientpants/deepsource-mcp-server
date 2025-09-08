@@ -4,13 +4,13 @@ import { DeepSourceClient, ReportType } from '../deepsource';
 
 // Mock logger to verify it's called properly
 vi.mock('../utils/logging/logger', () => {
-  const mockWarn = vi.fn();
+  const mockWarn = globalThis.vi.fn();
   return {
-    createLogger: vi.fn(() => ({
+    createLogger: globalThis.vi.fn(() => ({
       warn: mockWarn,
-      error: vi.fn(),
-      info: vi.fn(),
-      debug: vi.fn(),
+      error: globalThis.vi.fn(),
+      info: globalThis.vi.fn(),
+      debug: globalThis.vi.fn(),
     })),
     __mockWarn: mockWarn, // Export for test access
   };

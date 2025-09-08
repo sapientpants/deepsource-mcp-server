@@ -12,26 +12,28 @@ import { ReportType } from '../../deepsource';
 // Mock modules before importing the implementation
 vi.mock('../../utils/logging/logger', () => {
   const mockLogger = {
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
+    debug: globalThis.vi.fn(),
+    info: globalThis.vi.fn(),
+    warn: globalThis.vi.fn(),
+    error: globalThis.vi.fn(),
   };
   return {
-    createLogger: vi.fn(() => mockLogger),
+    createLogger: globalThis.vi.fn(() => mockLogger),
     __mockLogger: mockLogger, // Export for test access
   };
 });
 
 // Mock the repository and factory
 vi.mock('../../infrastructure/factories/repository.factory', () => {
-  const mockFindByProjectAndType = vi.fn();
+  const mockFindByProjectAndType = globalThis.vi.fn();
   const mockComplianceReportRepository = {
     findByProjectAndType: mockFindByProjectAndType,
   } as unknown as IComplianceReportRepository;
 
-  const mockCreateComplianceReportRepository = vi.fn(() => mockComplianceReportRepository);
-  const mockRepositoryFactory = vi.fn(() => ({
+  const mockCreateComplianceReportRepository = globalThis.vi.fn(
+    () => mockComplianceReportRepository
+  );
+  const mockRepositoryFactory = globalThis.vi.fn(() => ({
     createComplianceReportRepository: mockCreateComplianceReportRepository,
   }));
 
