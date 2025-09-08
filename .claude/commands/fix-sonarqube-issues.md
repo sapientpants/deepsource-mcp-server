@@ -1,15 +1,15 @@
-# Fix SonarQube Issues
+# Fix DeepSource Issues
 
-Analyze and fix all open issues reported by SonarQube for this project.
+Analyze and fix all open issues reported by DeepSource for this project.
 
 ## Steps
 
-1. **Connect to SonarQube and Check for Issues**
-   - Use the configured SonarQube MCP server
+1. **Connect to DeepSource and Check for Issues**
+   - Use the configured DeepSource MCP server
    - Identify the project key (usually matches the repository name)
    - Query all open issues for the project
    - Filter by status: OPEN, CONFIRMED, REOPENED
-   - **If no issues found**: Report "✅ No SonarQube issues found!" and exit
+   - **If no issues found**: Report "✅ No DeepSource issues found!" and exit
 
 2. **Analyze Retrieved Issues**
    - Group by severity: BLOCKER, CRITICAL, MAJOR, MINOR, INFO
@@ -24,7 +24,7 @@ Analyze and fix all open issues reported by SonarQube for this project.
 3. **Create Feature Branch** (only if issues exist)
 
    ```bash
-   git checkout -b fix/sonarqube-issues
+   git checkout -b fix/deepsource-issues
    ```
 
 4. **Fix Issues by Priority**
@@ -68,7 +68,7 @@ Analyze and fix all open issues reported by SonarQube for this project.
 
    ```bash
    git add -A
-   git commit -m "fix: resolve SonarQube issues
+   git commit -m "fix: resolve DeepSource issues
 
    - Fix [number] code smells
    - Fix [number] bugs
@@ -79,15 +79,15 @@ Analyze and fix all open issues reported by SonarQube for this project.
 10. **Push Branch**
 
     ```bash
-    git push origin fix/sonarqube-issues
+    git push origin fix/deepsource-issues
     ```
 
 11. **Create Pull Request**
 
     ```bash
-    gh pr create --title "fix: resolve SonarQube issues" \
+    gh pr create --title "fix: resolve DeepSource issues" \
       --body "## Summary
-    - Fixed all open SonarQube issues for the project
+    - Fixed all open DeepSource issues for the project
     - Improved code quality, security, and maintainability
 
     ## Changes
@@ -112,11 +112,11 @@ Analyze and fix all open issues reported by SonarQube for this project.
 ## Example Usage
 
 ```bash
-# First, ensure SonarQube MCP server is configured
+# First, ensure DeepSource MCP server is configured
 # Then run this command to fix all issues
 
 # The command will:
-# 1. Connect to SonarQube and check for issues
+# 1. Connect to DeepSource and check for issues
 # 2. If no issues: exit early with success message
 # 3. If issues exist:
 #    - Create a new branch
@@ -129,7 +129,7 @@ Analyze and fix all open issues reported by SonarQube for this project.
 
 ## Notes
 
-- Some issues may be false positives - mark them as such in SonarQube
+- Some issues may be false positives - mark them as such in DeepSource
 - Complex refactoring should be done carefully to avoid breaking changes
 - Always run tests after fixing issues
 - Consider fixing related issues together for better code organization

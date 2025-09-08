@@ -38,6 +38,8 @@ jobs:
   # FAILS IF: Any check fails or coverage drops below 80%
   validate:
     uses: ./.github/workflows/reusable-validate.yml
+    secrets:
+      DEEPSOURCE_DSN: ${{ secrets.DEEPSOURCE_DSN }}
 
   # CodeQL: Static security analysis for TypeScript/JavaScript
   # Scans for: XSS, injection attacks, insecure patterns

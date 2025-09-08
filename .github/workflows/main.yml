@@ -40,6 +40,8 @@ jobs:
     # Reusable workflow handles: audit, typecheck, lint, format, tests
     # FAILS IF: Any check fails, tests don't meet 80% coverage threshold
     uses: ./.github/workflows/reusable-validate.yml
+    secrets:
+      DEEPSOURCE_DSN: ${{ secrets.DEEPSOURCE_DSN }}
 
   # =============================================================================
   # SECURITY SCANNING PHASE
