@@ -232,9 +232,17 @@ export class RunsClient extends BaseDeepSourceClient {
 
       // Now fetch the issues for this specific run
       const runIssuesQuery = RunsClient.buildRunOccurrencesQuery();
+      const requestedLimit = paginationParams?.first ?? 100;
+
+      // To avoid fetching too much data, limit both checks and occurrences
+      // If user wants 100 issues total, we might fetch from up to 10 checks with 10 issues each
+      const checksLimit = Math.min(10, Math.ceil(requestedLimit / 10));
+      const occurrencesPerCheck = Math.ceil(requestedLimit / checksLimit);
+
       const response = await this.executeGraphQL(runIssuesQuery, {
         runUid: mostRecentRun.runUid,
-        first: paginationParams?.first ?? 100, // Use provided limit or default to 100
+        first: occurrencesPerCheck,
+        checksFirst: checksLimit,
       });
 
       if (!response.data) {
@@ -247,17 +255,18 @@ export class RunsClient extends BaseDeepSourceClient {
         };
       }
 
-      const issues = this.extractIssuesFromRunResponse(response.data);
+      const issues = this.extractIssuesFromRunResponse(response.data, requestedLimit);
 
       this.logger.info('Successfully fetched run issues', {
         runUid: mostRecentRun.runUid,
         issueCount: issues.length,
+        requestedLimit,
       });
 
       return {
         run: mostRecentRun,
         items: issues,
-        pageInfo: { hasNextPage: false, hasPreviousPage: false },
+        pageInfo: { hasNextPage: issues.length >= requestedLimit, hasPreviousPage: false },
         totalCount: issues.length,
       };
     } catch (error) {
@@ -463,9 +472,9 @@ export class RunsClient extends BaseDeepSourceClient {
    */
   private static buildRunOccurrencesQuery(): string {
     return `
-      query getRunOccurrences($runUid: UUID!, $first: Int) {
+      query getRunOccurrences($runUid: UUID!, $first: Int, $checksFirst: Int) {
         run(runUid: $runUid) {
-          checks {
+          checks(first: $checksFirst) {
             edges {
               node {
                 analyzer {
@@ -487,8 +496,17 @@ export class RunsClient extends BaseDeepSourceClient {
                       issueText
                     }
                   }
+                  pageInfo {
+                    hasNextPage
+                    endCursor
+                  }
+                  totalCount
                 }
               }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
             }
           }
         }
@@ -500,8 +518,9 @@ export class RunsClient extends BaseDeepSourceClient {
    * Extracts issues from run occurrences response
    * @private
    */
-  private extractIssuesFromRunResponse(responseData: unknown): DeepSourceIssue[] {
+  private extractIssuesFromRunResponse(responseData: unknown, limit?: number): DeepSourceIssue[] {
     const issues: DeepSourceIssue[] = [];
+    const maxIssues = limit ?? Number.MAX_SAFE_INTEGER;
 
     try {
       const run = (responseData as Record<string, unknown>)?.run as Record<string, unknown>;
@@ -509,6 +528,8 @@ export class RunsClient extends BaseDeepSourceClient {
         ((run?.checks as Record<string, unknown>)?.edges as Array<Record<string, unknown>>) || [];
 
       for (const checkEdge of checks) {
+        if (issues.length >= maxIssues) break;
+
         const checkNode = checkEdge?.node as Record<string, unknown>;
         const occurrences =
           ((checkNode?.occurrences as Record<string, unknown>)?.edges as Array<
@@ -516,6 +537,8 @@ export class RunsClient extends BaseDeepSourceClient {
           >) || [];
 
         for (const occurrenceEdge of occurrences) {
+          if (issues.length >= maxIssues) break;
+
           const occurrence = occurrenceEdge?.node as Record<string, unknown>;
           const issue = occurrence?.issue as Record<string, unknown>;
 
