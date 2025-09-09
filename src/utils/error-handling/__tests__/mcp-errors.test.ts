@@ -415,7 +415,8 @@ describe('MCPErrorFormatter', () => {
 
       const textContent = response.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       expect(responseData).toMatchObject({
         error: 'Validation failed: Invalid email format',
         code: MCPErrorCode.VALIDATION_ERROR,
@@ -433,7 +434,8 @@ describe('MCPErrorFormatter', () => {
       expect(response.isError).toBe(true);
       const textContent = response.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       expect(responseData.error).toBe('An error occurred while processing your request');
       expect(responseData.code).toBe(MCPErrorCode.INTERNAL_ERROR);
     });
@@ -444,7 +446,8 @@ describe('MCPErrorFormatter', () => {
       expect(response.isError).toBe(true);
       const textContent = response.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       expect(responseData.error).toBe('An error occurred while processing your request');
     });
 
@@ -454,7 +457,8 @@ describe('MCPErrorFormatter', () => {
 
       const textContent = response.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       expect(responseData.error).toBe('Resource not found: project-123');
     });
   });
@@ -470,7 +474,8 @@ describe('MCPErrorFormatter', () => {
       expect(response.isError).toBe(true);
       const textContent = response.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       expect(responseData.error).toBe('Validation failed: must be a valid email');
       expect(responseData.code).toBe('VALIDATION_ERROR');
       expect(responseData.category).toBe('VALIDATION_ERROR');
@@ -486,7 +491,8 @@ describe('MCPErrorFormatter', () => {
 
       const textContent = response.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       expect(responseData.details).toEqual({ field: 'name' });
     });
 
@@ -495,7 +501,8 @@ describe('MCPErrorFormatter', () => {
 
       const textContent = response.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       expect(responseData.error).toBe('Validation failed: invalid format');
       expect(responseData.details).toBeUndefined();
     });
@@ -509,7 +516,8 @@ describe('MCPErrorFormatter', () => {
 
       const textContent = response.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       expect(responseData.details).toEqual({
         field: 'field',
         value: undefined,
@@ -524,7 +532,8 @@ describe('MCPErrorFormatter', () => {
       expect(response.isError).toBe(true);
       const textContent = response.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       expect(responseData.error).toBe('Resource not found: project');
       expect(responseData.code).toBe('RESOURCE_NOT_FOUND');
       expect(responseData.category).toBe('RESOURCE_ERROR');
@@ -540,7 +549,8 @@ describe('MCPErrorFormatter', () => {
 
       const textContent = response.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       expect(responseData.error).toBe('Resource not found: user');
       expect(responseData.details).toEqual({ resource: 'user' });
     });
@@ -588,7 +598,8 @@ describe('withMCPErrorHandling', () => {
 
     const responseContent = (result as { content: Array<{ text: string }> }).content[0];
     expect(responseContent?.text).toBeDefined();
-    const responseText = responseContent!.text;
+    if (!responseContent?.text) throw new Error('responseContent.text is undefined');
+    const responseText = responseContent.text;
     const responseData = JSON.parse(responseText);
     expect(responseData.error).toBe('Validation failed: Invalid input');
     expect(responseData.code).toBe(MCPErrorCode.VALIDATION_ERROR);

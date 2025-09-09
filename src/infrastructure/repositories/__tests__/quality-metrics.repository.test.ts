@@ -2,7 +2,7 @@
  * @fileoverview Tests for QualityMetricsRepository
  */
 
-import { describe, it, expect, beforeEach, jest } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { QualityMetricsRepository } from '../quality-metrics.repository.js';
 import { DeepSourceClient } from '../../../deepsource.js';
 import {

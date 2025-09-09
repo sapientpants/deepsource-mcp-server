@@ -3,7 +3,6 @@
  */
 
 import { vi, MockedFunction } from 'vitest';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { ToolRegistry, ToolDefinition } from '../../server/tool-registry.js';
 import { BaseHandlerDeps } from '../../handlers/base/handler.interface.js';

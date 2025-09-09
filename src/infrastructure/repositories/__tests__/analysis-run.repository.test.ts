@@ -2,7 +2,7 @@
  * @fileoverview Tests for AnalysisRunRepository
  */
 
-import { describe, it, expect, beforeEach, jest } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { AnalysisRunRepository } from '../analysis-run.repository.js';
 import { DeepSourceClient } from '../../../deepsource.js';
 import { DeepSourceRun } from '../../../models/runs.js';

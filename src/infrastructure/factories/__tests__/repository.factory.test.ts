@@ -2,7 +2,7 @@
  * @fileoverview Tests for repository factory
  */
 
-import { describe, it, expect, beforeEach, jest } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   RepositoryFactory,
   createRepositoryFactory,

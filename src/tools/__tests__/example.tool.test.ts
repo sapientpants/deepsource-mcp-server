@@ -64,7 +64,8 @@ describe('Example Tool', () => {
 
       const textContent = result.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       expect(responseData.result).toBe('Hello');
       expect(responseData.metadata.messageLength).toBe(5);
       expect(responseData.metadata.repeatCount).toBe(1);
@@ -78,7 +79,8 @@ describe('Example Tool', () => {
       expect(result.content).toHaveLength(1);
       const textContent = result.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       expect(responseData.result).toBe('Test Test Test');
       expect(responseData.metadata.messageLength).toBe(4);
       expect(responseData.metadata.repeatCount).toBe(3);
@@ -91,7 +93,8 @@ describe('Example Tool', () => {
       expect(result.content).toHaveLength(1);
       const textContent = result.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       expect(responseData.result).toBe('Default');
       expect(responseData.metadata.repeatCount).toBe(1);
     });
@@ -103,7 +106,8 @@ describe('Example Tool', () => {
       expect(result.content).toHaveLength(1);
       const textContent = result.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       expect(responseData.result).toBe('');
       expect(responseData.metadata.repeatCount).toBe(0);
     });
@@ -115,7 +119,8 @@ describe('Example Tool', () => {
       expect(result.content).toHaveLength(1);
       const textContent = result.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       expect(responseData.result).toBe(' ');
       expect(responseData.metadata.messageLength).toBe(0);
       expect(responseData.metadata.repeatCount).toBe(2);
@@ -128,7 +133,8 @@ describe('Example Tool', () => {
       expect(result.content).toHaveLength(1);
       const textContent = result.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       const expectedResult = Array(10).fill('Big').join(' ');
       expect(responseData.result).toBe(expectedResult);
       expect(responseData.metadata.repeatCount).toBe(10);
@@ -161,7 +167,8 @@ describe('Example Tool', () => {
       expect(result.content).toHaveLength(1);
       const textContent = result.content[0]?.text;
       expect(textContent).toBeDefined();
-      const responseData = JSON.parse(textContent!);
+      if (!textContent) throw new Error('textContent is undefined');
+      const responseData = JSON.parse(textContent);
       expect(responseData.result).toBe('Definition Definition');
     });
   });

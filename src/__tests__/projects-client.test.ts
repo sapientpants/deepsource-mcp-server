@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 
-import { vi, MockedFunction } from 'vitest';
+import { vi } from 'vitest';
 import { ProjectsClient } from '../client/projects-client.js';
 import { asProjectKey } from '../types/branded.js';
 import { ViewerProjectsResponse } from '../types/graphql-responses.js';

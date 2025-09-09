@@ -2,7 +2,7 @@
  * @fileoverview Tests for ComplianceReportRepository
  */
 
-import { describe, it, expect, beforeEach, jest } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ComplianceReportRepository } from '../compliance-report.repository.js';
 import { DeepSourceClient, ComplianceReport as ApiComplianceReport } from '../../../deepsource.js';
 import { ReportType } from '../../../types/report-types.js';

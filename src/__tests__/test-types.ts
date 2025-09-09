@@ -8,11 +8,6 @@
 
 /* global jest */
 
-import { SecurityClient } from '../client/security-client.js';
-import { MetricsClient } from '../client/metrics-client.js';
-import { IssuesClient } from '../client/issues-client.js';
-import { RunsClient } from '../client/runs-client.js';
-import { Logger } from '../utils/logging/logger.js';
 import { ProjectKey } from '../types/branded.js';
 import { PaginatedResponse, PaginationParams } from '../models/pagination.js';
 import { Project } from '../types/graphql-responses.js';

@@ -2,7 +2,7 @@
  * @fileoverview Tests for ProjectRepository
  */
 
-import { describe, it, expect, beforeEach, jest } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ProjectRepository } from '../project.repository.js';
 import { ProjectsClient } from '../../../client/projects-client.js';
 import { DeepSourceProject } from '../../../models/projects.js';
