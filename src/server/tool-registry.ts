@@ -71,7 +71,7 @@ export class ToolRegistry {
 
     this.tools.set(tool.name, tool as ToolDefinition<unknown, unknown>);
     logger.debug(`Registering tool: ${tool.name}`, {
-      hasInputSchema: !!tool.inputSchema,
+      hasInputSchema: Boolean(tool.inputSchema),
       inputSchemaType: tool.inputSchema ? typeof tool.inputSchema : 'undefined',
       inputSchemaDetails: tool.inputSchema
         ? {
@@ -118,22 +118,21 @@ export class ToolRegistry {
         tool.name,
         toolConfig,
 
-        async (params: Record<string, unknown>, _extra: unknown): Promise<McpResponse> => {
-          // _extra parameter required by MCP SDK but not used
-          void _extra;
+        async (params: Record<string, unknown>, _: unknown): Promise<McpResponse> => {
+          // Second parameter required by MCP SDK but not used
           logger.info(`===== TOOL INVOCATION START: ${tool.name} =====`);
           logger.info(`Tool ${tool.name} received params:`, {
             params,
             paramsType: typeof params,
             paramsKeys: params ? Object.keys(params) : [],
             paramsStringified: JSON.stringify(params),
-            hasInputSchema: !!tool.inputSchema,
+            hasInputSchema: Boolean(tool.inputSchema),
           });
           try {
             logger.debug(`Tool ${tool.name} invoked`, {
               params,
               paramsType: typeof params,
-              hasInputSchema: !!tool.inputSchema,
+              hasInputSchema: Boolean(tool.inputSchema),
             });
             logToolInvocation(tool.name, params);
 

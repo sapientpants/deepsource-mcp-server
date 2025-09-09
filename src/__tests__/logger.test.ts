@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 
-import { vi } from 'vitest';
+import { vi, MockedFunction } from 'vitest';
 // import * as fs from 'fs'; - not used directly, only through jest mocks
 
 // Mock the fs module before importing Logger
@@ -19,7 +19,6 @@ const loggerModule = await import('../utils/logger.js');
 const { Logger, createLogger, defaultLogger } = loggerModule;
 
 // Type the mocks with proper types
-import { MockedFunction } from 'vitest';
 const mockAppendFileSync = appendFileSync as MockedFunction<typeof appendFileSync>;
 const mockExistsSync = existsSync as MockedFunction<typeof existsSync>;
 

@@ -42,7 +42,6 @@ const TOOL_HANDLERS: Record<string, (params: unknown) => Promise<unknown>> = {
     logger.info('Projects handler called with params:', { params, type: typeof params });
     try {
       // Params currently unused but may be used for future filtering
-      void params;
       const result = await handleProjects();
       logger.info('=== PROJECTS HANDLER SUCCESS ===', { result });
       return result;
@@ -250,7 +249,7 @@ function createToolDefinition(
   handler: (_params: unknown) => Promise<unknown>
 ): ToolDefinition {
   logger.debug(`Creating tool definition for ${schema.name}`, {
-    hasInputSchema: !!schema.inputSchema,
+    hasInputSchema: Boolean(schema.inputSchema),
     inputSchemaType: typeof schema.inputSchema,
     inputSchema: schema.inputSchema,
   });
@@ -300,7 +299,7 @@ export function registerDeepSourceTools(registry: ToolRegistry): void {
   // Register all tools
   registry.registerTools(toolDefinitions);
 
-  logger.info(`=== REGISTER DEEPSOURCE TOOLS COMPLETE ===`, {
+  logger.info('=== REGISTER DEEPSOURCE TOOLS COMPLETE ===', {
     registeredCount: toolDefinitions.length,
     registeredTools: toolDefinitions.map((t) => t.name),
   });

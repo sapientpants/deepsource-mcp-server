@@ -15,6 +15,10 @@ interface ToolInput {
   };
 }
 
+/**
+ * Main entry point for the git hook script
+ * Reads tool input from stdin and blocks git commands with --no-verify flag
+ */
 function main(): void {
   try {
     // Read JSON input from stdin

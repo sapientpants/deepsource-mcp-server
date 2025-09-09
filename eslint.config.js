@@ -30,6 +30,13 @@ export default [
       ...tseslint.configs['recommended'].rules,
       'no-console': 'warn',
       'no-debugger': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
     },
   },
   // Relaxed rules for test files

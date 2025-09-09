@@ -96,8 +96,8 @@ export class DeepSourceMCPServer {
     try {
       logger.info('Starting registration of default DeepSource tools', {
         mcpServerType: typeof this.mcpServer,
-        mcpServerExists: !!this.mcpServer,
-        toolRegistryExists: !!this.toolRegistry,
+        mcpServerExists: Boolean(this.mcpServer),
+        toolRegistryExists: Boolean(this.toolRegistry),
       });
 
       registerDeepSourceTools(this.toolRegistry);
@@ -114,7 +114,7 @@ export class DeepSourceMCPServer {
       logger.info('Tool registration verification', {
         toolRegistryCount: registeredTools.length,
         mcpServerConnected: this.isConnected,
-        transportSet: !!this.transport,
+        transportSet: Boolean(this.transport),
       });
     } catch (error) {
       logger.error('Failed to register DeepSource tools', {
