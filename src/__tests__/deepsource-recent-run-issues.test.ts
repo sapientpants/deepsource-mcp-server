@@ -35,7 +35,7 @@ vi.mock('axios', () => ({
 
 // Import axios to get the mocked version
 const axios = await import('axios');
-const mockAxios = axios.default as any;
+const mockAxios = axios.default as any; // skipcq: JS-0323
 
 // Import DeepSourceClient after mocking
 const { DeepSourceClient } = await import('../deepsource.js');

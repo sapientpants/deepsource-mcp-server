@@ -17,8 +17,8 @@ const mockLogger = {
 
 describe('ProjectsClient', () => {
   let projectsClient: ProjectsClient;
-  let mockExecuteGraphQL: any;
-  let mockAsProjectKey: any;
+  let mockExecuteGraphQL: any; // skipcq: JS-0323
+  let mockAsProjectKey: any; // skipcq: JS-0323
 
   beforeEach(() => {
     mockExecuteGraphQL = vi.fn();

@@ -17,11 +17,13 @@ describe('SecurityClient', () => {
     mockBaseClient = securityClient as unknown as MockDeepSourceClient;
 
     // Mock the methods we need
-    (mockBaseClient as any).findProjectByKey = vi.fn();
-    (mockBaseClient as any).executeGraphQL = vi.fn();
-    (mockBaseClient as any).createEmptyPaginatedResponse = vi.fn();
-    (mockBaseClient as any).normalizePaginationParams = vi.fn();
+    // skipcq: JS-0323
+    (mockBaseClient as any).findProjectByKey = vi.fn(); // skipcq: JS-0323
+    (mockBaseClient as any).executeGraphQL = vi.fn(); // skipcq: JS-0323
+    (mockBaseClient as any).createEmptyPaginatedResponse = vi.fn(); // skipcq: JS-0323
+    (mockBaseClient as any).normalizePaginationParams = vi.fn(); // skipcq: JS-0323
     (mockBaseClient as any).logger = {
+      // skipcq: JS-0323
       info: vi.fn(),
       error: vi.fn(),
       debug: vi.fn(),
@@ -69,13 +71,14 @@ describe('SecurityClient', () => {
         },
       };
 
-      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any);
-      (mockBaseClient as any).executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any);
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any); // skipcq: JS-0323
+      (mockBaseClient as any).executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any); // skipcq: JS-0323
 
       const result = await securityClient.getComplianceReport('test-project', 'OWASP_TOP_10');
 
-      expect((mockBaseClient as any).findProjectByKey).toHaveBeenCalledWith('test-project');
+      expect((mockBaseClient as any).findProjectByKey).toHaveBeenCalledWith('test-project'); // skipcq: JS-0323
       expect((mockBaseClient as any).executeGraphQL).toHaveBeenCalledWith(
+        // skipcq: JS-0323
         expect.stringContaining('query getComplianceReports'),
         expect.objectContaining({
           login: 'test-org',
@@ -94,7 +97,7 @@ describe('SecurityClient', () => {
     });
 
     it('should return null when project not found', async () => {
-      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(null as any);
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(null as any); // skipcq: JS-0323
 
       const result = await securityClient.getComplianceReport(
         'nonexistent-project',
@@ -113,7 +116,7 @@ describe('SecurityClient', () => {
         },
       };
 
-      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any);
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any); // skipcq: JS-0323
       vi.spyOn(mockBaseClient as any, 'executeGraphQL').mockRejectedValue(
         new Error('GraphQL error')
       );
@@ -136,8 +139,8 @@ describe('SecurityClient', () => {
         data: null,
       };
 
-      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any);
-      (mockBaseClient as any).executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any);
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any); // skipcq: JS-0323
+      (mockBaseClient as any).executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any); // skipcq: JS-0323
 
       const result = await securityClient.getComplianceReport('test-project', 'OWASP_TOP_10');
 
@@ -161,8 +164,8 @@ describe('SecurityClient', () => {
         },
       };
 
-      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any);
-      (mockBaseClient as any).executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any);
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any); // skipcq: JS-0323
+      (mockBaseClient as any).executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any); // skipcq: JS-0323
 
       const result = await securityClient.getComplianceReport('test-project', 'OWASP_TOP_10');
 
@@ -239,17 +242,18 @@ describe('SecurityClient', () => {
         },
       };
 
-      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any);
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any); // skipcq: JS-0323
       (mockBaseClient as any).normalizePaginationParams = vi.fn().mockReturnValue({
         first: 20,
         after: null,
       });
-      (mockBaseClient as any).executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any);
+      (mockBaseClient as any).executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any); // skipcq: JS-0323
 
       const result = await securityClient.getDependencyVulnerabilities('test-project');
 
-      expect((mockBaseClient as any).findProjectByKey).toHaveBeenCalledWith('test-project');
+      expect((mockBaseClient as any).findProjectByKey).toHaveBeenCalledWith('test-project'); // skipcq: JS-0323
       expect((mockBaseClient as any).executeGraphQL).toHaveBeenCalledWith(
+        // skipcq: JS-0323
         expect.stringContaining('query getDependencyVulnerabilities'),
         expect.objectContaining({
           login: 'test-org',
@@ -266,7 +270,7 @@ describe('SecurityClient', () => {
     });
 
     it('should return empty response when project not found', async () => {
-      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(null as any);
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(null as any); // skipcq: JS-0323
       (mockBaseClient as any).createEmptyPaginatedResponse = vi.fn().mockReturnValue({
         items: [],
         pageInfo: { hasNextPage: false, hasPreviousPage: false },
@@ -288,7 +292,7 @@ describe('SecurityClient', () => {
         },
       };
 
-      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any);
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any); // skipcq: JS-0323
       (mockBaseClient as any).normalizePaginationParams = vi.fn().mockReturnValue({
         first: 20,
       });
@@ -326,12 +330,12 @@ describe('SecurityClient', () => {
         },
       };
 
-      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any);
+      (mockBaseClient as any).findProjectByKey = vi.fn().mockResolvedValue(mockProject as any); // skipcq: JS-0323
       (mockBaseClient as any).normalizePaginationParams = vi.fn().mockReturnValue({
         first: 10,
         after: 'cursor123',
       });
-      (mockBaseClient as any).executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any);
+      (mockBaseClient as any).executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any); // skipcq: JS-0323
 
       await securityClient.getDependencyVulnerabilities('test-project', {
         first: 10,

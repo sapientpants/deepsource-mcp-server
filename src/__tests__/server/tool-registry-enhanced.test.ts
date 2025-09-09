@@ -60,7 +60,7 @@ vi.mock('path', () => {
 });
 
 describe('EnhancedToolRegistry', () => {
-  let mockServer: any;
+  let mockServer: any; // skipcq: JS-0323
   let registry: EnhancedToolRegistry;
   const mockDeps: BaseHandlerDeps = {
     getApiKey: vi.fn(() => 'test-api-key'),
@@ -78,7 +78,7 @@ describe('EnhancedToolRegistry', () => {
     mockServer = {
       registerTool: vi.fn(),
       connect: vi.fn(),
-    } as unknown as any;
+    } as unknown as any; // skipcq: JS-0323
 
     registry = new EnhancedToolRegistry(mockServer, mockDeps);
     vi.clearAllMocks();
@@ -363,16 +363,16 @@ describe('EnhancedToolRegistry', () => {
 
     it('should handle reload errors gracefully', async () => {
       // Access the private members through type assertion
-      const mockRegistry = registry as any;
+      const mockRegistry = registry as any; // skipcq: JS-0323
 
       mockRegistry.discoveredTools.set('discovered-tool', '/path/to/tool.js');
       mockRegistry.loadToolFromFile = vi.fn().mockRejectedValue(new Error('Load failed'));
 
       // Mock require.resolve directly
       const originalResolve = require.resolve;
-      require.resolve = vi.fn(() => '/resolved/path') as any;
+      require.resolve = vi.fn(() => '/resolved/path') as any; // skipcq: JS-0323
       // Set up require.cache
-      require.cache['/resolved/path'] = {} as any;
+      require.cache['/resolved/path'] = {} as any; // skipcq: JS-0323
 
       const result = await registry.reloadTool('discovered-tool');
       expect(result).toBe(false);
@@ -384,7 +384,7 @@ describe('EnhancedToolRegistry', () => {
 
     it.skip('should successfully reload a discovered tool', async () => {
       // Access the private members through type assertion
-      const mockRegistry = registry as any;
+      const mockRegistry = registry as any; // skipcq: JS-0323
 
       // The registry already has discoveredTools initialized, just add to it
       mockRegistry.discoveredTools.set('reloadable-tool', '/path/to/tool.js');
@@ -392,9 +392,9 @@ describe('EnhancedToolRegistry', () => {
 
       // Mock require.resolve directly
       const originalResolve = require.resolve;
-      require.resolve = vi.fn(() => '/resolved/path') as any;
+      require.resolve = vi.fn(() => '/resolved/path') as any; // skipcq: JS-0323
       // Set up require.cache
-      require.cache['/resolved/path'] = {} as any;
+      require.cache['/resolved/path'] = {} as any; // skipcq: JS-0323
 
       const result = await registry.reloadTool('reloadable-tool');
       expect(result).toBe(true);
@@ -407,16 +407,16 @@ describe('EnhancedToolRegistry', () => {
 
     it('should return false when reloaded tool has different name', async () => {
       // Access the private members through type assertion
-      const mockRegistry = registry as any;
+      const mockRegistry = registry as any; // skipcq: JS-0323
 
       mockRegistry.discoveredTools.set('original-tool', '/path/to/tool.js');
       mockRegistry.loadToolFromFile = vi.fn().mockResolvedValue('different-tool');
 
       // Mock require.resolve directly
       const originalResolve = require.resolve;
-      require.resolve = vi.fn(() => '/resolved/path') as any;
+      require.resolve = vi.fn(() => '/resolved/path') as any; // skipcq: JS-0323
       // Set up require.cache
-      require.cache['/resolved/path'] = {} as any;
+      require.cache['/resolved/path'] = {} as any; // skipcq: JS-0323
 
       const result = await registry.reloadTool('original-tool');
       expect(result).toBe(false);

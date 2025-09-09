@@ -14,7 +14,7 @@ vi.mock('fs', () => ({
 
 // Import the mocked fs
 const { appendFileSync } = await import('fs');
-const mockAppendFileSync = appendFileSync as any;
+const mockAppendFileSync = appendFileSync as any; // skipcq: JS-0323
 
 // Import logger module after mocking fs
 const loggerModule = await import('../../../utils/logging/logger');
@@ -68,9 +68,9 @@ describe('Logger Module', () => {
 
       // Re-import modules
       const { appendFileSync, writeFileSync, mkdirSync } = await import('fs');
-      const mockDir = mkdirSync as any;
-      const mockWrite = writeFileSync as any;
-      const mockAppend = appendFileSync as any;
+      const mockDir = mkdirSync as any; // skipcq: JS-0323
+      const mockWrite = writeFileSync as any; // skipcq: JS-0323
+      const mockAppend = appendFileSync as any; // skipcq: JS-0323
       const loggerModule = await import('../../../utils/logging/logger');
       const { Logger } = loggerModule;
 
@@ -124,8 +124,8 @@ describe('Logger Module', () => {
 
       // Re-import modules
       const { writeFileSync, mkdirSync } = await import('fs');
-      const mockWrite = writeFileSync as any;
-      const mockMkdir = mkdirSync as any;
+      const mockWrite = writeFileSync as any; // skipcq: JS-0323
+      const mockMkdir = mkdirSync as any; // skipcq: JS-0323
       const loggerModule = await import('../../../utils/logging/logger');
       const { Logger } = loggerModule;
 
@@ -314,7 +314,7 @@ describe('Logger Module', () => {
 
         // Re-import modules
         const { appendFileSync } = await import('fs');
-        const mockAppendFile = appendFileSync as any;
+        const mockAppendFile = appendFileSync as any; // skipcq: JS-0323
         const loggerModule = await import('../../../utils/logging/logger');
         const { Logger } = loggerModule;
 

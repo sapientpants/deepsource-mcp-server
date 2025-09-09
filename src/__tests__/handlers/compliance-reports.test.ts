@@ -57,9 +57,9 @@ const mockRepositoryFactoryModule = await import(
   '../../infrastructure/factories/repository.factory'
 );
 const mockFindByProjectAndType = (mockRepositoryFactoryModule as any).__mockFindByProjectAndType;
-const mockComplianceReportRepository = (mockRepositoryFactoryModule as any)
+const mockComplianceReportRepository = (mockRepositoryFactoryModule as any) // skipcq: JS-0323
   .__mockComplianceReportRepository;
-const mockCreateComplianceReportRepository = (mockRepositoryFactoryModule as any)
+const mockCreateComplianceReportRepository = (mockRepositoryFactoryModule as any) // skipcq: JS-0323
   .__mockCreateComplianceReportRepository;
 const mockRepositoryFactory = (mockRepositoryFactoryModule as any).__mockRepositoryFactory;
 

@@ -45,16 +45,16 @@ class TestableMetricsClient extends MetricsClient {
 describe('MetricsClient - History and Additional Methods', () => {
   let metricsClient: TestableMetricsClient;
   let mockBaseClient: {
-    findProjectByKey: any;
-    executeGraphQL: any;
+    findProjectByKey: any; // skipcq: JS-0323
+    executeGraphQL: any; // skipcq: JS-0323
     logger: {
-      info: any;
-      error: any;
-      debug: any;
-      warn: any;
+      info: any; // skipcq: JS-0323
+      error: any; // skipcq: JS-0323
+      debug: any; // skipcq: JS-0323
+      warn: any; // skipcq: JS-0323
     };
-    extractHistoryFromResponse: any;
-    extractMetricsFromResponse: any;
+    extractHistoryFromResponse: any; // skipcq: JS-0323
+    extractMetricsFromResponse: any; // skipcq: JS-0323
   };
   let originalEnv: typeof process.env;
 
@@ -62,16 +62,16 @@ describe('MetricsClient - History and Additional Methods', () => {
     originalEnv = { ...process.env };
     metricsClient = new TestableMetricsClient('test-api-key');
     mockBaseClient = metricsClient as unknown as {
-      findProjectByKey: any;
-      executeGraphQL: any;
+      findProjectByKey: any; // skipcq: JS-0323
+      executeGraphQL: any; // skipcq: JS-0323
       logger: {
-        info: any;
-        error: any;
-        debug: any;
-        warn: any;
+        info: any; // skipcq: JS-0323
+        error: any; // skipcq: JS-0323
+        debug: any; // skipcq: JS-0323
+        warn: any; // skipcq: JS-0323
       };
-      extractHistoryFromResponse: any;
-      extractMetricsFromResponse: any;
+      extractHistoryFromResponse: any; // skipcq: JS-0323
+      extractMetricsFromResponse: any; // skipcq: JS-0323
     };
 
     // Mock the methods on the client instance
@@ -85,7 +85,9 @@ describe('MetricsClient - History and Additional Methods', () => {
     };
     // Ensure logger and other properties are properly set up
     if (!(mockBaseClient as any).logger) {
+      // skipcq: JS-0323
       (mockBaseClient as any).logger = {
+        // skipcq: JS-0323
         info: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
@@ -93,10 +95,12 @@ describe('MetricsClient - History and Additional Methods', () => {
       };
     }
     if (!(mockBaseClient as any).extractHistoryFromResponse) {
-      (mockBaseClient as any).extractHistoryFromResponse = vi.fn();
+      // skipcq: JS-0323
+      (mockBaseClient as any).extractHistoryFromResponse = vi.fn(); // skipcq: JS-0323
     }
     if (!(mockBaseClient as any).extractMetricsFromResponse) {
-      (mockBaseClient as any).extractMetricsFromResponse = vi.fn();
+      // skipcq: JS-0323
+      (mockBaseClient as any).extractMetricsFromResponse = vi.fn(); // skipcq: JS-0323
     }
   });
 
@@ -159,8 +163,8 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      (mockBaseClient.findProjectByKey as any).mockResolvedValue(mockProject);
-      (mockBaseClient.executeGraphQL as any).mockResolvedValue(mockResponse);
+      (mockBaseClient.findProjectByKey as any).mockResolvedValue(mockProject); // skipcq: JS-0323 // skipcq: JS-0323
+      (mockBaseClient.executeGraphQL as any).mockResolvedValue(mockResponse); // skipcq: JS-0323
 
       const result = await metricsClient.getMetricHistory(mockHistoryParams);
 
@@ -181,7 +185,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         metricKey: 'UNKNOWN_KEY' as MetricKey,
       };
 
-      (mockBaseClient.findProjectByKey as any).mockResolvedValue(null);
+      (mockBaseClient.findProjectByKey as any).mockResolvedValue(null); // skipcq: JS-0323
 
       await expect(metricsClient.getMetricHistory(nonTestParams)).rejects.toThrow(
         'Project with key non-test-project not found'
@@ -200,8 +204,8 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      (mockBaseClient.findProjectByKey as any).mockResolvedValue(mockProject);
-      (mockBaseClient.executeGraphQL as any).mockResolvedValue({ data: null });
+      (mockBaseClient.findProjectByKey as any).mockResolvedValue(mockProject); // skipcq: JS-0323
+      (mockBaseClient.executeGraphQL as any).mockResolvedValue({ data: null }); // skipcq: JS-0323
 
       const result = await metricsClient.getMetricHistory(mockHistoryParams);
       expect(result).toBeNull();
@@ -251,8 +255,8 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      (mockBaseClient.findProjectByKey as any).mockResolvedValue(mockProject);
-      (mockBaseClient.executeGraphQL as any).mockRejectedValue(new Error('Metric not found'));
+      (mockBaseClient.findProjectByKey as any).mockResolvedValue(mockProject); // skipcq: JS-0323
+      (mockBaseClient.executeGraphQL as any).mockRejectedValue(new Error('Metric not found')); // skipcq: JS-0323
 
       const result = await metricsClient.getMetricHistory(mockHistoryParams);
       expect(result).toBeNull();
@@ -273,8 +277,9 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      (mockBaseClient.findProjectByKey as any).mockResolvedValue(mockProject);
+      (mockBaseClient.findProjectByKey as any).mockResolvedValue(mockProject); // skipcq: JS-0323
       (mockBaseClient.executeGraphQL as any).mockRejectedValue(
+        // skipcq: JS-0323
         new Error("'NoneType' object has no attribute")
       );
 
@@ -297,8 +302,8 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      (mockBaseClient.findProjectByKey as any).mockResolvedValue(mockProject);
-      (mockBaseClient.executeGraphQL as any).mockRejectedValue(new Error('Network error'));
+      (mockBaseClient.findProjectByKey as any).mockResolvedValue(mockProject); // skipcq: JS-0323
+      (mockBaseClient.executeGraphQL as any).mockRejectedValue(new Error('Network error')); // skipcq: JS-0323
 
       await expect(metricsClient.getMetricHistory(mockHistoryParams)).rejects.toThrow(
         'Network error'
@@ -370,7 +375,7 @@ describe('MetricsClient - History and Additional Methods', () => {
       const result = metricsClient.testExtractHistoryFromResponse(
         mockResponseData,
         mockParams
-      ) as any;
+      ) as any; // skipcq: JS-0323
 
       expect(result).not.toBeNull();
       expect(result.shortcode).toBe(MetricShortcode.LCV);
@@ -467,7 +472,7 @@ describe('MetricsClient - History and Additional Methods', () => {
       const result = metricsClient.testExtractHistoryFromResponse(
         mockResponseData,
         mockParams
-      ) as any;
+      ) as any; // skipcq: JS-0323
 
       expect(result).not.toBeNull();
       expect(result.values).toHaveLength(2); // Only valid nodes
@@ -479,7 +484,7 @@ describe('MetricsClient - History and Additional Methods', () => {
 
       // Create a new metrics client with a mocked logger
       const testClient = new MetricsClient('test-api-key');
-      const testMockClient = testClient as unknown as any;
+      const testMockClient = testClient as unknown as any; // skipcq: JS-0323
       testMockClient.logger = {
         info: vi.fn(),
         error: vi.fn(),
@@ -586,7 +591,7 @@ describe('MetricsClient - History and Additional Methods', () => {
 
       // Create a new metrics client with a mocked logger
       const testClient = new MetricsClient('test-api-key');
-      const testMockClient = testClient as unknown as any;
+      const testMockClient = testClient as unknown as any; // skipcq: JS-0323
       testMockClient.logger = {
         info: vi.fn(),
         error: vi.fn(),
@@ -619,7 +624,7 @@ describe('MetricsClient - History and Additional Methods', () => {
       const result = metricsClient.testExtractMetricsFromResponse(mockResponseData);
 
       expect(result).toHaveLength(1);
-      expect((result as any)[0].items).toEqual([]);
+      expect((result as any)[0].items).toEqual([]); // skipcq: JS-0323
     });
   });
 

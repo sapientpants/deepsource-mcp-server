@@ -164,7 +164,7 @@ const {
 describe('Registry-based MCP Server Integration', () => {
   let registry: MockToolRegistry;
   let mockMcpServer: {
-    registerTool: any;
+    registerTool: any; // skipcq: JS-0323
     connect: MockedFunction<(...args: any[]) => Promise<void>>;
   };
 
