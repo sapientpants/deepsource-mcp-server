@@ -8,12 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [v1.4.0] - 2025-08-23
 
 ### Breaking Changes
+
 - Removed misleading `start`, `dev`, and related test:server commands that don't work with MCP servers
 - Renamed `format` and `format:check` commands for consistency with lint commands:
   - `format` now checks formatting (was `format:check`)
   - `format:fix` now fixes formatting (was `format`)
 
 ### Changed
+
 - Updated dependencies to latest versions:
   - zod: 3.25.76 → 4.1.0 (major version upgrade)
   - @modelcontextprotocol/sdk: 1.17.3 → 1.17.4
@@ -22,10 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed redundant `validate` script (use `ci` instead)
 
 ### Fixed
+
 - Fixed Zod v4 breaking change by updating error property access from `.errors` to `.issues`
 - Fixed MCP server documentation to clarify stdio communication requirements
 
 ### Documentation
+
 - Significantly improved CLAUDE.md with better architecture overview and focused guidelines
 - Reorganized and enhanced development commands documentation
 - Added comprehensive error handling patterns with complete examples
@@ -33,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clarified that MCP servers cannot be run standalone
 
 ## [v1.3.2] - 2025-08-23
+
 - Added commitlint support for conventional commits
 - Upgraded to Node 22 LTS (minimum version requirement)
 - Fixed TypeScript type safety issues by replacing `any` types with proper types
@@ -50,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved build process reliability
 
 ## [v1.3.1] - 2025-08-11
+
 - Updated dependencies to latest versions
   - @modelcontextprotocol/sdk: 1.17.1 → 1.17.2
   - @eslint/js: 9.32.0 → 9.33.0
@@ -64,6 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed ESLint warnings by removing unused eslint-disable directives
 
 ## [v1.3.0] - 2025-08-05
+
 - Major architectural improvements with Domain-Driven Design (DDD) implementation
 - Improved test coverage from 88.84% to 90.27%
 - Added comprehensive error handling system with MCP-specific error types
@@ -85,6 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved code organization following SOLID and DRY principles
 
 ## [v1.2.2] - 2025-07-28
+
 - Updated all dependencies to their latest versions
   - @modelcontextprotocol/sdk: 1.12.3 → 1.17.0
   - axios: 1.10.0 → 1.11.0
@@ -105,6 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Security fix: Bumped brace-expansion to address vulnerability
 
 ## [v1.2.1] - 2025-06-16
+
 - Updated all dependencies to their latest versions
   - @modelcontextprotocol/sdk: 1.11.4 → 1.12.3
   - axios: 1.9.0 → 1.10.0
@@ -123,11 +132,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - ts-jest: 29.3.4 → 29.4.0
 
 ## [v1.2.0] - 2025-05-21
+
 - Refactored codebase for improved maintainability
 - Removed examples directory containing non-production code
 - Improved documentation
 
 ## [v1.1.0] - 2025-05-20
+
 - Added dependency vulnerability reporting
 - Added quality metrics history support
 - Added metric threshold management
@@ -136,14 +147,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved error handling
 
 ## [v1.0.2] - 2025-05-17
+
 - Fixed npx launching issues
 - Fixed package description
 
 ## [v1.0.1] - 2025-05-17
+
 - Fixed documentation issues
 - Added comprehensive test coverage
 
 ## [v1.0.0] - 2025-05-16
+
 - Initial stable release
 - Complete MCP server implementation for DeepSource
 - Support for projects, issues, runs, and compliance reports

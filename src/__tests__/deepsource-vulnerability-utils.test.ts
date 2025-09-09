@@ -1,5 +1,5 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
 import { TestableDeepSourceClient } from './utils/test-utils';

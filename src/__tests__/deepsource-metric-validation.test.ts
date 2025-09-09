@@ -1,8 +1,8 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import nock from 'nock';
 import { DeepSourceClient, MetricShortcode } from '../deepsource';
 import { MetricKey } from '../types/metrics';
@@ -65,14 +65,14 @@ describe('DeepSourceClient Metric Validation', () => {
       ];
 
       // Mock the listProjects method to return our mock data (line 2931)
-      jest.spyOn(client, 'listProjects').mockResolvedValue(mockProjects);
+      vi.spyOn(client, 'listProjects').mockResolvedValue(mockProjects);
 
       // Mock the getQualityMetrics method to return our mock data (line 2942)
-      jest.spyOn(client, 'getQualityMetrics').mockResolvedValue(mockMetrics);
+      vi.spyOn(client, 'getQualityMetrics').mockResolvedValue(mockMetrics);
 
       // Mock the static validateProjectRepository method (line 2939)
       // This validation is bypassed because we're testing other aspects of the validation flow
-      jest.spyOn(DeepSourceClient, 'validateProjectRepository').mockImplementation(() => {
+      vi.spyOn(DeepSourceClient, 'validateProjectRepository').mockImplementation(() => {
         // Intentionally empty - validation is not the focus of this test
         // We're just preventing it from throwing errors
       });
@@ -104,7 +104,7 @@ describe('DeepSourceClient Metric Validation', () => {
 
     it('should throw error when project is not found (line 2934)', async () => {
       // Mock the listProjects method to return empty array (line 2931)
-      jest.spyOn(client, 'listProjects').mockResolvedValue([]);
+      vi.spyOn(client, 'listProjects').mockResolvedValue([]);
 
       // Call the method and expect it to throw
       await expect(
@@ -141,14 +141,14 @@ describe('DeepSourceClient Metric Validation', () => {
       }> = [];
 
       // Mock the listProjects method to return our mock data (line 2931)
-      jest.spyOn(client, 'listProjects').mockResolvedValue(mockProjects);
+      vi.spyOn(client, 'listProjects').mockResolvedValue(mockProjects);
 
       // Mock the getQualityMetrics method to return empty array (line 2942)
-      jest.spyOn(client, 'getQualityMetrics').mockResolvedValue(mockMetrics);
+      vi.spyOn(client, 'getQualityMetrics').mockResolvedValue(mockMetrics);
 
       // Mock the static validateProjectRepository method (line 2939)
       // This validation is bypassed because we're testing other aspects of the validation flow
-      jest.spyOn(DeepSourceClient, 'validateProjectRepository').mockImplementation(() => {
+      vi.spyOn(DeepSourceClient, 'validateProjectRepository').mockImplementation(() => {
         // Intentionally empty - validation is not the focus of this test
         // We're just preventing it from throwing errors
       });
@@ -198,14 +198,14 @@ describe('DeepSourceClient Metric Validation', () => {
       ];
 
       // Mock the listProjects method to return our mock data (line 2931)
-      jest.spyOn(client, 'listProjects').mockResolvedValue(mockProjects);
+      vi.spyOn(client, 'listProjects').mockResolvedValue(mockProjects);
 
       // Mock the getQualityMetrics method to return our mock data (line 2942)
-      jest.spyOn(client, 'getQualityMetrics').mockResolvedValue(mockMetrics);
+      vi.spyOn(client, 'getQualityMetrics').mockResolvedValue(mockMetrics);
 
       // Mock the static validateProjectRepository method (line 2939)
       // This validation is bypassed because we're testing other aspects of the validation flow
-      jest.spyOn(DeepSourceClient, 'validateProjectRepository').mockImplementation(() => {
+      vi.spyOn(DeepSourceClient, 'validateProjectRepository').mockImplementation(() => {
         // Intentionally empty - validation is not the focus of this test
         // We're just preventing it from throwing errors
       });

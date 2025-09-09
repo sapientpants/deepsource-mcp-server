@@ -110,8 +110,14 @@ export function createRunHandlerWithRepo(deps: RunHandlerDeps) {
             occurrencesIntroduced: domainRun.summary.totalIntroduced.count,
             occurrencesResolved: domainRun.summary.totalResolved.count,
             occurrencesSuppressed: domainRun.summary.totalSuppressed.count,
-            occurrenceDistributionByAnalyzer: domainRun.summary.byAnalyzer,
-            occurrenceDistributionByCategory: domainRun.summary.byCategory,
+            occurrenceDistributionByAnalyzer: domainRun.summary.byAnalyzer.map((dist) => ({
+              analyzerShortcode: dist.analyzerShortcode,
+              introduced: dist.introduced.count,
+            })),
+            occurrenceDistributionByCategory: domainRun.summary.byCategory.map((dist) => ({
+              category: dist.category,
+              introduced: dist.introduced.count,
+            })),
           },
           repository: {
             name: 'Repository', // Domain aggregate doesn't store repository name directly
@@ -284,8 +290,13 @@ export async function handleDeepsourceRun(params: DeepsourceRunParams): Promise<
 
   // If the domain handler returned an error response, throw an error for backward compatibility
   if (result.isError) {
-    const errorData = JSON.parse(result.content[0].text);
-    throw new Error(errorData.error);
+    const firstContent = result.content[0];
+    if (firstContent) {
+      const errorData = JSON.parse(firstContent.text);
+      throw new Error(errorData.error);
+    } else {
+      throw new Error('Unknown run error');
+    }
   }
 
   return result;

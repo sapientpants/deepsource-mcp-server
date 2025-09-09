@@ -2,18 +2,6 @@
   "name": "deepsource-mcp-server",
   "version": "1.4.0",
   "description": "Model Context Protocol server for DeepSource",
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "bin": {
-    "deepsource-mcp-server": "./dist/index.js"
-  },
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sapientpants/deepsource-mcp-server.git"
@@ -21,52 +9,99 @@
   "bugs": {
     "url": "https://github.com/sapientpants/deepsource-mcp-server/issues"
   },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "bin": {
+    "deepsource-mcp-server": "./dist/index.js"
+  },
+  "packageManager": "pnpm@10.15.0",
   "engines": {
-    "node": ">=22.0.0",
-    "pnpm": ">=10.0.0"
+    "node": ">=22.0.0"
   },
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
-    "clean": "rm -rf dist",
-    "test": "NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest",
-    "test:watch": "NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest --watch",
-    "test:coverage": "NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest --coverage",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
-    "format": "prettier --check \"src/**/*.ts\"",
-    "format:fix": "prettier --write \"src/**/*.ts\"",
-    "check-types": "tsc --noEmit",
-    "ci": "pnpm run format && pnpm run lint && pnpm run check-types && pnpm run build && pnpm run test:coverage",
+    "build:watch": "tsc -p tsconfig.build.json --watch",
+    "build": "tsc -p tsconfig.build.json",
+    "changeset:status": "changeset status --since=main",
+    "changeset": "changeset",
+    "ci:local:fast": "./scripts/ci-local.sh --fast",
+    "ci:local": "./scripts/ci-local.sh",
+    "clean": "rimraf dist coverage",
+    "coverage:open": "open coverage/index.html",
+    "coverage:report": "vitest run --coverage --reporter=verbose",
+    "dev": "tsc --watch --preserveWatchOutput",
+    "doctor": "node -e \"console.log('Node:', process.version); console.log('npm scripts:', Object.keys(require('./package.json').scripts).length, 'available'); console.log('Run: pnpm run help')\"",
+    "format:fix": "prettier --write .",
+    "format": "prettier --check .",
+    "help": "node -e \"const s=require('./package.json').scripts; console.log('Available commands:'); Object.keys(s).sort().forEach(k => console.log('  pnpm run ' + k.padEnd(20) + ' # ' + s[k].split(' ')[0]))\"",
     "inspect": "npx @modelcontextprotocol/inspector@latest node dist/index.js",
-    "prepare": "husky"
+    "lint-staged": "lint-staged",
+    "lint:fix": "eslint . --fix",
+    "lint:markdown:fix": "markdownlint-cli2 --fix \"**/*.md\" \"#node_modules\"",
+    "lint:markdown": "markdownlint-cli2 \"**/*.md\" \"#node_modules\"",
+    "lint:workflows": "./scripts/actionlint.sh",
+    "lint:yaml": "yamllint '**/*.{yml,yaml}' --ignore='node_modules/**' --ignore='.github/workflows/**' --ignore='pnpm-lock.yaml'",
+    "lint": "eslint .",
+    "precommit": "pnpm audit --audit-level critical && pnpm typecheck && pnpm lint && pnpm lint:workflows && pnpm lint:markdown && pnpm lint:yaml && pnpm format && pnpm test",
+    "prepare": "husky",
+    "quick-check": "pnpm typecheck && pnpm lint && pnpm test",
+    "release:publish": "pnpm build && changeset publish",
+    "release:tag": "git add -A && git commit -m \"chore(release): version packages\" && git tag -a v$(node -p \"require('./package.json').version\") -m \"Release\"",
+    "release": "changeset version && pnpm build",
+    "reset": "pnpm clean && pnpm install",
+    "sbom": "pnpm dlx @cyclonedx/cdxgen -o sbom.cdx.json",
+    "scan:container:sarif": "./scripts/scan-container.sh --format sarif --output container-scan.sarif",
+    "scan:container": "./scripts/scan-container.sh",
+    "setup": "./scripts/setup.sh",
+    "start": "node dist/index.js",
+    "test:coverage:watch": "vitest --coverage",
+    "test:coverage": "vitest run --reporter=verbose --coverage",
+    "test:ui": "vitest --ui",
+    "test:watch": "vitest",
+    "test": "vitest run --reporter=verbose",
+    "typecheck:watch": "tsc -p tsconfig.json --noEmit --watch",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
+    "verify": "pnpm precommit"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "prettier --check",
-      "eslint"
+    "*.{ts,tsx,js,json,md,yml,yaml}": [
+      "prettier --write"
+    ],
+    "*.{ts,tsx,js,json,jsonc,json5}": [
+      "eslint --fix"
+    ],
+    "*.md": [
+      "markdownlint-cli2 --fix"
+    ],
+    "*.{yml,yaml}": [
+      "yamllint"
     ]
   },
-  "keywords": [
-    "deepsource",
-    "mcp",
-    "model-context-protocol"
-  ],
-  "author": "Marc Tremblay <marc.tremblay@gmail.com>",
-  "homepage": "https://github.com/sapientpants/deepsource-mcp-server",
-  "license": "MIT",
-  "packageManager": "pnpm@10.7.0",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.4",
     "axios": "^1.11.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "zod": "^4.1.0"
+    "pino": "9.9.0",
+    "pino-roll": "3.1.0",
+    "pino-syslog": "3.2.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "0.5.1",
+    "@changesets/cli": "^2.29.6",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
+    "@cyclonedx/cdxgen": "11.6.0",
     "@eslint/js": "^9.34.0",
+    "@fast-check/vitest": "^0.2.2",
+    "@jest/globals": "^30.1.2",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
@@ -74,19 +109,28 @@
     "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.40.0",
     "@typescript-eslint/parser": "^8.40.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^9.34.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jsonc": "2.20.1",
     "eslint-plugin-prettier": "^5.5.4",
+    "fast-check": "^4.2.0",
     "husky": "^9.1.7",
     "jest": "^30.0.5",
+    "jsonc-eslint-parser": "2.4.0",
     "lint-staged": "^16.1.5",
+    "markdownlint-cli2": "0.18.1",
     "nock": "^14.0.10",
+    "pino-pretty": "13.1.1",
     "prettier": "^3.6.2",
+    "rimraf": "^6.0.1",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.1",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4",
+    "yaml-lint": "1.7.0"
   },
   "pnpm": {
     "overrides": {

@@ -1,8 +1,8 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import nock from 'nock';
 import { DeepSourceClient, MetricShortcode } from '../deepsource';
 import { MetricDirection, MetricKey } from '../types/metrics';
@@ -365,8 +365,8 @@ describe('DeepSourceClient Metrics History', () => {
       expect(result?.isTrendingPositive).toBe(true);
 
       // Verify values are decreasing
-      expect(result?.values[0].value).toBeGreaterThan(result?.values[1].value as number);
-      expect(result?.values[1].value).toBeGreaterThan(result?.values[2].value as number);
+      expect(result?.values[0].value).toBeGreaterThan(Number(result?.values[1].value));
+      expect(result?.values[1].value).toBeGreaterThan(Number(result?.values[2].value));
     });
 
     it('should handle negative trends correctly', async () => {
@@ -522,8 +522,8 @@ describe('DeepSourceClient Metrics History', () => {
       expect(result?.isTrendingPositive).toBe(false); // Should detect negative trend
 
       // Verify values are decreasing (which is negative for LCV)
-      expect(result?.values[0].value).toBeGreaterThan(result?.values[1].value as number);
-      expect(result?.values[1].value).toBeGreaterThan(result?.values[2].value as number);
+      expect(result?.values[0].value).toBeGreaterThan(Number(result?.values[1].value));
+      expect(result?.values[1].value).toBeGreaterThan(Number(result?.values[2].value));
     });
 
     it('should handle API errors gracefully', async () => {
@@ -623,12 +623,12 @@ describe('DeepSourceClient Metrics History', () => {
 
       // Mock the validateProjectKey method to do nothing - we only need to bypass the validation
       // without actually implementing its logic, as we're testing the error handling in getMetricHistory
-      jest.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {
+      vi.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {
         // Intentionally empty - we're just bypassing validation
       });
 
       // Mock the client's post method to throw a "not found" error
-      jest.spyOn(customClient['client'], 'post').mockImplementation(() => {
+      vi.spyOn(customClient['client'], 'post').mockImplementation(() => {
         throw new Error('not found: Metric data could not be found');
       });
 
@@ -643,7 +643,7 @@ describe('DeepSourceClient Metrics History', () => {
       expect(result).toBeNull();
 
       // Restore mocks
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should return null when isNotFoundError is true with "NoneType" error (line 2715)', async () => {
@@ -655,12 +655,12 @@ describe('DeepSourceClient Metrics History', () => {
 
       // Mock the validateProjectKey method to do nothing - we only need to bypass the validation
       // without actually implementing its logic, as we're testing the error handling in getMetricHistory
-      jest.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {
+      vi.spyOn(DeepSourceClient, 'validateProjectKey').mockImplementation(() => {
         // Intentionally empty - we're just bypassing validation
       });
 
       // Mock the client's post method to throw a NoneType error
-      jest.spyOn(customClient['client'], 'post').mockImplementation(() => {
+      vi.spyOn(customClient['client'], 'post').mockImplementation(() => {
         throw new Error('NoneType object has no attribute get');
       });
 
@@ -675,7 +675,7 @@ describe('DeepSourceClient Metrics History', () => {
       expect(result).toBeNull();
 
       // Restore mocks
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should validate required parameters', async () => {

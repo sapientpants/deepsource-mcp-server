@@ -1,8 +1,8 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import {
   asProjectKey,
   asRunId,
@@ -17,39 +17,39 @@ import { IssueCount } from '../../domain/value-objects/issue-count';
 
 // Create mock logger
 const mockLogger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
 };
 
 // Mock modules before importing the implementation
-jest.unstable_mockModule('../../utils/logging/logger', () => ({
-  createLogger: jest.fn(() => mockLogger),
+vi.mock('../../utils/logging/logger', () => ({
+  createLogger: vi.fn(() => mockLogger),
 }));
 
 // Mock the repository and factory
-const mockFindMostRecent = jest.fn();
+const mockFindMostRecent = vi.fn();
 const mockAnalysisRunRepository = {
   findMostRecent: mockFindMostRecent,
 } as unknown as IAnalysisRunRepository;
 
-const mockCreateAnalysisRunRepository = jest.fn(() => mockAnalysisRunRepository);
-const mockRepositoryFactory = jest.fn(() => ({
+const mockCreateAnalysisRunRepository = vi.fn(() => mockAnalysisRunRepository);
+const mockRepositoryFactory = vi.fn(() => ({
   createAnalysisRunRepository: mockCreateAnalysisRunRepository,
 }));
 
-jest.unstable_mockModule('../../infrastructure/factories/repository.factory', () => ({
+vi.mock('../../infrastructure/factories/repository.factory', () => ({
   RepositoryFactory: mockRepositoryFactory,
 }));
 
 // Mock the DeepSource client
-const mockGetRecentRunIssues = jest.fn();
-const mockDeepSourceClient = jest.fn(() => ({
+const mockGetRecentRunIssues = vi.fn();
+const mockDeepSourceClient = vi.fn(() => ({
   getRecentRunIssues: mockGetRecentRunIssues,
 }));
 
-jest.unstable_mockModule('../../deepsource.js', () => ({
+vi.mock('../../deepsource.js', () => ({
   DeepSourceClient: mockDeepSourceClient,
   ReportType: {
     OWASP_TOP_10: 'OWASP_TOP_10',
@@ -83,7 +83,7 @@ describe('Recent Run Issues Handler', () => {
     process.env.DEEPSOURCE_API_KEY = 'test-api-key';
 
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {

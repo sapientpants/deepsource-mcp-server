@@ -13,7 +13,7 @@ const registry = new EnhancedToolRegistry(server);
 const discoveredTools = await registry.discoverTools({
   directories: ['./src/tools', './plugins'],
   patterns: ['*.tool.js', '*.tool.mjs'],
-  recursive: true
+  recursive: true,
 });
 ```
 
@@ -30,8 +30,8 @@ export const toolDefinition: EnhancedToolDefinition = {
     category: 'analytics',
     version: '1.2.0',
     tags: ['stable', 'fast'],
-    enabled: true
-  }
+    enabled: true,
+  },
 };
 ```
 
@@ -49,7 +49,7 @@ const stableTools = registry.getToolsByTag('stable');
 // Discover only specific categories
 await registry.discoverTools({
   includeCategories: ['core', 'analytics'],
-  excludeTags: ['experimental', 'deprecated']
+  excludeTags: ['experimental', 'deprecated'],
 });
 ```
 
@@ -85,7 +85,7 @@ export const toolSchema = {
   }),
   outputSchema: z.object({
     // Output schema
-  })
+  }),
 };
 
 export const handler = async (params) => {
@@ -99,8 +99,8 @@ export const toolDefinition: EnhancedToolDefinition = {
     category: 'utilities',
     version: '1.0.0',
     tags: ['stable'],
-    enabled: true
-  }
+    enabled: true,
+  },
 };
 
 export default toolDefinition;
@@ -115,12 +115,12 @@ Tool discovery can be configured based on environment:
 export const productionToolDiscoveryConfig = {
   directories: ['./src/tools'],
   excludeTags: ['experimental', 'development'],
-  includeCategories: ['core', 'analytics', 'security']
+  includeCategories: ['core', 'analytics', 'security'],
 };
 
 export const developmentToolDiscoveryConfig = {
   directories: ['./src/tools', './src/tools/dev'],
-  excludeTags: ['deprecated']
+  excludeTags: ['deprecated'],
 };
 ```
 
@@ -165,8 +165,8 @@ registry.registerEnhancedTool({
   metadata: {
     category: 'core',
     version: '1.0.0',
-    tags: ['stable', 'fast']
-  }
+    tags: ['stable', 'fast'],
+  },
 });
 
 // Discover additional tools

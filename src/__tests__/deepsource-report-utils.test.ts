@@ -4,8 +4,8 @@
  */
 import { DeepSourceClient, ReportType } from '../deepsource';
 
-// Import jest from @jest/globals
-import { jest } from '@jest/globals';
+// Import jest from vitest
+import { vi } from 'vitest';
 
 // Create a testable class to access private methods
 class TestableDeepSourceClient extends DeepSourceClient {
@@ -262,7 +262,7 @@ describe('DeepSource Report Utility Methods', () => {
       const originalGetReportField = DeepSourceClient['getReportField'];
 
       // Temporarily override getReportField to return an empty string
-      DeepSourceClient['getReportField'] = jest.fn().mockReturnValue('');
+      DeepSourceClient['getReportField'] = vi.fn().mockReturnValue('');
 
       // Create a response with all required levels of nesting
       const mockResponse = {

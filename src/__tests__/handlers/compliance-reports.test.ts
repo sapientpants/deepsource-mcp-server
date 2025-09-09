@@ -1,46 +1,82 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { asProjectKey } from '../../types/branded';
 import type { IComplianceReportRepository } from '../../domain/aggregates/compliance-report/compliance-report.repository';
 import type { ComplianceReport } from '../../domain/aggregates/compliance-report/compliance-report.aggregate';
 import type { Logger } from '../../utils/logging/logger';
 import { ReportType } from '../../deepsource';
 
-// Create mock logger
-const mockLogger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-};
-
 // Mock modules before importing the implementation
-jest.unstable_mockModule('../../utils/logging/logger', () => ({
-  createLogger: jest.fn(() => mockLogger),
-}));
+vi.mock('../../utils/logging/logger', () => {
+  const mockLogger = {
+    debug: globalThis.vi.fn(),
+    info: globalThis.vi.fn(),
+    warn: globalThis.vi.fn(),
+    error: globalThis.vi.fn(),
+  };
+  return {
+    createLogger: globalThis.vi.fn(() => mockLogger),
+    __mockLogger: mockLogger, // Export for test access
+  };
+});
 
 // Mock the repository and factory
-const mockFindByProjectAndType = jest.fn();
-const mockComplianceReportRepository = {
-  findByProjectAndType: mockFindByProjectAndType,
-} as unknown as IComplianceReportRepository;
+vi.mock('../../infrastructure/factories/repository.factory', () => {
+  const mockFindByProjectAndType = globalThis.vi.fn();
+  const mockComplianceReportRepository = {
+    findByProjectAndType: mockFindByProjectAndType,
+  } as unknown as IComplianceReportRepository;
 
-const mockCreateComplianceReportRepository = jest.fn(() => mockComplianceReportRepository);
-const mockRepositoryFactory = jest.fn(() => ({
-  createComplianceReportRepository: mockCreateComplianceReportRepository,
-}));
+  const mockCreateComplianceReportRepository = globalThis.vi.fn(
+    () => mockComplianceReportRepository
+  );
+  const mockRepositoryFactory = globalThis.vi.fn(() => ({
+    createComplianceReportRepository: mockCreateComplianceReportRepository,
+  }));
 
-jest.unstable_mockModule('../../infrastructure/factories/repository.factory', () => ({
-  RepositoryFactory: mockRepositoryFactory,
-}));
+  return {
+    RepositoryFactory: mockRepositoryFactory,
+    // Export mocks for access in tests
+    __mockFindByProjectAndType: mockFindByProjectAndType,
+    __mockComplianceReportRepository: mockComplianceReportRepository,
+    __mockCreateComplianceReportRepository: mockCreateComplianceReportRepository,
+    __mockRepositoryFactory: mockRepositoryFactory,
+  };
+});
 
 // Import the modules under test AFTER mocking
 const { handleDeepsourceComplianceReport, createComplianceReportHandlerWithRepo } = await import(
   '../../handlers/compliance-reports'
 );
+
+// Get mocked functions
+interface MockedRepositoryModule {
+  __mockFindByProjectAndType: ReturnType<typeof vi.fn>;
+  __mockComplianceReportRepository: Record<string, unknown>;
+  __mockCreateComplianceReportRepository: ReturnType<typeof vi.fn>;
+  __mockRepositoryFactory: Record<string, unknown>;
+}
+
+const mockRepositoryFactoryModule = (await import(
+  '../../infrastructure/factories/repository.factory'
+)) as unknown as MockedRepositoryModule;
+const mockFindByProjectAndType = mockRepositoryFactoryModule.__mockFindByProjectAndType;
+const mockComplianceReportRepository = mockRepositoryFactoryModule.__mockComplianceReportRepository;
+const mockCreateComplianceReportRepository =
+  mockRepositoryFactoryModule.__mockCreateComplianceReportRepository;
+const mockRepositoryFactory = mockRepositoryFactoryModule.__mockRepositoryFactory;
+
+// Get mocked logger
+interface MockedLoggerModule {
+  __mockLogger: Logger;
+}
+const mockLoggerModule = (await import(
+  '../../utils/logging/logger'
+)) as unknown as MockedLoggerModule;
+const mockLogger = mockLoggerModule.__mockLogger;
 
 describe('Compliance Reports Handler', () => {
   // Environment backup
@@ -52,7 +88,7 @@ describe('Compliance Reports Handler', () => {
     process.env.DEEPSOURCE_API_KEY = 'test-api-key';
 
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {

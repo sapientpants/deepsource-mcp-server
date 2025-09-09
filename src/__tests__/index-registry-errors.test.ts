@@ -2,11 +2,11 @@
  * @fileoverview Tests for error handlers in index-registry.ts
  */
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 describe('Index Registry Error Handlers', () => {
-  let mockExit: jest.SpyInstance;
-  let mockConsoleError: jest.SpyInstance;
+  let mockExit: ReturnType<typeof vi.spyOn>;
+  let mockConsoleError: ReturnType<typeof vi.spyOn>;
   let originalListeners: {
     uncaughtException: Array<() => void>;
     unhandledRejection: Array<() => void>;
@@ -24,12 +24,12 @@ describe('Index Registry Error Handlers', () => {
     process.removeAllListeners('unhandledRejection');
 
     // Mock process.exit
-    mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
+    mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
       throw new Error('process.exit called');
     });
 
     // Mock console.error
-    mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {
+    mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {
       // Empty mock to suppress console errors during tests
     });
 
@@ -54,13 +54,13 @@ describe('Index Registry Error Handlers', () => {
       process.on('unhandledRejection', listener);
     });
 
-    jest.resetModules();
+    vi.resetModules();
   });
 
   it('should register and handle uncaughtException', () => {
     // Manually add the uncaughtException handler from index-registry.ts
     const handler = (error: Error) => {
-      const logger = { error: jest.fn() };
+      const logger = { error: vi.fn() };
       logger.error('Uncaught exception', {
         error: error.message,
         stack: error.stack,
@@ -85,7 +85,7 @@ describe('Index Registry Error Handlers', () => {
   it('should register and handle unhandledRejection', () => {
     // Manually add the unhandledRejection handler from index-registry.ts
     const handler = (reason: unknown, promise: Promise<unknown>) => {
-      const logger = { error: jest.fn() };
+      const logger = { error: vi.fn() };
       logger.error('Unhandled rejection', {
         reason,
         promise,

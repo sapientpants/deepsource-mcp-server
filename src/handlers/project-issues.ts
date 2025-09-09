@@ -61,15 +61,24 @@ export const createProjectIssuesHandler = createBaseHandlerFactory(
       hasTagsFilter: Boolean(tags),
     });
 
-    const issues = await client.getIssues(projectKey, {
-      path,
-      analyzerIn,
-      tags,
-      first,
-      after,
-      last,
-      before,
-    });
+    const params: {
+      path?: string;
+      analyzerIn?: string[];
+      tags?: string[];
+      first?: number;
+      after?: string;
+      last?: number;
+      before?: string;
+    } = {};
+    if (path !== undefined) params.path = path;
+    if (analyzerIn !== undefined) params.analyzerIn = analyzerIn;
+    if (tags !== undefined) params.tags = tags;
+    if (first !== undefined) params.first = first;
+    if (after !== undefined) params.after = after;
+    if (last !== undefined) params.last = last;
+    if (before !== undefined) params.before = before;
+
+    const issues = await client.getIssues(projectKey, params);
 
     deps.logger.info('Successfully fetched project issues', {
       count: issues.items.length,

@@ -2,7 +2,7 @@
  * @fileoverview Tests for tool registration module
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import {
   registerDeepSourceTools,
   ToolCategory,
@@ -14,26 +14,26 @@ import {
 import { ToolRegistry } from '../../server/tool-registry.js';
 
 // Mock dependencies
-jest.mock('../../utils/logging/logger.js', () => ({
-  createLogger: jest.fn(() => ({
-    info: jest.fn(),
-    debug: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+vi.mock('../../utils/logging/logger.js', () => ({
+  createLogger: vi.fn(() => ({
+    info: vi.fn(),
+    debug: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   })),
 }));
 
-jest.mock('../../handlers/index.js', () => ({
-  handleProjects: jest.fn().mockResolvedValue({ content: [{ text: '[]' }] }),
-  handleDeepsourceQualityMetrics: jest.fn().mockResolvedValue({ content: [{ text: '{}' }] }),
-  handleDeepsourceUpdateMetricThreshold: jest.fn().mockResolvedValue({ content: [{ text: '{}' }] }),
-  handleDeepsourceUpdateMetricSetting: jest.fn().mockResolvedValue({ content: [{ text: '{}' }] }),
-  handleDeepsourceComplianceReport: jest.fn().mockResolvedValue({ content: [{ text: '{}' }] }),
-  handleDeepsourceProjectIssues: jest.fn().mockResolvedValue({ content: [{ text: '{}' }] }),
-  handleDeepsourceProjectRuns: jest.fn().mockResolvedValue({ content: [{ text: '{}' }] }),
-  handleDeepsourceRun: jest.fn().mockResolvedValue({ content: [{ text: '{}' }] }),
-  handleDeepsourceRecentRunIssues: jest.fn().mockResolvedValue({ content: [{ text: '{}' }] }),
-  handleDeepsourceDependencyVulnerabilities: jest
+vi.mock('../../handlers/index.js', () => ({
+  handleProjects: vi.fn().mockResolvedValue({ content: [{ text: '[]' }] }),
+  handleDeepsourceQualityMetrics: vi.fn().mockResolvedValue({ content: [{ text: '{}' }] }),
+  handleDeepsourceUpdateMetricThreshold: vi.fn().mockResolvedValue({ content: [{ text: '{}' }] }),
+  handleDeepsourceUpdateMetricSetting: vi.fn().mockResolvedValue({ content: [{ text: '{}' }] }),
+  handleDeepsourceComplianceReport: vi.fn().mockResolvedValue({ content: [{ text: '{}' }] }),
+  handleDeepsourceProjectIssues: vi.fn().mockResolvedValue({ content: [{ text: '{}' }] }),
+  handleDeepsourceProjectRuns: vi.fn().mockResolvedValue({ content: [{ text: '{}' }] }),
+  handleDeepsourceRun: vi.fn().mockResolvedValue({ content: [{ text: '{}' }] }),
+  handleDeepsourceRecentRunIssues: vi.fn().mockResolvedValue({ content: [{ text: '{}' }] }),
+  handleDeepsourceDependencyVulnerabilities: vi
     .fn()
     .mockResolvedValue({ content: [{ text: '{}' }] }),
 }));
@@ -42,13 +42,14 @@ describe('Tool Registration', () => {
   describe('registerDeepSourceTools', () => {
     it('should register all DeepSource tools', () => {
       const mockRegistry = {
-        registerTools: jest.fn(),
+        registerTools: vi.fn(),
       } as unknown as ToolRegistry;
 
       registerDeepSourceTools(mockRegistry);
 
       expect(mockRegistry.registerTools).toHaveBeenCalledTimes(1);
-      const registeredTools = (mockRegistry.registerTools as jest.Mock).mock.calls[0][0];
+      const mockRegisterTools = mockRegistry.registerTools as ReturnType<typeof vi.fn>;
+      const registeredTools = mockRegisterTools.mock.calls[0][0];
       expect(registeredTools).toHaveLength(10); // 10 DeepSource tools
       expect(registeredTools.map((t: { name: string }) => t.name)).toEqual([
         'projects',
@@ -66,12 +67,13 @@ describe('Tool Registration', () => {
 
     it('should handle tools with parameter transformations', () => {
       const mockRegistry = {
-        registerTools: jest.fn(),
+        registerTools: vi.fn(),
       } as unknown as ToolRegistry;
 
       registerDeepSourceTools(mockRegistry);
 
-      const registeredTools = (mockRegistry.registerTools as jest.Mock).mock.calls[0][0];
+      const mockRegisterTools = mockRegistry.registerTools as ReturnType<typeof vi.fn>;
+      const registeredTools = mockRegisterTools.mock.calls[0][0];
 
       // Find tools that need parameter transformations
       const updateMetricThresholdTool = registeredTools.find(

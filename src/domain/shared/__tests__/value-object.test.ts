@@ -2,7 +2,7 @@
  * @fileoverview Tests for ValueObject base class
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { ValueObject } from '../value-object.js';
 
 /**

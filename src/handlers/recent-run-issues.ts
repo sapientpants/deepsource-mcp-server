@@ -112,8 +112,14 @@ export function createRecentRunIssuesHandlerWithRepo(deps: RecentRunIssuesHandle
             occurrencesIntroduced: recentRun.summary.totalIntroduced.count,
             occurrencesResolved: recentRun.summary.totalResolved.count,
             occurrencesSuppressed: recentRun.summary.totalSuppressed.count,
-            occurrenceDistributionByAnalyzer: recentRun.summary.byAnalyzer,
-            occurrenceDistributionByCategory: recentRun.summary.byCategory,
+            occurrenceDistributionByAnalyzer: recentRun.summary.byAnalyzer.map((dist) => ({
+              analyzerShortcode: dist.analyzerShortcode,
+              introduced: dist.introduced.count,
+            })),
+            occurrenceDistributionByCategory: recentRun.summary.byCategory.map((dist) => ({
+              category: dist.category,
+              introduced: dist.introduced.count,
+            })),
           },
           repository: {
             name: 'Repository', // Domain aggregate doesn't store repository name directly
@@ -314,8 +320,13 @@ export async function handleDeepsourceRecentRunIssues(
 
   // If the domain handler returned an error response, throw an error for backward compatibility
   if (result.isError) {
-    const errorData = JSON.parse(result.content[0].text);
-    throw new Error(errorData.error);
+    const firstContent = result.content[0];
+    if (firstContent) {
+      const errorData = JSON.parse(firstContent.text);
+      throw new Error(errorData.error);
+    } else {
+      throw new Error('Unknown recent run issues error');
+    }
   }
 
   return result;

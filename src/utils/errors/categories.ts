@@ -3,7 +3,6 @@
  * This module defines the possible error categories for classification.
  */
 
-/* eslint-disable no-unused-vars */
 /**
  * Possible error categories for API errors
  * @enum {string}
@@ -31,4 +30,3 @@ export enum ErrorCategory {
   /** Other uncategorized errors */
   OTHER = 'OTHER',
 }
-/* eslint-enable no-unused-vars */

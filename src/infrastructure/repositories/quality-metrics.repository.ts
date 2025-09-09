@@ -29,7 +29,6 @@ const logger = createLogger('QualityMetricsRepository');
  * as per requirements.
  */
 export class QualityMetricsRepository implements IQualityMetricsRepository {
-  // eslint-disable-next-line no-unused-vars
   constructor(private readonly client: DeepSourceClient) {
     // client is stored for use in methods
   }
@@ -53,7 +52,7 @@ export class QualityMetricsRepository implements IQualityMetricsRepository {
     try {
       const runs = await this.client.listRuns(projectKey, { first: 1 });
       // The runs query includes repository information with ID
-      if (runs.items.length > 0 && runs.items[0].repository?.id) {
+      if (runs.items.length > 0 && runs.items[0]?.repository?.id) {
         return runs.items[0].repository.id;
       }
 
@@ -200,7 +199,7 @@ export class QualityMetricsRepository implements IQualityMetricsRepository {
       }
 
       // If no metricKey specified, return the first item (usually AGGREGATE)
-      if (metric.items.length > 0) {
+      if (metric.items.length > 0 && metric.items[0]) {
         return QualityMetricsMapper.toDomain(metric, metric.items[0], projectKey, repositoryId);
       }
 

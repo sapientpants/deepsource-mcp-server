@@ -2,7 +2,7 @@
  * @fileoverview Tests for handler factory functions
  */
 
-import { jest } from '@jest/globals';
+import { vi, MockedFunction } from 'vitest';
 import {
   createBaseHandlerFactory,
   createDefaultHandlerDeps,
@@ -15,16 +15,16 @@ import { DeepSourceClientFactory } from '../../../client/factory.js';
 import { Logger } from '../../../utils/logging/logger.js';
 
 // Mock dependencies
-jest.mock('../../../client/factory.js');
-jest.mock('../../../config/index.js', () => ({
-  getApiKey: jest.fn(() => 'test-api-key'),
+vi.mock('../../../client/factory.js');
+vi.mock('../../../config/index.js', () => ({
+  getApiKey: vi.fn(() => 'test-api-key'),
 }));
-jest.mock('../../../utils/logging/logger.js', () => ({
-  createLogger: jest.fn(() => ({
-    info: jest.fn(),
-    debug: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+vi.mock('../../../utils/logging/logger.js', () => ({
+  createLogger: vi.fn(() => ({
+    info: vi.fn(),
+    debug: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   })),
 }));
 
@@ -41,25 +41,25 @@ describe('handler.factory', () => {
   describe('createBaseHandlerFactory', () => {
     let mockDeps: BaseHandlerDeps;
     let mockLogger: {
-      info: jest.Mock;
-      error: jest.Mock;
+      info: MockedFunction<(message: string, data?: unknown) => void>;
+      error: MockedFunction<(message: string, error?: unknown) => void>;
     };
 
     beforeEach(() => {
       mockLogger = {
-        info: jest.fn(),
-        error: jest.fn(),
+        info: vi.fn(),
+        error: vi.fn(),
       };
 
       mockDeps = {
         clientFactory: new DeepSourceClientFactory('test-key'),
         logger: mockLogger as Logger,
-        getApiKey: jest.fn(() => 'test-api-key'),
+        getApiKey: vi.fn(() => 'test-api-key'),
       };
     });
 
     it('should create a handler factory with logging', async () => {
-      const handlerLogic = jest.fn(async (deps, params) => ({
+      const handlerLogic = vi.fn(async (deps, params) => ({
         data: `Hello ${params.name}`,
       }));
 
@@ -84,7 +84,7 @@ describe('handler.factory', () => {
 
     it('should log handler errors and re-throw', async () => {
       const error = new Error('Handler failed');
-      const handlerLogic = jest.fn(async () => {
+      const handlerLogic = vi.fn(async () => {
         throw error;
       });
 
@@ -105,7 +105,7 @@ describe('handler.factory', () => {
     });
 
     it('should handle non-Error throws', async () => {
-      const handlerLogic = jest.fn(async () => {
+      const handlerLogic = vi.fn(async () => {
         throw 'String error';
       });
 
@@ -125,7 +125,7 @@ describe('handler.factory', () => {
     });
 
     it('should log result count for array data', async () => {
-      const handlerLogic = jest.fn(async () => ({
+      const handlerLogic = vi.fn(async () => ({
         data: ['item1', 'item2', 'item3'],
       }));
 
@@ -156,10 +156,10 @@ describe('handler.factory', () => {
 
     it('should accept overrides', () => {
       const customLogger = {
-        info: jest.fn(),
-        debug: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn(),
+        info: vi.fn(),
+        debug: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
       };
 
       const deps = createDefaultHandlerDeps({

@@ -64,15 +64,29 @@ function validateConfig(config: Partial<DeepSourceConfig>): DeepSourceConfig {
  * Loads configuration from environment variables
  */
 function loadConfigFromEnv(): Partial<DeepSourceConfig> {
-  return {
-    apiKey: process.env.DEEPSOURCE_API_KEY,
-    apiBaseUrl: process.env.DEEPSOURCE_API_BASE_URL,
-    requestTimeout: process.env.DEEPSOURCE_REQUEST_TIMEOUT
-      ? parseInt(process.env.DEEPSOURCE_REQUEST_TIMEOUT, 10)
-      : undefined,
-    logFile: process.env.LOG_FILE,
-    logLevel: process.env.LOG_LEVEL,
-  };
+  const config: Partial<DeepSourceConfig> = {};
+
+  if (process.env.DEEPSOURCE_API_KEY) {
+    config.apiKey = process.env.DEEPSOURCE_API_KEY;
+  }
+
+  if (process.env.DEEPSOURCE_API_BASE_URL) {
+    config.apiBaseUrl = process.env.DEEPSOURCE_API_BASE_URL;
+  }
+
+  if (process.env.DEEPSOURCE_REQUEST_TIMEOUT) {
+    config.requestTimeout = parseInt(process.env.DEEPSOURCE_REQUEST_TIMEOUT, 10);
+  }
+
+  if (process.env.LOG_FILE) {
+    config.logFile = process.env.LOG_FILE;
+  }
+
+  if (process.env.LOG_LEVEL) {
+    config.logLevel = process.env.LOG_LEVEL;
+  }
+
+  return config;
 }
 
 /**

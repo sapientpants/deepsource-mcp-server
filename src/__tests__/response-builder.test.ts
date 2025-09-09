@@ -2,16 +2,16 @@
  * @fileoverview Tests for the response builder utility
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 // Mock logger
 const mockLogger = {
-  info: jest.fn(),
-  error: jest.fn(),
+  info: vi.fn(),
+  error: vi.fn(),
 };
 
-jest.unstable_mockModule('../utils/logging/logger.js', () => ({
-  createLogger: jest.fn(() => mockLogger),
+vi.mock('../utils/logging/logger.js', () => ({
+  createLogger: vi.fn(() => mockLogger),
 }));
 
 // Import after mocking
@@ -21,7 +21,7 @@ const { ToolResponseBuilder, successResponse, errorResponse, parseToolResponse }
 
 describe('ToolResponseBuilder', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('success responses', () => {

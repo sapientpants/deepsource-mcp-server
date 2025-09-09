@@ -200,7 +200,6 @@ process.on('uncaughtException', (error) => {
     error: error.message,
     stack: error.stack,
   });
-  console.error('Uncaught exception:', error);
   process.exit(1);
 });
 
@@ -209,7 +208,6 @@ process.on('unhandledRejection', (reason, promise) => {
     reason,
     promise,
   });
-  console.error('Unhandled rejection at:', promise, 'reason:', reason);
   process.exit(1);
 });
 
@@ -219,6 +217,5 @@ main().catch((error) => {
     error: error.message,
     stack: error.stack,
   });
-  console.error('Failed to start server:', error);
   process.exit(1);
 });

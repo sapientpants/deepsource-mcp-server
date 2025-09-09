@@ -273,8 +273,13 @@ export async function handleDeepsourceComplianceReport(params: DeepsourceComplia
 
   // If the domain handler returned an error response, throw an error for backward compatibility
   if (result.isError) {
-    const errorData = JSON.parse(result.content[0].text);
-    throw new Error(errorData.error);
+    const firstContent = result.content[0];
+    if (firstContent) {
+      const errorData = JSON.parse(firstContent.text);
+      throw new Error(errorData.error);
+    } else {
+      throw new Error('Unknown compliance report error');
+    }
   }
 
   return result;

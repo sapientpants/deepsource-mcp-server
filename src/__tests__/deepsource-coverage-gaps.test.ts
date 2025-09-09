@@ -1,17 +1,20 @@
 import nock from 'nock';
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { DeepSourceClient, ReportType } from '../deepsource';
 
 // Mock logger to verify it's called properly
-const mockWarn = jest.fn();
-jest.mock('../utils/logging/logger', () => ({
-  createLogger: jest.fn(() => ({
-    warn: mockWarn,
-    error: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn(),
-  })),
-}));
+vi.mock('../utils/logging/logger', () => {
+  const mockWarn = globalThis.vi.fn();
+  return {
+    createLogger: globalThis.vi.fn(() => ({
+      warn: mockWarn,
+      error: globalThis.vi.fn(),
+      info: globalThis.vi.fn(),
+      debug: globalThis.vi.fn(),
+    })),
+    __mockWarn: mockWarn, // Export for test access
+  };
+});
 
 describe('DeepSource Client Coverage Gaps', () => {
   const API_KEY = 'test-api-key';
@@ -19,7 +22,7 @@ describe('DeepSource Client Coverage Gaps', () => {
 
   beforeEach(() => {
     nock.cleanAll();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     client = new DeepSourceClient(API_KEY);
   });
 

@@ -26,8 +26,7 @@ export interface BaseHandlerDeps {
  */
 export type HandlerFunction<TParams = unknown, TResult = ApiResponse> = TParams extends undefined
   ? () => Promise<TResult>
-  : // eslint-disable-next-line no-unused-vars
-    (params: TParams) => Promise<TResult>;
+  : (params: TParams) => Promise<TResult>;
 
 /**
  * Factory function type for creating handlers with dependencies
@@ -39,7 +38,6 @@ export type HandlerFactory<
   TDeps extends BaseHandlerDeps = BaseHandlerDeps,
   TParams = unknown,
   TResult = ApiResponse,
-  // eslint-disable-next-line no-unused-vars
 > = (deps: TDeps) => HandlerFunction<TParams, TResult>;
 
 /**

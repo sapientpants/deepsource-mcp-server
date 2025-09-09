@@ -3,34 +3,45 @@
  * This file adds coverage for the previously untested security-client.ts
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SecurityClient } from '../../client/security-client.js';
 import type { SecurityClientTestable, MockDeepSourceClient } from '../test-types.js';
 import { TestableSecurityClient } from '../utils/test-utils.js';
 
-// Mock the base client
-jest.mock('../../client/base-client.js', () => ({
-  BaseDeepSourceClient: jest.fn().mockImplementation(() => ({
-    findProjectByKey: jest.fn(),
-    executeGraphQL: jest.fn(),
-    createEmptyPaginatedResponse: jest.fn(),
-    normalizePaginationParams: jest.fn(),
-    logger: {
-      info: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-      warn: jest.fn(),
-    },
-  })),
-}));
+interface MockBaseClient {
+  findProjectByKey: ReturnType<typeof vi.fn>;
+  executeGraphQL: ReturnType<typeof vi.fn>;
+  createEmptyPaginatedResponse: ReturnType<typeof vi.fn>;
+  normalizePaginationParams: ReturnType<typeof vi.fn>;
+  logger: {
+    info: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn>;
+    debug: ReturnType<typeof vi.fn>;
+    warn: ReturnType<typeof vi.fn>;
+  };
+}
 
 describe('SecurityClient', () => {
   let securityClient: SecurityClient;
   let mockBaseClient: MockDeepSourceClient;
+  let mockedClient: MockBaseClient;
 
   beforeEach(() => {
     securityClient = new SecurityClient('test-api-key');
     mockBaseClient = securityClient as unknown as MockDeepSourceClient;
+
+    // Mock the methods we need
+    mockedClient = mockBaseClient as unknown as MockBaseClient;
+    mockedClient.findProjectByKey = vi.fn();
+    mockedClient.executeGraphQL = vi.fn();
+    mockedClient.createEmptyPaginatedResponse = vi.fn();
+    mockedClient.normalizePaginationParams = vi.fn();
+    mockedClient.logger = {
+      info: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+      warn: vi.fn(),
+    };
   });
 
   describe('getComplianceReport', () => {
@@ -73,13 +84,13 @@ describe('SecurityClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockedClient.findProjectByKey = vi.fn().mockResolvedValue(mockProject);
+      mockedClient.executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any); // skipcq: JS-0323
 
       const result = await securityClient.getComplianceReport('test-project', 'OWASP_TOP_10');
 
-      expect(mockBaseClient.findProjectByKey).toHaveBeenCalledWith('test-project');
-      expect(mockBaseClient.executeGraphQL).toHaveBeenCalledWith(
+      expect(mockedClient.findProjectByKey).toHaveBeenCalledWith('test-project');
+      expect(mockedClient.executeGraphQL).toHaveBeenCalledWith(
         expect.stringContaining('query getComplianceReports'),
         expect.objectContaining({
           login: 'test-org',
@@ -98,7 +109,7 @@ describe('SecurityClient', () => {
     });
 
     it('should return null when project not found', async () => {
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(null);
+      mockedClient.findProjectByKey = vi.fn().mockResolvedValue(null);
 
       const result = await securityClient.getComplianceReport(
         'nonexistent-project',
@@ -117,8 +128,8 @@ describe('SecurityClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest.fn().mockRejectedValue(new Error('GraphQL error'));
+      mockedClient.findProjectByKey = vi.fn().mockResolvedValue(mockProject);
+      vi.spyOn(mockedClient, 'executeGraphQL').mockRejectedValue(new Error('GraphQL error'));
 
       await expect(
         securityClient.getComplianceReport('test-project', 'OWASP_TOP_10')
@@ -138,8 +149,8 @@ describe('SecurityClient', () => {
         data: null,
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockedClient.findProjectByKey = vi.fn().mockResolvedValue(mockProject);
+      mockedClient.executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any); // skipcq: JS-0323
 
       const result = await securityClient.getComplianceReport('test-project', 'OWASP_TOP_10');
 
@@ -163,8 +174,8 @@ describe('SecurityClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockedClient.findProjectByKey = vi.fn().mockResolvedValue(mockProject);
+      mockedClient.executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any); // skipcq: JS-0323
 
       const result = await securityClient.getComplianceReport('test-project', 'OWASP_TOP_10');
 
@@ -241,17 +252,17 @@ describe('SecurityClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.normalizePaginationParams = jest.fn().mockReturnValue({
+      mockedClient.findProjectByKey = vi.fn().mockResolvedValue(mockProject);
+      mockedClient.normalizePaginationParams = vi.fn().mockReturnValue({
         first: 20,
         after: null,
       });
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockedClient.executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any); // skipcq: JS-0323
 
       const result = await securityClient.getDependencyVulnerabilities('test-project');
 
-      expect(mockBaseClient.findProjectByKey).toHaveBeenCalledWith('test-project');
-      expect(mockBaseClient.executeGraphQL).toHaveBeenCalledWith(
+      expect(mockedClient.findProjectByKey).toHaveBeenCalledWith('test-project');
+      expect(mockedClient.executeGraphQL).toHaveBeenCalledWith(
         expect.stringContaining('query getDependencyVulnerabilities'),
         expect.objectContaining({
           login: 'test-org',
@@ -268,8 +279,8 @@ describe('SecurityClient', () => {
     });
 
     it('should return empty response when project not found', async () => {
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(null);
-      mockBaseClient.createEmptyPaginatedResponse = jest.fn().mockReturnValue({
+      mockedClient.findProjectByKey = vi.fn().mockResolvedValue(null);
+      mockedClient.createEmptyPaginatedResponse = vi.fn().mockReturnValue({
         items: [],
         pageInfo: { hasNextPage: false, hasPreviousPage: false },
         totalCount: 0,
@@ -290,11 +301,11 @@ describe('SecurityClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.normalizePaginationParams = jest.fn().mockReturnValue({
+      mockedClient.findProjectByKey = vi.fn().mockResolvedValue(mockProject);
+      mockedClient.normalizePaginationParams = vi.fn().mockReturnValue({
         first: 20,
       });
-      mockBaseClient.executeGraphQL = jest.fn().mockRejectedValue(new Error('GraphQL error'));
+      vi.spyOn(mockedClient, 'executeGraphQL').mockRejectedValue(new Error('GraphQL error'));
 
       await expect(securityClient.getDependencyVulnerabilities('test-project')).rejects.toThrow(
         'GraphQL error'
@@ -326,12 +337,12 @@ describe('SecurityClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.normalizePaginationParams = jest.fn().mockReturnValue({
+      mockedClient.findProjectByKey = vi.fn().mockResolvedValue(mockProject);
+      mockedClient.normalizePaginationParams = vi.fn().mockReturnValue({
         first: 10,
         after: 'cursor123',
       });
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockedClient.executeGraphQL = vi.fn().mockResolvedValue(mockResponse as any); // skipcq: JS-0323
 
       await securityClient.getDependencyVulnerabilities('test-project', {
         first: 10,

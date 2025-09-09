@@ -13,23 +13,17 @@ export default {
       {
         useESM: true,
         tsconfig: {
-          moduleResolution: "NodeNext"
-        }
+          moduleResolution: 'NodeNext',
+        },
       },
     ],
   },
   extensionsToTreatAsEsm: ['.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  transformIgnorePatterns: [
-    'node_modules/(?!(@modelcontextprotocol)/)'
-  ],
-  collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
-    '!src/**/*.test.ts',
-  ],
+  transformIgnorePatterns: ['node_modules/(?!(@modelcontextprotocol)/)'],
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts', '!src/**/*.test.ts'],
   coverageReporters: ['text', 'lcov'],
   resetModules: true,
   clearMocks: true,
-  restoreMocks: true
-}; 
+  restoreMocks: true,
+};

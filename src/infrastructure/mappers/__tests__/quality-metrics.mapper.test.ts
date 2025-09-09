@@ -2,7 +2,7 @@
  * @fileoverview Tests for QualityMetricsMapper
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { QualityMetricsMapper } from '../quality-metrics.mapper.js';
 import {
   RepositoryMetric,

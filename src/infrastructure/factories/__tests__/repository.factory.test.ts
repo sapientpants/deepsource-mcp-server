@@ -2,7 +2,7 @@
  * @fileoverview Tests for repository factory
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   RepositoryFactory,
   createRepositoryFactory,
@@ -10,12 +10,12 @@ import {
 } from '../repository.factory.js';
 
 // Mock logger
-jest.mock('../../../utils/logging/logger.js', () => ({
-  createLogger: jest.fn(() => ({
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+vi.mock('../../../utils/logging/logger.js', () => ({
+  createLogger: vi.fn(() => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   })),
 }));
 
@@ -26,7 +26,7 @@ describe('RepositoryFactory', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('constructor', () => {

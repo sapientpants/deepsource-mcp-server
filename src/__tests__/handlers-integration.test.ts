@@ -3,18 +3,18 @@
  * Tests handler logic without requiring complex HTTP mocking
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 // Mock the DeepSource client before any imports
 const mockClient = {
-  getDependencyVulnerabilities: jest.fn(),
-  listRuns: jest.fn(),
-  getRecentRunIssues: jest.fn(),
-  getRun: jest.fn(),
+  getDependencyVulnerabilities: vi.fn(),
+  listRuns: vi.fn(),
+  getRecentRunIssues: vi.fn(),
+  getRun: vi.fn(),
 };
 
-jest.unstable_mockModule('../deepsource.js', () => ({
-  DeepSourceClient: jest.fn().mockImplementation(() => mockClient),
+vi.mock('../deepsource.js', () => ({
+  DeepSourceClient: vi.fn().mockImplementation(() => mockClient),
   ReportType: {
     OWASP_TOP_10: 'OWASP_TOP_10',
     SANS_TOP_25: 'SANS_TOP_25',
@@ -44,7 +44,7 @@ describe('Handler Integration Tests', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     process.env = { ...originalEnv, DEEPSOURCE_API_KEY: 'test-api-key' };
   });
 

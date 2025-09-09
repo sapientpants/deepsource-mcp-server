@@ -57,16 +57,16 @@ export function mapQualityMetricToDomain(
     projectKey: asProjectKey(projectKey),
     repositoryId: asGraphQLNodeId(repositoryId),
     configuration,
-    currentValue:
-      item.latestValue !== null
-        ? MetricValue.create(
-            item.latestValue,
-            apiMetric.unit,
-            item.latestValueDisplay,
-            new Date() // API doesn't provide measurement time
-          )
-        : undefined,
   };
+
+  if (item.latestValue !== null) {
+    params.currentValue = MetricValue.create(
+      item.latestValue,
+      apiMetric.unit,
+      item.latestValueDisplay,
+      new Date() // API doesn't provide measurement time
+    );
+  }
 
   return QualityMetrics.create(params);
 }

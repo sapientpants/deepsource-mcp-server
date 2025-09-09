@@ -2,7 +2,7 @@
  * @fileoverview Tests for AnalysisRunMapper
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { AnalysisRunMapper } from '../analysis-run.mapper.js';
 import { DeepSourceRun, AnalysisRunStatus } from '../../../models/runs.js';
 import {

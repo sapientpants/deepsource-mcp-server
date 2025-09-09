@@ -429,8 +429,8 @@ export class MetricsClient extends BaseDeepSourceClient {
       (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     );
 
-    const firstValue = sortedValues[0].value;
-    const lastValue = sortedValues[sortedValues.length - 1].value;
+    const firstValue = sortedValues[0]?.value ?? 0;
+    const lastValue = sortedValues[sortedValues.length - 1]?.value ?? 0;
     const percentChange = ((lastValue - firstValue) / firstValue) * 100;
 
     if (Math.abs(percentChange) < 5) {

@@ -13,14 +13,14 @@ The error handling system classifies errors into categories for better debugging
 ```typescript
 enum ErrorCategory {
   AUTHENTICATION = 'authentication',
-  AUTHORIZATION = 'authorization', 
+  AUTHORIZATION = 'authorization',
   NETWORK = 'network',
   RATE_LIMIT = 'rate_limit',
   VALIDATION = 'validation',
   NOT_FOUND = 'not_found',
   GRAPHQL = 'graphql',
   INTERNAL = 'internal',
-  CONFIGURATION = 'configuration'
+  CONFIGURATION = 'configuration',
 }
 ```
 
@@ -69,6 +69,7 @@ User Request → Tool Handler → Domain Layer → Infrastructure Layer
 ```
 
 **Common causes:**
+
 - Missing `DEEPSOURCE_API_KEY` environment variable
 - Expired API key
 - Invalid API key format
@@ -86,6 +87,7 @@ User Request → Tool Handler → Domain Layer → Infrastructure Layer
 ```
 
 **Common causes:**
+
 - Network connectivity issues
 - DeepSource API downtime
 - Firewall/proxy blocking
@@ -103,6 +105,7 @@ User Request → Tool Handler → Domain Layer → Infrastructure Layer
 ```
 
 **Common causes:**
+
 - API version mismatch
 - Invalid query structure
 - Schema changes
@@ -120,6 +123,7 @@ User Request → Tool Handler → Domain Layer → Infrastructure Layer
 ```
 
 **Common causes:**
+
 - Missing required parameters
 - Invalid parameter types
 - Out-of-range values
@@ -145,14 +149,16 @@ export async function handleProjects(deps: ProjectsHandlerDeps): Promise<ApiResp
   try {
     const projects = await deps.projectRepository.findAll();
     return {
-      content: [{
-        type: 'text',
-        text: JSON.stringify({ projects })
-      }]
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({ projects }),
+        },
+      ],
     };
   } catch (error) {
     deps.logger.error('Error in handleProjects', { error });
-    
+
     // Error is automatically classified and formatted
     return createErrorResponse(error);
   }
@@ -167,17 +173,14 @@ export const createQualityMetricsHandler = createBaseHandlerFactory(
   async (deps, params) => {
     try {
       const metrics = await deps.repository.getMetrics(params.projectKey);
-      
+
       // Custom validation
       if (metrics.length === 0) {
-        throw createClassifiedError(
-          'No metrics found for project',
-          ErrorCategory.NOT_FOUND,
-          null,
-          { projectKey: params.projectKey }
-        );
+        throw createClassifiedError('No metrics found for project', ErrorCategory.NOT_FOUND, null, {
+          projectKey: params.projectKey,
+        });
       }
-      
+
       return formatMetricsResponse(metrics);
     } catch (error) {
       // Base handler factory automatically handles errors
@@ -198,9 +201,9 @@ try {
     'Failed to fetch project data',
     ErrorCategory.NETWORK,
     error, // Original error preserved
-    { 
+    {
       projectKey: params.projectKey,
-      attempt: retryCount 
+      attempt: retryCount,
     }
   );
 }
@@ -214,12 +217,7 @@ Always classify errors to help with debugging and monitoring:
 
 ```typescript
 // Good
-throw createClassifiedError(
-  'Project not found',
-  ErrorCategory.NOT_FOUND,
-  null,
-  { projectKey }
-);
+throw createClassifiedError('Project not found', ErrorCategory.NOT_FOUND, null, { projectKey });
 
 // Avoid
 throw new Error('Project not found');
@@ -282,20 +280,14 @@ Always handle promises and async operations:
 
 ```typescript
 // Good - errors are caught by handler factory
-export const handler = createBaseHandlerFactory(
-  'tool_name',
-  async (deps, params) => {
-    const result = await asyncOperation(); // Errors automatically caught
-    return formatResponse(result);
-  }
-);
+export const handler = createBaseHandlerFactory('tool_name', async (deps, params) => {
+  const result = await asyncOperation(); // Errors automatically caught
+  return formatResponse(result);
+});
 
 // Manual error handling when needed
 try {
-  const results = await Promise.all([
-    operation1(),
-    operation2()
-  ]);
+  const results = await Promise.all([operation1(), operation2()]);
 } catch (error) {
   // Handle aggregated errors
 }
@@ -307,18 +299,20 @@ All errors follow a consistent response format:
 
 ```typescript
 interface ErrorResponse {
-  content: [{
-    type: 'text',
-    text: string // JSON stringified error object
-  }],
-  isError: true
+  content: [
+    {
+      type: 'text';
+      text: string; // JSON stringified error object
+    },
+  ];
+  isError: true;
 }
 
 interface ErrorObject {
-  error: string,      // Human-readable error message
-  details?: string,   // Additional context
-  code?: string,      // Error code (e.g., 'AUTH_001')
-  metadata?: object   // Debug information (not shown to users)
+  error: string; // Human-readable error message
+  details?: string; // Additional context
+  code?: string; // Error code (e.g., 'AUTH_001')
+  metadata?: object; // Debug information (not shown to users)
 }
 ```
 
@@ -334,7 +328,7 @@ logger.error('Handler failed', {
   error: error.message,
   category: error.category,
   metadata: error.metadata,
-  stack: error.stack
+  stack: error.stack,
 });
 ```
 
@@ -349,12 +343,14 @@ export LOG_LEVEL=DEBUG
 ### Common Error Patterns
 
 1. **Authentication Chain**
+
    ```
    API Key Missing → Check Environment → Return Configuration Error
    API Key Invalid → GraphQL 401 → Return Authentication Error
    ```
 
 2. **Network Failures**
+
    ```
    Connection Timeout → Retry Logic → Return Network Error
    DNS Failure → No Retry → Return Network Error
@@ -374,14 +370,13 @@ export LOG_LEVEL=DEBUG
 it('should handle authentication errors', async () => {
   const error = new Error('401 Unauthorized');
   mockClient.listProjects.mockRejectedValue(error);
-  
+
   const result = await handler({ projectKey: 'test' });
-  
+
   expect(result.isError).toBe(true);
-  expect(JSON.parse(result.content[0].text))
-    .toMatchObject({
-      error: expect.stringContaining('Authentication error')
-    });
+  expect(JSON.parse(result.content[0].text)).toMatchObject({
+    error: expect.stringContaining('Authentication error'),
+  });
 });
 ```
 
@@ -391,9 +386,9 @@ it('should handle authentication errors', async () => {
 it('should handle network timeouts gracefully', async () => {
   const timeoutError = new Error('ETIMEDOUT');
   mockApiCall.mockRejectedValue(timeoutError);
-  
+
   const result = await callTool('projects');
-  
+
   expect(result.isError).toBe(true);
   expect(result.content[0].text).toContain('Network error');
 });

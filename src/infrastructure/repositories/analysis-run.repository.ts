@@ -70,7 +70,6 @@ function convertClientRunToModelRun(clientRun: {
  * data retrieval on every request as per requirements.
  */
 export class AnalysisRunRepository implements IAnalysisRunRepository {
-  // eslint-disable-next-line no-unused-vars
   constructor(private readonly client: DeepSourceClient) {
     // client is stored for use in methods
   }
@@ -110,10 +109,11 @@ export class AnalysisRunRepository implements IAnalysisRunRepository {
         let hasNextPage = true;
 
         while (hasNextPage) {
-          const response = await this.client.listRuns(projectKey, {
-            first: 50,
-            after: cursor,
-          });
+          const filterParams: { first: number; after?: string } = { first: 50 };
+          if (cursor !== undefined) {
+            filterParams.after = cursor;
+          }
+          const response = await this.client.listRuns(projectKey, filterParams);
 
           const run = response.items.find((r) => r.runUid === id);
           if (run) {
@@ -207,10 +207,11 @@ export class AnalysisRunRepository implements IAnalysisRunRepository {
       let hasNextPage = true;
 
       while (hasNextPage) {
-        const response = await this.client.listRuns(projectKey, {
-          first: 50,
-          after: cursor,
-        });
+        const filterParams: { first: number; after?: string } = { first: 50 };
+        if (cursor !== undefined) {
+          filterParams.after = cursor;
+        }
+        const response = await this.client.listRuns(projectKey, filterParams);
 
         // Filter by branch if specified
         const runsToCheck = branch
@@ -268,10 +269,11 @@ export class AnalysisRunRepository implements IAnalysisRunRepository {
       let hasNextPage = true;
 
       while (hasNextPage) {
-        const response = await this.client.listRuns(projectKey, {
-          first: 50,
-          after: cursor,
-        });
+        const filterParams: { first: number; after?: string } = { first: 50 };
+        if (cursor !== undefined) {
+          filterParams.after = cursor;
+        }
+        const response = await this.client.listRuns(projectKey, filterParams);
 
         const run = response.items.find((r) => r.commitOid === commitOid);
         if (run) {
@@ -316,10 +318,11 @@ export class AnalysisRunRepository implements IAnalysisRunRepository {
       let hasNextPage = true;
 
       while (hasNextPage) {
-        const response = await this.client.listRuns(projectKey, {
-          first: 100,
-          after: cursor,
-        });
+        const filterParams: { first: number; after?: string } = { first: 100 };
+        if (cursor !== undefined) {
+          filterParams.after = cursor;
+        }
+        const response = await this.client.listRuns(projectKey, filterParams);
 
         const modelRuns = response.items.map(convertClientRunToModelRun);
         allRuns.push(...modelRuns);
@@ -388,10 +391,11 @@ export class AnalysisRunRepository implements IAnalysisRunRepository {
       let hasNextPage = true;
 
       while (hasNextPage) {
-        const response = await this.client.listRuns(projectKey, {
-          first: 100,
-          after: cursor,
-        });
+        const filterParams: { first: number; after?: string } = { first: 100 };
+        if (cursor !== undefined) {
+          filterParams.after = cursor;
+        }
+        const response = await this.client.listRuns(projectKey, filterParams);
 
         // Filter runs by date range
         const runsInRange = response.items.filter((run) => {
@@ -405,7 +409,7 @@ export class AnalysisRunRepository implements IAnalysisRunRepository {
         // If we found runs outside the range, we can stop
         if (response.items.length > 0) {
           const oldestRun = response.items[response.items.length - 1];
-          if (new Date(oldestRun.createdAt) < startDate) {
+          if (oldestRun && new Date(oldestRun.createdAt) < startDate) {
             break;
           }
         }
@@ -465,10 +469,11 @@ export class AnalysisRunRepository implements IAnalysisRunRepository {
       let hasNextPage = true;
 
       while (hasNextPage) {
-        const response = await this.client.listRuns(projectKey, {
-          first: 100,
-          after: cursor,
-        });
+        const filterParams: { first: number; after?: string } = { first: 100 };
+        if (cursor !== undefined) {
+          filterParams.after = cursor;
+        }
+        const response = await this.client.listRuns(projectKey, filterParams);
 
         count += response.items.length;
         hasNextPage = response.pageInfo.hasNextPage;
@@ -500,10 +505,11 @@ export class AnalysisRunRepository implements IAnalysisRunRepository {
       let hasNextPage = true;
 
       while (hasNextPage) {
-        const response = await this.client.listRuns(projectKey, {
-          first: 100,
-          after: cursor,
-        });
+        const filterParams: { first: number; after?: string } = { first: 100 };
+        if (cursor !== undefined) {
+          filterParams.after = cursor;
+        }
+        const response = await this.client.listRuns(projectKey, filterParams);
 
         // Map and count matching status
         const modelRuns = response.items.map(convertClientRunToModelRun);

@@ -3,48 +3,42 @@
  * This file adds coverage for the previously untested projects-client.ts
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProjectsClient } from '../../client/projects-client.js';
 import { asProjectKey } from '../../types/branded.js';
 
 // Mock the base client
 const mockLogger = {
-  info: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-  warn: jest.fn(),
+  info: vi.fn(),
+  error: vi.fn(),
+  debug: vi.fn(),
+  warn: vi.fn(),
 };
-
-jest.mock('../../client/base-client.js', () => ({
-  BaseDeepSourceClient: jest.fn().mockImplementation(() => ({
-    executeGraphQL: jest.fn(),
-    logger: mockLogger,
-  })),
-}));
-
-// Mock the branded type function
-const mockAsProjectKey = jest.fn((str: string) => str);
-jest.mock('../../types/branded.js', () => ({
-  asProjectKey: jest.fn((str: string) => str),
-}));
 
 describe('ProjectsClient', () => {
   let projectsClient: ProjectsClient;
-  let mockBaseClient: {
-    executeGraphQL: jest.Mock;
-  };
+  let mockExecuteGraphQL: any; // skipcq: JS-0323
+  let mockAsProjectKey: any; // skipcq: JS-0323
 
   beforeEach(() => {
+    mockExecuteGraphQL = vi.fn();
+    mockAsProjectKey = vi.fn((key: string) => key);
     projectsClient = new ProjectsClient('test-api-key');
-    mockBaseClient = projectsClient as unknown as {
-      executeGraphQL: jest.Mock;
-    };
-    jest.clearAllMocks();
+
+    // Mock the executeGraphQL method on the instance
+    interface MockProjectsClient {
+      executeGraphQL: typeof mockExecuteGraphQL;
+      logger: typeof mockLogger;
+    }
+    const mockedClient = projectsClient as unknown as MockProjectsClient;
+    mockedClient.executeGraphQL = mockExecuteGraphQL;
+    mockedClient.logger = mockLogger;
+
+    vi.clearAllMocks();
     mockLogger.info.mockClear();
     mockLogger.error.mockClear();
     mockLogger.debug.mockClear();
     mockLogger.warn.mockClear();
-    mockAsProjectKey.mockClear();
   });
 
   describe('listProjects', () => {
@@ -81,14 +75,14 @@ describe('ProjectsClient', () => {
       const mockProjectKey = asProjectKey('github.com/test-org/test-repo');
       mockAsProjectKey.mockReturnValue(mockProjectKey);
 
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockExecuteGraphQL.mockResolvedValue(mockResponse);
 
       const result = await projectsClient.listProjects();
 
       expect(result).toHaveLength(1);
-      expect(result[0].key).toBe(mockProjectKey);
-      expect(result[0].name).toBe('test-repo');
-      expect(result[0].repository.login).toBe('test-org');
+      expect(result[0]?.key).toBe(mockProjectKey);
+      expect(result[0]?.name).toBe('test-repo');
+      expect(result[0]?.repository.login).toBe('test-org');
     });
 
     it.skip('should handle projects with missing DSN by skipping them', async () => {
@@ -133,12 +127,12 @@ describe('ProjectsClient', () => {
       const mockProjectKey = asProjectKey('github.com/test-org/repo-with-dsn');
       mockAsProjectKey.mockReturnValue(mockProjectKey);
 
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockExecuteGraphQL.mockResolvedValue(mockResponse);
 
       const result = await projectsClient.listProjects();
 
       expect(result).toHaveLength(1);
-      expect(result[0].name).toBe('repo-with-dsn');
+      expect(result[0]?.name).toBe('repo-with-dsn');
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Skipping repository due to missing DSN',
         expect.objectContaining({
@@ -183,7 +177,7 @@ describe('ProjectsClient', () => {
         throw new Error('Runtime error during processing');
       });
 
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockExecuteGraphQL.mockResolvedValue(mockResponse);
 
       const result = await projectsClient.listProjects();
 
@@ -237,7 +231,7 @@ describe('ProjectsClient', () => {
         throw 'String error'; // Non-Error object
       });
 
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockExecuteGraphQL.mockResolvedValue(mockResponse);
 
       const result = await projectsClient.listProjects();
 
@@ -256,13 +250,13 @@ describe('ProjectsClient', () => {
     });
 
     it('should handle GraphQL errors', async () => {
-      mockBaseClient.executeGraphQL = jest.fn().mockRejectedValue(new Error('GraphQL error'));
+      mockExecuteGraphQL.mockRejectedValue(new Error('GraphQL error'));
 
       await expect(projectsClient.listProjects()).rejects.toThrow('GraphQL error');
     });
 
     it.skip('should handle NoneType errors by returning empty array', async () => {
-      mockBaseClient.executeGraphQL = jest.fn().mockRejectedValue(new Error('NoneType'));
+      mockExecuteGraphQL.mockRejectedValue(new Error('NoneType'));
 
       const result = await projectsClient.listProjects();
 
@@ -277,7 +271,7 @@ describe('ProjectsClient', () => {
         },
       };
 
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockExecuteGraphQL.mockResolvedValue(mockResponse);
 
       const result = await projectsClient.listProjects();
 
@@ -297,7 +291,7 @@ describe('ProjectsClient', () => {
         },
       };
 
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockExecuteGraphQL.mockResolvedValue(mockResponse);
 
       const result = await projectsClient.listProjects();
 
@@ -310,7 +304,7 @@ describe('ProjectsClient', () => {
       const mockProjectKey = asProjectKey('test-project');
 
       // Mock listProjects to return a project with the matching key
-      jest.spyOn(projectsClient, 'listProjects').mockResolvedValue([
+      vi.spyOn(projectsClient, 'listProjects').mockResolvedValue([
         {
           key: mockProjectKey,
           name: 'Test Project',
@@ -335,7 +329,7 @@ describe('ProjectsClient', () => {
       const differentProjectKey = asProjectKey('different-project');
 
       // Mock listProjects to return a project with a different key
-      jest.spyOn(projectsClient, 'listProjects').mockResolvedValue([
+      vi.spyOn(projectsClient, 'listProjects').mockResolvedValue([
         {
           key: differentProjectKey,
           name: 'Different Project',
@@ -359,7 +353,7 @@ describe('ProjectsClient', () => {
       const mockProjectKey = asProjectKey('test-project');
 
       // Mock listProjects to throw an error
-      jest.spyOn(projectsClient, 'listProjects').mockRejectedValue(new Error('API error'));
+      vi.spyOn(projectsClient, 'listProjects').mockRejectedValue(new Error('API error'));
 
       const result = await projectsClient.projectExists(mockProjectKey);
 

@@ -2,7 +2,7 @@
  * @fileoverview Tests for GraphQL Query Builder
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { GraphQLQueryBuilder } from '../query-builder.js';
 import { asProjectKey, asRunId } from '../../../types/branded.js';
 
@@ -67,7 +67,7 @@ describe('GraphQLQueryBuilder', () => {
           'name',
           {
             name: 'profile',
-            fields: ['bio', 'avatar'],
+            fields: [{ name: 'bio' }, { name: 'avatar' }],
           },
         ])
         .build();
@@ -94,7 +94,7 @@ describe('GraphQLQueryBuilder', () => {
                 fields: [
                   {
                     name: 'node',
-                    fields: ['id', 'title'],
+                    fields: [{ name: 'id' }, { name: 'title' }],
                   },
                 ],
               },
@@ -239,13 +239,13 @@ describe('GraphQLQueryBuilder', () => {
                   fields: [
                     {
                       name: 'node',
-                      fields: ['...IssueFields'],
+                      fields: [{ name: '...IssueFields' }],
                     },
                   ],
                 },
                 {
                   name: 'pageInfo',
-                  fields: ['hasNextPage', 'endCursor'],
+                  fields: [{ name: 'hasNextPage' }, { name: 'endCursor' }],
                 },
               ],
             },

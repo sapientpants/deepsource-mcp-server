@@ -36,10 +36,16 @@ import { DeepsourceRecentRunIssuesParams } from '../handlers/recent-run-issues.j
  */
 export function adaptQualityMetricsParams(params: unknown): DeepsourceQualityMetricsParams {
   const typedParams = params as Record<string, unknown>;
-  return {
+  const result: DeepsourceQualityMetricsParams = {
     projectKey: typedParams.projectKey as string, // Handler still expects string
-    shortcodeIn: typedParams.shortcodeIn as MetricShortcode[] | undefined,
   };
+
+  const shortcodeIn = typedParams.shortcodeIn as MetricShortcode[] | undefined;
+  if (shortcodeIn !== undefined) {
+    result.shortcodeIn = shortcodeIn;
+  }
+
+  return result;
 }
 
 /**
@@ -49,13 +55,19 @@ export function adaptUpdateMetricThresholdParams(
   params: unknown
 ): DeepsourceUpdateMetricThresholdParams {
   const typedParams = params as Record<string, unknown>;
-  return {
+  const result: DeepsourceUpdateMetricThresholdParams = {
     projectKey: typedParams.projectKey as string, // Handler still expects string
     repositoryId: typedParams.repositoryId as string, // Handler still expects string
     metricShortcode: typedParams.metricShortcode as MetricShortcode,
     metricKey: typedParams.metricKey as MetricKey,
-    thresholdValue: typedParams.thresholdValue as number | null | undefined,
   };
+
+  const thresholdValue = typedParams.thresholdValue as number | null | undefined;
+  if (thresholdValue !== undefined) {
+    result.thresholdValue = thresholdValue;
+  }
+
+  return result;
 }
 
 /**
@@ -90,16 +102,32 @@ export function adaptComplianceReportParams(params: unknown): DeepsourceComplian
  */
 export function adaptProjectIssuesParams(params: unknown): DeepsourceProjectIssuesParams {
   const typedParams = params as Record<string, unknown>;
-  return {
+  const result: DeepsourceProjectIssuesParams = {
     projectKey: typedParams.projectKey as string, // Handler still expects string
-    path: typedParams.path as string | undefined,
-    analyzerIn: typedParams.analyzerIn as string[] | undefined,
-    tags: typedParams.tags as string[] | undefined,
-    first: typedParams.first as number | undefined,
-    last: typedParams.last as number | undefined,
-    after: typedParams.after as string | undefined,
-    before: typedParams.before as string | undefined,
   };
+
+  const path = typedParams.path as string | undefined;
+  if (path !== undefined) result.path = path;
+
+  const analyzerIn = typedParams.analyzerIn as string[] | undefined;
+  if (analyzerIn !== undefined) result.analyzerIn = analyzerIn;
+
+  const tags = typedParams.tags as string[] | undefined;
+  if (tags !== undefined) result.tags = tags;
+
+  const first = typedParams.first as number | undefined;
+  if (first !== undefined) result.first = first;
+
+  const last = typedParams.last as number | undefined;
+  if (last !== undefined) result.last = last;
+
+  const after = typedParams.after as string | undefined;
+  if (after !== undefined) result.after = after;
+
+  const before = typedParams.before as string | undefined;
+  if (before !== undefined) result.before = before;
+
+  return result;
 }
 
 /**
@@ -109,13 +137,23 @@ export function adaptDependencyVulnerabilitiesParams(
   params: unknown
 ): DeepsourceDependencyVulnerabilitiesParams {
   const typedParams = params as Record<string, unknown>;
-  return {
+  const result: DeepsourceDependencyVulnerabilitiesParams = {
     projectKey: typedParams.projectKey as string, // Handler still expects string
-    first: typedParams.first as number | undefined,
-    last: typedParams.last as number | undefined,
-    after: typedParams.after as string | undefined,
-    before: typedParams.before as string | undefined,
   };
+
+  const first = typedParams.first as number | undefined;
+  if (first !== undefined) result.first = first;
+
+  const last = typedParams.last as number | undefined;
+  if (last !== undefined) result.last = last;
+
+  const after = typedParams.after as string | undefined;
+  if (after !== undefined) result.after = after;
+
+  const before = typedParams.before as string | undefined;
+  if (before !== undefined) result.before = before;
+
+  return result;
 }
 
 /**
@@ -123,14 +161,26 @@ export function adaptDependencyVulnerabilitiesParams(
  */
 export function adaptProjectRunsParams(params: unknown): DeepsourceProjectRunsParams {
   const typedParams = params as Record<string, unknown>;
-  return {
+  const result: DeepsourceProjectRunsParams = {
     projectKey: typedParams.projectKey as string, // Handler still expects string
-    analyzerIn: typedParams.analyzerIn as AnalyzerShortcode[] | undefined,
-    first: typedParams.first as number | undefined,
-    last: typedParams.last as number | undefined,
-    after: typedParams.after as string | undefined,
-    before: typedParams.before as string | undefined,
   };
+
+  const analyzerIn = typedParams.analyzerIn as AnalyzerShortcode[] | undefined;
+  if (analyzerIn !== undefined) result.analyzerIn = analyzerIn;
+
+  const first = typedParams.first as number | undefined;
+  if (first !== undefined) result.first = first;
+
+  const last = typedParams.last as number | undefined;
+  if (last !== undefined) result.last = last;
+
+  const after = typedParams.after as string | undefined;
+  if (after !== undefined) result.after = after;
+
+  const before = typedParams.before as string | undefined;
+  if (before !== undefined) result.before = before;
+
+  return result;
 }
 
 /**
@@ -150,14 +200,24 @@ export function adaptRunParams(params: unknown): DeepsourceRunParams {
  */
 export function adaptRecentRunIssuesParams(params: unknown): DeepsourceRecentRunIssuesParams {
   const typedParams = params as Record<string, unknown>;
-  return {
+  const result: DeepsourceRecentRunIssuesParams = {
     projectKey: typedParams.projectKey as string, // Handler still expects string
     branchName: typedParams.branchName as string,
-    first: typedParams.first as number | undefined,
-    last: typedParams.last as number | undefined,
-    after: typedParams.after as string | undefined,
-    before: typedParams.before as string | undefined,
   };
+
+  const first = typedParams.first as number | undefined;
+  if (first !== undefined) result.first = first;
+
+  const last = typedParams.last as number | undefined;
+  if (last !== undefined) result.last = last;
+
+  const after = typedParams.after as string | undefined;
+  if (after !== undefined) result.after = after;
+
+  const before = typedParams.before as string | undefined;
+  if (before !== undefined) result.before = before;
+
+  return result;
 }
 
 /**
@@ -237,10 +297,16 @@ export interface DomainRecentRunIssuesParams {
  */
 export function adaptToDomainQualityMetricsParams(params: unknown): DomainQualityMetricsParams {
   const typedParams = params as Record<string, unknown>;
-  return {
+  const result: DomainQualityMetricsParams = {
     projectKey: asProjectKey(typedParams.projectKey as string),
-    shortcodeIn: typedParams.shortcodeIn as MetricShortcode[] | undefined,
   };
+
+  const shortcodeIn = typedParams.shortcodeIn as MetricShortcode[] | undefined;
+  if (shortcodeIn !== undefined) {
+    result.shortcodeIn = shortcodeIn;
+  }
+
+  return result;
 }
 
 /**
@@ -252,13 +318,19 @@ export function adaptToDomainUpdateMetricThresholdParams(
   params: unknown
 ): DomainUpdateMetricThresholdParams {
   const typedParams = params as Record<string, unknown>;
-  return {
+  const result: DomainUpdateMetricThresholdParams = {
     projectKey: asProjectKey(typedParams.projectKey as string),
     repositoryId: asGraphQLNodeId(typedParams.repositoryId as string),
     metricShortcode: typedParams.metricShortcode as MetricShortcode,
     metricKey: typedParams.metricKey as MetricKey,
-    thresholdValue: typedParams.thresholdValue as number | null | undefined,
   };
+
+  const thresholdValue = typedParams.thresholdValue as number | null | undefined;
+  if (thresholdValue !== undefined) {
+    result.thresholdValue = thresholdValue;
+  }
+
+  return result;
 }
 
 /**
@@ -299,18 +371,34 @@ export function adaptToDomainComplianceReportParams(params: unknown): DomainComp
  */
 export function adaptToDomainProjectIssuesParams(params: unknown): DomainProjectIssuesParams {
   const typedParams = params as Record<string, unknown>;
-  return {
+  const result: DomainProjectIssuesParams = {
     projectKey: asProjectKey(typedParams.projectKey as string),
-    path: typedParams.path as string | undefined,
-    analyzerIn: (typedParams.analyzerIn as string[] | undefined)?.map((a: string) =>
-      asAnalyzerShortcode(a)
-    ),
-    tags: typedParams.tags as string[] | undefined,
-    first: typedParams.first as number | undefined,
-    last: typedParams.last as number | undefined,
-    after: typedParams.after as string | undefined,
-    before: typedParams.before as string | undefined,
   };
+
+  const path = typedParams.path as string | undefined;
+  if (path !== undefined) result.path = path;
+
+  const analyzerIn = (typedParams.analyzerIn as string[] | undefined)?.map((a: string) =>
+    asAnalyzerShortcode(a)
+  );
+  if (analyzerIn !== undefined) result.analyzerIn = analyzerIn;
+
+  const tags = typedParams.tags as string[] | undefined;
+  if (tags !== undefined) result.tags = tags;
+
+  const first = typedParams.first as number | undefined;
+  if (first !== undefined) result.first = first;
+
+  const last = typedParams.last as number | undefined;
+  if (last !== undefined) result.last = last;
+
+  const after = typedParams.after as string | undefined;
+  if (after !== undefined) result.after = after;
+
+  const before = typedParams.before as string | undefined;
+  if (before !== undefined) result.before = before;
+
+  return result;
 }
 
 /**
@@ -322,13 +410,23 @@ export function adaptToDomainDependencyVulnerabilitiesParams(
   params: unknown
 ): DomainDependencyVulnerabilitiesParams {
   const typedParams = params as Record<string, unknown>;
-  return {
+  const result: DomainDependencyVulnerabilitiesParams = {
     projectKey: asProjectKey(typedParams.projectKey as string),
-    first: typedParams.first as number | undefined,
-    last: typedParams.last as number | undefined,
-    after: typedParams.after as string | undefined,
-    before: typedParams.before as string | undefined,
   };
+
+  const first = typedParams.first as number | undefined;
+  if (first !== undefined) result.first = first;
+
+  const last = typedParams.last as number | undefined;
+  if (last !== undefined) result.last = last;
+
+  const after = typedParams.after as string | undefined;
+  if (after !== undefined) result.after = after;
+
+  const before = typedParams.before as string | undefined;
+  if (before !== undefined) result.before = before;
+
+  return result;
 }
 
 /**
@@ -338,16 +436,28 @@ export function adaptToDomainDependencyVulnerabilitiesParams(
  */
 export function adaptToDomainProjectRunsParams(params: unknown): DomainProjectRunsParams {
   const typedParams = params as Record<string, unknown>;
-  return {
+  const result: DomainProjectRunsParams = {
     projectKey: asProjectKey(typedParams.projectKey as string),
-    analyzerIn: (typedParams.analyzerIn as string[] | undefined)?.map((a: string) =>
-      asAnalyzerShortcode(a)
-    ),
-    first: typedParams.first as number | undefined,
-    last: typedParams.last as number | undefined,
-    after: typedParams.after as string | undefined,
-    before: typedParams.before as string | undefined,
   };
+
+  const analyzerIn = (typedParams.analyzerIn as string[] | undefined)?.map((a: string) =>
+    asAnalyzerShortcode(a)
+  );
+  if (analyzerIn !== undefined) result.analyzerIn = analyzerIn;
+
+  const first = typedParams.first as number | undefined;
+  if (first !== undefined) result.first = first;
+
+  const last = typedParams.last as number | undefined;
+  if (last !== undefined) result.last = last;
+
+  const after = typedParams.after as string | undefined;
+  if (after !== undefined) result.after = after;
+
+  const before = typedParams.before as string | undefined;
+  if (before !== undefined) result.before = before;
+
+  return result;
 }
 
 /**
@@ -357,13 +467,19 @@ export function adaptToDomainProjectRunsParams(params: unknown): DomainProjectRu
  */
 export function adaptToDomainRunParams(params: unknown): DomainRunParams {
   const typedParams = params as Record<string, unknown>;
-  return {
+  const result: DomainRunParams = {
     projectKey: asProjectKey(typedParams.projectKey as string),
     runIdentifier: typedParams.isCommitOid
       ? asCommitOid(typedParams.runIdentifier as string)
       : asRunId(typedParams.runIdentifier as string),
-    isCommitOid: typedParams.isCommitOid as boolean | undefined,
   };
+
+  const isCommitOid = typedParams.isCommitOid as boolean | undefined;
+  if (isCommitOid !== undefined) {
+    result.isCommitOid = isCommitOid;
+  }
+
+  return result;
 }
 
 /**
@@ -373,12 +489,22 @@ export function adaptToDomainRunParams(params: unknown): DomainRunParams {
  */
 export function adaptToDomainRecentRunIssuesParams(params: unknown): DomainRecentRunIssuesParams {
   const typedParams = params as Record<string, unknown>;
-  return {
+  const result: DomainRecentRunIssuesParams = {
     projectKey: asProjectKey(typedParams.projectKey as string),
     branchName: typedParams.branchName as string,
-    first: typedParams.first as number | undefined,
-    last: typedParams.last as number | undefined,
-    after: typedParams.after as string | undefined,
-    before: typedParams.before as string | undefined,
   };
+
+  const first = typedParams.first as number | undefined;
+  if (first !== undefined) result.first = first;
+
+  const last = typedParams.last as number | undefined;
+  if (last !== undefined) result.last = last;
+
+  const after = typedParams.after as string | undefined;
+  if (after !== undefined) result.after = after;
+
+  const before = typedParams.before as string | undefined;
+  if (before !== undefined) result.before = before;
+
+  return result;
 }

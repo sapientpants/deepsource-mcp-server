@@ -4,44 +4,44 @@
  * this ensures the module can be imported successfully
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 // Use unstable_mockModule for ES modules - set up all mocks before imports
-jest.unstable_mockModule('@modelcontextprotocol/sdk/server/mcp.js', () => ({
-  McpServer: jest.fn().mockImplementation(() => ({
-    registerTool: jest.fn(),
-    connect: jest.fn(),
-    setRequestHandler: jest.fn(),
+vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
+  McpServer: vi.fn().mockImplementation(() => ({
+    registerTool: vi.fn(),
+    connect: vi.fn(),
+    setRequestHandler: vi.fn(),
   })),
 }));
 
-jest.unstable_mockModule('@modelcontextprotocol/sdk/server/stdio.js', () => ({
-  StdioServerTransport: jest.fn(),
+vi.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
+  StdioServerTransport: vi.fn(),
 }));
 
-jest.unstable_mockModule('../utils/logging/logger.js', () => ({
-  createLogger: jest.fn(() => ({
-    info: jest.fn(),
-    debug: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
+vi.mock('../utils/logging/logger.js', () => ({
+  createLogger: vi.fn(() => ({
+    info: vi.fn(),
+    debug: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
   })),
 }));
 
-jest.unstable_mockModule('../server/mcp-server.js', () => ({
+vi.mock('../server/mcp-server.js', () => ({
   DeepSourceMCPServer: {
-    create: jest.fn().mockResolvedValue({
-      getRegisteredTools: jest.fn().mockReturnValue([]),
-      getMcpServer: jest.fn().mockReturnValue({
-        registerTool: jest.fn(),
+    create: vi.fn().mockResolvedValue({
+      getRegisteredTools: vi.fn().mockReturnValue([]),
+      getMcpServer: vi.fn().mockReturnValue({
+        registerTool: vi.fn(),
       }),
-      start: jest.fn(),
+      start: vi.fn(),
     }),
   },
 }));
 
 // Import test utilities after all mocks are set
-const { describe, it, expect, beforeAll, afterAll } = await import('@jest/globals');
+const { describe, it, expect, beforeAll, afterAll } = await import('vitest');
 
 describe('index.ts module loading', () => {
   let originalEnv: typeof process.env;
@@ -65,7 +65,7 @@ describe('index.ts module loading', () => {
 
   afterAll(() => {
     process.env = originalEnv;
-    jest.resetModules();
+    vi.resetModules();
   });
 
   it('should load without errors', () => {

@@ -182,7 +182,12 @@ export const createQualityMetricsHandler: HandlerFactory<
   const client = new DeepSourceClient(apiKey);
   deps.logger.info('Fetching quality metrics', { projectKey, shortcodeIn });
 
-  const metrics = await client.getQualityMetrics(projectKey, { shortcodeIn });
+  const params: { shortcodeIn?: MetricShortcode[] } = {};
+  if (shortcodeIn !== undefined) {
+    params.shortcodeIn = shortcodeIn;
+  }
+
+  const metrics = await client.getQualityMetrics(projectKey, params);
 
   deps.logger.info('Successfully fetched quality metrics', {
     count: metrics.length,

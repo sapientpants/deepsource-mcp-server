@@ -3,25 +3,11 @@
  * This file adds coverage for the uncovered methods in metrics-client.ts
  */
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MetricsClient } from '../../client/metrics-client.js';
 import { MetricShortcode, MetricKey } from '../../types/metrics.js';
 import type { MetricsClientTestable } from '../test-types.js';
 import { TestableMetricsClient as TestableMetricsClientUtil } from '../utils/test-utils.js';
-
-// Mock the base client
-jest.mock('../../client/base-client.js', () => ({
-  BaseDeepSourceClient: jest.fn().mockImplementation(() => ({
-    findProjectByKey: jest.fn(),
-    executeGraphQL: jest.fn(),
-    logger: {
-      info: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-      warn: jest.fn(),
-    },
-  })),
-}));
 
 // Test helper class to expose private methods for testing
 class TestableMetricsClient extends MetricsClient {
@@ -56,41 +42,52 @@ class TestableMetricsClient extends MetricsClient {
   }
 }
 
+interface MockBaseClient {
+  findProjectByKey: ReturnType<typeof vi.fn>;
+  executeGraphQL: ReturnType<typeof vi.fn>;
+  logger: {
+    info: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn>;
+    debug: ReturnType<typeof vi.fn>;
+    warn: ReturnType<typeof vi.fn>;
+  };
+  extractHistoryFromResponse?: ReturnType<typeof vi.fn>;
+  extractMetricsFromResponse?: ReturnType<typeof vi.fn>;
+}
+
 describe('MetricsClient - History and Additional Methods', () => {
   let metricsClient: TestableMetricsClient;
-  let mockBaseClient: {
-    findProjectByKey: jest.Mock;
-    executeGraphQL: jest.Mock;
-    logger: {
-      info: jest.Mock;
-      error: jest.Mock;
-      debug: jest.Mock;
-      warn: jest.Mock;
-    };
-  };
+  let mockBaseClient: MockBaseClient;
   let originalEnv: typeof process.env;
 
   beforeEach(() => {
     originalEnv = { ...process.env };
     metricsClient = new TestableMetricsClient('test-api-key');
-    mockBaseClient = metricsClient as unknown as {
-      findProjectByKey: jest.Mock;
-      executeGraphQL: jest.Mock;
-      logger: {
-        info: jest.Mock;
-        error: jest.Mock;
-        debug: jest.Mock;
-        warn: jest.Mock;
-      };
+    mockBaseClient = metricsClient as unknown as MockBaseClient;
+
+    // Mock the methods on the client instance
+    mockBaseClient.findProjectByKey = vi.fn();
+    mockBaseClient.executeGraphQL = vi.fn();
+    mockBaseClient.logger = {
+      info: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+      warn: vi.fn(),
     };
-    // Ensure logger is properly set up
+    // Ensure logger and other properties are properly set up
     if (!mockBaseClient.logger) {
       mockBaseClient.logger = {
-        info: jest.fn(),
-        error: jest.fn(),
-        debug: jest.fn(),
-        warn: jest.fn(),
+        info: vi.fn(),
+        error: vi.fn(),
+        debug: vi.fn(),
+        warn: vi.fn(),
       };
+    }
+    if (!mockBaseClient.extractHistoryFromResponse) {
+      mockBaseClient.extractHistoryFromResponse = vi.fn();
+    }
+    if (!mockBaseClient.extractMetricsFromResponse) {
+      mockBaseClient.extractMetricsFromResponse = vi.fn();
     }
   });
 
@@ -153,8 +150,8 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      (mockBaseClient.findProjectByKey as any).mockResolvedValue(mockProject); // skipcq: JS-0323 // skipcq: JS-0323
+      (mockBaseClient.executeGraphQL as any).mockResolvedValue(mockResponse); // skipcq: JS-0323
 
       const result = await metricsClient.getMetricHistory(mockHistoryParams);
 
@@ -162,8 +159,8 @@ describe('MetricsClient - History and Additional Methods', () => {
       expect(result?.shortcode).toBe(MetricShortcode.LCV);
       expect(result?.metricKey).toBe(MetricKey.AGGREGATE);
       expect(result?.values).toHaveLength(2);
-      expect(result?.values[0].value).toBe(75.5);
-      expect(result?.values[1].value).toBe(78.2);
+      expect(result?.values?.[0]?.value).toBe(75.5);
+      expect(result?.values?.[1]?.value).toBe(78.2);
       expect(result?.isTrendingPositive).toBe(true);
     });
 
@@ -175,7 +172,7 @@ describe('MetricsClient - History and Additional Methods', () => {
         metricKey: 'UNKNOWN_KEY' as MetricKey,
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(null);
+      (mockBaseClient.findProjectByKey as any).mockResolvedValue(null); // skipcq: JS-0323
 
       await expect(metricsClient.getMetricHistory(nonTestParams)).rejects.toThrow(
         'Project with key non-test-project not found'
@@ -194,8 +191,8 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue({ data: null });
+      (mockBaseClient.findProjectByKey as any).mockResolvedValue(mockProject); // skipcq: JS-0323
+      (mockBaseClient.executeGraphQL as any).mockResolvedValue({ data: null }); // skipcq: JS-0323
 
       const result = await metricsClient.getMetricHistory(mockHistoryParams);
       expect(result).toBeNull();
@@ -229,8 +226,8 @@ describe('MetricsClient - History and Additional Methods', () => {
       expect(result).not.toBeNull();
       expect(result?.shortcode).toBe(MetricShortcode.LCV);
       expect(result?.values).toHaveLength(2);
-      expect(result?.values[0].value).toBe(75.5);
-      expect(result?.values[1].value).toBe(78.2);
+      expect(result?.values?.[0]?.value).toBe(75.5);
+      expect(result?.values?.[1]?.value).toBe(78.2);
     });
 
     it('should handle errors with "not found" message', async () => {
@@ -245,8 +242,8 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest.fn().mockRejectedValue(new Error('Metric not found'));
+      (mockBaseClient.findProjectByKey as any).mockResolvedValue(mockProject); // skipcq: JS-0323
+      (mockBaseClient.executeGraphQL as any).mockRejectedValue(new Error('Metric not found')); // skipcq: JS-0323
 
       const result = await metricsClient.getMetricHistory(mockHistoryParams);
       expect(result).toBeNull();
@@ -267,10 +264,10 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest
-        .fn()
-        .mockRejectedValue(new Error("'NoneType' object has no attribute"));
+      mockBaseClient.findProjectByKey.mockResolvedValue(mockProject);
+      mockBaseClient.executeGraphQL.mockRejectedValue(
+        new Error("'NoneType' object has no attribute")
+      );
 
       const result = await metricsClient.getMetricHistory(mockHistoryParams);
       expect(result).toBeNull();
@@ -291,8 +288,8 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.executeGraphQL = jest.fn().mockRejectedValue(new Error('Network error'));
+      (mockBaseClient.findProjectByKey as any).mockResolvedValue(mockProject); // skipcq: JS-0323
+      (mockBaseClient.executeGraphQL as any).mockRejectedValue(new Error('Network error')); // skipcq: JS-0323
 
       await expect(metricsClient.getMetricHistory(mockHistoryParams)).rejects.toThrow(
         'Network error'
@@ -361,7 +358,10 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      const result = metricsClient.testExtractHistoryFromResponse(mockResponseData, mockParams);
+      const result = metricsClient.testExtractHistoryFromResponse(
+        mockResponseData,
+        mockParams
+      ) as any; // skipcq: JS-0323
 
       expect(result).not.toBeNull();
       expect(result.shortcode).toBe(MetricShortcode.LCV);
@@ -455,7 +455,10 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      const result = metricsClient.testExtractHistoryFromResponse(mockResponseData, mockParams);
+      const result = metricsClient.testExtractHistoryFromResponse(
+        mockResponseData,
+        mockParams
+      ) as any; // skipcq: JS-0323
 
       expect(result).not.toBeNull();
       expect(result.values).toHaveLength(2); // Only valid nodes
@@ -467,15 +470,12 @@ describe('MetricsClient - History and Additional Methods', () => {
 
       // Create a new metrics client with a mocked logger
       const testClient = new MetricsClient('test-api-key');
-      const testMockClient = testClient as unknown as {
-        findProjectByKey: jest.Mock;
-        executeGraphQL: jest.Mock;
-      };
+      const testMockClient = testClient as unknown as any; // skipcq: JS-0323
       testMockClient.logger = {
-        info: jest.fn(),
-        error: jest.fn(),
-        debug: jest.fn(),
-        warn: jest.fn(),
+        info: vi.fn(),
+        error: vi.fn(),
+        debug: vi.fn(),
+        warn: vi.fn(),
       };
 
       const result = testMockClient.extractHistoryFromResponse(invalidData, mockParams);
@@ -577,15 +577,12 @@ describe('MetricsClient - History and Additional Methods', () => {
 
       // Create a new metrics client with a mocked logger
       const testClient = new MetricsClient('test-api-key');
-      const testMockClient = testClient as unknown as {
-        findProjectByKey: jest.Mock;
-        executeGraphQL: jest.Mock;
-      };
+      const testMockClient = testClient as unknown as any; // skipcq: JS-0323
       testMockClient.logger = {
-        info: jest.fn(),
-        error: jest.fn(),
-        debug: jest.fn(),
-        warn: jest.fn(),
+        info: vi.fn(),
+        error: vi.fn(),
+        debug: vi.fn(),
+        warn: vi.fn(),
       };
 
       const result = testMockClient.extractMetricsFromResponse(invalidData);
@@ -613,7 +610,7 @@ describe('MetricsClient - History and Additional Methods', () => {
       const result = metricsClient.testExtractMetricsFromResponse(mockResponseData);
 
       expect(result).toHaveLength(1);
-      expect(result[0].items).toEqual([]);
+      expect((result as any)[0].items).toEqual([]); // skipcq: JS-0323
     });
   });
 

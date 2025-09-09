@@ -2,7 +2,7 @@
  * @fileoverview Tests for ThresholdValue value object
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { ThresholdValue } from '../threshold-value.js';
 
 describe('ThresholdValue', () => {

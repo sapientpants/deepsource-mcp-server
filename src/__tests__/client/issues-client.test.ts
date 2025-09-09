@@ -3,26 +3,10 @@
  * This file adds coverage for the previously untested issues-client.ts
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { IssuesClient } from '../../client/issues-client.js';
 import type { IssuesClientTestable, MockDeepSourceClient } from '../test-types.js';
 import { TestableIssuesClient } from '../utils/test-utils.js';
-
-// Mock the base client
-jest.mock('../../client/base-client.js', () => ({
-  BaseDeepSourceClient: jest.fn().mockImplementation(() => ({
-    findProjectByKey: jest.fn(),
-    executeGraphQL: jest.fn(),
-    createEmptyPaginatedResponse: jest.fn(),
-    normalizePaginationParams: jest.fn(),
-    logger: {
-      info: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-      warn: jest.fn(),
-    },
-  })),
-}));
 
 describe('IssuesClient', () => {
   let issuesClient: IssuesClient;
@@ -31,6 +15,18 @@ describe('IssuesClient', () => {
   beforeEach(() => {
     issuesClient = new IssuesClient('test-api-key');
     mockBaseClient = issuesClient as unknown as MockDeepSourceClient;
+
+    // Mock the methods we need
+    mockBaseClient.findProjectByKey = vi.fn();
+    mockBaseClient.executeGraphQL = vi.fn();
+    mockBaseClient.createEmptyPaginatedResponse = vi.fn();
+    mockBaseClient.normalizePaginationParams = vi.fn();
+    mockBaseClient.logger = {
+      info: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+      warn: vi.fn(),
+    };
   });
 
   describe('getIssues', () => {
@@ -83,12 +79,12 @@ describe('IssuesClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.normalizePaginationParams = jest.fn().mockReturnValue({
+      mockBaseClient.findProjectByKey.mockResolvedValue(mockProject);
+      mockBaseClient.normalizePaginationParams.mockReturnValue({
         first: 20,
         after: null,
       });
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockBaseClient.executeGraphQL.mockResolvedValue(mockResponse);
 
       const result = await issuesClient.getIssues('test-project');
 
@@ -103,14 +99,14 @@ describe('IssuesClient', () => {
       );
 
       expect(result.items).toHaveLength(1);
-      expect(result.items[0].id).toBe('occ-1'); // Uses occurrence ID as issue ID
-      expect(result.items[0].shortcode).toBe('JS-0001');
-      expect(result.items[0].category).toBe('BUG_RISK');
+      expect(result.items[0]?.id).toBe('occ-1'); // Uses occurrence ID as issue ID
+      expect(result.items[0]?.shortcode).toBe('JS-0001');
+      expect(result.items[0]?.category).toBe('BUG_RISK');
     });
 
     it('should return empty response when project not found', async () => {
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(null);
-      mockBaseClient.createEmptyPaginatedResponse = jest.fn().mockReturnValue({
+      mockBaseClient.findProjectByKey.mockResolvedValue(null);
+      mockBaseClient.createEmptyPaginatedResponse.mockReturnValue({
         items: [],
         pageInfo: { hasNextPage: false, hasPreviousPage: false },
         totalCount: 0,
@@ -131,11 +127,11 @@ describe('IssuesClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.normalizePaginationParams = jest.fn().mockReturnValue({
+      mockBaseClient.findProjectByKey.mockResolvedValue(mockProject);
+      mockBaseClient.normalizePaginationParams.mockReturnValue({
         first: 20,
       });
-      mockBaseClient.executeGraphQL = jest.fn().mockRejectedValue(new Error('GraphQL error'));
+      mockBaseClient.executeGraphQL.mockRejectedValue(new Error('GraphQL error'));
 
       await expect(issuesClient.getIssues('test-project')).rejects.toThrow('GraphQL error');
     });
@@ -153,11 +149,11 @@ describe('IssuesClient', () => {
         data: null,
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.normalizePaginationParams = jest.fn().mockReturnValue({
+      mockBaseClient.findProjectByKey.mockResolvedValue(mockProject);
+      mockBaseClient.normalizePaginationParams.mockReturnValue({
         first: 20,
       });
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockBaseClient.executeGraphQL.mockResolvedValue(mockResponse);
 
       await expect(issuesClient.getIssues('test-project')).rejects.toThrow(
         'No data received from GraphQL API'
@@ -189,14 +185,14 @@ describe('IssuesClient', () => {
         },
       };
 
-      mockBaseClient.findProjectByKey = jest.fn().mockResolvedValue(mockProject);
-      mockBaseClient.normalizePaginationParams = jest.fn().mockReturnValue({
+      mockBaseClient.findProjectByKey.mockResolvedValue(mockProject);
+      mockBaseClient.normalizePaginationParams.mockReturnValue({
         analyzerIn: ['javascript'],
         tags: ['security'],
         path: '/src/',
         first: 10,
       });
-      mockBaseClient.executeGraphQL = jest.fn().mockResolvedValue(mockResponse);
+      mockBaseClient.executeGraphQL.mockResolvedValue(mockResponse);
 
       await issuesClient.getIssues('test-project', {
         analyzerIn: ['javascript'],
@@ -257,14 +253,14 @@ describe('IssuesClient', () => {
         },
       };
 
-      const issues = (issuesClient as unknown as IssuesClientTestable).extractIssuesFromResponse(
+      const issues = (issuesClient as IssuesClientTestable).extractIssuesFromResponse(
         mockResponseData
-      );
+      ) as unknown[];
 
       expect(issues).toHaveLength(1);
-      expect(issues[0].id).toBe('occ-1'); // Uses occurrence ID as issue ID
-      expect(issues[0].shortcode).toBe('JS-0001');
-      expect(issues[0].category).toBe('BUG_RISK');
+      expect(issues[0]?.id).toBe('occ-1'); // Uses occurrence ID as issue ID
+      expect(issues[0]?.shortcode).toBe('JS-0001');
+      expect(issues[0]?.category).toBe('BUG_RISK');
     });
 
     it('should handle missing issues in response', () => {
@@ -272,9 +268,9 @@ describe('IssuesClient', () => {
         repository: {},
       };
 
-      const issues = (issuesClient as unknown as IssuesClientTestable).extractIssuesFromResponse(
+      const issues = (issuesClient as IssuesClientTestable).extractIssuesFromResponse(
         mockResponseData
-      );
+      ) as unknown[];
 
       expect(issues).toHaveLength(0);
     });
@@ -301,9 +297,9 @@ describe('IssuesClient', () => {
         },
       };
 
-      const issues = (issuesClient as unknown as IssuesClientTestable).extractIssuesFromResponse(
+      const issues = (issuesClient as IssuesClientTestable).extractIssuesFromResponse(
         mockResponseData
-      );
+      ) as unknown[];
 
       expect(issues).toHaveLength(0); // No occurrences means no issues
     });
@@ -313,7 +309,7 @@ describe('IssuesClient', () => {
     it('should return empty response for NoneType errors', () => {
       const error = new Error('NoneType error');
 
-      const result = (issuesClient as unknown as IssuesClientTestable).handleIssuesError(error);
+      const result = (issuesClient as IssuesClientTestable).handleIssuesError(error);
 
       expect(result.items).toHaveLength(0);
       expect(result.totalCount).toBe(0);
@@ -324,7 +320,7 @@ describe('IssuesClient', () => {
       const error = new Error('Other error');
 
       expect(() => {
-        (issuesClient as unknown as IssuesClientTestable).handleIssuesError(error);
+        (issuesClient as IssuesClientTestable).handleIssuesError(error);
       }).toThrow('Other error');
     });
   });

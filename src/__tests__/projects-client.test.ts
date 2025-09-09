@@ -1,33 +1,22 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { ProjectsClient } from '../client/projects-client.js';
 import { asProjectKey } from '../types/branded.js';
 import { ViewerProjectsResponse } from '../types/graphql-responses.js';
 
-// Mock the executeGraphQL method to avoid actual network calls
-jest.mock('../client/base-client.js', () => {
-  return {
-    BaseDeepSourceClient: jest.fn().mockImplementation(() => {
-      return {
-        executeGraphQL: jest.fn(),
-        logger: {
-          debug: jest.fn(),
-          info: jest.fn(),
-          error: jest.fn(),
-        },
-      };
-    }),
-  };
-});
+// Type for accessing protected methods in tests
+interface TestableProjectsClient extends ProjectsClient {
+  executeGraphQL: (query: string, variables?: Record<string, unknown>) => Promise<unknown>;
+}
 
 describe('ProjectsClient', () => {
   const API_KEY = 'test-api-key';
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('listProjects', () => {
@@ -93,9 +82,7 @@ describe('ProjectsClient', () => {
 
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      (client as unknown as { executeGraphQL: jest.Mock }).executeGraphQL = jest
-        .fn()
-        .mockResolvedValue(mockResponse);
+      vi.spyOn(client as TestableProjectsClient, 'executeGraphQL').mockResolvedValue(mockResponse);
 
       const projects = await client.listProjects();
 
@@ -161,9 +148,7 @@ describe('ProjectsClient', () => {
 
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      (client as unknown as { executeGraphQL: jest.Mock }).executeGraphQL = jest
-        .fn()
-        .mockResolvedValue(mockResponse);
+      vi.spyOn(client as TestableProjectsClient, 'executeGraphQL').mockResolvedValue(mockResponse);
 
       const projects = await client.listProjects();
 
@@ -207,9 +192,7 @@ describe('ProjectsClient', () => {
 
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      (client as unknown as { executeGraphQL: jest.Mock }).executeGraphQL = jest
-        .fn()
-        .mockResolvedValue(mockResponse);
+      vi.spyOn(client as TestableProjectsClient, 'executeGraphQL').mockResolvedValue(mockResponse);
 
       const projects = await client.listProjects();
 
@@ -224,9 +207,9 @@ describe('ProjectsClient', () => {
     it('should handle NoneType errors by returning an empty array', async () => {
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      (client as unknown as { executeGraphQL: jest.Mock }).executeGraphQL = jest
-        .fn()
-        .mockRejectedValue(new Error('NoneType'));
+      vi.spyOn(client as TestableProjectsClient, 'executeGraphQL').mockRejectedValue(
+        new Error('NoneType')
+      );
 
       const projects = await client.listProjects();
 
@@ -236,9 +219,9 @@ describe('ProjectsClient', () => {
     it('should handle error responses', async () => {
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      (client as unknown as { executeGraphQL: jest.Mock }).executeGraphQL = jest
-        .fn()
-        .mockRejectedValue(new Error('Server error'));
+      vi.spyOn(client as TestableProjectsClient, 'executeGraphQL').mockRejectedValue(
+        new Error('Server error')
+      );
 
       await expect(client.listProjects()).rejects.toThrow();
     });
@@ -246,9 +229,9 @@ describe('ProjectsClient', () => {
     it('should handle GraphQL errors by returning empty array', async () => {
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      (client as unknown as { executeGraphQL: jest.Mock }).executeGraphQL = jest
-        .fn()
-        .mockRejectedValue(new Error('GraphQL Errors: Something went wrong'));
+      vi.spyOn(client as TestableProjectsClient, 'executeGraphQL').mockRejectedValue(
+        new Error('GraphQL Errors: Something went wrong')
+      );
 
       const projects = await client.listProjects();
       expect(projects).toEqual([]);
@@ -262,7 +245,7 @@ describe('ProjectsClient', () => {
       };
 
       // Use TypeScript type assertion to access protected method
-      (client as unknown as { executeGraphQL: jest.Mock }).executeGraphQL = jest
+      (client as TestableProjectsClient).executeGraphQL = vi
         .fn()
         .mockRejectedValue(errorWithResponse);
 
@@ -313,9 +296,7 @@ describe('ProjectsClient', () => {
 
       const client = new ProjectsClient(API_KEY);
       // Use TypeScript type assertion to access protected method
-      (client as unknown as { executeGraphQL: jest.Mock }).executeGraphQL = jest
-        .fn()
-        .mockResolvedValue(mockResponse);
+      vi.spyOn(client as TestableProjectsClient, 'executeGraphQL').mockResolvedValue(mockResponse);
 
       const projects = await client.listProjects();
 
@@ -361,7 +342,7 @@ describe('ProjectsClient', () => {
       ];
 
       const client = new ProjectsClient(API_KEY);
-      const listProjectsSpy = jest.spyOn(client, 'listProjects').mockResolvedValue(mockProjects);
+      const listProjectsSpy = vi.spyOn(client, 'listProjects').mockResolvedValue(mockProjects);
 
       const exists = await client.projectExists(asProjectKey('project1'));
       expect(exists).toBe(true);
@@ -387,7 +368,7 @@ describe('ProjectsClient', () => {
       ];
 
       const client = new ProjectsClient(API_KEY);
-      const listProjectsSpy = jest.spyOn(client, 'listProjects').mockResolvedValue(mockProjects);
+      const listProjectsSpy = vi.spyOn(client, 'listProjects').mockResolvedValue(mockProjects);
 
       const exists = await client.projectExists(asProjectKey('project2'));
       expect(exists).toBe(false);
@@ -398,7 +379,7 @@ describe('ProjectsClient', () => {
 
     it('should return false if error occurs during check', async () => {
       const client = new ProjectsClient(API_KEY);
-      const listProjectsSpy = jest.spyOn(client, 'listProjects').mockImplementation(() => {
+      const listProjectsSpy = vi.spyOn(client, 'listProjects').mockImplementation(() => {
         throw new Error('API error');
       });
 

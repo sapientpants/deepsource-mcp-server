@@ -97,7 +97,11 @@ export class GraphQLQueryBuilder {
     args?: Record<string, unknown>
   ): this {
     const nestedFields = fields.map((f) => (typeof f === 'string' ? { name: f } : f));
-    this.selections.push({ name, fields: nestedFields, args });
+    const selection: FieldSelection = { name, fields: nestedFields };
+    if (args !== undefined) {
+      selection.args = args;
+    }
+    this.selections.push(selection);
     return this;
   }
 

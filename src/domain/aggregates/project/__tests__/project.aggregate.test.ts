@@ -2,7 +2,7 @@
  * @fileoverview Tests for Project aggregate
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { Project } from '../project.aggregate.js';
 import type {
   CreateProjectParams,

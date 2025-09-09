@@ -18,14 +18,13 @@ import { dirname } from 'path';
  * @enum {string}
  */
 // This enum is part of the public API and is used by consumers, even if not all values are used in this file
-/* eslint-disable no-unused-vars */
+
 export enum LogLevel {
   DEBUG = 'DEBUG',
   INFO = 'INFO',
   WARN = 'WARN',
   ERROR = 'ERROR',
 }
-/* eslint-enable no-unused-vars */
 
 /**
  * Environment-aware logging configuration
@@ -128,7 +127,9 @@ export class Logger {
    * @param context Optional context name to identify the log source
    */
   constructor(context?: string) {
-    this.context = context;
+    if (context !== undefined) {
+      this.context = context;
+    }
   }
 
   /**

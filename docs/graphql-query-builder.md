@@ -30,10 +30,7 @@ The DeepSource MCP Server includes a powerful GraphQL query builder that provide
 ```typescript
 import { GraphQLQueryBuilder } from './utils/graphql/query-builder.js';
 
-const query = new GraphQLQueryBuilder()
-  .query('viewer')
-  .select(['login', 'email'])
-  .build();
+const query = new GraphQLQueryBuilder().query('viewer').select(['login', 'email']).build();
 
 // Result:
 // query {
@@ -76,10 +73,10 @@ const query = new GraphQLQueryBuilder()
         'name',
         {
           field: 'items',
-          selection: ['key', 'latestValue', 'threshold']
-        }
-      ]
-    }
+          selection: ['key', 'latestValue', 'threshold'],
+        },
+      ],
+    },
   ])
   .build();
 ```
@@ -93,7 +90,7 @@ const query = new GraphQLQueryBuilder()
   .query('repository', { dsn: projectKey })
   .select([
     { field: 'name', alias: 'projectName' },
-    { field: 'defaultBranch', alias: 'mainBranch' }
+    { field: 'defaultBranch', alias: 'mainBranch' },
   ])
   .build();
 
@@ -131,20 +128,14 @@ const query = new GraphQLQueryBuilder()
 
 ```typescript
 // Define reusable fragments
-const METRIC_FIELDS = [
-  'shortcode',
-  'name',
-  'description',
-  'unit',
-  'positiveDirection'
-];
+const METRIC_FIELDS = ['shortcode', 'name', 'description', 'unit', 'positiveDirection'];
 
 const METRIC_ITEM_FIELDS = [
   'key',
   'threshold',
   'latestValue',
   'latestValueDisplay',
-  'thresholdStatus'
+  'thresholdStatus',
 ];
 
 // Use in queries
@@ -158,10 +149,10 @@ const query = new GraphQLQueryBuilder()
         ...METRIC_FIELDS,
         {
           field: 'items',
-          selection: METRIC_ITEM_FIELDS
-        }
-      ]
-    }
+          selection: METRIC_ITEM_FIELDS,
+        },
+      ],
+    },
   ])
   .build();
 ```
@@ -174,10 +165,10 @@ const query = new GraphQLQueryBuilder()
   .select([
     {
       field: 'issues',
-      args: { 
+      args: {
         first: 10,
         after: cursor,
-        states: ['ACTIVE']
+        states: ['ACTIVE'],
       },
       selection: [
         {
@@ -186,17 +177,17 @@ const query = new GraphQLQueryBuilder()
             'cursor',
             {
               field: 'node',
-              selection: ['id', 'code', 'title']
-            }
-          ]
+              selection: ['id', 'code', 'title'],
+            },
+          ],
         },
         {
           field: 'pageInfo',
-          selection: ['hasNextPage', 'endCursor']
+          selection: ['hasNextPage', 'endCursor'],
         },
-        'totalCount'
-      ]
-    }
+        'totalCount',
+      ],
+    },
   ])
   .build();
 ```
@@ -206,10 +197,10 @@ const query = new GraphQLQueryBuilder()
 ### Project Fragments
 
 ```typescript
-import { 
+import {
   PROJECT_BASIC_FRAGMENT,
   PROJECT_METRICS_FRAGMENT,
-  PROJECT_FULL_FRAGMENT 
+  PROJECT_FULL_FRAGMENT,
 } from './utils/graphql/queries.js';
 
 // Basic project info
@@ -231,7 +222,7 @@ const metricsQuery = new GraphQLQueryBuilder()
 // Project fragments
 export const PROJECT_BASIC_FRAGMENT = ['name', 'defaultBranch', 'dsn'];
 
-// Metric fragments  
+// Metric fragments
 export const METRIC_FRAGMENT = [
   'shortcode',
   'name',
@@ -242,21 +233,21 @@ export const METRIC_FRAGMENT = [
   'isThresholdEnforced',
   {
     field: 'items',
-    selection: METRIC_ITEM_FRAGMENT
-  }
+    selection: METRIC_ITEM_FRAGMENT,
+  },
 ];
 
 // Issue fragments
 export const ISSUE_FRAGMENT = [
   'id',
-  'code', 
+  'code',
   'title',
   'message',
   'category',
   {
     field: 'location',
-    selection: ['path', { field: 'position', selection: ['beginLine'] }]
-  }
+    selection: ['path', { field: 'position', selection: ['beginLine'] }],
+  },
 ];
 
 // Run fragments
@@ -268,8 +259,8 @@ export const RUN_FRAGMENT = [
   'createdAt',
   {
     field: 'summary',
-    selection: ['occurrencesIntroduced', 'occurrencesResolved']
-  }
+    selection: ['occurrencesIntroduced', 'occurrencesResolved'],
+  },
 ];
 ```
 
@@ -286,8 +277,8 @@ class DeepSourceClient {
         {
           field: 'metrics',
           args: this.buildMetricArgs(filters),
-          selection: METRIC_FRAGMENT
-        }
+          selection: METRIC_FRAGMENT,
+        },
       ])
       .build();
 
@@ -313,7 +304,7 @@ try {
     .query('repository', { dsn: projectKey })
     .select(['invalidField']) // This will cause an error
     .build();
-    
+
   const response = await client.request(query);
 } catch (error) {
   if (error.response?.errors) {
@@ -366,8 +357,8 @@ const query = new GraphQLQueryBuilder()
     {
       field: 'issues',
       args: { first: 10, states: ['ACTIVE'] } as IssuesArgs,
-      selection: ISSUE_FRAGMENT
-    }
+      selection: ISSUE_FRAGMENT,
+    },
   ])
   .build();
 ```
@@ -383,8 +374,8 @@ const query = new GraphQLQueryBuilder()
     'name',
     {
       field: 'latestRun', // May be null
-      selection: RUN_FRAGMENT
-    }
+      selection: RUN_FRAGMENT,
+    },
   ])
   .build();
 
@@ -402,33 +393,41 @@ const query = builder
   .query('repository')
   .select([
     'name',
-    { field: 'issues', selection: ['edges', { field: 'node', selection: ['id', 'title'] }] }
+    { field: 'issues', selection: ['edges', { field: 'node', selection: ['id', 'title'] }] },
   ]);
 
 // Avoid - Too deeply nested
-const query = builder
-  .query('repository')
-  .select([
-    {
-      field: 'issues',
-      selection: [{
+const query = builder.query('repository').select([
+  {
+    field: 'issues',
+    selection: [
+      {
         field: 'edges',
-        selection: [{
-          field: 'node',
-          selection: [{
-            field: 'author',
-            selection: [{
-              field: 'organization',
-              selection: [{
-                field: 'repositories',
-                selection: ['edges'] // Too deep!
-              }]
-            }]
-          }]
-        }]
-      }]
-    }
-  ]);
+        selection: [
+          {
+            field: 'node',
+            selection: [
+              {
+                field: 'author',
+                selection: [
+                  {
+                    field: 'organization',
+                    selection: [
+                      {
+                        field: 'repositories',
+                        selection: ['edges'], // Too deep!
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+]);
 ```
 
 ### 5. Use Aliases for Clarity
@@ -443,14 +442,14 @@ const query = new GraphQLQueryBuilder()
       field: 'issues',
       alias: 'openIssues',
       args: { states: ['ACTIVE'] },
-      selection: ['totalCount']
+      selection: ['totalCount'],
     },
     {
       field: 'issues',
       alias: 'closedIssues',
       args: { states: ['RESOLVED'] },
-      selection: ['totalCount']
-    }
+      selection: ['totalCount'],
+    },
   ])
   .build();
 ```
@@ -462,11 +461,8 @@ const query = new GraphQLQueryBuilder()
 ```typescript
 describe('GraphQLQueryBuilder', () => {
   it('should build a simple query', () => {
-    const query = new GraphQLQueryBuilder()
-      .query('viewer')
-      .select(['login'])
-      .build();
-      
+    const query = new GraphQLQueryBuilder().query('viewer').select(['login']).build();
+
     expect(query).toBe('query { viewer { login } }');
   });
 
@@ -477,11 +473,11 @@ describe('GraphQLQueryBuilder', () => {
         'name',
         {
           field: 'metrics',
-          selection: ['shortcode', 'name']
-        }
+          selection: ['shortcode', 'name'],
+        },
       ])
       .build();
-      
+
     expect(query).toContain('repository(dsn: "test-project")');
     expect(query).toContain('metrics { shortcode name }');
   });
@@ -494,19 +490,15 @@ describe('GraphQLQueryBuilder', () => {
 it('should fetch metrics using query builder', async () => {
   const mockResponse = {
     repository: {
-      metrics: [
-        { shortcode: 'LCV', name: 'Line Coverage', latestValue: 85 }
-      ]
-    }
+      metrics: [{ shortcode: 'LCV', name: 'Line Coverage', latestValue: 85 }],
+    },
   };
 
   mockGraphQLClient.request.mockResolvedValue(mockResponse);
 
   const metrics = await client.getQualityMetrics('test-project');
-  
-  expect(mockGraphQLClient.request).toHaveBeenCalledWith(
-    expect.stringContaining('metrics')
-  );
+
+  expect(mockGraphQLClient.request).toHaveBeenCalledWith(expect.stringContaining('metrics'));
   expect(metrics).toHaveLength(1);
   expect(metrics[0].shortcode).toBe('LCV');
 });
@@ -525,21 +517,23 @@ async function fetchAllIssues(projectKey: string): Promise<Issue[]> {
   while (hasMore) {
     const query = new GraphQLQueryBuilder()
       .query('repository', { dsn: projectKey })
-      .select([{
-        field: 'issues',
-        args: { first: 100, after: cursor },
-        selection: [
-          { field: 'edges', selection: ['cursor', { field: 'node', selection: ISSUE_FRAGMENT }] },
-          { field: 'pageInfo', selection: ['hasNextPage', 'endCursor'] }
-        ]
-      }])
+      .select([
+        {
+          field: 'issues',
+          args: { first: 100, after: cursor },
+          selection: [
+            { field: 'edges', selection: ['cursor', { field: 'node', selection: ISSUE_FRAGMENT }] },
+            { field: 'pageInfo', selection: ['hasNextPage', 'endCursor'] },
+          ],
+        },
+      ])
       .build();
 
     const response = await client.request(query);
     const issueData = response.repository?.issues;
-    
+
     if (issueData?.edges) {
-      issues.push(...issueData.edges.map(e => e.node));
+      issues.push(...issueData.edges.map((e) => e.node));
       cursor = issueData.pageInfo.endCursor;
       hasMore = issueData.pageInfo.hasNextPage;
     } else {
@@ -554,17 +548,14 @@ async function fetchAllIssues(projectKey: string): Promise<Issue[]> {
 ### Conditional Field Selection
 
 ```typescript
-function buildMetricsQuery(
-  projectKey: string,
-  includeHistory: boolean = false
-): string {
+function buildMetricsQuery(projectKey: string, includeHistory: boolean = false): string {
   const metricSelection = [...METRIC_FRAGMENT];
-  
+
   if (includeHistory) {
     metricSelection.push({
       field: 'history',
       args: { last: 30 },
-      selection: ['value', 'measuredAt']
+      selection: ['value', 'measuredAt'],
     });
   }
 
@@ -580,7 +571,7 @@ function buildMetricsQuery(
 ```typescript
 function buildBatchQuery(projectKeys: string[]): string {
   const builder = new GraphQLQueryBuilder();
-  
+
   projectKeys.forEach((key, index) => {
     builder.addField(
       'repository',
@@ -589,7 +580,7 @@ function buildBatchQuery(projectKeys: string[]): string {
       `project${index}` // Alias
     );
   });
-  
+
   return builder.build();
 }
 ```
@@ -631,6 +622,7 @@ function buildBatchQuery(projectKeys: string[]): string {
 ### Debug Tips
 
 1. **Log Generated Queries**
+
    ```typescript
    const query = builder.build();
    console.log('Generated query:', query);
@@ -643,7 +635,7 @@ function buildBatchQuery(projectKeys: string[]): string {
 3. **Enable Debug Mode**
    ```typescript
    const client = new DeepSourceClient(apiKey, {
-     debug: true // Logs all queries and responses
+     debug: true, // Logs all queries and responses
    });
    ```
 
@@ -668,10 +660,7 @@ const query = `
 // New approach
 const query = new GraphQLQueryBuilder()
   .query('repository', { dsn: projectKey })
-  .select([
-    'name',
-    { field: 'metrics', selection: ['shortcode', 'name'] }
-  ])
+  .select(['name', { field: 'metrics', selection: ['shortcode', 'name'] }])
   .build();
 ```
 
@@ -682,7 +671,7 @@ const query = new GraphQLQueryBuilder()
 const createMetricsQuery = (projectKey: string, metricTypes: string[]) => `
   query {
     repository(dsn: "${projectKey}") {
-      metrics(shortcodeIn: [${metricTypes.map(t => `"${t}"`).join(', ')}]) {
+      metrics(shortcodeIn: [${metricTypes.map((t) => `"${t}"`).join(', ')}]) {
         shortcode
         latestValue
       }
@@ -690,15 +679,17 @@ const createMetricsQuery = (projectKey: string, metricTypes: string[]) => `
   }
 `;
 
-// New approach  
+// New approach
 const createMetricsQuery = (projectKey: string, metricTypes: string[]) =>
   new GraphQLQueryBuilder()
     .query('repository', { dsn: projectKey })
-    .select([{
-      field: 'metrics',
-      args: { shortcodeIn: metricTypes },
-      selection: ['shortcode', 'latestValue']
-    }])
+    .select([
+      {
+        field: 'metrics',
+        args: { shortcodeIn: metricTypes },
+        selection: ['shortcode', 'latestValue'],
+      },
+    ])
     .build();
 ```
 

@@ -1,8 +1,8 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { ProjectKey } from '../../types/branded';
 import type { IProjectRepository } from '../../domain/aggregates/project/project.repository';
 import type { Project } from '../../domain/aggregates/project/project.aggregate';
@@ -10,29 +10,29 @@ import type { Logger } from '../../utils/logging/logger';
 
 // Create mock logger
 const mockLogger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
 };
 
 // Mock modules before importing the implementation
-jest.unstable_mockModule('../../utils/logging/logger', () => ({
-  createLogger: jest.fn(() => mockLogger),
+vi.mock('../../utils/logging/logger', () => ({
+  createLogger: vi.fn(() => mockLogger),
 }));
 
 // Mock the repository and factory
-const mockFindAll = jest.fn();
+const mockFindAll = vi.fn();
 const mockProjectRepository = {
   findAll: mockFindAll,
 } as unknown as IProjectRepository;
 
-const mockCreateProjectRepository = jest.fn(() => mockProjectRepository);
-const mockRepositoryFactory = jest.fn(() => ({
+const mockCreateProjectRepository = vi.fn(() => mockProjectRepository);
+const mockRepositoryFactory = vi.fn(() => ({
   createProjectRepository: mockCreateProjectRepository,
 }));
 
-jest.unstable_mockModule('../../infrastructure/factories/repository.factory', () => ({
+vi.mock('../../infrastructure/factories/repository.factory', () => ({
   RepositoryFactory: mockRepositoryFactory,
 }));
 
@@ -49,7 +49,7 @@ describe('Projects Handler', () => {
     process.env.DEEPSOURCE_API_KEY = 'test-api-key';
 
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {

@@ -12,7 +12,7 @@ import { ApiResponse } from '../../models/common.js';
  * Standard MCP error codes based on JSON-RPC 2.0 specification
  * These codes are exported for use by consumers of the library
  */
-/* eslint-disable no-unused-vars */
+
 export enum MCPErrorCode {
   // JSON-RPC 2.0 standard error codes
   PARSE_ERROR = -32700,
@@ -36,13 +36,12 @@ export enum MCPErrorCode {
   NETWORK_ERROR = -32009,
   CLIENT_ERROR = -32010,
 }
-/* eslint-enable no-unused-vars */
 
 /**
  * MCP error categories for better error classification
  * These categories are exported for use by consumers of the library
  */
-/* eslint-disable no-unused-vars */
+
 export enum MCPErrorCategory {
   CLIENT_ERROR = 'client_error',
   SERVER_ERROR = 'server_error',
@@ -53,7 +52,6 @@ export enum MCPErrorCategory {
   INTERNAL_ERROR = 'internal_error',
   TRANSPORT_ERROR = 'transport_error',
 }
-/* eslint-enable no-unused-vars */
 
 /**
  * Interface for structured MCP error information
@@ -72,21 +70,25 @@ export interface MCPErrorInfo {
  * Enhanced error class for MCP-compliant errors
  */
 export class MCPError extends Error {
+  public override readonly name = 'MCPError';
   public readonly code: MCPErrorCode | string;
   public readonly category: MCPErrorCategory | string;
   public readonly details?: Record<string, unknown>;
-  public readonly cause?: Error;
+  public override readonly cause?: Error;
   public readonly retryable: boolean;
   public readonly userFriendly: boolean;
   public readonly timestamp: Date;
 
   constructor(info: MCPErrorInfo) {
     super(info.message);
-    this.name = 'MCPError';
     this.code = info.code;
     this.category = info.category;
-    this.details = info.details;
-    this.cause = info.cause;
+    if (info.details !== undefined) {
+      this.details = info.details;
+    }
+    if (info.cause !== undefined) {
+      this.cause = info.cause;
+    }
     this.retryable = info.retryable ?? false;
     this.userFriendly = info.userFriendly ?? true;
     this.timestamp = new Date();

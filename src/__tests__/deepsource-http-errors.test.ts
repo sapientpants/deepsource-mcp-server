@@ -1,9 +1,9 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
 import nock from 'nock';
-import { expect } from '@jest/globals';
+import { expect } from 'vitest';
 import { DeepSourceClient } from '../deepsource.js';
 import { ClassifiedError, ErrorCategory } from '../utils/errors.js';
 

@@ -1,5 +1,5 @@
 import nock from 'nock';
-// Removed unused import: import { jest } from '@jest/globals'
+// Removed unused import: import { vi as jest } from 'vitest'
 import { DeepSourceClient, MetricShortcode } from '../deepsource';
 import { MetricKey } from '../types/metrics';
 

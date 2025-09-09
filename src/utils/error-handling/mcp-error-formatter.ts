@@ -2,7 +2,7 @@
  * @fileoverview Formats errors into MCP-compliant API responses
  */
 
-import { MCPError } from './mcp-errors.js';
+import { MCPError, MCPErrorInfo } from './mcp-errors.js';
 import { toMCPError } from './mcp-error-converter.js';
 import { createLogger } from '../logging/logger.js';
 import type { ApiResponse } from '../../models/common.js';
@@ -102,14 +102,19 @@ export function createValidationErrorResponse(
   if (field) details.field = field;
   if (value !== undefined) details.value = value;
 
-  const error = new MCPError({
+  const errorInfo: MCPErrorInfo = {
     code: 'VALIDATION_ERROR',
     category: 'VALIDATION_ERROR',
     message: `Validation failed: ${message}`,
-    details: Object.keys(details).length > 0 ? details : undefined,
     retryable: false,
     userFriendly: true,
-  });
+  };
+
+  if (Object.keys(details).length > 0) {
+    errorInfo.details = details;
+  }
+
+  const error = new MCPError(errorInfo);
 
   return createErrorResponse(error);
 }

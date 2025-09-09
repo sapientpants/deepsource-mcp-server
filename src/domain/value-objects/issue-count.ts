@@ -54,10 +54,11 @@ export class IssueCount extends ValueObject<IssueCountProps> {
       throw new Error('Issue count cannot be negative');
     }
 
-    return new IssueCount({
-      count,
-      category,
-    });
+    const props: IssueCountProps = { count };
+    if (category !== undefined) {
+      props.category = category;
+    }
+    return new IssueCount(props);
   }
 
   /**
@@ -157,7 +158,7 @@ export class IssueCount extends ValueObject<IssueCountProps> {
   /**
    * Returns a string representation of the issue count
    */
-  toString(): string {
+  override toString(): string {
     const categoryStr = this.props.category ? ` ${this.props.category}` : '';
     return `${this.props.count}${categoryStr} issue${this.props.count !== 1 ? 's' : ''}`;
   }

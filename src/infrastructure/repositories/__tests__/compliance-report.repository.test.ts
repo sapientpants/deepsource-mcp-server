@@ -2,7 +2,7 @@
  * @fileoverview Tests for ComplianceReportRepository
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ComplianceReportRepository } from '../compliance-report.repository.js';
 import { DeepSourceClient, ComplianceReport as ApiComplianceReport } from '../../../deepsource.js';
 import { ReportType } from '../../../types/report-types.js';
@@ -10,33 +10,33 @@ import { asProjectKey } from '../../../types/branded.js';
 import { ComplianceReport } from '../../../domain/aggregates/compliance-report/compliance-report.aggregate.js';
 
 // Mock the DeepSourceClient
-jest.mock('../../../deepsource.js');
+vi.mock('../../../deepsource.js');
 
 // Mock the logger
-jest.mock('../../../utils/logging/logger.js', () => ({
-  createLogger: jest.fn(() => ({
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+vi.mock('../../../utils/logging/logger.js', () => ({
+  createLogger: vi.fn(() => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   })),
 }));
 
 describe('ComplianceReportRepository', () => {
   let repository: ComplianceReportRepository;
-  let mockClient: jest.Mocked<DeepSourceClient>;
+  let mockClient: anyed<DeepSourceClient>;
   let mockApiReport: ApiComplianceReport;
 
   beforeEach(() => {
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create mock DeepSourceClient
     mockClient = {
-      listProjects: jest.fn(),
-      getComplianceReport: jest.fn(),
-      listRuns: jest.fn(),
-    } as unknown as jest.Mocked<DeepSourceClient>;
+      listProjects: vi.fn(),
+      getComplianceReport: vi.fn(),
+      listRuns: vi.fn(),
+    } as unknown as anyed<DeepSourceClient>;
 
     // Create test data
     mockApiReport = {

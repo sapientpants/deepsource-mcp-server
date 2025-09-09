@@ -1,5 +1,5 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
 import {
@@ -57,10 +57,8 @@ describe('Branded Types', () => {
       // The following should cause TypeScript errors (but will pass at runtime)
       // The tests are commented out as they should fail at compile time
 
-      // @ts-expect-error - Cannot assign ProjectKey to RunId
       // const mixedTypes1: RunId = projectKey;
 
-      // @ts-expect-error - Cannot assign RunId to ProjectKey
       // const mixedTypes2: ProjectKey = runId;
 
       // These assertions just confirm that the values themselves are still strings
@@ -88,7 +86,6 @@ describe('Branded Types', () => {
       expect(stringVar).toBe('test-project-key');
 
       // But strings are not directly assignable to branded types
-      // @ts-expect-error - Cannot assign string to ProjectKey
       // const projectKey2: ProjectKey = 'another-project-key';
 
       // Must use conversion function
@@ -114,10 +111,8 @@ describe('Branded Types', () => {
       expect(processProject(projectKey)).toBe('Processing project: test-project');
       expect(analyzeCommit(commitOid)).toBe('Analyzing commit: abcdef123456');
 
-      // @ts-expect-error - Cannot pass raw string to function expecting ProjectKey
       // processProject('invalid-usage');
 
-      // @ts-expect-error - Cannot pass CommitOid to function expecting ProjectKey
       // processProject(commitOid);
     });
 

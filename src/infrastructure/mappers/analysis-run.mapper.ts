@@ -10,6 +10,7 @@ import {
   CommitInfo,
   RunSummary,
   RunStatus,
+  RunTimestamps,
   AnalyzerDistribution,
   CategoryDistribution,
   IssueCategory,
@@ -117,11 +118,18 @@ export function mapAnalysisRunToDomain(apiRun: DeepSourceRun, projectKey: string
     repositoryId: asGraphQLNodeId(apiRun.repository.id),
     commitInfo,
     status,
-    timestamps: {
-      createdAt: new Date(apiRun.createdAt),
-      startedAt: status !== 'PENDING' ? new Date(apiRun.updatedAt) : undefined,
-      finishedAt: apiRun.finishedAt ? new Date(apiRun.finishedAt) : undefined,
-    },
+    timestamps: (() => {
+      const ts: RunTimestamps = {
+        createdAt: new Date(apiRun.createdAt),
+      };
+      if (status !== 'PENDING') {
+        ts.startedAt = new Date(apiRun.updatedAt);
+      }
+      if (apiRun.finishedAt) {
+        ts.finishedAt = new Date(apiRun.finishedAt);
+      }
+      return ts;
+    })(),
     summary,
     issues: [], // Issues are fetched separately if needed
   });

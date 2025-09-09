@@ -1,8 +1,8 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import {
   asProjectKey,
   asRunId,
@@ -17,31 +17,31 @@ import { IssueCount } from '../../domain/value-objects/issue-count';
 
 // Create mock logger
 const mockLogger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
 };
 
 // Mock modules before importing the implementation
-jest.unstable_mockModule('../../utils/logging/logger', () => ({
-  createLogger: jest.fn(() => mockLogger),
+vi.mock('../../utils/logging/logger', () => ({
+  createLogger: vi.fn(() => mockLogger),
 }));
 
 // Mock the repository and factory
-const mockFindByRunId = jest.fn();
-const mockFindByCommit = jest.fn();
+const mockFindByRunId = vi.fn();
+const mockFindByCommit = vi.fn();
 const mockAnalysisRunRepository = {
   findByRunId: mockFindByRunId,
   findByCommit: mockFindByCommit,
 } as unknown as IAnalysisRunRepository;
 
-const mockCreateAnalysisRunRepository = jest.fn(() => mockAnalysisRunRepository);
-const mockRepositoryFactory = jest.fn(() => ({
+const mockCreateAnalysisRunRepository = vi.fn(() => mockAnalysisRunRepository);
+const mockRepositoryFactory = vi.fn(() => ({
   createAnalysisRunRepository: mockCreateAnalysisRunRepository,
 }));
 
-jest.unstable_mockModule('../../infrastructure/factories/repository.factory', () => ({
+vi.mock('../../infrastructure/factories/repository.factory', () => ({
   RepositoryFactory: mockRepositoryFactory,
 }));
 
@@ -58,7 +58,7 @@ describe('Run Handler', () => {
     process.env.DEEPSOURCE_API_KEY = 'test-api-key';
 
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {

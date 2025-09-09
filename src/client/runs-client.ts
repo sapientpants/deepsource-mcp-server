@@ -88,8 +88,6 @@ export class RunsClient extends BaseDeepSourceClient {
         pageInfo: {
           hasNextPage: false, // Simplified for now
           hasPreviousPage: false,
-          startCursor: undefined,
-          endCursor: undefined,
         },
         totalCount: runs.length,
       };
@@ -162,10 +160,13 @@ export class RunsClient extends BaseDeepSourceClient {
 
       // Paginate through runs to find the most recent for the specific branch
       while (hasNextPage) {
-        const runs = await this.listRuns(projectKey, {
+        const params: { first: number; after?: string } = {
           first: 50,
-          after,
-        });
+        };
+        if (after !== undefined) {
+          params.after = after;
+        }
+        const runs = await this.listRuns(projectKey, params);
 
         for (const run of runs.items) {
           if (run.branchName === branchName) {
@@ -211,7 +212,8 @@ export class RunsClient extends BaseDeepSourceClient {
    */
   async getRecentRunIssues(
     projectKey: string,
-    branchName: BranchName
+    branchName: BranchName,
+    paginationParams?: { first?: number; after?: string; last?: number; before?: string }
   ): Promise<RecentRunIssuesResponse> {
     try {
       this.logger.info('Fetching recent run issues', { projectKey, branchName });
@@ -228,13 +230,44 @@ export class RunsClient extends BaseDeepSourceClient {
         };
       }
 
-      // For now, return empty issues - would need to implement run-specific issue fetching
-      // This would require additional GraphQL queries to get checks and occurrences for the specific run
+      // Now fetch the issues for this specific run
+      const runIssuesQuery = RunsClient.buildRunOccurrencesQuery();
+      const requestedLimit = paginationParams?.first ?? 100;
+
+      // To avoid fetching too much data, limit both checks and occurrences
+      // If user wants 100 issues total, we might fetch from up to 10 checks with 10 issues each
+      const checksLimit = Math.min(10, Math.ceil(requestedLimit / 10));
+      const occurrencesPerCheck = Math.ceil(requestedLimit / checksLimit);
+
+      const response = await this.executeGraphQL(runIssuesQuery, {
+        runUid: mostRecentRun.runUid,
+        first: occurrencesPerCheck,
+        checksFirst: checksLimit,
+      });
+
+      if (!response.data) {
+        this.logger.warn('No data received for run occurrences');
+        return {
+          run: mostRecentRun,
+          items: [],
+          pageInfo: { hasNextPage: false, hasPreviousPage: false },
+          totalCount: 0,
+        };
+      }
+
+      const issues = this.extractIssuesFromRunResponse(response.data, requestedLimit);
+
+      this.logger.info('Successfully fetched run issues', {
+        runUid: mostRecentRun.runUid,
+        issueCount: issues.length,
+        requestedLimit,
+      });
+
       return {
         run: mostRecentRun,
-        items: [], // Run-specific issue fetching not yet implemented
-        pageInfo: { hasNextPage: false, hasPreviousPage: false },
-        totalCount: 0,
+        items: issues,
+        pageInfo: { hasNextPage: issues.length >= requestedLimit, hasPreviousPage: false },
+        totalCount: issues.length,
       };
     } catch (error) {
       this.logger.error('Error fetching recent run issues', {
@@ -434,6 +467,105 @@ export class RunsClient extends BaseDeepSourceClient {
   }
 
   /**
+   * Builds GraphQL query for fetching run occurrences
+   * @private
+   */
+  private static buildRunOccurrencesQuery(): string {
+    return `
+      query getRunOccurrences($runUid: UUID!, $first: Int, $checksFirst: Int) {
+        run(runUid: $runUid) {
+          checks(first: $checksFirst) {
+            edges {
+              node {
+                analyzer {
+                  shortcode
+                }
+                occurrences(first: $first) {
+                  edges {
+                    node {
+                      id
+                      issue {
+                        id
+                        shortcode
+                        title
+                        category
+                        severity
+                      }
+                      path
+                      beginLine
+                      issueText
+                    }
+                  }
+                  pageInfo {
+                    hasNextPage
+                    endCursor
+                  }
+                  totalCount
+                }
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+      }
+    `;
+  }
+
+  /**
+   * Extracts issues from run occurrences response
+   * @private
+   */
+  private extractIssuesFromRunResponse(responseData: unknown, limit?: number): DeepSourceIssue[] {
+    const issues: DeepSourceIssue[] = [];
+    const maxIssues = limit ?? Number.MAX_SAFE_INTEGER;
+
+    try {
+      const run = (responseData as Record<string, unknown>)?.run as Record<string, unknown>;
+      const checks =
+        ((run?.checks as Record<string, unknown>)?.edges as Array<Record<string, unknown>>) || [];
+
+      for (const checkEdge of checks) {
+        if (issues.length >= maxIssues) break;
+
+        const checkNode = checkEdge?.node as Record<string, unknown>;
+        const occurrences =
+          ((checkNode?.occurrences as Record<string, unknown>)?.edges as Array<
+            Record<string, unknown>
+          >) || [];
+
+        for (const occurrenceEdge of occurrences) {
+          if (issues.length >= maxIssues) break;
+
+          const occurrence = occurrenceEdge?.node as Record<string, unknown>;
+          const issue = occurrence?.issue as Record<string, unknown>;
+
+          if (occurrence && issue) {
+            issues.push({
+              id: String(occurrence.id ?? 'unknown'),
+              title: String(issue.title ?? 'Unknown Issue'),
+              shortcode: String(issue.shortcode ?? 'UNKNOWN'),
+              category: String(issue.category ?? 'UNKNOWN'),
+              severity: String(issue.severity ?? 'UNKNOWN'),
+              status: 'OPEN', // Occurrences in a run are typically open issues
+              issue_text: String(occurrence.issueText ?? ''),
+              file_path: String(occurrence.path ?? ''),
+              line_number: Number(occurrence.beginLine ?? 0),
+              tags: [], // Tags would need to be fetched separately if needed
+            });
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.error('Error extracting issues from run response', { error });
+    }
+
+    return issues;
+  }
+
+  /**
    * Handles errors during runs fetching
    * @private
    */
@@ -450,8 +582,6 @@ export class RunsClient extends BaseDeepSourceClient {
         pageInfo: {
           hasNextPage: false,
           hasPreviousPage: false,
-          startCursor: undefined,
-          endCursor: undefined,
         },
         totalCount: 0,
       };

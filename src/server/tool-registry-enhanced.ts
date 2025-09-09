@@ -120,12 +120,27 @@ export class EnhancedToolRegistry extends ToolRegistry {
 
     for (const directory of directories) {
       try {
-        const toolsFound = await this.scanDirectory(directory, patterns, recursive, {
-          includeCategories,
-          excludeCategories,
-          includeTags,
-          excludeTags,
-        });
+        const filterOptions: {
+          includeCategories?: string[];
+          excludeCategories?: string[];
+          includeTags?: string[];
+          excludeTags?: string[];
+        } = {};
+
+        if (includeCategories) {
+          filterOptions.includeCategories = includeCategories;
+        }
+        if (excludeCategories) {
+          filterOptions.excludeCategories = excludeCategories;
+        }
+        if (includeTags) {
+          filterOptions.includeTags = includeTags;
+        }
+        if (excludeTags) {
+          filterOptions.excludeTags = excludeTags;
+        }
+
+        const toolsFound = await this.scanDirectory(directory, patterns, recursive, filterOptions);
         discoveredTools.push(...toolsFound);
       } catch (error) {
         logger.warn(`Failed to scan directory: ${directory}`, error);
@@ -233,10 +248,15 @@ export class EnhancedToolRegistry extends ToolRegistry {
         toolDef = {
           name: schema.name as string,
           description: schema.description as string,
-          inputSchema: schema.inputSchema as z.ZodType<unknown> | undefined,
-          outputSchema: schema.outputSchema as z.ZodType<unknown> | undefined,
           handler: module.handler,
         };
+
+        if (schema.inputSchema) {
+          toolDef.inputSchema = schema.inputSchema as z.ZodType<unknown>;
+        }
+        if (schema.outputSchema) {
+          toolDef.outputSchema = schema.outputSchema as z.ZodType<unknown>;
+        }
       }
 
       if (!toolDef) {
@@ -463,15 +483,32 @@ export class EnhancedToolRegistry extends ToolRegistry {
       const discovered = this.discoveredTools.has(name);
 
       if (tool) {
-        toolsInfo.push({
+        const toolInfo: {
+          name: string;
+          description: string;
+          category?: string;
+          version?: string;
+          tags?: string[];
+          enabled?: boolean;
+          discovered?: boolean;
+        } = {
           name: tool.name,
           description: tool.description,
-          category: metadata?.category,
-          version: metadata?.version,
-          tags: metadata?.tags,
           enabled: metadata?.enabled !== false,
           discovered,
-        });
+        };
+
+        if (metadata?.category) {
+          toolInfo.category = metadata.category;
+        }
+        if (metadata?.version) {
+          toolInfo.version = metadata.version;
+        }
+        if (metadata?.tags) {
+          toolInfo.tags = metadata.tags;
+        }
+
+        toolsInfo.push(toolInfo);
       }
     }
 

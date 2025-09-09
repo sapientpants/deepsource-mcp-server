@@ -118,12 +118,17 @@ export function parseToolVersion(version: string): ToolVersion {
     throw new Error(`Invalid version format: ${version}`);
   }
 
-  return {
-    major: parseInt(match[1], 10),
-    minor: parseInt(match[2], 10),
-    patch: parseInt(match[3], 10),
-    prerelease: match[4],
+  const result: ToolVersion = {
+    major: parseInt(match[1] ?? '0', 10),
+    minor: parseInt(match[2] ?? '0', 10),
+    patch: parseInt(match[3] ?? '0', 10),
   };
+
+  if (match[4]) {
+    result.prerelease = match[4];
+  }
+
+  return result;
 }
 
 /**

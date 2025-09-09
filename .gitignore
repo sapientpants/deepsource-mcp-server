@@ -1,34 +1,20 @@
-# Dependencies
-node_modules/
-.pnpm-store/
-
-# Build output
-dist/
-coverage/
-
-# IDE and editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Logs
-*.log
-npm-debug.log*
-pnpm-debug.log*
-
-# Environment variables
-.env
-.env.local
-.env.*.local
-
-# OS files
+.claude/settings.local.json
 .DS_Store
-Thumbs.db 
-**/.claude/settings.local.json
-
-# Local configuration
+.env
+.env.*.local
+.env.local
+.idea/
+.pnpm-store/
+.vscode/
+*.log
+*.log
+*.swo
+*.swp
 CLAUDE.local.md
-
-# Temporary files
-tmp/*
+coverage/
+dist/
+logs/
+node_modules/
+sbom.cdx.json
+Thumbs.db 
+tmp/

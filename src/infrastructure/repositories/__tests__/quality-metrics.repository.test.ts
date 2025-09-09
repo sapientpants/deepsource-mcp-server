@@ -2,7 +2,7 @@
  * @fileoverview Tests for QualityMetricsRepository
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { QualityMetricsRepository } from '../quality-metrics.repository.js';
 import { DeepSourceClient } from '../../../deepsource.js';
 import {
@@ -10,41 +10,42 @@ import {
   MetricShortcode,
   MetricDirection,
   MetricThresholdStatus,
+  MetricKey,
 } from '../../../models/metrics.js';
 import { asProjectKey } from '../../../types/branded.js';
 import { QualityMetrics } from '../../../domain/aggregates/quality-metrics/quality-metrics.aggregate.js';
 import { DeepSourceProject } from '../../../models/projects.js';
 
 // Mock the DeepSourceClient
-jest.mock('../../../deepsource.js');
+vi.mock('../../../deepsource.js');
 
 // Mock the logger
-jest.mock('../../../utils/logging/logger.js', () => ({
-  createLogger: jest.fn(() => ({
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+vi.mock('../../../utils/logging/logger.js', () => ({
+  createLogger: vi.fn(() => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   })),
 }));
 
 describe('QualityMetricsRepository', () => {
   let repository: QualityMetricsRepository;
-  let mockClient: jest.Mocked<DeepSourceClient>;
+  let mockClient: anyed<DeepSourceClient>;
   let mockApiMetrics: RepositoryMetric[];
 
   beforeEach(() => {
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create mock DeepSourceClient
     mockClient = {
-      listProjects: jest.fn(),
-      getQualityMetrics: jest.fn(),
-      setMetricThreshold: jest.fn(),
-      updateMetricSetting: jest.fn(),
-      listRuns: jest.fn(),
-    } as unknown as jest.Mocked<DeepSourceClient>;
+      listProjects: vi.fn(),
+      getQualityMetrics: vi.fn(),
+      setMetricThreshold: vi.fn(),
+      updateMetricSetting: vi.fn(),
+      listRuns: vi.fn(),
+    } as unknown as anyed<DeepSourceClient>;
 
     // Create test data
     mockApiMetrics = [
@@ -301,7 +302,7 @@ describe('QualityMetricsRepository', () => {
     it('should find metrics by composite ID components', async () => {
       const id = {
         projectKey: asProjectKey('test-project'),
-        metricKey: 'AGGREGATE',
+        metricKey: MetricKey.AGGREGATE,
         shortcode: MetricShortcode.BCV,
       };
 
@@ -367,7 +368,7 @@ describe('QualityMetricsRepository', () => {
       expect(mockClient.setMetricThreshold).toHaveBeenCalledWith({
         repositoryId: 'repo-123',
         metricShortcode: MetricShortcode.LCV,
-        metricKey: 'AGGREGATE',
+        metricKey: MetricKey.AGGREGATE,
         thresholdValue: 80,
       });
 
@@ -426,13 +427,15 @@ describe('QualityMetricsRepository', () => {
       await repository.findByProject(projectKey);
 
       // Update mock data
-      mockApiMetrics[0].items[0].latestValue = 90;
+      if (mockApiMetrics[0]?.items?.[0]) {
+        mockApiMetrics[0].items[0].latestValue = 90;
+      }
 
       // Second call should get fresh data
       const metrics = await repository.findByProject(projectKey);
 
       expect(mockClient.getQualityMetrics).toHaveBeenCalledTimes(2);
-      expect(metrics[0].currentValue?.value).toBe(90);
+      expect(metrics[0]?.currentValue?.value).toBe(90);
     });
 
     it('should not cache results between different method calls', async () => {

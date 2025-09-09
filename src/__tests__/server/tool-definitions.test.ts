@@ -2,7 +2,7 @@
  * @fileoverview Tests for tool definitions and schemas
  */
 
-// import { z } from 'zod'; // Not needed for these tests
+import { z } from 'zod';
 import {
   projectsToolSchema,
   qualityMetricsToolSchema,
@@ -17,6 +17,19 @@ import {
   toolSchemas,
 } from '../../server/tool-definitions.js';
 
+// Helper function to parse input with ZodRawShape
+function parseInput(schema: { inputSchema?: z.ZodRawShape | z.ZodSchema }, input: unknown) {
+  if (!schema.inputSchema) return undefined;
+
+  // Check if it's already a ZodSchema (has safeParse method)
+  if ('safeParse' in schema.inputSchema) {
+    return (schema.inputSchema as z.ZodSchema).safeParse(input);
+  }
+
+  // Otherwise, wrap it in z.object()
+  return z.object(schema.inputSchema as z.ZodRawShape).safeParse(input);
+}
+
 describe('Tool Definitions', () => {
   describe('projectsToolSchema', () => {
     it('should have correct name and description', () => {
@@ -24,8 +37,11 @@ describe('Tool Definitions', () => {
       expect(projectsToolSchema.description).toContain('List all available DeepSource projects');
     });
 
-    it('should have no input schema', () => {
-      expect(projectsToolSchema.inputSchema).toBeUndefined();
+    it('should have empty input schema', () => {
+      expect(projectsToolSchema.inputSchema).toBeDefined();
+      const result = parseInput(projectsToolSchema, {});
+      expect(result?.success).toBe(true);
+      expect(result?.data).toEqual({});
     });
 
     it('should have output schema', () => {
@@ -45,7 +61,7 @@ describe('Tool Definitions', () => {
         shortcodeIn: ['LCV', 'BCV'],
       };
 
-      const result = qualityMetricsToolSchema.inputSchema?.safeParse(validInput);
+      const result = parseInput(qualityMetricsToolSchema, validInput);
       expect(result?.success).toBe(true);
     });
 
@@ -54,7 +70,7 @@ describe('Tool Definitions', () => {
         projectKey: 'test-project',
       };
 
-      const result = qualityMetricsToolSchema.inputSchema?.safeParse(validInput);
+      const result = parseInput(qualityMetricsToolSchema, validInput);
       expect(result?.success).toBe(true);
     });
 
@@ -63,7 +79,7 @@ describe('Tool Definitions', () => {
         shortcodeIn: ['LCV'],
       };
 
-      const result = qualityMetricsToolSchema.inputSchema?.safeParse(invalidInput);
+      const result = parseInput(qualityMetricsToolSchema, invalidInput);
       expect(result?.success).toBe(false);
     });
 
@@ -73,7 +89,7 @@ describe('Tool Definitions', () => {
         shortcodeIn: ['INVALID'],
       };
 
-      const result = qualityMetricsToolSchema.inputSchema?.safeParse(invalidInput);
+      const result = parseInput(qualityMetricsToolSchema, invalidInput);
       expect(result?.success).toBe(false);
     });
   });
@@ -93,7 +109,7 @@ describe('Tool Definitions', () => {
         thresholdValue: 80,
       };
 
-      const result = updateMetricThresholdToolSchema.inputSchema?.safeParse(validInput);
+      const result = parseInput(updateMetricThresholdToolSchema, validInput);
       expect(result?.success).toBe(true);
     });
 
@@ -106,7 +122,7 @@ describe('Tool Definitions', () => {
         thresholdValue: null,
       };
 
-      const result = updateMetricThresholdToolSchema.inputSchema?.safeParse(validInput);
+      const result = parseInput(updateMetricThresholdToolSchema, validInput);
       expect(result?.success).toBe(true);
     });
 
@@ -116,7 +132,7 @@ describe('Tool Definitions', () => {
         metricShortcode: 'LCV',
       };
 
-      const result = updateMetricThresholdToolSchema.inputSchema?.safeParse(invalidInput);
+      const result = parseInput(updateMetricThresholdToolSchema, invalidInput);
       expect(result?.success).toBe(false);
     });
   });
@@ -136,7 +152,7 @@ describe('Tool Definitions', () => {
         isThresholdEnforced: false,
       };
 
-      const result = updateMetricSettingToolSchema.inputSchema?.safeParse(validInput);
+      const result = parseInput(updateMetricSettingToolSchema, validInput);
       expect(result?.success).toBe(true);
     });
 
@@ -149,7 +165,7 @@ describe('Tool Definitions', () => {
         isThresholdEnforced: 0,
       };
 
-      const result = updateMetricSettingToolSchema.inputSchema?.safeParse(invalidInput);
+      const result = parseInput(updateMetricSettingToolSchema, invalidInput);
       expect(result?.success).toBe(false);
     });
   });
@@ -178,7 +194,7 @@ describe('Tool Definitions', () => {
           reportType,
         };
 
-        const result = complianceReportToolSchema.inputSchema?.safeParse(input);
+        const result = parseInput(complianceReportToolSchema, input);
         expect(result?.success).toBe(true);
       });
     });
@@ -189,7 +205,7 @@ describe('Tool Definitions', () => {
         reportType: 'INVALID_TYPE',
       };
 
-      const result = complianceReportToolSchema.inputSchema?.safeParse(invalidInput);
+      const result = parseInput(complianceReportToolSchema, invalidInput);
       expect(result?.success).toBe(false);
     });
   });
@@ -210,7 +226,7 @@ describe('Tool Definitions', () => {
         after: 'cursor123',
       };
 
-      const result = projectIssuesToolSchema.inputSchema?.safeParse(validInput);
+      const result = parseInput(projectIssuesToolSchema, validInput);
       expect(result?.success).toBe(true);
     });
 
@@ -219,7 +235,7 @@ describe('Tool Definitions', () => {
         projectKey: 'test-project',
       };
 
-      const result = projectIssuesToolSchema.inputSchema?.safeParse(validInput);
+      const result = parseInput(projectIssuesToolSchema, validInput);
       expect(result?.success).toBe(true);
     });
 
@@ -229,7 +245,7 @@ describe('Tool Definitions', () => {
         first: -5,
       };
 
-      const result = projectIssuesToolSchema.inputSchema?.safeParse(invalidInput);
+      const result = parseInput(projectIssuesToolSchema, invalidInput);
       // Note: The schema uses z.number() without validation, so negative values pass
       // This is a known limitation in the schema
       expect(result?.success).toBe(true);
@@ -250,7 +266,7 @@ describe('Tool Definitions', () => {
         before: 'cursor456',
       };
 
-      const result = runsToolSchema.inputSchema?.safeParse(validInput);
+      const result = parseInput(runsToolSchema, validInput);
       expect(result?.success).toBe(true);
     });
 
@@ -267,8 +283,8 @@ describe('Tool Definitions', () => {
         before: 'cursorB',
       };
 
-      expect(runsToolSchema.inputSchema?.safeParse(forwardInput)?.success).toBe(true);
-      expect(runsToolSchema.inputSchema?.safeParse(backwardInput)?.success).toBe(true);
+      expect(parseInput(runsToolSchema, forwardInput)?.success).toBe(true);
+      expect(parseInput(runsToolSchema, backwardInput)?.success).toBe(true);
     });
   });
 
@@ -286,7 +302,7 @@ describe('Tool Definitions', () => {
         runIdentifier: 'run-uid-123',
       };
 
-      const result = runToolSchema.inputSchema?.safeParse(validInput);
+      const result = parseInput(runToolSchema, validInput);
       expect(result?.success).toBe(true);
     });
 
@@ -297,7 +313,7 @@ describe('Tool Definitions', () => {
         isCommitOid: true,
       };
 
-      const result = runToolSchema.inputSchema?.safeParse(validInput);
+      const result = parseInput(runToolSchema, validInput);
       expect(result?.success).toBe(true);
     });
 
@@ -308,7 +324,7 @@ describe('Tool Definitions', () => {
         isCommitOid: false,
       };
 
-      const result = runToolSchema.inputSchema?.safeParse(validInput);
+      const result = parseInput(runToolSchema, validInput);
       expect(result?.success).toBe(true);
     });
   });
@@ -326,7 +342,7 @@ describe('Tool Definitions', () => {
         first: 50,
       };
 
-      const result = recentRunIssuesToolSchema.inputSchema?.safeParse(validInput);
+      const result = parseInput(recentRunIssuesToolSchema, validInput);
       expect(result?.success).toBe(true);
     });
 
@@ -339,8 +355,8 @@ describe('Tool Definitions', () => {
         branchName: 'main',
       };
 
-      expect(recentRunIssuesToolSchema.inputSchema?.safeParse(missingBranch)?.success).toBe(false);
-      expect(recentRunIssuesToolSchema.inputSchema?.safeParse(missingProject)?.success).toBe(false);
+      expect(parseInput(recentRunIssuesToolSchema, missingBranch)?.success).toBe(false);
+      expect(parseInput(recentRunIssuesToolSchema, missingProject)?.success).toBe(false);
     });
   });
 
@@ -359,7 +375,7 @@ describe('Tool Definitions', () => {
         after: 'vuln-cursor',
       };
 
-      const result = dependencyVulnerabilitiesToolSchema.inputSchema?.safeParse(validInput);
+      const result = parseInput(dependencyVulnerabilitiesToolSchema, validInput);
       expect(result?.success).toBe(true);
     });
 
@@ -368,7 +384,7 @@ describe('Tool Definitions', () => {
         projectKey: 'test-project',
       };
 
-      const result = dependencyVulnerabilitiesToolSchema.inputSchema?.safeParse(validInput);
+      const result = parseInput(dependencyVulnerabilitiesToolSchema, validInput);
       expect(result?.success).toBe(true);
     });
   });
@@ -411,13 +427,16 @@ describe('Tool Definitions', () => {
         tags: [],
       };
 
-      const result = projectIssuesToolSchema.inputSchema?.safeParse(input);
+      const result = parseInput(projectIssuesToolSchema, input);
       expect(result?.success).toBe(true);
     });
 
     it('should handle very long project keys', () => {
-      // projectsToolSchema has no input schema
-      expect(projectsToolSchema.inputSchema).toBeUndefined();
+      // projectsToolSchema has empty input schema
+      expect(projectsToolSchema.inputSchema).toBeDefined();
+      const result = parseInput(projectsToolSchema, {});
+      expect(result?.success).toBe(true);
+      expect(result?.data).toEqual({});
     });
 
     it('should handle special characters in strings', () => {
@@ -426,7 +445,7 @@ describe('Tool Definitions', () => {
         path: '/path/with spaces/and-special!@#$%.py',
       };
 
-      const result = projectIssuesToolSchema.inputSchema?.safeParse(input);
+      const result = parseInput(projectIssuesToolSchema, input);
       expect(result?.success).toBe(true);
     });
 
@@ -439,7 +458,7 @@ describe('Tool Definitions', () => {
           shortcodeIn: [code],
         };
 
-        const result = qualityMetricsToolSchema.inputSchema?.safeParse(input);
+        const result = parseInput(qualityMetricsToolSchema, input);
         expect(result?.success).toBe(true);
       });
     });
