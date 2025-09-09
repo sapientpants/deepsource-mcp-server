@@ -136,7 +136,6 @@ describe('DeepSourceClient Historical Data Processing', () => {
       };
 
       // Mock the validateAndGetMetricInfo method to return our mock data
-      vi;
       vi.spyOn(
         client as unknown as Record<string, unknown>,
         'validateAndGetMetricInfo'
@@ -147,7 +146,6 @@ describe('DeepSourceClient Historical Data Processing', () => {
       });
 
       // Mock the fetchHistoricalValues method to return mock history data
-      vi;
       vi.spyOn(
         client as unknown as Record<string, unknown>,
         'fetchHistoricalValues'
@@ -165,7 +163,6 @@ describe('DeepSourceClient Historical Data Processing', () => {
         values: mockHistoryValues,
       };
 
-      vi;
       vi.spyOn(
         DeepSourceClient as unknown as Record<string, unknown>,
         'createMetricHistoryResponse'

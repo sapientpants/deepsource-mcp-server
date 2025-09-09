@@ -81,7 +81,6 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
   describe('getRecentRunIssues', () => {
     it('should successfully retrieve issues from the most recent run', async () => {
       // Mock the findMostRecentRun method
-      vi;
       vi.spyOn(
         client as unknown as { findMostRecentRun: ReturnType<typeof vi.fn> },
         'findMostRecentRun'
@@ -207,7 +206,6 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
 
     it('should handle no runs found for branch', async () => {
       // Mock findMostRecentRun to throw the expected error
-      vi;
       vi.spyOn(
         client as unknown as { findMostRecentRun: ReturnType<typeof vi.fn> },
         'findMostRecentRun'
@@ -223,7 +221,6 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
 
     it('should handle GraphQL errors in checks fetch', async () => {
       // Mock findMostRecentRun to succeed
-      vi;
       vi.spyOn(
         client as unknown as { findMostRecentRun: ReturnType<typeof vi.fn> },
         'findMostRecentRun'
@@ -268,7 +265,6 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
 
     it('should handle GraphQL errors in occurrences fetch', async () => {
       // Mock findMostRecentRun to succeed
-      vi;
       vi.spyOn(
         client as unknown as { findMostRecentRun: ReturnType<typeof vi.fn> },
         'findMostRecentRun'
@@ -340,7 +336,6 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
 
     it('should handle missing node data in occurrences response', async () => {
       // Mock findMostRecentRun to succeed
-      vi;
       vi.spyOn(
         client as unknown as { findMostRecentRun: ReturnType<typeof vi.fn> },
         'findMostRecentRun'
