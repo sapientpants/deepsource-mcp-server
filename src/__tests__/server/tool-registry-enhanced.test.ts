@@ -10,6 +10,28 @@ import {
 } from '../../server/tool-registry-enhanced.js';
 // import { wrapInApiResponse } from '../../handlers/base/handler.factory.js';
 import type { BaseHandlerDeps } from '../../handlers/base/handler.interface.js';
+import type { Dirent } from 'fs';
+
+// Helper to create mock Dirent objects
+function createMockDirent(name: string, isFile: boolean): Dirent {
+  return {
+    name,
+    isFile: () => isFile,
+    isDirectory: () => !isFile,
+    isBlockDevice: () => false,
+    isCharacterDevice: () => false,
+    isSymbolicLink: () => false,
+    isFIFO: () => false,
+    isSocket: () => false,
+  } as Dirent;
+}
+
+// Type for accessing private properties during testing
+interface TestableRegistry {
+  discoveredTools: Map<string, unknown>;
+  registerEnhancedTool: (tool: EnhancedToolDefinition) => void;
+  getTool: (name: string) => unknown;
+}
 
 // Mock modules
 vi.mock('fs', () => ({
@@ -453,9 +475,7 @@ describe('EnhancedToolRegistry', () => {
 
     it('should discover tools with default options', async () => {
       const fs = vi.mocked(await import('fs'));
-      fs.promises.readdir.mockResolvedValue([
-        { name: 'test.tool.js', isFile: () => true, isDirectory: () => false },
-      ] as any);
+      fs.promises.readdir.mockResolvedValue([createMockDirent('test.tool.js', true)]);
 
       // Mock dynamic import for tool module
       const mockToolModule = {
@@ -478,14 +498,10 @@ describe('EnhancedToolRegistry', () => {
       fs.promises.readdir.mockReset();
 
       // First call for main directory with subdirectory
-      fs.promises.readdir.mockResolvedValueOnce([
-        { name: 'subdir', isFile: () => false, isDirectory: () => true },
-      ] as any);
+      fs.promises.readdir.mockResolvedValueOnce([createMockDirent('subdir', false)]);
 
       // Second call for subdirectory with tool file
-      fs.promises.readdir.mockResolvedValueOnce([
-        { name: 'nested.tool.js', isFile: () => true, isDirectory: () => false },
-      ] as any);
+      fs.promises.readdir.mockResolvedValueOnce([createMockDirent('nested.tool.js', true)]);
 
       const mockToolModule = {
         toolDefinition: {
@@ -504,9 +520,9 @@ describe('EnhancedToolRegistry', () => {
     it('should filter tools by includeCategories', async () => {
       const fs = vi.mocked(await import('fs'));
       fs.promises.readdir.mockResolvedValue([
-        { name: 'tool1.tool.js', isFile: () => true, isDirectory: () => false },
-        { name: 'tool2.tool.js', isFile: () => true, isDirectory: () => false },
-      ] as any);
+        createMockDirent('tool1.tool.js', true),
+        createMockDirent('tool2.tool.js', true),
+      ]);
 
       const tool1Module = {
         toolDefinition: {
@@ -539,9 +555,7 @@ describe('EnhancedToolRegistry', () => {
 
     it('should filter tools by excludeCategories', async () => {
       const fs = vi.mocked(await import('fs'));
-      fs.promises.readdir.mockResolvedValue([
-        { name: 'tool.tool.js', isFile: () => true, isDirectory: () => false },
-      ] as any);
+      fs.promises.readdir.mockResolvedValue([createMockDirent('tool.tool.js', true)]);
 
       const mockToolModule = {
         toolDefinition: {
@@ -562,9 +576,7 @@ describe('EnhancedToolRegistry', () => {
 
     it('should filter tools by includeTags', async () => {
       const fs = vi.mocked(await import('fs'));
-      fs.promises.readdir.mockResolvedValue([
-        { name: 'tagged.tool.js', isFile: () => true, isDirectory: () => false },
-      ] as any);
+      fs.promises.readdir.mockResolvedValue([createMockDirent('tagged.tool.js', true)]);
 
       const mockToolModule = {
         toolDefinition: {
@@ -585,9 +597,7 @@ describe('EnhancedToolRegistry', () => {
 
     it('should filter tools by excludeTags', async () => {
       const fs = vi.mocked(await import('fs'));
-      fs.promises.readdir.mockResolvedValue([
-        { name: 'beta.tool.js', isFile: () => true, isDirectory: () => false },
-      ] as any);
+      fs.promises.readdir.mockResolvedValue([createMockDirent('beta.tool.js', true)]);
 
       const mockToolModule = {
         toolDefinition: {
@@ -608,9 +618,7 @@ describe('EnhancedToolRegistry', () => {
 
     it('should skip disabled tools', async () => {
       const fs = vi.mocked(await import('fs'));
-      fs.promises.readdir.mockResolvedValue([
-        { name: 'disabled.tool.js', isFile: () => true, isDirectory: () => false },
-      ] as any);
+      fs.promises.readdir.mockResolvedValue([createMockDirent('disabled.tool.js', true)]);
 
       const mockToolModule = {
         toolDefinition: {
@@ -630,14 +638,10 @@ describe('EnhancedToolRegistry', () => {
       const fs = vi.mocked(await import('fs'));
 
       // First directory
-      fs.promises.readdir.mockResolvedValueOnce([
-        { name: 'tool1.tool.js', isFile: () => true, isDirectory: () => false },
-      ] as any);
+      fs.promises.readdir.mockResolvedValueOnce([createMockDirent('tool1.tool.js', true)]);
 
       // Second directory
-      fs.promises.readdir.mockResolvedValueOnce([
-        { name: 'tool2.tool.js', isFile: () => true, isDirectory: () => false },
-      ] as any);
+      fs.promises.readdir.mockResolvedValueOnce([createMockDirent('tool2.tool.js', true)]);
 
       await registry.discoverTools({
         directories: ['./tools1', './tools2'],
@@ -650,9 +654,9 @@ describe('EnhancedToolRegistry', () => {
     it('should use custom patterns', async () => {
       const fs = vi.mocked(await import('fs'));
       fs.promises.readdir.mockResolvedValue([
-        { name: 'custom.plugin.mjs', isFile: () => true, isDirectory: () => false },
-        { name: 'regular.js', isFile: () => true, isDirectory: () => false },
-      ] as any);
+        createMockDirent('custom.plugin.mjs', true),
+        createMockDirent('regular.js', true),
+      ]);
 
       await registry.discoverTools({
         patterns: ['*.plugin.mjs'],
@@ -678,7 +682,7 @@ describe('EnhancedToolRegistry', () => {
 
   describe('loadToolFromFile', () => {
     it('should load tool from default export', async () => {
-      const mockRegistry = registry as any;
+      const mockRegistry = registry as unknown as TestableRegistry;
 
       // Mock a successful tool load scenario
       const toolDef = {
@@ -695,7 +699,7 @@ describe('EnhancedToolRegistry', () => {
     });
 
     it('should load tool from toolSchema and handler exports', async () => {
-      const mockRegistry = registry as any;
+      const mockRegistry = registry as unknown as TestableRegistry;
 
       // Create a tool with schema exports
       const toolDef = {
