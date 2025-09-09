@@ -209,7 +209,7 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
       // Mock findMostRecentRun to throw the expected error
       vi;
       vi.spyOn(
-        client as unknown as { findMostRecentRun: any },
+        client as unknown as { findMostRecentRun: ReturnType<typeof vi.fn> },
         'findMostRecentRun'
       ).mockRejectedValue(
         new Error("No runs found for branch 'non-existent-branch' in project 'test-project'")

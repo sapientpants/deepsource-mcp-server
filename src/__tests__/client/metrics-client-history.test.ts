@@ -42,37 +42,28 @@ class TestableMetricsClient extends MetricsClient {
   }
 }
 
+interface MockBaseClient {
+  findProjectByKey: ReturnType<typeof vi.fn>;
+  executeGraphQL: ReturnType<typeof vi.fn>;
+  logger: {
+    info: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn>;
+    debug: ReturnType<typeof vi.fn>;
+    warn: ReturnType<typeof vi.fn>;
+  };
+  extractHistoryFromResponse?: ReturnType<typeof vi.fn>;
+  extractMetricsFromResponse?: ReturnType<typeof vi.fn>;
+}
+
 describe('MetricsClient - History and Additional Methods', () => {
   let metricsClient: TestableMetricsClient;
-  let mockBaseClient: {
-    findProjectByKey: any; // skipcq: JS-0323
-    executeGraphQL: any; // skipcq: JS-0323
-    logger: {
-      info: any; // skipcq: JS-0323
-      error: any; // skipcq: JS-0323
-      debug: any; // skipcq: JS-0323
-      warn: any; // skipcq: JS-0323
-    };
-    extractHistoryFromResponse: any; // skipcq: JS-0323
-    extractMetricsFromResponse: any; // skipcq: JS-0323
-  };
+  let mockBaseClient: MockBaseClient;
   let originalEnv: typeof process.env;
 
   beforeEach(() => {
     originalEnv = { ...process.env };
     metricsClient = new TestableMetricsClient('test-api-key');
-    mockBaseClient = metricsClient as unknown as {
-      findProjectByKey: any; // skipcq: JS-0323
-      executeGraphQL: any; // skipcq: JS-0323
-      logger: {
-        info: any; // skipcq: JS-0323
-        error: any; // skipcq: JS-0323
-        debug: any; // skipcq: JS-0323
-        warn: any; // skipcq: JS-0323
-      };
-      extractHistoryFromResponse: any; // skipcq: JS-0323
-      extractMetricsFromResponse: any; // skipcq: JS-0323
-    };
+    mockBaseClient = metricsClient as unknown as MockBaseClient;
 
     // Mock the methods on the client instance
     mockBaseClient.findProjectByKey = vi.fn();
@@ -84,23 +75,19 @@ describe('MetricsClient - History and Additional Methods', () => {
       warn: vi.fn(),
     };
     // Ensure logger and other properties are properly set up
-    if (!(mockBaseClient as any).logger) {
-      // skipcq: JS-0323
-      (mockBaseClient as any).logger = {
-        // skipcq: JS-0323
+    if (!mockBaseClient.logger) {
+      mockBaseClient.logger = {
         info: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
         warn: vi.fn(),
       };
     }
-    if (!(mockBaseClient as any).extractHistoryFromResponse) {
-      // skipcq: JS-0323
-      (mockBaseClient as any).extractHistoryFromResponse = vi.fn(); // skipcq: JS-0323
+    if (!mockBaseClient.extractHistoryFromResponse) {
+      mockBaseClient.extractHistoryFromResponse = vi.fn();
     }
-    if (!(mockBaseClient as any).extractMetricsFromResponse) {
-      // skipcq: JS-0323
-      (mockBaseClient as any).extractMetricsFromResponse = vi.fn(); // skipcq: JS-0323
+    if (!mockBaseClient.extractMetricsFromResponse) {
+      mockBaseClient.extractMetricsFromResponse = vi.fn();
     }
   });
 
@@ -277,9 +264,8 @@ describe('MetricsClient - History and Additional Methods', () => {
         },
       };
 
-      (mockBaseClient.findProjectByKey as any).mockResolvedValue(mockProject); // skipcq: JS-0323
-      (mockBaseClient.executeGraphQL as any).mockRejectedValue(
-        // skipcq: JS-0323
+      mockBaseClient.findProjectByKey.mockResolvedValue(mockProject);
+      mockBaseClient.executeGraphQL.mockRejectedValue(
         new Error("'NoneType' object has no attribute")
       );
 

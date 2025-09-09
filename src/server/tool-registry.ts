@@ -178,7 +178,7 @@ export class ToolRegistry {
             logger.info(`Handler for ${tool.name} returned result:`, {
               resultType: typeof result,
               isApiResponse: isApiResponse(result),
-              result: result,
+              result,
             });
 
             logToolResult(tool.name, result);

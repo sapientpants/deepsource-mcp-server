@@ -55,7 +55,7 @@ export function processRunChecksResponse(response: {
   totalCount: number;
 } {
   const issues: DeepSourceIssue[] = [];
-  let pageInfo: {
+  const pageInfo: {
     hasNextPage: boolean;
     hasPreviousPage: boolean;
     startCursor?: string;
