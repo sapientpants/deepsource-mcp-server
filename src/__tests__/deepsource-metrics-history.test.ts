@@ -365,8 +365,8 @@ describe('DeepSourceClient Metrics History', () => {
       expect(result?.isTrendingPositive).toBe(true);
 
       // Verify values are decreasing
-      expect(result?.values[0].value).toBeGreaterThan(result?.values[1].value as number);
-      expect(result?.values[1].value).toBeGreaterThan(result?.values[2].value as number);
+      expect(result?.values[0].value).toBeGreaterThan(Number(result?.values[1].value));
+      expect(result?.values[1].value).toBeGreaterThan(Number(result?.values[2].value));
     });
 
     it('should handle negative trends correctly', async () => {
@@ -522,8 +522,8 @@ describe('DeepSourceClient Metrics History', () => {
       expect(result?.isTrendingPositive).toBe(false); // Should detect negative trend
 
       // Verify values are decreasing (which is negative for LCV)
-      expect(result?.values[0].value).toBeGreaterThan(result?.values[1].value as number);
-      expect(result?.values[1].value).toBeGreaterThan(result?.values[2].value as number);
+      expect(result?.values[0].value).toBeGreaterThan(Number(result?.values[1].value));
+      expect(result?.values[1].value).toBeGreaterThan(Number(result?.values[2].value));
     });
 
     it('should handle API errors gracefully', async () => {

@@ -7,13 +7,19 @@ Analyze and fix all open issues reported by DeepSource for this project using th
 1. **Identify Project and Check for Issues**
    - Use MCP tool `projects` to list available projects
    - Find the project key matching this repository
-   - Use `project_issues` to query all open issues with pagination
-   - Filter by status: OPEN, CONFIRMED, REOPENED
+   - **For branch-specific issues**: Use `recent_run_issues` with the current branch name
+   - **For overall project issues**: Use `project_issues` to query all open issues
+   - **Note**: `recent_run_issues` may return very large responses - use `runs` to check issue counts first
    - **If no issues found**: Report "✅ No DeepSource issues found!" and exit
 
 2. **Get Detailed Issue Analysis**
-   - Use `recent_run_issues` to get issues from the most recent analysis
-   - Cross-reference with `project_issues` for comprehensive view
+   - When working on a specific branch (e.g., for a PR):
+     - Use `runs` to find the latest run for your branch and check issue counts
+     - Use `run` with the run ID to get summary information
+     - **Note**: `recent_run_issues` responses can exceed token limits even with `first: 1`
+     - If API responses are too large, check the DeepSource dashboard directly
+   - For main branch or overall project:
+     - Use `project_issues` with pagination (default branch is main)
    - Use `quality_metrics` to understand overall code health
    - Check `dependency_vulnerabilities` for security issues in dependencies
 
@@ -173,19 +179,35 @@ Analyze and fix all open issues reported by DeepSource for this project using th
 // List projects to find project key
 mcp_tool: projects
 
-// Get all open issues with pagination
-mcp_tool: project_issues
+// Check runs for a specific branch to see issue counts
+mcp_tool: runs
 args: {
   projectKey: "deepsource-mcp-server",
-  status: ["OPEN", "CONFIRMED", "REOPENED"],
-  first: 50
+  first: 5
 }
 
-// Get issues from most recent run
+// Get details of a specific run
+mcp_tool: run
+args: {
+  projectKey: "deepsource-mcp-server",
+  runIdentifier: "run-id-here",
+  isCommitOid: false
+}
+
+// Get issues from most recent run on a branch (WARNING: may exceed token limits)
 mcp_tool: recent_run_issues
 args: {
   projectKey: "deepsource-mcp-server",
-  branch: "main"
+  branchName: "feature/my-branch",  // Specify the actual branch name
+  first: 1  // Even with 1, response may be too large
+}
+
+// Get all open issues (defaults to main branch)
+mcp_tool: project_issues
+args: {
+  projectKey: "deepsource-mcp-server",
+  analyzerIn: ["javascript"],  // Filter by analyzer if needed
+  first: 50
 }
 
 // Check quality metrics
@@ -199,20 +221,16 @@ mcp_tool: dependency_vulnerabilities
 args: {
   projectKey: "deepsource-mcp-server"
 }
-
-// Monitor new analysis runs
-mcp_tool: runs
-args: {
-  projectKey: "deepsource-mcp-server",
-  branch: "fix/deepsource-issues-*"
-}
 ```
 
 ## Notes
 
 - The MCP server provides real-time access to DeepSource data
+- **API Limitations**: `recent_run_issues` can return very large responses (>70K tokens) even with `first: 1` due to large code snippets in issue details
+- **Branch-specific queries**: `project_issues` defaults to main branch; use `recent_run_issues` for other branches but be aware of size limitations
+- **Workaround for large responses**: Use `runs` and `run` tools to get issue counts and summaries, then check the DeepSource dashboard for details
 - Use pagination for large issue sets (>50 issues)
-- Some issues may be false positives - document them in code comments
+- Some issues may be false positives - document them in code comments using `skipcq` directives
 - Complex refactoring should preserve existing functionality
 - Monitor the DeepSource dashboard for analysis progress
 - If no issues are found, celebrate with "✅ No DeepSource issues found!"

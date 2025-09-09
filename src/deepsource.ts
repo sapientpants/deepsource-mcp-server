@@ -1140,8 +1140,8 @@ export class DeepSourceClient {
             occurrenceDistributionByAnalyzer:
               run.summary?.occurrenceDistributionByAnalyzer?.map(
                 (dist: Record<string, unknown>) => ({
-                  analyzerShortcode: asAnalyzerShortcode(dist.analyzerShortcode as string),
-                  introduced: dist.introduced as number,
+                  analyzerShortcode: asAnalyzerShortcode(String(dist.analyzerShortcode)),
+                  introduced: Number(dist.introduced),
                 })
               ) ?? [],
             occurrenceDistributionByCategory: run.summary?.occurrenceDistributionByCategory ?? [],
@@ -1240,8 +1240,8 @@ export class DeepSourceClient {
           occurrencesSuppressed: run.summary?.occurrencesSuppressed ?? 0,
           occurrenceDistributionByAnalyzer:
             run.summary?.occurrenceDistributionByAnalyzer?.map((dist: Record<string, unknown>) => ({
-              analyzerShortcode: asAnalyzerShortcode(dist.analyzerShortcode as string),
-              introduced: dist.introduced as number,
+              analyzerShortcode: asAnalyzerShortcode(String(dist.analyzerShortcode)),
+              introduced: Number(dist.introduced),
             })) ?? [],
           occurrenceDistributionByCategory: run.summary?.occurrenceDistributionByCategory ?? [],
         },
@@ -1431,16 +1431,16 @@ export class DeepSourceClient {
     const issue = occurrence.issue as Record<string, unknown>;
 
     return {
-      id: (occurrence.id as string) ?? 'unknown',
-      shortcode: (issue.shortcode as string) ?? '',
-      title: (issue.title as string) ?? 'Untitled Issue',
-      category: (issue.category as string) ?? 'UNKNOWN',
-      severity: (issue.severity as string) ?? 'UNKNOWN',
+      id: String(occurrence.id ?? 'unknown'),
+      shortcode: String(issue.shortcode ?? ''),
+      title: String(issue.title ?? 'Untitled Issue'),
+      category: String(issue.category ?? 'UNKNOWN'),
+      severity: String(issue.severity ?? 'UNKNOWN'),
       status: 'OPEN',
-      issue_text: (issue.description as string) ?? '',
-      file_path: (occurrence.path as string) ?? 'N/A',
-      line_number: (occurrence.beginLine as number) ?? 0,
-      tags: (issue.tags as string[]) ?? [],
+      issue_text: String(issue.description ?? ''),
+      file_path: String(occurrence.path ?? 'N/A'),
+      line_number: Number(occurrence.beginLine ?? 0),
+      tags: Array.isArray(issue.tags) ? issue.tags : [],
     };
   }
 
@@ -2588,24 +2588,24 @@ export class DeepSourceClient {
       return metrics.map((metricItem: unknown) => {
         const metricRecord = metricItem as Record<string, unknown>;
         return {
-          name: (metricRecord.name as string) || '',
-          shortcode: (metricRecord.shortcode as string) || '',
-          description: (metricRecord.description as string) || '',
-          positiveDirection: (metricRecord.positiveDirection as string) || 'UPWARD',
-          unit: metricRecord.unit as string,
-          minValueAllowed: metricRecord.minValueAllowed as number,
-          maxValueAllowed: metricRecord.maxValueAllowed as number,
+          name: String(metricRecord.name || ''),
+          shortcode: String(metricRecord.shortcode || ''),
+          description: String(metricRecord.description || ''),
+          positiveDirection: String(metricRecord.positiveDirection || 'UPWARD'),
+          unit: String(metricRecord.unit || ''),
+          minValueAllowed: Number(metricRecord.minValueAllowed),
+          maxValueAllowed: Number(metricRecord.maxValueAllowed),
           isReported: Boolean(metricRecord.isReported),
           isThresholdEnforced: Boolean(metricRecord.isThresholdEnforced),
           items: ((metricRecord.items as unknown[]) || []).map((metricItemData: unknown) => {
             const itemRecord = metricItemData as Record<string, unknown>;
             return {
-              id: (itemRecord.id as string) || '',
-              key: (itemRecord.key as string) || 'AGGREGATE',
-              threshold: itemRecord.threshold as number | null,
-              latestValue: itemRecord.latestValue as number | null,
-              latestValueDisplay: itemRecord.latestValueDisplay as string,
-              thresholdStatus: itemRecord.thresholdStatus as string,
+              id: String(itemRecord.id || ''),
+              key: String(itemRecord.key || 'AGGREGATE'),
+              threshold: itemRecord.threshold == null ? null : Number(itemRecord.threshold),
+              latestValue: itemRecord.latestValue == null ? null : Number(itemRecord.latestValue),
+              latestValueDisplay: String(itemRecord.latestValueDisplay || ''),
+              thresholdStatus: String(itemRecord.thresholdStatus || ''),
             };
           }),
         };

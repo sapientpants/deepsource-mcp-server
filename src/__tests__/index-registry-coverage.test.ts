@@ -47,7 +47,6 @@ vi.mock('../server/tool-registry.js', () => ({
 
     return {
       registerTool: vi.fn((tool) => {
-        console.log('Registering tool:', tool.name);
         instanceTools[tool.name] = tool;
         // Also store globally for test access
         registeredTools[tool.name] = tool;
