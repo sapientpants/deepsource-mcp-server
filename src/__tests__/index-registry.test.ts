@@ -108,14 +108,14 @@ class MockToolRegistry {
     name: string;
     description: string;
     inputSchema?: Record<string, unknown>;
-    handler: MockedFunction<(...args: any[]) => Promise<unknown>>;
+    handler: MockedFunction<(...args: unknown[]) => Promise<unknown>>;
   }> = [];
 
   registerTool(tool: {
     name: string;
     description: string;
     inputSchema?: Record<string, unknown>;
-    handler: MockedFunction<(...args: any[]) => Promise<unknown>>;
+    handler: MockedFunction<(...args: unknown[]) => Promise<unknown>>;
   }) {
     if (this.tools.find((t) => t.name === tool.name)) {
       throw new Error(`Tool ${tool.name} is already registered`);
@@ -164,8 +164,8 @@ const {
 describe('Registry-based MCP Server Integration', () => {
   let registry: MockToolRegistry;
   let mockMcpServer: {
-    registerTool: any; // skipcq: JS-0323
-    connect: MockedFunction<(...args: any[]) => Promise<void>>;
+    registerTool: ReturnType<typeof vi.fn>;
+    connect: MockedFunction<() => Promise<void>>;
   };
 
   beforeEach(() => {
@@ -174,7 +174,8 @@ describe('Registry-based MCP Server Integration', () => {
       registerTool: vi.fn(),
       connect: vi.fn().mockResolvedValue(undefined),
     };
-    (McpServer as any).mockImplementation(() => mockMcpServer as ReturnType<typeof McpServer>);
+    const MockedMcpServer = McpServer as ReturnType<typeof vi.fn>;
+    MockedMcpServer.mockImplementation(() => mockMcpServer as ReturnType<typeof McpServer>);
     registry = new ToolRegistry();
     vi.clearAllMocks();
   });

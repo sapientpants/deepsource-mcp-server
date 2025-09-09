@@ -53,19 +53,30 @@ const { handleDeepsourceComplianceReport, createComplianceReportHandlerWithRepo 
 );
 
 // Get mocked functions
-const mockRepositoryFactoryModule = await import(
+interface MockedRepositoryModule {
+  __mockFindByProjectAndType: ReturnType<typeof vi.fn>;
+  __mockComplianceReportRepository: Record<string, unknown>;
+  __mockCreateComplianceReportRepository: ReturnType<typeof vi.fn>;
+  __mockRepositoryFactory: Record<string, unknown>;
+}
+
+const mockRepositoryFactoryModule = (await import(
   '../../infrastructure/factories/repository.factory'
-);
-const mockFindByProjectAndType = (mockRepositoryFactoryModule as any).__mockFindByProjectAndType;
-const mockComplianceReportRepository = (mockRepositoryFactoryModule as any) // skipcq: JS-0323
-  .__mockComplianceReportRepository;
-const mockCreateComplianceReportRepository = (mockRepositoryFactoryModule as any) // skipcq: JS-0323
-  .__mockCreateComplianceReportRepository;
-const mockRepositoryFactory = (mockRepositoryFactoryModule as any).__mockRepositoryFactory;
+)) as unknown as MockedRepositoryModule;
+const mockFindByProjectAndType = mockRepositoryFactoryModule.__mockFindByProjectAndType;
+const mockComplianceReportRepository = mockRepositoryFactoryModule.__mockComplianceReportRepository;
+const mockCreateComplianceReportRepository =
+  mockRepositoryFactoryModule.__mockCreateComplianceReportRepository;
+const mockRepositoryFactory = mockRepositoryFactoryModule.__mockRepositoryFactory;
 
 // Get mocked logger
-const mockLoggerModule = await import('../../utils/logging/logger');
-const mockLogger = (mockLoggerModule as any).__mockLogger;
+interface MockedLoggerModule {
+  __mockLogger: Logger;
+}
+const mockLoggerModule = (await import(
+  '../../utils/logging/logger'
+)) as unknown as MockedLoggerModule;
+const mockLogger = mockLoggerModule.__mockLogger;
 
 describe('Compliance Reports Handler', () => {
   // Environment backup

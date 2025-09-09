@@ -56,7 +56,8 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
       post: vi.fn(),
     };
 
-    (mockAxios.create as any).mockReturnValue(mockAxiosInstance);
+    const mockAxiosCreate = mockAxios.create as ReturnType<typeof vi.fn>;
+    mockAxiosCreate.mockReturnValue(mockAxiosInstance);
 
     // Create client instance
     client = new DeepSourceClient({ apiKey: 'test-key' });
@@ -82,7 +83,7 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
       // Mock the findMostRecentRun method
       vi;
       vi.spyOn(
-        client as unknown as { findMostRecentRun: any },
+        client as unknown as { findMostRecentRun: ReturnType<typeof vi.fn> },
         'findMostRecentRun'
       ).mockResolvedValue({
         id: 'run1',
@@ -224,7 +225,7 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
       // Mock findMostRecentRun to succeed
       vi;
       vi.spyOn(
-        client as unknown as { findMostRecentRun: any },
+        client as unknown as { findMostRecentRun: ReturnType<typeof vi.fn> },
         'findMostRecentRun'
       ).mockResolvedValue({
         id: 'run1',
@@ -269,7 +270,7 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
       // Mock findMostRecentRun to succeed
       vi;
       vi.spyOn(
-        client as unknown as { findMostRecentRun: any },
+        client as unknown as { findMostRecentRun: ReturnType<typeof vi.fn> },
         'findMostRecentRun'
       ).mockResolvedValue({
         id: 'run1',
@@ -341,7 +342,7 @@ describe('DeepSourceClient - getRecentRunIssues', () => {
       // Mock findMostRecentRun to succeed
       vi;
       vi.spyOn(
-        client as unknown as { findMostRecentRun: any },
+        client as unknown as { findMostRecentRun: ReturnType<typeof vi.fn> },
         'findMostRecentRun'
       ).mockResolvedValue({
         id: 'run1',

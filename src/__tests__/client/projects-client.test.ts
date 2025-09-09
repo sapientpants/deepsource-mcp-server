@@ -26,8 +26,13 @@ describe('ProjectsClient', () => {
     projectsClient = new ProjectsClient('test-api-key');
 
     // Mock the executeGraphQL method on the instance
-    (projectsClient as any).executeGraphQL = mockExecuteGraphQL;
-    (projectsClient as any).logger = mockLogger;
+    interface MockProjectsClient {
+      executeGraphQL: typeof mockExecuteGraphQL;
+      logger: typeof mockLogger;
+    }
+    const mockedClient = projectsClient as unknown as MockProjectsClient;
+    mockedClient.executeGraphQL = mockExecuteGraphQL;
+    mockedClient.logger = mockLogger;
 
     vi.clearAllMocks();
     mockLogger.info.mockClear();

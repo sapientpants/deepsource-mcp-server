@@ -48,7 +48,8 @@ describe('Tool Registration', () => {
       registerDeepSourceTools(mockRegistry);
 
       expect(mockRegistry.registerTools).toHaveBeenCalledTimes(1);
-      const registeredTools = (mockRegistry.registerTools as any).mock.calls[0][0];
+      const mockRegisterTools = mockRegistry.registerTools as ReturnType<typeof vi.fn>;
+      const registeredTools = mockRegisterTools.mock.calls[0][0];
       expect(registeredTools).toHaveLength(10); // 10 DeepSource tools
       expect(registeredTools.map((t: { name: string }) => t.name)).toEqual([
         'projects',
@@ -71,7 +72,8 @@ describe('Tool Registration', () => {
 
       registerDeepSourceTools(mockRegistry);
 
-      const registeredTools = (mockRegistry.registerTools as any).mock.calls[0][0];
+      const mockRegisterTools = mockRegistry.registerTools as ReturnType<typeof vi.fn>;
+      const registeredTools = mockRegisterTools.mock.calls[0][0];
 
       // Find tools that need parameter transformations
       const updateMetricThresholdTool = registeredTools.find(
