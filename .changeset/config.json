@@ -3,7 +3,7 @@
   "changelog": [
     "@changesets/changelog-github",
     {
-      "repo": "sapientpants/agentic-node-ts-starter"
+      "repo": "sapientpants/deepsource-mcp-server"
     }
   ],
   "commit": false,
