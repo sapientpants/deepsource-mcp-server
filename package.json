@@ -21,9 +21,9 @@
   "bin": {
     "deepsource-mcp-server": "./dist/index.js"
   },
-  "packageManager": "pnpm@10.15.0",
+  "packageManager": "pnpm@10.15.1",
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22.19.0"
   },
   "scripts": {
     "build:watch": "tsc -p tsconfig.build.json --watch",

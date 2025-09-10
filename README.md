@@ -469,8 +469,8 @@ type RunState =
 
 ### Prerequisites
 
-- Node.js 22 or higher
-- pnpm 10.7.0 or higher
+- Node.js 22.19.0 or higher
+- pnpm 10.15.1 or higher
 - Docker (optional, for container builds)
 
 ### Setup
