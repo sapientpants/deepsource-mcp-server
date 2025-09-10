@@ -48,7 +48,10 @@ export async function fetchMultiplePages<T>(
     fetchAll,
   });
 
-  while (hasMore && (fetchAll || pagesFetched < maxPages)) {
+  // Use a bounded loop to prevent infinite loop warnings
+  const maxIterations = fetchAll ? Number.MAX_SAFE_INTEGER : maxPages;
+
+  for (let iteration = 0; iteration < maxIterations && hasMore; iteration++) {
     try {
       // Fetch the next page
       const response = await fetcher(currentCursor, pageSize);
@@ -57,7 +60,7 @@ export async function fetchMultiplePages<T>(
       allItems.push(...response.items);
       pagesFetched++;
 
-      // Update pagination state - these updates prevent infinite loops
+      // Update pagination state
       hasMore = response.pageInfo.hasNextPage;
       currentCursor = response.pageInfo.endCursor;
       totalCount = response.totalCount;
@@ -74,13 +77,8 @@ export async function fetchMultiplePages<T>(
         hasMore,
       });
 
-      // Break if we've reached the limit and not fetching all
-      if (!fetchAll && pagesFetched >= maxPages && hasMore) {
-        logger.info('Reached max pages limit', {
-          maxPages,
-          pagesFetched,
-          totalItemsFetched: allItems.length,
-        });
+      // Break if no more pages
+      if (!hasMore) {
         break;
       }
     } catch (error) {
@@ -88,7 +86,7 @@ export async function fetchMultiplePages<T>(
         pageNumber: pagesFetched + 1,
         error,
       });
-      // Ensure loop termination on error to prevent infinite loops
+      // Ensure loop termination on error
       hasMore = false;
       throw error;
     }
