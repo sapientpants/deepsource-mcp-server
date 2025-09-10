@@ -5,7 +5,7 @@
 
 import { BaseDeepSourceClient } from './base-client.js';
 import { DeepSourceIssue, IssueFilterParams } from '../models/issues.js';
-import { PaginatedResponse } from '../utils/pagination/types.js';
+import { PaginatedResponse, PageInfo } from '../utils/pagination/types.js';
 import { isErrorWithMessage } from '../utils/errors/handlers.js';
 
 /**
@@ -17,8 +17,9 @@ import { isErrorWithMessage } from '../utils/errors/handlers.js';
 export class IssuesClient extends BaseDeepSourceClient {
   /**
    * Fetches issues from a DeepSource project with optional filtering
+   * Supports multi-page fetching when max_pages is specified
    * @param projectKey The project key to fetch issues for
-   * @param params Optional filter parameters
+   * @param params Optional filter parameters including pagination
    * @returns Promise that resolves to a paginated list of issues
    * @throws {ClassifiedError} When the API request fails
    * @public
@@ -31,6 +32,7 @@ export class IssuesClient extends BaseDeepSourceClient {
       this.logger.info('Fetching issues from DeepSource API', {
         projectKey,
         hasFilters: Object.keys(params).length > 0,
+        maxPages: params.max_pages,
       });
 
       const project = await this.findProjectByKey(projectKey);
@@ -38,35 +40,65 @@ export class IssuesClient extends BaseDeepSourceClient {
         return BaseDeepSourceClient.createEmptyPaginatedResponse<DeepSourceIssue>();
       }
 
-      const normalizedParams = BaseDeepSourceClient.normalizePaginationParams(params);
-      const query = IssuesClient.buildIssuesQuery();
+      // Create a fetcher function for single page
+      const singlePageFetcher = async (
+        pageParams: IssueFilterParams
+      ): Promise<PaginatedResponse<DeepSourceIssue>> => {
+        const normalizedParams = BaseDeepSourceClient.normalizePaginationParams(pageParams);
+        const query = IssuesClient.buildIssuesQuery();
 
-      const response = await this.executeGraphQL(query, {
-        login: project.repository.login,
-        name: project.repository.name,
-        provider: project.repository.provider,
-        ...normalizedParams,
-      });
+        const response = await this.executeGraphQL(query, {
+          login: project.repository.login,
+          name: project.repository.name,
+          provider: project.repository.provider,
+          ...normalizedParams,
+        });
 
-      if (!response.data) {
-        throw new Error('No data received from GraphQL API');
-      }
+        if (!response.data) {
+          throw new Error('No data received from GraphQL API');
+        }
 
-      const issues = this.extractIssuesFromResponse(response.data);
+        const responseData = response.data as { repository?: { issues?: unknown } };
+        const issuesData = responseData.repository?.issues as
+          | {
+              pageInfo?: PageInfo;
+              totalCount?: number;
+              edges?: unknown[];
+            }
+          | undefined;
+        if (!issuesData) {
+          return BaseDeepSourceClient.createEmptyPaginatedResponse<DeepSourceIssue>();
+        }
 
-      this.logger.info('Successfully fetched issues', {
-        count: issues.length,
-        totalCount: issues.length, // Note: GraphQL API doesn't provide totalCount for issues
-      });
-
-      return {
-        items: issues,
-        pageInfo: {
-          hasNextPage: false, // Simplified for now - would need cursor-based pagination
+        const issues = this.extractIssuesFromResponse(response.data);
+        const pageInfo: PageInfo = issuesData.pageInfo || {
+          hasNextPage: false,
           hasPreviousPage: false,
-        },
-        totalCount: issues.length,
+        };
+        const totalCount = issuesData.totalCount || issues.length;
+
+        this.logger.debug('Fetched issues page', {
+          count: issues.length,
+          totalCount,
+          hasNextPage: pageInfo.hasNextPage,
+        });
+
+        return {
+          items: issues,
+          pageInfo,
+          totalCount,
+        };
       };
+
+      // Use fetchWithPagination for automatic multi-page support
+      const result = await this.fetchWithPagination(singlePageFetcher, params);
+
+      this.logger.info('Successfully fetched all issues', {
+        totalItems: result.items.length,
+        totalCount: result.totalCount,
+      });
+
+      return result;
     } catch (error) {
       return this.handleIssuesError(error);
     }
@@ -104,9 +136,26 @@ export class IssuesClient extends BaseDeepSourceClient {
         $path: String
         $first: Int
         $after: String
+        $last: Int
+        $before: String
       ) {
         repository(login: $login, name: $name, vcsProvider: $provider) {
-          issues(analyzerIn: $analyzerIn, tags: $tags, path: $path, first: $first, after: $after) {
+          issues(
+            analyzerIn: $analyzerIn, 
+            tags: $tags, 
+            path: $path, 
+            first: $first, 
+            after: $after,
+            last: $last,
+            before: $before
+          ) {
+            totalCount
+            pageInfo {
+              hasNextPage
+              hasPreviousPage
+              startCursor
+              endCursor
+            }
             edges {
               node {
                 id

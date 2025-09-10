@@ -8,7 +8,14 @@ import { createLogger } from '../utils/logging/logger.js';
 import { handleApiError } from '../utils/errors/handlers.js';
 import { GraphQLResponse } from '../types/graphql-responses.js';
 import { DeepSourceProject } from '../models/projects.js';
-import { PaginatedResponse, PaginationParams } from '../utils/pagination/types.js';
+import {
+  PaginatedResponse,
+  PaginationParams,
+  MultiPageOptions,
+  PageInfo,
+} from '../utils/pagination/types.js';
+import { PaginationManager, PageFetcher } from '../utils/pagination/manager.js';
+import { handlePageSizeAlias, shouldFetchMultiplePages } from '../utils/pagination/helpers.js';
 import { asProjectKey } from '../types/branded.js';
 
 /**
@@ -295,5 +302,69 @@ export class BaseDeepSourceClient {
    */
   protected static extractErrorMessages(errors: Array<{ message: string }>): string {
     return errors.map((error) => error.message).join('; ');
+  }
+
+  /**
+   * Fetches data with automatic pagination support
+   * Handles multi-page fetching when max_pages is specified
+   * @template T The type of items being fetched
+   * @param fetcher Single page fetcher function
+   * @param params Pagination parameters including potential max_pages
+   * @returns Paginated response with all fetched items
+   * @protected
+   */
+  protected async fetchWithPagination<T>(
+    fetcher: (params: PaginationParams) => Promise<PaginatedResponse<T>>,
+    params: PaginationParams
+  ): Promise<PaginatedResponse<T>> {
+    // Handle page_size alias
+    const processedParams = handlePageSizeAlias(params);
+
+    // Check if multi-page fetching is needed
+    if (shouldFetchMultiplePages(processedParams)) {
+      const maxPages = processedParams.max_pages!;
+
+      // Create a page fetcher wrapper for the pagination manager
+      const pageFetcher: PageFetcher<T> = async (cursor, pageSize) => {
+        const pageParams: PaginationParams = {
+          ...processedParams,
+          first: pageSize || processedParams.first || 50,
+        };
+        if (cursor) {
+          pageParams.after = cursor;
+        }
+        delete pageParams.max_pages; // Remove max_pages from individual requests
+        return fetcher(pageParams);
+      };
+
+      // Fetch multiple pages
+      const options: MultiPageOptions = {
+        maxPages,
+        pageSize: processedParams.first || processedParams.page_size || 50,
+        onProgress: (pagesFetched, itemsFetched) => {
+          this.logger.debug('Pagination progress', { pagesFetched, itemsFetched });
+        },
+      };
+
+      const result = await PaginationManager.fetchMultiplePages(pageFetcher, options);
+
+      // Create a merged response
+      const pageInfo: PageInfo = {
+        hasNextPage: result.hasMore,
+        hasPreviousPage: false, // First page for multi-page fetch
+      };
+      if (result.lastCursor) {
+        pageInfo.endCursor = result.lastCursor;
+      }
+
+      return {
+        items: result.items,
+        pageInfo,
+        totalCount: result.totalCount || result.items.length,
+      };
+    }
+
+    // Single page fetch
+    return fetcher(processedParams);
   }
 }
