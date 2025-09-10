@@ -88,6 +88,8 @@ export async function fetchMultiplePages<T>(
         pageNumber: pagesFetched + 1,
         error,
       });
+      // Ensure loop termination on error to prevent infinite loops
+      hasMore = false;
       throw error;
     }
   }
