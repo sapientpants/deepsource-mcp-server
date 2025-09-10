@@ -427,7 +427,7 @@ describe('Pagination Helpers', () => {
           hasNextPage: true,
           hasPreviousPage: false,
         },
-        totalCount: undefined as any,
+        totalCount: undefined,
       };
 
       const metadata = createPaginationMetadata(response, 1);
