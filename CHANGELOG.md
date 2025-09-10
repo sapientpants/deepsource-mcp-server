@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.1
+
+### Patch Changes
+
+- [#142](https://github.com/sapientpants/deepsource-mcp-server/pull/142) [`04f7440`](https://github.com/sapientpants/deepsource-mcp-server/commit/04f744073131e99d4613ba661ccb93b090001ffc) Thanks [@sapientpants](https://github.com/sapientpants)! - Fixed TypeScript strict mode compatibility and integrated agentic-node-ts-starter template
+  - Resolved hundreds of `exactOptionalPropertyTypes` errors across the codebase
+  - Migrated test suite from Jest to Vitest
+  - Enhanced CI/CD workflows with security scanning and validation
+  - Added comprehensive linting tools (actionlint, markdownlint, yamllint)
+  - Improved development tooling and scripts
+  - Fixed all precommit check failures
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
