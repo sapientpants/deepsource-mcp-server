@@ -142,7 +142,7 @@ describe('Project Issues Handler', () => {
       ).rejects.toThrow('API client error');
     });
 
-    it.skip('should handle max_pages parameter with multi-page fetching message', async () => {
+    it('should handle max_pages parameter with multi-page fetching message', async () => {
       // Mock response data
       const mockIssues: PaginatedResult<DeepSourceIssue> = {
         items: [
@@ -153,16 +153,10 @@ describe('Project Issues Handler', () => {
             category: 'BUG',
             severity: 'CRITICAL',
             status: 'OPEN',
-            analyzer: 'javascript',
+            issue_text: 'Test issue message',
+            file_path: 'src/test.ts',
+            line_number: 10,
             tags: ['test'],
-            path: 'src/test.ts',
-            line: 10,
-            message: 'Test issue message',
-            occurences: 1,
-            repository: {
-              login: 'test',
-              name: 'test-repo',
-            },
           },
         ],
         totalCount: 1,
@@ -183,8 +177,11 @@ describe('Project Issues Handler', () => {
         max_pages: 5,
       });
 
-      expect(result.issues).toEqual(mockIssues.items);
-      expect(result.usage_examples.pagination.next_page).toBe(
+      // Parse the response content
+      const parsedContent = JSON.parse(result.content[0].text);
+
+      expect(parsedContent.issues).toEqual(mockIssues.items);
+      expect(parsedContent.usage_examples.pagination.next_page).toBe(
         'Multi-page fetching enabled with max_pages parameter'
       );
       expect(mockGetIssues).toHaveBeenCalledWith('test-project', { max_pages: 5 });
