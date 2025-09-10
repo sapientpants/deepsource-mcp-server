@@ -524,5 +524,46 @@ describe('BaseDeepSourceClient', () => {
 
       expect(mockFetcher).toHaveBeenCalledTimes(2);
     });
+
+    it('should include endCursor in pageInfo when multi-page fetch has lastCursor', async () => {
+      // Mock the fetchMultiplePages to return a result with lastCursor
+      const mockFetcher = vi.fn();
+
+      // We need to test the actual implementation, so let's mock fetchMultiplePages directly
+      // First, let's test with real multi-page fetching behavior
+      const page1 = {
+        items: ['item1', 'item2'],
+        pageInfo: {
+          hasNextPage: true,
+          hasPreviousPage: false,
+          endCursor: 'cursor1',
+        },
+        totalCount: 4,
+      };
+
+      const page2 = {
+        items: ['item3', 'item4'],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: true,
+          startCursor: 'cursor1',
+          endCursor: 'cursor2',
+        },
+        totalCount: 4,
+      };
+
+      mockFetcher.mockResolvedValueOnce(page1).mockResolvedValueOnce(page2);
+
+      const result = await client.testFetchWithPagination(mockFetcher, {
+        first: 2,
+        max_pages: 3,
+      });
+
+      // The result should have the endCursor from the last page
+      expect(result.pageInfo.endCursor).toBe('cursor2');
+      expect(result.items).toEqual(['item1', 'item2', 'item3', 'item4']);
+      expect(result.pageInfo.hasNextPage).toBe(false);
+      expect(mockFetcher).toHaveBeenCalledTimes(2);
+    });
   });
 });

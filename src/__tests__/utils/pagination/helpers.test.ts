@@ -6,6 +6,7 @@ import {
   normalizePaginationParams,
   createPaginationHelp,
   createEnhancedPaginationHelp,
+  createPaginationMetadata,
 } from '../../../utils/pagination/helpers';
 import { PageInfo, PaginationParams } from '../../../utils/pagination/types';
 
@@ -352,6 +353,111 @@ describe('Pagination Helpers', () => {
       expect(help.current_page.size).toBe(0);
       expect(help.next_page).toBeNull();
       expect(help.previous_page).toBeNull();
+    });
+  });
+
+  describe('createPaginationMetadata', () => {
+    it('should create metadata with single page fetched', () => {
+      const response = {
+        items: ['item1', 'item2'],
+        pageInfo: {
+          hasNextPage: true,
+          hasPreviousPage: false,
+          endCursor: 'cursor1',
+        },
+        totalCount: 10,
+      };
+
+      const metadata = createPaginationMetadata(response, 1);
+
+      expect(metadata).toEqual({
+        has_more_pages: true,
+        page_size: 2,
+        next_cursor: 'cursor1',
+        total_count: 10,
+      });
+      expect(metadata.pages_fetched).toBeUndefined();
+    });
+
+    it('should include pages_fetched when multiple pages are fetched', () => {
+      const response = {
+        items: ['item1', 'item2', 'item3', 'item4', 'item5'],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          endCursor: 'cursor2',
+        },
+        totalCount: 5,
+      };
+
+      const metadata = createPaginationMetadata(response, 3);
+
+      expect(metadata).toEqual({
+        has_more_pages: false,
+        page_size: 5,
+        next_cursor: 'cursor2',
+        total_count: 5,
+        pages_fetched: 3,
+      });
+    });
+
+    it('should handle response without significant totalCount', () => {
+      const response = {
+        items: ['item1'],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+        totalCount: 0,
+      };
+
+      const metadata = createPaginationMetadata(response, 1);
+
+      expect(metadata).toEqual({
+        has_more_pages: false,
+        page_size: 1,
+        total_count: 0,
+      });
+    });
+
+    it('should handle response with undefined totalCount', () => {
+      const response = {
+        items: ['item1', 'item2'],
+        pageInfo: {
+          hasNextPage: true,
+          hasPreviousPage: false,
+        },
+        totalCount: undefined as any,
+      };
+
+      const metadata = createPaginationMetadata(response, 1);
+
+      expect(metadata).toEqual({
+        has_more_pages: true,
+        page_size: 2,
+      });
+      expect(metadata.total_count).toBeUndefined();
+    });
+
+    it('should include previous_cursor when available', () => {
+      const response = {
+        items: ['item1', 'item2'],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: true,
+          startCursor: 'prev_cursor',
+        },
+        totalCount: 10,
+      };
+
+      const metadata = createPaginationMetadata(response, 1);
+
+      expect(metadata).toEqual({
+        has_more_pages: false,
+        page_size: 2,
+        previous_cursor: 'prev_cursor',
+        total_count: 10,
+      });
     });
   });
 });

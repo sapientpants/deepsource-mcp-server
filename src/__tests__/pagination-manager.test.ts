@@ -296,6 +296,26 @@ describe('PaginationManager', () => {
       expect(result.pageInfo.hasPreviousPage).toBe(false);
       expect(result.totalCount).toBe(0);
     });
+
+    it('should handle sparse array with undefined elements', () => {
+      // Create a sparse array where accessing elements returns undefined
+      const sparseArray: PaginatedResponse<string>[] = new Array(2);
+      sparseArray[1] = {
+        items: ['item1'],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+        totalCount: 1,
+      };
+
+      const result = mergeResponses(sparseArray);
+
+      expect(result.items).toEqual(['item1']);
+      expect(result.pageInfo.hasNextPage).toBe(false);
+      expect(result.pageInfo.hasPreviousPage).toBe(false);
+      expect(result.totalCount).toBe(1);
+    });
   });
 
   describe('createPaginationIterator', () => {

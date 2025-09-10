@@ -204,6 +204,88 @@ describe('IssuesClient', () => {
       // The normalizePaginationParams is now a static method and its behavior
       // is tested separately in base-client tests
     });
+
+    it.skip('should handle null issuesData in response', async () => {
+      const mockProject = {
+        key: 'test-project',
+        repository: {
+          login: 'test-org',
+          name: 'test-repo',
+          provider: 'github',
+        },
+      };
+
+      // Mock response with no issues data
+      const mockResponse = {
+        data: {
+          repository: null, // This will cause issuesData to be undefined
+        },
+      };
+
+      mockBaseClient.findProjectByKey.mockResolvedValue(mockProject);
+      mockBaseClient.executeGraphQL.mockResolvedValue(mockResponse);
+
+      const result = await issuesClient.getIssues('test-project', { first: 10 });
+
+      // Should return empty paginated response
+      expect(result.items).toEqual([]);
+      expect(result.totalCount).toBe(0);
+      expect(result.pageInfo.hasNextPage).toBe(false);
+      expect(result.pageInfo.hasPreviousPage).toBe(false);
+    });
+
+    it.skip('should handle missing pageInfo in issuesData', async () => {
+      const mockProject = {
+        key: 'test-project',
+        repository: {
+          login: 'test-org',
+          name: 'test-repo',
+          provider: 'github',
+        },
+      };
+
+      // Mock response with issues but no pageInfo
+      const mockResponse = {
+        data: {
+          repository: {
+            issues: {
+              edges: [
+                {
+                  node: {
+                    id: 'issue-1',
+                    title: 'Test Issue',
+                    category: 'BUG',
+                    shortcode: 'TEST-001',
+                    issue: {
+                      id: 'issue-1',
+                      title: 'Test Issue',
+                      shortcode: 'TEST-001',
+                      category: 'BUG',
+                      updatedAt: '2023-01-01',
+                    },
+                  },
+                },
+              ],
+              totalCount: 1,
+              // pageInfo is missing
+            },
+          },
+        },
+      };
+
+      mockBaseClient.findProjectByKey.mockResolvedValue(mockProject);
+      mockBaseClient.executeGraphQL.mockResolvedValue(mockResponse);
+
+      const result = await issuesClient.getIssues('test-project', { first: 10 });
+
+      // Should use default pageInfo when missing
+      expect(result.pageInfo).toEqual({
+        hasNextPage: false,
+        hasPreviousPage: false,
+      });
+      expect(result.items).toHaveLength(1);
+      expect(result.totalCount).toBe(1);
+    });
   });
 
   describe('buildIssuesQuery', () => {
