@@ -13,7 +13,14 @@ import jsoncParser from 'jsonc-eslint-parser';
 export default [
   // Ignore patterns
   {
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'jest.config.js', 'examples/**'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'coverage/**',
+      'jest.config.js',
+      'examples/**',
+      'sbom.cdx.json',
+    ],
   },
   // Base configuration for all JS/TS files
   {
