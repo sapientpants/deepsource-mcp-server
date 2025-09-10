@@ -189,6 +189,14 @@ export const projectIssuesToolSchema = {
       .string()
       .optional()
       .describe('Cursor to start retrieving items before (backward pagination)'),
+    page_size: z
+      .number()
+      .optional()
+      .describe('Number of items per page (alias for first, for convenience)'),
+    max_pages: z
+      .number()
+      .optional()
+      .describe('Maximum number of pages to fetch (enables automatic multi-page fetching)'),
   },
   outputSchema: {
     issues: z.array(
@@ -211,6 +219,18 @@ export const projectIssuesToolSchema = {
       startCursor: z.string().nullable(),
       endCursor: z.string().nullable(),
     }),
+    pagination: z
+      .object({
+        has_more_pages: z.boolean(),
+        next_cursor: z.string().optional(),
+        previous_cursor: z.string().optional(),
+        total_count: z.number().optional(),
+        page_size: z.number(),
+        pages_fetched: z.number().optional(),
+        limit_reached: z.boolean().optional(),
+      })
+      .optional()
+      .describe('User-friendly pagination metadata'),
     totalCount: z.number(),
   },
 };
@@ -234,6 +254,14 @@ export const runsToolSchema = {
       .string()
       .optional()
       .describe('Cursor to start retrieving items before (backward pagination)'),
+    page_size: z
+      .number()
+      .optional()
+      .describe('Number of items per page (alias for first, for convenience)'),
+    max_pages: z
+      .number()
+      .optional()
+      .describe('Maximum number of pages to fetch (enables automatic multi-page fetching)'),
   },
   outputSchema: {
     runs: z.array(
@@ -363,6 +391,14 @@ export const recentRunIssuesToolSchema = {
       .string()
       .optional()
       .describe('Cursor to start retrieving items before (backward pagination)'),
+    page_size: z
+      .number()
+      .optional()
+      .describe('Number of items per page (alias for first, for convenience)'),
+    max_pages: z
+      .number()
+      .optional()
+      .describe('Maximum number of pages to fetch (enables automatic multi-page fetching)'),
   },
   outputSchema: {
     run: z.object({
@@ -443,6 +479,14 @@ export const dependencyVulnerabilitiesToolSchema = {
       .string()
       .optional()
       .describe('Cursor to start retrieving items before (backward pagination)'),
+    page_size: z
+      .number()
+      .optional()
+      .describe('Number of items per page (alias for first, for convenience)'),
+    max_pages: z
+      .number()
+      .optional()
+      .describe('Maximum number of pages to fetch (enables automatic multi-page fetching)'),
   },
   outputSchema: {
     vulnerabilities: z.array(

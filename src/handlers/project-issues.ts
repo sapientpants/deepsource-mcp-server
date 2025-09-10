@@ -7,6 +7,7 @@ import { DeepSourceClient } from '../deepsource.js';
 import { ApiResponse } from '../models/common.js';
 import { createLogger } from '../utils/logging/logger.js';
 import { DeepSourceIssue, IssueFilterParams } from '../models/issues.js';
+import { createPaginationMetadata } from '../utils/pagination/helpers.js';
 import { BaseHandlerDeps } from './base/handler.interface.js';
 import {
   createBaseHandlerFactory,
@@ -44,6 +45,8 @@ export const createProjectIssuesHandler = createBaseHandlerFactory(
       after,
       last,
       before,
+      page_size,
+      max_pages,
     }: DeepsourceProjectIssuesParams
   ) => {
     const apiKey = deps.getApiKey();
@@ -59,17 +62,10 @@ export const createProjectIssuesHandler = createBaseHandlerFactory(
       hasFilterPath: Boolean(path),
       hasAnalyzerFilter: Boolean(analyzerIn),
       hasTagsFilter: Boolean(tags),
+      maxPages: max_pages,
     });
 
-    const params: {
-      path?: string;
-      analyzerIn?: string[];
-      tags?: string[];
-      first?: number;
-      after?: string;
-      last?: number;
-      before?: string;
-    } = {};
+    const params: IssueFilterParams = {};
     if (path !== undefined) params.path = path;
     if (analyzerIn !== undefined) params.analyzerIn = analyzerIn;
     if (tags !== undefined) params.tags = tags;
@@ -77,6 +73,8 @@ export const createProjectIssuesHandler = createBaseHandlerFactory(
     if (after !== undefined) params.after = after;
     if (last !== undefined) params.last = last;
     if (before !== undefined) params.before = before;
+    if (page_size !== undefined) params.page_size = page_size;
+    if (max_pages !== undefined) params.max_pages = max_pages;
 
     const issues = await client.getIssues(projectKey, params);
 
@@ -86,6 +84,9 @@ export const createProjectIssuesHandler = createBaseHandlerFactory(
       hasNextPage: issues.pageInfo?.hasNextPage,
       hasPreviousPage: issues.pageInfo?.hasPreviousPage,
     });
+
+    // Create pagination metadata for user-friendly response
+    const paginationMetadata = createPaginationMetadata(issues);
 
     const issuesData = {
       issues: issues.items.map((issue: DeepSourceIssue) => ({
@@ -100,12 +101,14 @@ export const createProjectIssuesHandler = createBaseHandlerFactory(
         line_number: issue.line_number,
         tags: issue.tags,
       })),
+      // Include both formats for backward compatibility and user convenience
       pageInfo: {
         hasNextPage: issues.pageInfo?.hasNextPage || false,
         hasPreviousPage: issues.pageInfo?.hasPreviousPage || false,
         startCursor: issues.pageInfo?.startCursor || null,
         endCursor: issues.pageInfo?.endCursor || null,
       },
+      pagination: paginationMetadata,
       totalCount: issues.totalCount,
       // Provide helpful guidance on filtering and pagination
       usage_examples: {
@@ -115,8 +118,12 @@ export const createProjectIssuesHandler = createBaseHandlerFactory(
           by_tags: 'Use the tags parameter to filter by specific tags',
         },
         pagination: {
-          next_page: 'For forward pagination, use first and after parameters',
+          next_page: max_pages
+            ? 'Multi-page fetching enabled with max_pages parameter'
+            : 'For forward pagination, use first and after parameters',
           previous_page: 'For backward pagination, use last and before parameters',
+          page_size: 'Use page_size parameter as a convenient alias for first',
+          multi_page: 'Use max_pages to automatically fetch multiple pages (e.g., max_pages: 5)',
         },
       },
     };

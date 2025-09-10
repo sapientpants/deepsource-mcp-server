@@ -141,5 +141,50 @@ describe('Project Issues Handler', () => {
         })
       ).rejects.toThrow('API client error');
     });
+
+    it('should handle max_pages parameter with multi-page fetching message', async () => {
+      // Mock response data
+      const mockIssues: PaginatedResult<DeepSourceIssue> = {
+        items: [
+          {
+            id: 'issue-1',
+            title: 'Test Issue 1',
+            shortcode: 'TEST-001',
+            category: 'BUG',
+            severity: 'CRITICAL',
+            status: 'OPEN',
+            issue_text: 'Test issue message',
+            file_path: 'src/test.ts',
+            line_number: 10,
+            tags: ['test'],
+          },
+        ],
+        totalCount: 1,
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+        pagination: {
+          has_more_pages: false,
+          page_size: 1,
+        },
+      };
+
+      mockGetIssues.mockResolvedValue(mockIssues);
+
+      const result = await handleDeepsourceProjectIssues({
+        projectKey: 'test-project',
+        max_pages: 5,
+      });
+
+      // Parse the response content
+      const parsedContent = JSON.parse(result.content[0].text);
+
+      expect(parsedContent.issues).toEqual(mockIssues.items);
+      expect(parsedContent.usage_examples.pagination.next_page).toBe(
+        'Multi-page fetching enabled with max_pages parameter'
+      );
+      expect(mockGetIssues).toHaveBeenCalledWith('test-project', { max_pages: 5 });
+    });
   });
 });

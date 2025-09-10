@@ -4,7 +4,7 @@
  */
 
 import { createLogger } from '../logging/logger.js';
-import { PageInfo, PaginationParams, PaginatedResponse } from './types.js';
+import { PageInfo, PaginationParams, PaginatedResponse, PaginationMetadata } from './types.js';
 
 // Logger for pagination utilities
 const logger = createLogger('PaginationUtils');
@@ -165,4 +165,63 @@ export function createEnhancedPaginationHelp(
       legacy: 'Legacy offset-based pagination is also supported via the "offset" parameter',
     },
   };
+}
+
+/**
+ * Handles page_size parameter as an alias for first
+ * @param params Pagination parameters that may include page_size
+ * @returns Normalized params with first set appropriately
+ * @public
+ */
+export function handlePageSizeAlias(params: PaginationParams): PaginationParams {
+  const { page_size, ...restParams } = params;
+
+  // Use page_size as an alias for first if first is not already set
+  if (page_size !== undefined && restParams.first === undefined && !restParams.before) {
+    restParams.first = page_size;
+  }
+
+  return restParams;
+}
+
+/**
+ * Determines if multi-page fetching is needed based on parameters
+ * @param params Pagination parameters
+ * @returns Whether multiple pages should be fetched
+ * @public
+ */
+export function shouldFetchMultiplePages(params: PaginationParams): boolean {
+  return params.max_pages !== undefined && params.max_pages > 1;
+}
+
+/**
+ * Creates pagination metadata from a standard response
+ * @param response Paginated response
+ * @param pagesFetched Number of pages fetched (for multi-page operations)
+ * @returns User-friendly pagination metadata
+ * @public
+ */
+export function createPaginationMetadata<T>(
+  response: PaginatedResponse<T>,
+  pagesFetched = 1
+): PaginationMetadata {
+  const metadata: PaginationMetadata = {
+    has_more_pages: response.pageInfo.hasNextPage,
+    page_size: response.items.length,
+  };
+
+  if (response.pageInfo.endCursor) {
+    metadata.next_cursor = response.pageInfo.endCursor;
+  }
+  if (response.pageInfo.startCursor) {
+    metadata.previous_cursor = response.pageInfo.startCursor;
+  }
+  if (response.totalCount !== undefined) {
+    metadata.total_count = response.totalCount;
+  }
+  if (pagesFetched > 1) {
+    metadata.pages_fetched = pagesFetched;
+  }
+
+  return metadata;
 }
