@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
 import nock from 'nock';
 import { BaseDeepSourceClient } from '../../client/base-client.js';
 import { GraphQLResponse } from '../../types/graphql-responses.js';
+import { PaginationParams, PaginatedResponse } from '../../utils/pagination/types.js';
 
 // Extend the BaseDeepSourceClient to expose the protected methods
 class TestableBaseClient extends BaseDeepSourceClient {
@@ -29,9 +30,9 @@ class TestableBaseClient extends BaseDeepSourceClient {
   }
 
   async testFetchWithPagination<T>(
-    fetcher: (params: any) => Promise<any>,
-    params: any
-  ): Promise<any> {
+    fetcher: (params: PaginationParams) => Promise<PaginatedResponse<T>>,
+    params: PaginationParams
+  ): Promise<PaginatedResponse<T>> {
     return this.fetchWithPagination<T>(fetcher, params);
   }
 
