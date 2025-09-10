@@ -205,7 +205,7 @@ describe('IssuesClient', () => {
       // is tested separately in base-client tests
     });
 
-    it.skip('should handle null issuesData in response', async () => {
+    it('should handle null issuesData in response', async () => {
       const mockProject = {
         key: 'test-project',
         repository: {
@@ -223,18 +223,19 @@ describe('IssuesClient', () => {
       };
 
       mockBaseClient.findProjectByKey.mockResolvedValue(mockProject);
+      mockBaseClient.normalizePaginationParams.mockReturnValue({ first: 10 });
       mockBaseClient.executeGraphQL.mockResolvedValue(mockResponse);
 
       const result = await issuesClient.getIssues('test-project', { first: 10 });
 
-      // Should return empty paginated response
+      // Should return empty response when repository is null
       expect(result.items).toEqual([]);
       expect(result.totalCount).toBe(0);
       expect(result.pageInfo.hasNextPage).toBe(false);
       expect(result.pageInfo.hasPreviousPage).toBe(false);
     });
 
-    it.skip('should handle missing pageInfo in issuesData', async () => {
+    it('should handle missing pageInfo in issuesData', async () => {
       const mockProject = {
         key: 'test-project',
         repository: {
@@ -256,24 +257,33 @@ describe('IssuesClient', () => {
                     title: 'Test Issue',
                     category: 'BUG',
                     shortcode: 'TEST-001',
-                    issue: {
-                      id: 'issue-1',
-                      title: 'Test Issue',
-                      shortcode: 'TEST-001',
-                      category: 'BUG',
-                      updatedAt: '2023-01-01',
+                    severity: 'HIGH',
+                    occurrences: {
+                      edges: [
+                        {
+                          node: {
+                            id: 'occ-1',
+                            status: 'ACTIVE',
+                            issueText: 'Test issue',
+                            filePath: '/test.js',
+                            beginLine: 10,
+                            tags: [],
+                          },
+                        },
+                      ],
                     },
                   },
                 },
               ],
               totalCount: 1,
-              // pageInfo is missing
+              // pageInfo is missing - this will trigger the fallback
             },
           },
         },
       };
 
       mockBaseClient.findProjectByKey.mockResolvedValue(mockProject);
+      mockBaseClient.normalizePaginationParams.mockReturnValue({ first: 10 });
       mockBaseClient.executeGraphQL.mockResolvedValue(mockResponse);
 
       const result = await issuesClient.getIssues('test-project', { first: 10 });
@@ -384,6 +394,159 @@ describe('IssuesClient', () => {
       ) as unknown[];
 
       expect(issues).toHaveLength(0); // No occurrences means no issues
+    });
+
+    it('should handle null occurrences edges in response', () => {
+      const mockResponseData = {
+        repository: {
+          issues: {
+            edges: [
+              {
+                node: {
+                  id: 'issue-1',
+                  title: 'Test Issue',
+                  shortcode: 'JS-0001',
+                  category: 'BUG_RISK',
+                  severity: 'HIGH',
+                  occurrences: {
+                    edges: null,
+                  },
+                },
+              },
+            ],
+          },
+        },
+      };
+
+      const issues = (issuesClient as IssuesClientTestable).extractIssuesFromResponse(
+        mockResponseData
+      ) as unknown[];
+
+      expect(issues).toHaveLength(0); // Null edges means no issues
+    });
+
+    it('should handle missing occurrences property entirely', () => {
+      const mockResponseData = {
+        repository: {
+          issues: {
+            edges: [
+              {
+                node: {
+                  id: 'issue-1',
+                  title: 'Test Issue',
+                  shortcode: 'JS-0001',
+                  category: 'BUG_RISK',
+                  severity: 'HIGH',
+                  // occurrences is missing entirely
+                },
+              },
+            ],
+          },
+        },
+      };
+
+      const issues = (issuesClient as IssuesClientTestable).extractIssuesFromResponse(
+        mockResponseData
+      ) as unknown[];
+
+      expect(issues).toHaveLength(0); // Missing occurrences means no issues
+    });
+
+    it('should handle error thrown during extraction', () => {
+      const mockResponseData = {
+        repository: {
+          issues: {
+            edges: 'invalid', // This will cause an error when trying to iterate
+          },
+        },
+      };
+
+      // Should not throw, but handle the error gracefully
+      const issues = (issuesClient as IssuesClientTestable).extractIssuesFromResponse(
+        mockResponseData
+      ) as unknown[];
+
+      expect(issues).toHaveLength(0); // Error results in empty array
+    });
+  });
+
+  describe('getIssue', () => {
+    it('should fetch a specific issue by calling getIssues', async () => {
+      const mockIssues = {
+        items: [
+          {
+            id: 'issue-1',
+            title: 'Test Issue 1',
+            shortcode: 'JS-0001',
+            category: 'BUG_RISK',
+            severity: 'HIGH',
+            status: 'ACTIVE',
+            issue_text: 'Issue description',
+            file_path: '/src/test.js',
+            line_number: 10,
+            tags: ['security'],
+          },
+          {
+            id: 'issue-2',
+            title: 'Test Issue 2',
+            shortcode: 'JS-0002',
+            category: 'SECURITY',
+            severity: 'CRITICAL',
+            status: 'ACTIVE',
+            issue_text: 'Another issue',
+            file_path: '/src/test2.js',
+            line_number: 20,
+            tags: ['performance'],
+          },
+        ],
+        pageInfo: { hasNextPage: false, hasPreviousPage: false },
+        totalCount: 2,
+      };
+
+      // Mock getIssues to return our test issues
+      vi.spyOn(issuesClient, 'getIssues').mockResolvedValue(mockIssues);
+
+      const result = await issuesClient.getIssue('test-project', 'issue-2');
+
+      expect(result).toBeDefined();
+      expect(result?.id).toBe('issue-2');
+      expect(result?.shortcode).toBe('JS-0002');
+      expect(result?.category).toBe('SECURITY');
+    });
+
+    it('should return null when issue not found', async () => {
+      const mockIssues = {
+        items: [
+          {
+            id: 'issue-1',
+            title: 'Test Issue 1',
+            shortcode: 'JS-0001',
+            category: 'BUG_RISK',
+            severity: 'HIGH',
+            status: 'ACTIVE',
+            issue_text: 'Issue description',
+            file_path: '/src/test.js',
+            line_number: 10,
+            tags: ['security'],
+          },
+        ],
+        pageInfo: { hasNextPage: false, hasPreviousPage: false },
+        totalCount: 1,
+      };
+
+      vi.spyOn(issuesClient, 'getIssues').mockResolvedValue(mockIssues);
+
+      const result = await issuesClient.getIssue('test-project', 'non-existent-issue');
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle errors from getIssues', async () => {
+      vi.spyOn(issuesClient, 'getIssues').mockRejectedValue(new Error('Failed to fetch issues'));
+
+      await expect(issuesClient.getIssue('test-project', 'issue-1')).rejects.toThrow(
+        'Failed to fetch issues'
+      );
     });
   });
 
