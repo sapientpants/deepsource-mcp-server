@@ -216,7 +216,7 @@ export function createPaginationMetadata<T>(
   if (response.pageInfo.startCursor) {
     metadata.previous_cursor = response.pageInfo.startCursor;
   }
-  if (response.totalCount > 0) {
+  if (response.totalCount !== undefined) {
     metadata.total_count = response.totalCount;
   }
   if (pagesFetched > 1) {
