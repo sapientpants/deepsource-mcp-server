@@ -3,7 +3,13 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { PaginationManager } from '../utils/pagination/manager';
+import {
+  fetchMultiplePages,
+  addPaginationMetadata,
+  processPaginationParams,
+  isValidCursor,
+  mergeResponses,
+} from '../utils/pagination/manager';
 import { PaginatedResponse } from '../utils/pagination/types';
 
 describe('PaginationManager', () => {
@@ -20,7 +26,7 @@ describe('PaginationManager', () => {
         totalCount: 10,
       });
 
-      const result = await PaginationManager.fetchMultiplePages(mockFetcher, {
+      const result = await fetchMultiplePages(mockFetcher, {
         maxPages: 1,
         pageSize: 2,
       });
@@ -67,7 +73,7 @@ describe('PaginationManager', () => {
           totalCount: 5,
         });
 
-      const result = await PaginationManager.fetchMultiplePages(mockFetcher, {
+      const result = await fetchMultiplePages(mockFetcher, {
         maxPages: 5,
         pageSize: 2,
       });
@@ -90,7 +96,7 @@ describe('PaginationManager', () => {
         totalCount: 100,
       });
 
-      const result = await PaginationManager.fetchMultiplePages(mockFetcher, {
+      const result = await fetchMultiplePages(mockFetcher, {
         maxPages: 3,
         pageSize: 1,
       });
@@ -112,7 +118,7 @@ describe('PaginationManager', () => {
 
       const onProgress = vi.fn();
 
-      await PaginationManager.fetchMultiplePages(mockFetcher, {
+      await fetchMultiplePages(mockFetcher, {
         maxPages: 1,
         pageSize: 1,
         onProgress,
@@ -134,7 +140,7 @@ describe('PaginationManager', () => {
         totalCount: 10,
       };
 
-      const result = PaginationManager.addPaginationMetadata(response, 2, true);
+      const result = addPaginationMetadata(response, 2, true);
 
       expect(result.pagination).toBeDefined();
       expect(result.pagination?.has_more_pages).toBe(true);
@@ -147,7 +153,7 @@ describe('PaginationManager', () => {
 
   describe('processPaginationParams', () => {
     it('should handle page_size as alias for first', () => {
-      const result = PaginationManager.processPaginationParams({
+      const result = processPaginationParams({
         page_size: 10,
         max_pages: 3,
       });
@@ -157,7 +163,7 @@ describe('PaginationManager', () => {
     });
 
     it('should prefer first over page_size when both provided', () => {
-      const result = PaginationManager.processPaginationParams({
+      const result = processPaginationParams({
         first: 20,
         page_size: 10,
         max_pages: 3,
@@ -170,19 +176,19 @@ describe('PaginationManager', () => {
 
   describe('isValidCursor', () => {
     it('should accept undefined cursor', () => {
-      expect(PaginationManager.isValidCursor(undefined)).toBe(true);
+      expect(isValidCursor(undefined)).toBe(true);
     });
 
     it('should accept valid string cursor', () => {
-      expect(PaginationManager.isValidCursor('validCursor123')).toBe(true);
+      expect(isValidCursor('validCursor123')).toBe(true);
     });
 
     it('should reject empty string', () => {
-      expect(PaginationManager.isValidCursor('')).toBe(false);
+      expect(isValidCursor('')).toBe(false);
     });
 
     it('should reject whitespace-only string', () => {
-      expect(PaginationManager.isValidCursor('   ')).toBe(false);
+      expect(isValidCursor('   ')).toBe(false);
     });
   });
 
@@ -221,7 +227,7 @@ describe('PaginationManager', () => {
         },
       ];
 
-      const result = PaginationManager.mergeResponses(responses);
+      const result = mergeResponses(responses);
 
       expect(result.items).toEqual(['item1', 'item2', 'item3', 'item4', 'item5']);
       expect(result.pageInfo.hasNextPage).toBe(false);
@@ -232,7 +238,7 @@ describe('PaginationManager', () => {
     });
 
     it('should handle empty array', () => {
-      const result = PaginationManager.mergeResponses([]);
+      const result = mergeResponses([]);
 
       expect(result.items).toEqual([]);
       expect(result.pageInfo.hasNextPage).toBe(false);

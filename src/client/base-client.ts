@@ -14,7 +14,7 @@ import {
   MultiPageOptions,
   PageInfo,
 } from '../utils/pagination/types.js';
-import { PaginationManager, PageFetcher } from '../utils/pagination/manager.js';
+import { fetchMultiplePages, PageFetcher } from '../utils/pagination/manager.js';
 import { handlePageSizeAlias, shouldFetchMultiplePages } from '../utils/pagination/helpers.js';
 import { asProjectKey } from '../types/branded.js';
 
@@ -321,8 +321,8 @@ export class BaseDeepSourceClient {
     const processedParams = handlePageSizeAlias(params);
 
     // Check if multi-page fetching is needed
-    if (shouldFetchMultiplePages(processedParams)) {
-      const maxPages = processedParams.max_pages!;
+    if (shouldFetchMultiplePages(processedParams) && processedParams.max_pages !== undefined) {
+      const maxPages = processedParams.max_pages;
 
       // Create a page fetcher wrapper for the pagination manager
       const pageFetcher: PageFetcher<T> = async (cursor, pageSize) => {
@@ -346,7 +346,7 @@ export class BaseDeepSourceClient {
         },
       };
 
-      const result = await PaginationManager.fetchMultiplePages(pageFetcher, options);
+      const result = await fetchMultiplePages(pageFetcher, options);
 
       // Create a merged response
       const pageInfo: PageInfo = {
