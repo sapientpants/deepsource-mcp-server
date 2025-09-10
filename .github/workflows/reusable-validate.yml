@@ -20,7 +20,7 @@ on:
       pnpm-version:
         description: 'pnpm version (should match package.json packageManager)'
         type: string
-        default: '10.15.0' # UPDATE: When upgrading pnpm
+        default: '10.15.1' # UPDATE: When upgrading pnpm
     secrets:
       DEEPSOURCE_DSN:
         description: 'DeepSource DSN for test coverage reporting'
