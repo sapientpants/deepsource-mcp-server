@@ -9,6 +9,7 @@ import {
   processPaginationParams,
   isValidCursor,
   mergeResponses,
+  createPaginationIterator,
 } from '../utils/pagination/manager';
 import { PaginatedResponse } from '../utils/pagination/types';
 
@@ -125,6 +126,56 @@ describe('PaginationManager', () => {
       });
 
       expect(onProgress).toHaveBeenCalledWith(1, 1);
+    });
+
+    it('should handle errors during page fetching', async () => {
+      const mockFetcher = vi
+        .fn()
+        .mockResolvedValueOnce({
+          items: ['item1'],
+          pageInfo: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+            endCursor: 'cursor1',
+          },
+          totalCount: 3,
+        })
+        .mockRejectedValueOnce(new Error('Network error'));
+
+      await expect(
+        fetchMultiplePages(mockFetcher, {
+          maxPages: 3,
+          pageSize: 1,
+        })
+      ).rejects.toThrow('Network error');
+
+      expect(mockFetcher).toHaveBeenCalledTimes(2);
+    });
+
+    it('should fetch all pages when fetchAll is true', async () => {
+      let callCount = 0;
+      const mockFetcher = vi.fn().mockImplementation(() => {
+        callCount++;
+        return Promise.resolve({
+          items: [`item${callCount}`],
+          pageInfo: {
+            hasNextPage: callCount < 5,
+            hasPreviousPage: callCount > 1,
+            endCursor: `cursor${callCount}`,
+          },
+          totalCount: 5,
+        });
+      });
+
+      const result = await fetchMultiplePages(mockFetcher, {
+        fetchAll: true,
+        pageSize: 1,
+      });
+
+      expect(result.items).toEqual(['item1', 'item2', 'item3', 'item4', 'item5']);
+      expect(result.pagesFetched).toBe(5);
+      expect(result.hasMore).toBe(false);
+      expect(mockFetcher).toHaveBeenCalledTimes(5);
     });
   });
 
@@ -244,6 +295,108 @@ describe('PaginationManager', () => {
       expect(result.pageInfo.hasNextPage).toBe(false);
       expect(result.pageInfo.hasPreviousPage).toBe(false);
       expect(result.totalCount).toBe(0);
+    });
+  });
+
+  describe('createPaginationIterator', () => {
+    it('should iterate through pages', async () => {
+      let callCount = 0;
+      const mockFetcher = vi.fn().mockImplementation(() => {
+        callCount++;
+        return Promise.resolve({
+          items: [`item${callCount}`],
+          pageInfo: {
+            hasNextPage: callCount < 3,
+            hasPreviousPage: callCount > 1,
+            endCursor: callCount < 3 ? `cursor${callCount}` : undefined,
+          },
+          totalCount: 3,
+        });
+      });
+
+      const iterator = createPaginationIterator(mockFetcher, 1);
+      const results: string[][] = [];
+
+      for await (const page of iterator) {
+        results.push(page);
+      }
+
+      expect(results).toEqual([['item1'], ['item2'], ['item3']]);
+      expect(mockFetcher).toHaveBeenCalledTimes(3);
+      expect(mockFetcher).toHaveBeenNthCalledWith(1, undefined, 1);
+      expect(mockFetcher).toHaveBeenNthCalledWith(2, 'cursor1', 1);
+      expect(mockFetcher).toHaveBeenNthCalledWith(3, 'cursor2', 1);
+    });
+
+    it('should handle empty result set', async () => {
+      const mockFetcher = vi.fn().mockResolvedValue({
+        items: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+        totalCount: 0,
+      });
+
+      const iterator = createPaginationIterator(mockFetcher);
+      const results: string[][] = [];
+
+      for await (const page of iterator) {
+        results.push(page);
+      }
+
+      expect(results).toEqual([[]]);
+      expect(mockFetcher).toHaveBeenCalledOnce();
+    });
+
+    it('should handle errors during iteration', async () => {
+      const mockFetcher = vi
+        .fn()
+        .mockResolvedValueOnce({
+          items: ['item1'],
+          pageInfo: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+            endCursor: 'cursor1',
+          },
+          totalCount: 3,
+        })
+        .mockRejectedValueOnce(new Error('Fetch error'));
+
+      const iterator = createPaginationIterator(mockFetcher);
+      const results: string[][] = [];
+
+      try {
+        for await (const page of iterator) {
+          results.push(page);
+        }
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toBe('Fetch error');
+      }
+
+      expect(results).toEqual([['item1']]);
+      expect(mockFetcher).toHaveBeenCalledTimes(2);
+    });
+
+    it('should use default page size when not specified', async () => {
+      const mockFetcher = vi.fn().mockResolvedValue({
+        items: ['item'],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+        totalCount: 1,
+      });
+
+      const iterator = createPaginationIterator(mockFetcher);
+      const results: string[][] = [];
+
+      for await (const page of iterator) {
+        results.push(page);
+      }
+
+      expect(mockFetcher).toHaveBeenCalledWith(undefined, 50);
     });
   });
 });

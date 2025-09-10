@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 
-import { describe, it, expect, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
 import nock from 'nock';
 import { BaseDeepSourceClient } from '../../client/base-client.js';
 import { GraphQLResponse } from '../../types/graphql-responses.js';
@@ -26,6 +26,13 @@ class TestableBaseClient extends BaseDeepSourceClient {
 
   async testFindProjectByKey(projectKey: string) {
     return this.findProjectByKey(projectKey);
+  }
+
+  async testFetchWithPagination<T>(
+    fetcher: (params: any) => Promise<any>,
+    params: any
+  ): Promise<any> {
+    return this.fetchWithPagination<T>(fetcher, params);
   }
 
   // skipcq: JS-0105 - Test helper method calling static method
@@ -376,6 +383,145 @@ describe('BaseDeepSourceClient', () => {
       const result = client.testExtractErrorMessages(errors);
 
       expect(result).toBe('');
+    });
+  });
+
+  describe('fetchWithPagination', () => {
+    let client: TestableBaseClient;
+
+    beforeEach(() => {
+      client = new TestableBaseClient(API_KEY);
+    });
+
+    it('should fetch single page when max_pages is not provided', async () => {
+      const mockFetcher = vi.fn().mockResolvedValue({
+        items: ['item1', 'item2'],
+        pageInfo: {
+          hasNextPage: true,
+          hasPreviousPage: false,
+          endCursor: 'cursor1',
+        },
+        totalCount: 10,
+      });
+
+      const result = await client.testFetchWithPagination(mockFetcher, {
+        first: 2,
+      });
+
+      expect(result.items).toEqual(['item1', 'item2']);
+      expect(mockFetcher).toHaveBeenCalledOnce();
+      expect(mockFetcher).toHaveBeenCalledWith({ first: 2 });
+    });
+
+    it('should fetch multiple pages when max_pages is provided', async () => {
+      const page1 = {
+        items: ['item1', 'item2'],
+        pageInfo: {
+          hasNextPage: true,
+          hasPreviousPage: false,
+          endCursor: 'cursor1',
+        },
+        totalCount: 5,
+      };
+
+      const page2 = {
+        items: ['item3', 'item4'],
+        pageInfo: {
+          hasNextPage: true,
+          hasPreviousPage: true,
+          startCursor: 'cursor1',
+          endCursor: 'cursor2',
+        },
+        totalCount: 5,
+      };
+
+      const page3 = {
+        items: ['item5'],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: true,
+          startCursor: 'cursor2',
+        },
+        totalCount: 5,
+      };
+
+      const mockFetcher = vi
+        .fn()
+        .mockResolvedValueOnce(page1)
+        .mockResolvedValueOnce(page2)
+        .mockResolvedValueOnce(page3);
+
+      const result = await client.testFetchWithPagination(mockFetcher, {
+        first: 2,
+        max_pages: 5,
+      });
+
+      expect(result.items).toEqual(['item1', 'item2', 'item3', 'item4', 'item5']);
+      expect(result.pageInfo.hasNextPage).toBe(false);
+      expect(mockFetcher).toHaveBeenCalledTimes(3);
+    });
+
+    it('should handle page_size alias', async () => {
+      const mockFetcher = vi.fn().mockResolvedValue({
+        items: ['item1'],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+        totalCount: 1,
+      });
+
+      await client.testFetchWithPagination(mockFetcher, {
+        page_size: 10,
+      });
+
+      expect(mockFetcher).toHaveBeenCalledWith({ first: 10 });
+    });
+
+    it('should return correct structure when max_pages is 1', async () => {
+      const mockFetcher = vi.fn().mockResolvedValue({
+        items: ['item1', 'item2'],
+        pageInfo: {
+          hasNextPage: true,
+          hasPreviousPage: false,
+          endCursor: 'cursor1',
+        },
+        totalCount: 10,
+      });
+
+      const result = await client.testFetchWithPagination(mockFetcher, {
+        first: 2,
+        max_pages: 1,
+      });
+
+      expect(result.items).toEqual(['item1', 'item2']);
+      expect(result.pageInfo.hasNextPage).toBe(true);
+      expect(result.pageInfo.endCursor).toBe('cursor1');
+      expect(result.totalCount).toBe(10);
+    });
+
+    it('should handle errors during multi-page fetching', async () => {
+      const mockFetcher = vi
+        .fn()
+        .mockResolvedValueOnce({
+          items: ['item1'],
+          pageInfo: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+            endCursor: 'cursor1',
+          },
+          totalCount: 3,
+        })
+        .mockRejectedValueOnce(new Error('Network error'));
+
+      await expect(
+        client.testFetchWithPagination(mockFetcher, {
+          first: 1,
+          max_pages: 3,
+        })
+      ).rejects.toThrow('Network error');
+
+      expect(mockFetcher).toHaveBeenCalledTimes(2);
     });
   });
 });
