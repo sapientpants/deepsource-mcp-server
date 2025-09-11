@@ -11,6 +11,7 @@ import process from 'node:process';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { createLogger } from './utils/logging/logger.js';
+import { VERSION } from './version.js';
 // import { RepositoryFactory } from './infrastructure/factories/repository.factory.js';
 import { ToolRegistry } from './server/tool-registry.js';
 import {
@@ -169,7 +170,9 @@ export function createAndConfigureToolRegistry(server: McpServer): ToolRegistry 
  * Main function that starts the MCP server
  */
 export async function main() {
-  logger.info('Starting DeepSource MCP Server (Registry Implementation)');
+  logger.info('Starting DeepSource MCP Server (Registry Implementation)', {
+    version: VERSION,
+  });
 
   // Validate environment
   validateEnvironment();
@@ -177,7 +180,7 @@ export async function main() {
   // Create MCP server
   const server = new McpServer({
     name: 'deepsource-mcp-server',
-    version: '1.2.2',
+    version: VERSION,
   });
 
   // Create and configure tool registry

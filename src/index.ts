@@ -12,6 +12,7 @@
 
 import { createLogger } from './utils/logging/logger.js';
 import { DeepSourceMCPServer } from './server/mcp-server.js';
+import { VERSION, getVersion } from './version.js';
 
 // Create logger instance for index.ts
 const logger = createLogger('DeepSourceMCP:index');
@@ -56,16 +57,47 @@ export function getMcpServer() {
 
 // Main entry point
 async function main(): Promise<void> {
+  // Check for version flag before anything else
+  const args = process.argv.slice(2);
+  if (args.includes('--version') || args.includes('-v')) {
+    // eslint-disable-next-line no-console
+    console.log(`deepsource-mcp-server version ${VERSION}`);
+    process.exit(0);
+  }
+
+  // Check for help flag
+  if (args.includes('--help') || args.includes('-h')) {
+    /* eslint-disable no-console */
+    console.log(`DeepSource MCP Server v${VERSION}`);
+    console.log('\nUsage: deepsource-mcp-server [options]');
+    console.log('\nOptions:');
+    console.log('  -v, --version  Display version information');
+    console.log('  -h, --help     Display this help message');
+    console.log('\nEnvironment Variables:');
+    console.log('  DEEPSOURCE_API_KEY  DeepSource API key (required)');
+    console.log('  LOG_FILE            Path to log file (optional)');
+    console.log('  LOG_LEVEL           Minimum log level: DEBUG, INFO, WARN, ERROR (optional)');
+    /* eslint-enable no-console */
+    process.exit(0);
+  }
+
   try {
+    // Log startup with version
+    logger.info(`Starting DeepSource MCP Server v${VERSION}`, {
+      version: VERSION,
+      node: process.version,
+      platform: process.platform,
+    });
+
     // Initialize the server
     await initializeServer();
 
     // Start the server if not in test mode
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'test') {
-      logger.info('Starting MCP server...');
+      logger.info('Starting MCP server connection...');
       await mcpServer.current.start();
-      logger.info('MCP server started successfully');
+      logger.info('MCP server started successfully', { version: getVersion() });
     }
   } catch (error) {
     logger.error('Failed to start MCP server', error);

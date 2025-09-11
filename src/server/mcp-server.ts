@@ -16,6 +16,7 @@ import { ToolRegistry } from './tool-registry.js';
 import { BaseHandlerDeps } from '../handlers/base/handler.interface.js';
 import { createDefaultHandlerDeps } from '../handlers/base/handler.factory.js';
 import { registerDeepSourceTools } from './tool-registration.js';
+import { VERSION } from '../version.js';
 
 const logger = createLogger('MCPServer');
 
@@ -42,7 +43,7 @@ export interface MCPServerConfig {
  */
 const DEFAULT_CONFIG: Required<Omit<MCPServerConfig, 'handlerDeps' | 'transport'>> = {
   name: 'deepsource-mcp-server',
-  version: '1.2.0',
+  version: VERSION,
   autoRegisterTools: true,
   autoStart: false,
 };
