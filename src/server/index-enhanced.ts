@@ -8,6 +8,7 @@ import { createLogger } from '../utils/logging/logger.js';
 import { createDefaultHandlerDeps } from '../handlers/base/handler.factory.js';
 import { EnhancedToolRegistry } from './tool-registry-enhanced.js';
 import { getToolDiscoveryConfig } from '../config/tool-discovery.config.js';
+import { VERSION } from '../version.js';
 
 const logger = createLogger('EnhancedMCPServer');
 
@@ -15,9 +16,13 @@ const logger = createLogger('EnhancedMCPServer');
  * Initializes and runs the enhanced MCP server with tool discovery
  */
 export async function runEnhancedServer(): Promise<void> {
+  logger.info(`Starting DeepSource MCP Enhanced Server v${VERSION}`, {
+    version: VERSION,
+  });
+
   const server = new McpServer({
     name: 'deepsource-mcp-enhanced',
-    version: '1.0.0',
+    version: VERSION,
   });
 
   const transport = new StdioServerTransport();

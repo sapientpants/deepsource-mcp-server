@@ -27,7 +27,7 @@
   },
   "scripts": {
     "build:watch": "tsc -p tsconfig.build.json --watch",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node scripts/build-with-version.js",
     "changeset:status": "changeset status --since=main",
     "changeset": "changeset",
     "ci:local:fast": "./scripts/ci-local.sh --fast",
