@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { spawn } from 'child_process';
 import { join } from 'path';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 
 describe('CLI Version Flag', () => {
   const indexPath = join(process.cwd(), 'dist', 'index.js');
@@ -15,6 +15,11 @@ describe('CLI Version Flag', () => {
     // Get the actual version from package.json
     const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'));
     version = packageJson.version;
+
+    // Ensure the dist file exists
+    if (!existsSync(indexPath)) {
+      throw new Error(`Built file not found at ${indexPath}. Run 'pnpm build' first.`);
+    }
   });
 
   describe('--version flag', () => {
