@@ -22,7 +22,8 @@ exclude_patterns = [
   "jest.setup.ts",
   "vitest.setup.ts",
   "docs/**",
-  "examples/**"
+  "examples/**",
+  "scripts/**"
 ]
 
 [[analyzers]]
