@@ -55,14 +55,13 @@ export function getMcpServer() {
   return mcpServer.current.getMcpServer();
 }
 
-// Main entry point
-async function main(): Promise<void> {
+// CLI argument handler for testing
+export function handleCliArgs(args: string[]): boolean {
   // Check for version flag before anything else
-  const args = process.argv.slice(2);
   if (args.includes('--version') || args.includes('-v')) {
     // eslint-disable-next-line no-console
     console.log(`deepsource-mcp-server version ${VERSION}`);
-    process.exit(0);
+    return true;
   }
 
   // Check for help flag
@@ -78,6 +77,18 @@ async function main(): Promise<void> {
     console.log('  LOG_FILE            Path to log file (optional)');
     console.log('  LOG_LEVEL           Minimum log level: DEBUG, INFO, WARN, ERROR (optional)');
     /* eslint-enable no-console */
+    return true;
+  }
+
+  return false;
+}
+
+// Main entry point
+async function main(): Promise<void> {
+  const args = process.argv.slice(2);
+
+  // Handle CLI args and exit if needed
+  if (handleCliArgs(args)) {
     process.exit(0);
   }
 
