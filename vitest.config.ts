@@ -25,6 +25,7 @@ export default defineConfig({
         'node_modules/**',
         'src/dev/**', // Development utilities - no coverage required
         '**/*.example.ts', // Example files - not part of production code
+        'scripts/**', // Build scripts - not part of production code
       ],
       thresholds: {
         branches: 80,
