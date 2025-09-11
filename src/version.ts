@@ -92,9 +92,9 @@ export function parseVersion(versionString: string): VersionInfo | null {
 
   return {
     version: versionString,
-    major: parseInt(majorStr, 10),
-    minor: parseInt(minorStr, 10),
-    patch: parseInt(patchStr, 10),
+    major: parseInt(majorStr!, 10),
+    minor: parseInt(minorStr!, 10),
+    patch: parseInt(patchStr!, 10),
     ...(prerelease && { prerelease }),
     ...(build && { build }),
   };
