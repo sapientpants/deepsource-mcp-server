@@ -90,11 +90,18 @@ export function parseVersion(versionString: string): VersionInfo | null {
 
   const [, majorStr, minorStr, patchStr, prerelease, build] = match;
 
+  // These are guaranteed to be strings when the regex matches
+  // The regex requires \d+ for major, minor, and patch
+  if (!majorStr || !minorStr || !patchStr) {
+    // This should never happen due to regex, but satisfies TypeScript
+    return null;
+  }
+
   return {
     version: versionString,
-    major: parseInt(majorStr!, 10),
-    minor: parseInt(minorStr!, 10),
-    patch: parseInt(patchStr!, 10),
+    major: parseInt(majorStr, 10),
+    minor: parseInt(minorStr, 10),
+    patch: parseInt(patchStr, 10),
     ...(prerelease && { prerelease }),
     ...(build && { build }),
   };
@@ -153,26 +160,24 @@ export function compareVersions(v1: string, v2: string): number {
 }
 
 // Initialize version - try to read from package.json, fallback to build-time constant
-let VERSION: string;
+function determineVersion(): string {
+  const packageVersion = readVersionFromPackageJson();
+  if (packageVersion && validateVersion(packageVersion)) {
+    return packageVersion;
+  }
 
-const packageVersion = readVersionFromPackageJson();
-if (packageVersion) {
-  VERSION = packageVersion;
-} else {
   // This will be replaced during build process
-  VERSION = '__BUILD_VERSION__';
+  const buildVersion = '__BUILD_VERSION__';
 
   // If still the placeholder, use a fallback version
-  if (VERSION === '__BUILD_VERSION__') {
-    VERSION = '0.0.0-dev';
+  if (buildVersion === '__BUILD_VERSION__' || !validateVersion(buildVersion)) {
+    return '0.0.0-dev';
   }
+
+  return buildVersion;
 }
 
-// Validate the version format
-if (!validateVersion(VERSION)) {
-  // If version is invalid, use a safe fallback
-  VERSION = '0.0.0-dev';
-}
+const VERSION = determineVersion();
 
 /**
  * The current version of the DeepSource MCP Server

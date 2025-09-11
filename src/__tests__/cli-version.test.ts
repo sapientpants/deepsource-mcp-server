@@ -149,14 +149,6 @@ describe('CLI Version Flag', () => {
       // Since we need DEEPSOURCE_API_KEY to run normally
       // We'll create a simpler unit test for the logging behavior
 
-      // Mock the logger
-      const mockLogger = {
-        info: vi.fn(),
-        error: vi.fn(),
-        warn: vi.fn(),
-        debug: vi.fn(),
-      };
-
       // This is more of an integration test placeholder
       // The actual test would need to:
       // 1. Set DEEPSOURCE_API_KEY
