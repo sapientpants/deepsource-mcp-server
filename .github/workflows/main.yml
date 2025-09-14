@@ -117,6 +117,16 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # =============================================================================
+      # BUILD FOR CHANGESET
+      # Build TypeScript to ensure custom changelog generator is available
+      # =============================================================================
+
+      - name: Build for changeset
+        # Must build before versioning since custom changelog is TypeScript
+        # The compiled JS file is needed at: ./dist/src/dev/changelog-custom.js
+        run: pnpm build
+
+      # =============================================================================
       # VERSION MANAGEMENT
       # Determines if release needed based on changesets
       # =============================================================================
@@ -139,8 +149,11 @@ jobs:
 
       - name: Build
         # Skip build if no version change (e.g., docs-only commits)
+        # Clean and rebuild to ensure SBOM reflects exact build artifacts
         if: steps.version.outputs.changed == 'true'
-        run: pnpm build
+        run: |
+          pnpm clean  # Remove any previous build artifacts
+          pnpm build  # Fresh build for release
 
       - name: Generate SBOM
         # Software Bill of Materials for supply chain security
