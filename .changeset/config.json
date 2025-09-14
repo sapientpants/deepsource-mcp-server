@@ -3,7 +3,7 @@
   "changelog": [
     "../dist/src/dev/changelog-custom.js",
     {
-      "repo": "sapientpants/agentic-node-ts-starter"
+      "repo": "sapientpants/deepsource-mcp-server"
     }
   ],
   "commit": false,
