@@ -11,7 +11,7 @@ const changelogFunctions: ChangelogFunctions = {
     const opts = options as Options;
     if (!opts.repo) {
       throw new Error(
-        'Please provide a repo to this changelog generator like this:\n"changelog": ["@changesets/changelog-github", { "repo": "org/repo" }]'
+        'Please provide a repo to this changelog generator like this:\n"changelog": ["<custom-changelog-generator>", { "repo": "org/repo" }]'
       );
     }
     if (dependenciesUpdated.length === 0) return '';
