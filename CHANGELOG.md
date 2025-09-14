@@ -4,7 +4,7 @@
 
 ### Minor Changes
 
-- [#164](https://github.com/sapientpants/deepsource-mcp-server/pull/164) [`8939e69`](https://github.com/sapientpants/deepsource-mcp-server/commit/8939e6975ba7ef4f7c12fe6d72175b1dbee593bc) Thanks [@sapientpants](https://github.com/sapientpants)! - Add unified versioning system with single source of truth
+- [#164](https://github.com/sapientpants/deepsource-mcp-server/pull/164) [`8939e69`](https://github.com/sapientpants/deepsource-mcp-server/commit/8939e6975ba7ef4f7c12fe6d72175b1dbee593bc) - Add unified versioning system with single source of truth
   - Created central `version.ts` module that reads from package.json
   - Added CLI support for `--version` and `-v` flags to display version
   - Added `--help` and `-h` flags with comprehensive help text
@@ -26,7 +26,7 @@
 
 ### Patch Changes
 
-- [#163](https://github.com/sapientpants/deepsource-mcp-server/pull/163) [`e181abc`](https://github.com/sapientpants/deepsource-mcp-server/commit/e181abcef0b30d442df5285a999f80b94b9e3ef4) Thanks [@sapientpants](https://github.com/sapientpants)! - Update Node.js to 22.19.0 and pnpm to 10.15.1
+- [#163](https://github.com/sapientpants/deepsource-mcp-server/pull/163) [`e181abc`](https://github.com/sapientpants/deepsource-mcp-server/commit/e181abcef0b30d442df5285a999f80b94b9e3ef4) - Update Node.js to 22.19.0 and pnpm to 10.15.1
   - Update Node.js from 22.0.0 to 22.19.0 (latest 22.x LTS)
   - Update pnpm from 10.15.0 to 10.15.1 (latest version)
   - Configure mise for version management
@@ -37,7 +37,7 @@
 
 ### Minor Changes
 
-- [#162](https://github.com/sapientpants/deepsource-mcp-server/pull/162) [`56d4985`](https://github.com/sapientpants/deepsource-mcp-server/commit/56d4985bb76ef7753b59f34d215337d25ed46c9d) Thanks [@sapientpants](https://github.com/sapientpants)! - feat: implement true pagination for all list queries
+- [#162](https://github.com/sapientpants/deepsource-mcp-server/pull/162) [`56d4985`](https://github.com/sapientpants/deepsource-mcp-server/commit/56d4985bb76ef7753b59f34d215337d25ed46c9d) - feat: implement true pagination for all list queries
 
   Adds comprehensive cursor-based pagination support across all list endpoints to handle large datasets efficiently and provide deterministic, complete results.
 
@@ -126,7 +126,7 @@
 
 ### Patch Changes
 
-- [#151](https://github.com/sapientpants/deepsource-mcp-server/pull/151) [`c7c4569`](https://github.com/sapientpants/deepsource-mcp-server/commit/c7c45697c4f3c9d07620614a47ff503c7e76015d) Thanks [@sapientpants](https://github.com/sapientpants)! - Update dependencies to latest versions
+- [#151](https://github.com/sapientpants/deepsource-mcp-server/pull/151) [`c7c4569`](https://github.com/sapientpants/deepsource-mcp-server/commit/c7c45697c4f3c9d07620614a47ff503c7e76015d) - Update dependencies to latest versions
   - Updated pino from 9.9.0 to 9.9.4 (production dependency)
   - Updated @changesets/cli from 2.29.6 to 2.29.7
   - Updated @cyclonedx/cdxgen from 11.6.0 to 11.7.0
@@ -144,7 +144,7 @@
 
 ### Patch Changes
 
-- [#142](https://github.com/sapientpants/deepsource-mcp-server/pull/142) [`04f7440`](https://github.com/sapientpants/deepsource-mcp-server/commit/04f744073131e99d4613ba661ccb93b090001ffc) Thanks [@sapientpants](https://github.com/sapientpants)! - Fixed TypeScript strict mode compatibility and integrated agentic-node-ts-starter template
+- [#142](https://github.com/sapientpants/deepsource-mcp-server/pull/142) [`04f7440`](https://github.com/sapientpants/deepsource-mcp-server/commit/04f744073131e99d4613ba661ccb93b090001ffc) - Fixed TypeScript strict mode compatibility and integrated agentic-node-ts-starter template
   - Resolved hundreds of `exactOptionalPropertyTypes` errors across the codebase
   - Migrated test suite from Jest to Vitest
   - Enhanced CI/CD workflows with security scanning and validation
