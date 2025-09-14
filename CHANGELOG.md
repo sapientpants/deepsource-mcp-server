@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.6.1
+
+### Patch Changes
+
+- [#166](https://github.com/sapientpants/deepsource-mcp-server/pull/166) [`8828190`](https://github.com/sapientpants/deepsource-mcp-server/commit/8828190442628c0860df080f47ebbbe308e7a406) - Fix changelog format configuration and add custom changelog generator for improved release notes formatting
+
+- [#169](https://github.com/sapientpants/deepsource-mcp-server/pull/169) [`1603c83`](https://github.com/sapientpants/deepsource-mcp-server/commit/1603c83ec519be914179785bb821d15cf1a9dfb8) - fix: add build step before changeset versioning in ci
+  - Build TypeScript before running changeset version command to ensure custom changelog generator is available
+  - Clean build directory before final release build to ensure SBOM reflects exact release artifacts
+  - Fixes CI pipeline failure when using custom changelog generator
+
+- [#168](https://github.com/sapientpants/deepsource-mcp-server/pull/168) [`b7ab8d4`](https://github.com/sapientpants/deepsource-mcp-server/commit/b7ab8d49007377e31bdd70b4d06f047f7483da87) - chore: remove unused dependencies and Jest configuration
+  - Removed unused production dependencies: cors, express, pino, pino-roll, pino-syslog
+  - Removed unused dev dependencies related to Jest (project uses Vitest): @eslint/js, @fast-check/vitest, @jest/globals, @types/cors, @types/express, @types/jest, @types/supertest, fast-check, jest, pino-pretty, supertest, ts-jest, ts-node, ts-node-dev
+  - Removed jest.config.js as the project uses Vitest for testing
+
+- [#167](https://github.com/sapientpants/deepsource-mcp-server/pull/167) [`ee5c975`](https://github.com/sapientpants/deepsource-mcp-server/commit/ee5c975d442d45ea63c11d6168289c8942de3fcd) - Update dependencies to latest versions
+  - Update @modelcontextprotocol/sdk from 1.17.4 to 1.18.0
+  - Update axios from 1.11.0 to 1.12.1
+  - Update pino from 9.9.4 to 9.9.5
+  - Update @types/node from 24.3.1 to 24.3.3 (dev dependency)
+  - Constrain zod to >=3.25.0 <4.0.0 to prevent breaking changes from v4
+
+  All tests pass and no security vulnerabilities found.
+
 ## 1.6.0
 
 ### Minor Changes
