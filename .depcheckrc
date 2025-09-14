@@ -1,0 +1,41 @@
+{
+  "ignores": [
+    "@changesets/cli",
+    "@commitlint/*",
+    "@cyclonedx/cdxgen",
+    "@typescript-eslint/*",
+    "@vitest/coverage-v8",
+    "eslint-*",
+    "globals",
+    "husky",
+    "jsonc-eslint-parser",
+    "lint-staged",
+    "markdownlint-cli2",
+    "prettier",
+    "rimraf",
+    "vite",
+    "yaml-lint"
+  ],
+  "skip-missing": false,
+  "parsers": {
+    "**/*.ts": "typescript",
+    "**/*.js": "es6",
+    "**/*.json": "json"
+  },
+  "detectors": [
+    "requireCallExpression",
+    "importDeclaration",
+    "importCallExpression",
+    "typescriptImportType",
+    "typescriptImportEqualsDeclaration",
+    "exportDeclaration"
+  ],
+  "specials": [
+    "bin",
+    "eslint",
+    "husky",
+    "lint-staged",
+    "prettier",
+    "vitest"
+  ]
+}

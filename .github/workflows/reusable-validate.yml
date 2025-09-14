@@ -73,6 +73,12 @@ jobs:
         # To fix: Run 'pnpm update' or add overrides in package.json
         run: pnpm audit --audit-level critical
 
+      - name: Check for unused dependencies
+        # Validate all declared dependencies are actually used
+        # FAILS IF: Unused dependencies found
+        # To fix: Remove unused deps or add to .depcheckrc ignore list
+        run: pnpm deps:check
+
       - name: Type checking
         # Validate TypeScript types without emitting files
         # FAILS IF: Type errors in any .ts file
