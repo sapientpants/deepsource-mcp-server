@@ -5,6 +5,7 @@
     "@cyclonedx/cdxgen",
     "@typescript-eslint/*",
     "@vitest/coverage-v8",
+    "changelog-github-custom",
     "eslint-*",
     "globals",
     "husky",
