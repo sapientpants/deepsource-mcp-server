@@ -7,9 +7,6 @@ import { BaseDeepSourceClient } from './base-client.js';
 import { DeepSourceIssue, IssueFilterParams } from '../models/issues.js';
 import { PaginatedResponse, PageInfo } from '../utils/pagination/types.js';
 import { isErrorWithMessage } from '../utils/errors/handlers.js';
-// TODO: Enable optimized queries in future iteration
-// import { createOptimizedIssuesQuery } from '../utils/graphql/optimized-queries.js';
-// import { queryPerformanceTracker } from '../utils/graphql/query-optimizer.js';
 
 /**
  * Client for interacting with DeepSource issues API

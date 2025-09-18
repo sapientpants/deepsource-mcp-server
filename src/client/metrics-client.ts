@@ -18,9 +18,6 @@ import {
   MetricHistoryParams,
   MetricHistoryResponse,
 } from '../types/metrics.js';
-// TODO: Enable optimized queries in future iteration
-// import { createOptimizedMetricsQuery } from '../utils/graphql/optimized-queries.js';
-// import { queryPerformanceTracker } from '../utils/graphql/query-optimizer.js';
 
 /**
  * Client for interacting with DeepSource metrics API
