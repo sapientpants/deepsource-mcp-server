@@ -60,7 +60,7 @@ async function updateSchema() {
     writeFileSync(SCHEMA_FILE_PATH, sdl);
 
     // Calculate file size for logging
-    const sizeKB = (sdl.length / 1024).toFixed(2);
+    const sizeKB = (Buffer.byteLength(sdl, 'utf8') / 1024).toFixed(2);
 
     // eslint-disable-next-line no-console
     console.log(`✅ Schema updated successfully!`);
