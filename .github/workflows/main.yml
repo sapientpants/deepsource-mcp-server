@@ -117,16 +117,6 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # =============================================================================
-      # BUILD FOR CHANGESET
-      # Build TypeScript to ensure custom changelog generator is available
-      # =============================================================================
-
-      - name: Build for changeset
-        # Must build before versioning since custom changelog is TypeScript
-        # The compiled JS file is needed at: ./dist/src/dev/changelog-custom.js
-        run: pnpm build
-
-      # =============================================================================
       # VERSION MANAGEMENT
       # Determines if release needed based on changesets
       # =============================================================================
