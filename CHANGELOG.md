@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.3
+
+### Patch Changes
+
+- [#177](https://github.com/sapientpants/deepsource-mcp-server/pull/177) [`a670251`](https://github.com/sapientpants/deepsource-mcp-server/commit/a67025187410d557446b69951345aef8a9e476ca) - feat: add script to update GraphQL schema from DeepSource API
+  - Add reusable script to fetch and update GraphQL schema via introspection
+  - Add 'schema:update' npm script for easy schema updates
+  - Install graphql package for schema introspection utilities
+  - Update schema to latest version from DeepSource API
+
 ## 1.6.2
 
 ### Patch Changes
