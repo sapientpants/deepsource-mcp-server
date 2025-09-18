@@ -8,6 +8,7 @@ import {
 } from './base/handler.factory.js';
 import { createLogger, Logger } from '../utils/logging/logger.js';
 import { IQualityMetricsRepository } from '../domain/aggregates/quality-metrics/quality-metrics.repository.js';
+import { QualityMetrics } from '../domain/aggregates/quality-metrics/quality-metrics.aggregate.js';
 import { RepositoryFactory } from '../infrastructure/factories/repository.factory.js';
 import { asProjectKey } from '../types/branded.js';
 import { MCPErrorFormatter, validateNonEmptyString } from '../utils/error-handling/index.js';
@@ -84,13 +85,13 @@ export function createQualityMetricsHandlerWithRepo(deps: QualityMetricsHandlerD
       const projectKeyBranded = asProjectKey(projectKey);
       deps.logger.info('Fetching quality metrics from repository', { projectKey, shortcodeIn });
 
-      // Get all metrics for the project from repository
-      const allMetrics = await deps.qualityMetricsRepository.findByProject(projectKeyBranded);
-
-      // Filter by shortcode if specified (will be optimized with server-side filtering)
+      // Get metrics from repository with server-side filtering if shortcodes specified
       const filteredMetrics = shortcodeIn
-        ? allMetrics.filter((metric) => shortcodeIn.includes(metric.configuration.shortcode))
-        : allMetrics;
+        ? await deps.qualityMetricsRepository.findByProjectWithFilter(
+            projectKeyBranded,
+            shortcodeIn
+          )
+        : await deps.qualityMetricsRepository.findByProject(projectKeyBranded);
 
       deps.logger.info('Successfully fetched quality metrics', {
         count: filteredMetrics.length,
@@ -98,7 +99,7 @@ export function createQualityMetricsHandlerWithRepo(deps: QualityMetricsHandlerD
       });
 
       const metricsData = {
-        metrics: filteredMetrics.map((domainMetric) => ({
+        metrics: filteredMetrics.map((domainMetric: QualityMetrics) => ({
           name: domainMetric.configuration.name,
           shortcode: domainMetric.configuration.shortcode,
           description: domainMetric.configuration.description,

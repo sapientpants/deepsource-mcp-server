@@ -23,8 +23,10 @@ vi.mock('../../utils/logging/logger', () => ({
 
 // Mock the repository and factory
 const mockFindByProject = vi.fn();
+const mockFindByProjectWithFilter = vi.fn();
 const mockQualityMetricsRepository = {
   findByProject: mockFindByProject,
+  findByProjectWithFilter: mockFindByProjectWithFilter,
 } as unknown as IQualityMetricsRepository;
 
 const mockCreateQualityMetricsRepository = vi.fn(() => mockQualityMetricsRepository);
@@ -179,8 +181,8 @@ describe('Quality Metrics Handler', () => {
         } as QualityMetrics,
       ];
 
-      // Set up the mock to return the metrics
-      mockFindByProject.mockResolvedValue(mockMetrics);
+      // Set up the mock to return only the LCV metric when filtering
+      mockFindByProjectWithFilter.mockResolvedValue([mockMetrics[0]]);
 
       const handler = createQualityMetricsHandlerWithRepo({
         qualityMetricsRepository: mockQualityMetricsRepository,
@@ -193,8 +195,8 @@ describe('Quality Metrics Handler', () => {
         shortcodeIn: ['LCV'],
       });
 
-      // Verify repository was used
-      expect(mockFindByProject).toHaveBeenCalledWith(projectKey);
+      // Verify repository was used with filter
+      expect(mockFindByProjectWithFilter).toHaveBeenCalledWith(projectKey, ['LCV']);
 
       // Verify only LCV metric is returned
       const parsedContent = JSON.parse(result.content[0].text);
