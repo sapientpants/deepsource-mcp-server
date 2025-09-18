@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.2
+
+### Patch Changes
+
+- [#174](https://github.com/sapientpants/deepsource-mcp-server/pull/174) [`b94be08`](https://github.com/sapientpants/deepsource-mcp-server/commit/b94be0874031e5fc8ca7ebb202c35d68a73e3c2f) - chore: replace local changelog generator with @sapientpants/changelog-github-custom package
+  - Removed custom changelog implementation in favor of the community package
+  - Updated changeset config to use @sapientpants/changelog-github-custom
+  - Added @sapientpants/changelog-github-custom as a dev dependency
+  - Simplified maintenance by using an established solution
+
 ## 1.6.1
 
 ### Patch Changes
