@@ -158,6 +158,43 @@ export class QualityMetricsRepository implements IQualityMetricsRepository {
   }
 
   /**
+   * Finds metrics for a project with server-side filtering
+   *
+   * @param projectKey - The project key
+   * @param shortcodeIn - Array of metric shortcodes to filter by
+   * @returns Filtered quality metrics for the project
+   */
+  async findByProjectWithFilter(
+    projectKey: ProjectKey,
+    shortcodeIn: MetricShortcode[]
+  ): Promise<QualityMetrics[]> {
+    try {
+      logger.debug('Finding metrics for project with filter', { projectKey, shortcodeIn });
+
+      const repositoryId = await this.getRepositoryId(projectKey);
+      // This now uses server-side filtering via the optimized client
+      const apiMetrics = await this.client.getQualityMetrics(projectKey, { shortcodeIn });
+
+      const domainMetrics = QualityMetricsMapper.toDomainFromList(
+        apiMetrics,
+        projectKey,
+        repositoryId
+      );
+
+      logger.debug('Filtered metrics found for project', {
+        projectKey,
+        count: domainMetrics.length,
+        requestedShortcodes: shortcodeIn.length,
+      });
+
+      return domainMetrics;
+    } catch (error) {
+      logger.error('Error finding filtered metrics by project', { projectKey, shortcodeIn, error });
+      throw error;
+    }
+  }
+
+  /**
    * Finds metrics by project and metric type
    *
    * @param projectKey - The project key

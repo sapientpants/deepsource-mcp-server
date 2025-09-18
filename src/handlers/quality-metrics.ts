@@ -87,7 +87,7 @@ export function createQualityMetricsHandlerWithRepo(deps: QualityMetricsHandlerD
       // Get all metrics for the project from repository
       const allMetrics = await deps.qualityMetricsRepository.findByProject(projectKeyBranded);
 
-      // Filter by shortcode if specified
+      // Filter by shortcode if specified (will be optimized with server-side filtering)
       const filteredMetrics = shortcodeIn
         ? allMetrics.filter((metric) => shortcodeIn.includes(metric.configuration.shortcode))
         : allMetrics;

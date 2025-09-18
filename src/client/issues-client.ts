@@ -7,6 +7,9 @@ import { BaseDeepSourceClient } from './base-client.js';
 import { DeepSourceIssue, IssueFilterParams } from '../models/issues.js';
 import { PaginatedResponse, PageInfo } from '../utils/pagination/types.js';
 import { isErrorWithMessage } from '../utils/errors/handlers.js';
+// TODO: Enable optimized queries in future iteration
+// import { createOptimizedIssuesQuery } from '../utils/graphql/optimized-queries.js';
+// import { queryPerformanceTracker } from '../utils/graphql/query-optimizer.js';
 
 /**
  * Client for interacting with DeepSource issues API
@@ -45,6 +48,8 @@ export class IssuesClient extends BaseDeepSourceClient {
         pageParams: IssueFilterParams
       ): Promise<PaginatedResponse<DeepSourceIssue>> => {
         const normalizedParams = BaseDeepSourceClient.normalizePaginationParams(pageParams);
+
+        // For now, use the original query until optimization is fully implemented
         const query = IssuesClient.buildIssuesQuery();
 
         const response = await this.executeGraphQL(query, {
@@ -123,6 +128,7 @@ export class IssuesClient extends BaseDeepSourceClient {
 
   /**
    * Builds the GraphQL query for fetching issues
+   * @deprecated Use createOptimizedIssuesQuery instead for better performance
    * @private
    */
   private static buildIssuesQuery(): string {
