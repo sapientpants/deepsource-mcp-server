@@ -5,6 +5,8 @@
 
 import { createLogger } from '../utils/logging/logger.js';
 import { MCPErrorFactory } from '../utils/error-handling/index.js';
+import { loadRetryConfig, validateRetryConfig, RetryConfig } from './retry.config.js';
+export { RetryConfig, loadRetryConfig, validateRetryConfig } from './retry.config.js';
 
 const logger = createLogger('DeepSourceMCP:Config');
 
@@ -22,6 +24,8 @@ export interface DeepSourceConfig {
   logFile?: string;
   /** Log level */
   logLevel: string;
+  /** Retry configuration */
+  retry: RetryConfig;
 }
 
 /**
@@ -97,10 +101,21 @@ function loadConfigFromEnv(): Partial<DeepSourceConfig> {
 export function getConfig(): DeepSourceConfig {
   const envConfig = loadConfigFromEnv();
 
+  // Load retry configuration
+  const retryConfig = loadRetryConfig();
+  try {
+    validateRetryConfig(retryConfig);
+  } catch (error) {
+    throw MCPErrorFactory.configuration(`Invalid retry configuration: ${error}`, {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
   // Merge with defaults
   const mergedConfig = {
     ...defaultConfig,
     ...Object.fromEntries(Object.entries(envConfig).filter(([, value]) => value !== undefined)),
+    retry: retryConfig,
   };
 
   logger.debug('Loading configuration', {
@@ -108,6 +123,7 @@ export function getConfig(): DeepSourceConfig {
     apiBaseUrl: mergedConfig.apiBaseUrl,
     requestTimeout: mergedConfig.requestTimeout,
     logLevel: mergedConfig.logLevel,
+    retryConfig,
   });
 
   return validateConfig(mergedConfig);

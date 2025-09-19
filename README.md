@@ -155,10 +155,24 @@ For development or customization:
 | `LOG_FILE`           | No       | -       | Path to log file. If not set, no logs are written   |
 | `LOG_LEVEL`          | No       | `DEBUG` | Minimum log level: `DEBUG`, `INFO`, `WARN`, `ERROR` |
 
-### Performance Considerations
+#### Retry Configuration
 
+| Variable                     | Required | Default | Description                                               |
+| ---------------------------- | -------- | ------- | --------------------------------------------------------- |
+| `RETRY_MAX_ATTEMPTS`         | No       | `3`     | Maximum number of retry attempts (0-10)                   |
+| `RETRY_BASE_DELAY_MS`        | No       | `1000`  | Base delay between retries in milliseconds (100-60000)    |
+| `RETRY_MAX_DELAY_MS`         | No       | `30000` | Maximum delay between retries in milliseconds (≤300000)   |
+| `RETRY_BUDGET_PER_MINUTE`    | No       | `10`    | Maximum retries per minute across all endpoints (1-100)   |
+| `CIRCUIT_BREAKER_THRESHOLD`  | No       | `5`     | Failures before circuit opens (1-20)                      |
+| `CIRCUIT_BREAKER_TIMEOUT_MS` | No       | `30000` | Time before half-open state in milliseconds (1000-300000) |
+
+### Performance & Reliability
+
+- **Automatic Retry**: The server implements automatic retry with exponential backoff and jitter to handle transient failures
+- **Circuit Breaker**: Protects against cascading failures by temporarily blocking requests to failing endpoints
+- **Retry Budget**: Prevents retry storms by limiting the number of retries per minute
+- **Rate Limiting**: Automatically handles DeepSource API rate limits with intelligent backoff
 - **Pagination**: Use appropriate page sizes (10-50 items) to balance response time and data completeness
-- **Rate Limits**: DeepSource API has rate limits. The server implements automatic retry with exponential backoff
 - **Caching**: Results are not cached. Consider implementing caching for frequently accessed data
 
 ## Available Tools

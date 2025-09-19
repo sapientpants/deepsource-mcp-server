@@ -42,6 +42,14 @@ describe('Configuration Management', () => {
         apiBaseUrl: 'https://api.deepsource.io/graphql/',
         requestTimeout: 30000,
         logLevel: 'DEBUG',
+        retry: {
+          maxAttempts: 3,
+          baseDelayMs: 1000,
+          maxDelayMs: 30000,
+          retryBudgetPerMinute: 10,
+          circuitBreakerThreshold: 5,
+          circuitBreakerTimeoutMs: 30000,
+        },
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith('Loading configuration', {
@@ -49,6 +57,14 @@ describe('Configuration Management', () => {
         apiBaseUrl: 'https://api.deepsource.io/graphql/',
         requestTimeout: 30000,
         logLevel: 'DEBUG',
+        retryConfig: {
+          maxAttempts: 3,
+          baseDelayMs: 1000,
+          maxDelayMs: 30000,
+          retryBudgetPerMinute: 10,
+          circuitBreakerThreshold: 5,
+          circuitBreakerTimeoutMs: 30000,
+        },
       });
     });
 
@@ -67,6 +83,14 @@ describe('Configuration Management', () => {
         requestTimeout: 60000,
         logFile: '/tmp/deepsource.log',
         logLevel: 'INFO',
+        retry: {
+          maxAttempts: 3,
+          baseDelayMs: 1000,
+          maxDelayMs: 30000,
+          retryBudgetPerMinute: 10,
+          circuitBreakerThreshold: 5,
+          circuitBreakerTimeoutMs: 30000,
+        },
       });
     });
 
@@ -183,6 +207,14 @@ describe('Configuration Management', () => {
         apiBaseUrl: 'https://api.deepsource.io/graphql/',
         requestTimeout: 30000,
         logLevel: 'ERROR',
+        retry: {
+          maxAttempts: 3,
+          baseDelayMs: 1000,
+          maxDelayMs: 30000,
+          retryBudgetPerMinute: 10,
+          circuitBreakerThreshold: 5,
+          circuitBreakerTimeoutMs: 30000,
+        },
       });
     });
 
@@ -201,6 +233,14 @@ describe('Configuration Management', () => {
         requestTimeout: 45000,
         logFile: '/var/log/deepsource.log',
         logLevel: 'WARN',
+        retry: {
+          maxAttempts: 3,
+          baseDelayMs: 1000,
+          maxDelayMs: 30000,
+          retryBudgetPerMinute: 10,
+          circuitBreakerThreshold: 5,
+          circuitBreakerTimeoutMs: 30000,
+        },
       });
     });
   });
