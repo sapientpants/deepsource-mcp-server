@@ -124,13 +124,13 @@ export class BaseDeepSourceClientWithRetry extends BaseDeepSourceClient {
     };
 
     // Execute with retry
-    const result = await executeWithRetry(async () => {
+    const result = await executeWithRetry(async (context) => {
       try {
         // Log query execution
         this.logger.debug('Executing GraphQL query with retry support', {
           endpoint,
           operationType,
-          attempt: result?.attempts ?? 0,
+          attempt: context.attempt ?? 0,
         });
 
         // Execute the query using base implementation
