@@ -88,7 +88,7 @@ export async function executeWithRetry<T>(
     baseDelay: policy.baseDelay,
   });
 
-  while (context.attempt <= policy.maxAttempts) {
+  while (context.attempt < policy.maxAttempts) {
     // Check circuit breaker
     if (circuitBreaker && !circuitBreaker.canAttempt()) {
       const error = new Error(`Circuit breaker is open for endpoint: ${endpoint}`);
