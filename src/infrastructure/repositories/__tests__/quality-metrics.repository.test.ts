@@ -188,6 +188,67 @@ describe('QualityMetricsRepository', () => {
     });
   });
 
+  describe('findByProjectWithFilter', () => {
+    it('should return filtered metrics for a project', async () => {
+      const projectKey = asProjectKey('test-project');
+      const shortcodeIn = [MetricShortcode.LCV];
+
+      // Mock API to return only LCV metrics when filtered
+      mockClient.getQualityMetrics.mockResolvedValue([mockApiMetrics[0]]);
+
+      const metrics = await repository.findByProjectWithFilter(projectKey, shortcodeIn);
+
+      expect(metrics).toHaveLength(2); // Only LCV metrics
+      expect(metrics.every((m) => m.configuration.shortcode === MetricShortcode.LCV)).toBe(true);
+      expect(mockClient.getQualityMetrics).toHaveBeenCalledWith(projectKey, { shortcodeIn });
+    });
+
+    it('should handle multiple shortcode filters', async () => {
+      const projectKey = asProjectKey('test-project');
+      const shortcodeIn = [MetricShortcode.LCV, MetricShortcode.BCV];
+      const metrics = await repository.findByProjectWithFilter(projectKey, shortcodeIn);
+
+      expect(metrics).toHaveLength(3); // 2 LCV + 1 BCV
+      expect(mockClient.getQualityMetrics).toHaveBeenCalledWith(projectKey, { shortcodeIn });
+    });
+
+    it('should return empty array when filtered metrics do not exist', async () => {
+      const projectKey = asProjectKey('test-project');
+      const shortcodeIn = [MetricShortcode.DDP];
+      mockClient.getQualityMetrics.mockResolvedValue([]);
+
+      const metrics = await repository.findByProjectWithFilter(projectKey, shortcodeIn);
+
+      expect(metrics).toEqual([]);
+      expect(mockClient.getQualityMetrics).toHaveBeenCalledWith(projectKey, { shortcodeIn });
+    });
+
+    it('should throw and log error when API call fails', async () => {
+      const projectKey = asProjectKey('test-project');
+      const shortcodeIn = [MetricShortcode.LCV];
+      const error = new Error('API Error');
+      mockClient.getQualityMetrics.mockRejectedValue(error);
+
+      await expect(repository.findByProjectWithFilter(projectKey, shortcodeIn)).rejects.toThrow(
+        'API Error'
+      );
+      expect(mockClient.getQualityMetrics).toHaveBeenCalledWith(projectKey, { shortcodeIn });
+    });
+
+    it('should log debug information for successful calls', async () => {
+      const projectKey = asProjectKey('test-project');
+      const shortcodeIn = [MetricShortcode.BCV];
+
+      // Return only BCV metrics
+      mockClient.getQualityMetrics.mockResolvedValue([mockApiMetrics[1]]);
+
+      const metrics = await repository.findByProjectWithFilter(projectKey, shortcodeIn);
+
+      expect(metrics).toHaveLength(1);
+      expect(metrics[0].configuration.shortcode).toBe(MetricShortcode.BCV);
+    });
+  });
+
   describe('findByProjectAndMetric', () => {
     it('should find specific metric by shortcode and key', async () => {
       const projectKey = asProjectKey('test-project');

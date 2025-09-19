@@ -45,6 +45,8 @@ export class IssuesClient extends BaseDeepSourceClient {
         pageParams: IssueFilterParams
       ): Promise<PaginatedResponse<DeepSourceIssue>> => {
         const normalizedParams = BaseDeepSourceClient.normalizePaginationParams(pageParams);
+
+        // For now, use the original query until optimization is fully implemented
         const query = IssuesClient.buildIssuesQuery();
 
         const response = await this.executeGraphQL(query, {
@@ -123,6 +125,7 @@ export class IssuesClient extends BaseDeepSourceClient {
 
   /**
    * Builds the GraphQL query for fetching issues
+   * @deprecated Use createOptimizedIssuesQuery instead for better performance
    * @private
    */
   private static buildIssuesQuery(): string {

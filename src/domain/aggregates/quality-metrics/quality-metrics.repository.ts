@@ -67,6 +67,18 @@ export interface IQualityMetricsRepository extends IRepository<QualityMetrics, s
   findByProject(_projectKey: ProjectKey): Promise<QualityMetrics[]>;
 
   /**
+   * Finds metrics for a project with server-side filtering
+   *
+   * @param _projectKey - The project key
+   * @param _shortcodeIn - Array of metric shortcodes to filter by
+   * @returns Filtered quality metrics for the project
+   */
+  findByProjectWithFilter(
+    _projectKey: ProjectKey,
+    _shortcodeIn: MetricShortcode[]
+  ): Promise<QualityMetrics[]>;
+
+  /**
    * Finds metrics by project and metric type
    *
    * @param _projectKey - The project key
