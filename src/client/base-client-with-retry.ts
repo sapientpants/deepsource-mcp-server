@@ -130,7 +130,6 @@ export class BaseDeepSourceClientWithRetry extends BaseDeepSourceClient {
         this.logger.debug('Executing GraphQL query with retry support', {
           endpoint,
           operationType,
-          attempt: result?.attempts ?? 0,
         });
 
         // Execute the query using base implementation
