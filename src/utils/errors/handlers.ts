@@ -219,6 +219,24 @@ export function handleHttpStatusError(error: unknown): ClassifiedError | null {
         ErrorCategory.NOT_FOUND,
         error
       ),
+    502: () =>
+      createClassifiedError(
+        `Bad Gateway (${status}): DeepSource API gateway error`,
+        ErrorCategory.SERVER,
+        error
+      ),
+    503: () =>
+      createClassifiedError(
+        `Service Unavailable (${status}): DeepSource API temporarily unavailable`,
+        ErrorCategory.SERVER,
+        error
+      ),
+    504: () =>
+      createClassifiedError(
+        `Gateway Timeout (${status}): DeepSource API gateway timeout`,
+        ErrorCategory.SERVER,
+        error
+      ),
   };
 
   // Check for exact status code matches first
@@ -244,6 +262,73 @@ export function handleHttpStatusError(error: unknown): ClassifiedError | null {
   }
 
   return null;
+}
+
+/**
+ * Check if an error is retriable based on its classification
+ * @param error The error to check
+ * @returns True if the error should be retried
+ * @public
+ */
+export function isRetriableError(error: unknown): boolean {
+  const retriableCategories = [
+    ErrorCategory.RATE_LIMIT,
+    ErrorCategory.NETWORK,
+    ErrorCategory.TIMEOUT,
+    ErrorCategory.SERVER,
+  ];
+
+  // Check if it's already a classified error
+  if (error && typeof error === 'object' && 'category' in error) {
+    const classifiedError = error as ClassifiedError;
+    return retriableCategories.includes(classifiedError.category);
+  }
+
+  // Check for specific HTTP status codes
+  if (isAxiosErrorWithCriteria(error)) {
+    const status = (error as AxiosError).response?.status;
+    if (status) {
+      // Retriable status codes
+      const retriableStatusCodes = [429, 502, 503, 504];
+      if (retriableStatusCodes.includes(status)) {
+        return true;
+      }
+      // Server errors are generally retriable
+      if (status >= 500) {
+        return true;
+      }
+    }
+
+    // Check for network errors
+    const errorCode = (error as AxiosError).code;
+    if (errorCode) {
+      const retriableErrorCodes = ['ECONNREFUSED', 'ETIMEDOUT', 'ECONNRESET', 'EPIPE'];
+      return retriableErrorCodes.includes(errorCode);
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Extract Retry-After header from an error response
+ * @param error The error to extract from
+ * @returns The Retry-After header value or undefined
+ * @public
+ */
+export function extractRetryAfterHeader(error: unknown): string | undefined {
+  if (!isAxiosErrorWithCriteria(error)) {
+    return undefined;
+  }
+
+  const axiosError = error as AxiosError;
+  const retryAfter = axiosError.response?.headers?.['retry-after'];
+
+  if (typeof retryAfter === 'string') {
+    return retryAfter;
+  }
+
+  return undefined;
 }
 
 /**

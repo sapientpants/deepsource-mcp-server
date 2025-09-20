@@ -3,7 +3,7 @@
  * This module provides a base client class with core functionality.
  */
 
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 import { createLogger } from '../utils/logging/logger.js';
 import { handleApiError } from '../utils/errors/handlers.js';
 import { GraphQLResponse } from '../types/graphql-responses.js';
@@ -17,6 +17,7 @@ import {
 import { fetchMultiplePages, PageFetcher } from '../utils/pagination/manager.js';
 import { handlePageSizeAlias, shouldFetchMultiplePages } from '../utils/pagination/helpers.js';
 import { asProjectKey } from '../types/branded.js';
+import { executeWithRetry, RetryExecutorOptions } from '../utils/retry/retry-executor.js';
 
 /**
  * Configuration options for the DeepSource client
@@ -156,6 +157,87 @@ export class BaseDeepSourceClient {
 
       throw handledError;
     }
+  }
+
+  /**
+   * Execute a GraphQL query with automatic retry logic
+   * @param query The GraphQL query to execute
+   * @param variables The variables for the query
+   * @param endpoint The endpoint name for retry policy selection
+   * @returns The query response data
+   * @throws {ClassifiedError} When the query fails after all retries
+   * @protected
+   */
+  protected async executeGraphQLWithRetry<T>(
+    query: string,
+    variables?: Record<string, unknown>,
+    endpoint = 'default'
+  ): Promise<GraphQLResponse<T>> {
+    // Determine if this is a read operation (queries are always safe to retry)
+    const isQuery = query.trim().toLowerCase().startsWith('query');
+
+    // Only apply retry logic to queries, not mutations
+    if (!isQuery) {
+      this.logger.debug('Skipping retry for mutation', { endpoint });
+      return this.executeGraphQL<T>(query, variables);
+    }
+
+    const retryOptions: RetryExecutorOptions = {
+      endpoint,
+      extractRetryAfter: (error: unknown) => {
+        // Extract Retry-After header from Axios errors
+        if (this.isAxiosError(error) && error.response?.headers?.['retry-after']) {
+          return error.response.headers['retry-after'];
+        }
+        return undefined;
+      },
+      onRetryAttempt: (context) => {
+        this.logger.info('Retrying GraphQL query', {
+          endpoint: context.endpoint,
+          attempt: context.attemptNumber + 1,
+          elapsed: context.elapsedMs,
+          isLastAttempt: context.isLastAttempt,
+        });
+      },
+    };
+
+    const result = await executeWithRetry(
+      () => this.executeGraphQL<T>(query, variables),
+      retryOptions
+    );
+
+    if (result.success && result.data) {
+      return result.data;
+    }
+
+    // If we got here, all retries failed
+    if (result.circuitBreakerBlocked) {
+      const error = new Error(`Circuit breaker is open for endpoint: ${endpoint}`);
+      throw handleApiError(error);
+    }
+
+    if (result.budgetExhausted) {
+      const error = new Error(`Retry budget exhausted for endpoint: ${endpoint}`);
+      throw handleApiError(error);
+    }
+
+    // Re-throw the last error
+    throw result.error || new Error('Unknown error after retries');
+  }
+
+  /**
+   * Type guard to check if an error is an Axios error
+   * @param error The error to check
+   * @returns True if it's an Axios error
+   * @private
+   */
+  private isAxiosError(error: unknown): error is AxiosError {
+    return (
+      error !== null &&
+      typeof error === 'object' &&
+      'isAxiosError' in error &&
+      (error as AxiosError).isAxiosError === true
+    );
   }
 
   /**

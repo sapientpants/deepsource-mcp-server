@@ -89,7 +89,13 @@ The simplest way to use the DeepSource MCP Server:
       "env": {
         "DEEPSOURCE_API_KEY": "your-deepsource-api-key",
         "LOG_FILE": "/tmp/deepsource-mcp.log",
-        "LOG_LEVEL": "INFO"
+        "LOG_LEVEL": "INFO",
+        "RETRY_MAX_ATTEMPTS": "3",
+        "RETRY_BASE_DELAY_MS": "1000",
+        "RETRY_MAX_DELAY_MS": "30000",
+        "RETRY_BUDGET_PER_MINUTE": "10",
+        "CIRCUIT_BREAKER_THRESHOLD": "5",
+        "CIRCUIT_BREAKER_TIMEOUT_MS": "30000"
       }
     }
   }
@@ -149,16 +155,28 @@ For development or customization:
 
 ### Environment Variables
 
-| Variable             | Required | Default | Description                                         |
-| -------------------- | -------- | ------- | --------------------------------------------------- |
-| `DEEPSOURCE_API_KEY` | Yes      | -       | Your DeepSource API key for authentication          |
-| `LOG_FILE`           | No       | -       | Path to log file. If not set, no logs are written   |
-| `LOG_LEVEL`          | No       | `DEBUG` | Minimum log level: `DEBUG`, `INFO`, `WARN`, `ERROR` |
+| Variable                     | Required | Default | Description                                                   |
+| ---------------------------- | -------- | ------- | ------------------------------------------------------------- |
+| `DEEPSOURCE_API_KEY`         | Yes      | -       | Your DeepSource API key for authentication                    |
+| `LOG_FILE`                   | No       | -       | Path to log file. If not set, no logs are written             |
+| `LOG_LEVEL`                  | No       | `DEBUG` | Minimum log level: `DEBUG`, `INFO`, `WARN`, `ERROR`           |
+| `RETRY_MAX_ATTEMPTS`         | No       | `3`     | Maximum number of retry attempts for failed requests          |
+| `RETRY_BASE_DELAY_MS`        | No       | `1000`  | Base delay in milliseconds for exponential backoff            |
+| `RETRY_MAX_DELAY_MS`         | No       | `30000` | Maximum delay in milliseconds between retries                 |
+| `RETRY_BUDGET_PER_MINUTE`    | No       | `10`    | Maximum retries allowed per minute across all operations      |
+| `CIRCUIT_BREAKER_THRESHOLD`  | No       | `5`     | Number of failures before circuit breaker opens               |
+| `CIRCUIT_BREAKER_TIMEOUT_MS` | No       | `30000` | Time in milliseconds before circuit breaker attempts recovery |
 
 ### Performance Considerations
 
 - **Pagination**: Use appropriate page sizes (10-50 items) to balance response time and data completeness
-- **Rate Limits**: DeepSource API has rate limits. The server implements automatic retry with exponential backoff
+- **Automatic Retry**: The server implements intelligent retry logic with:
+  - Exponential backoff with jitter to prevent thundering herd
+  - Circuit breaker pattern to prevent cascade failures
+  - Retry budget to limit resource consumption
+  - Respect for Retry-After headers from the API
+- **Rate Limits**: Rate-limited requests (429) are automatically retried with appropriate delays
+- **Fault Tolerance**: Transient failures (network, 502, 503, 504) are handled gracefully
 - **Caching**: Results are not cached. Consider implementing caching for frequently accessed data
 
 ## Available Tools
