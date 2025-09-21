@@ -354,11 +354,8 @@ export class CircuitBreakerManager {
     if (!this.breakers.has(endpoint)) {
       this.breakers.set(endpoint, new CircuitBreaker(endpoint, config));
     }
-    const breaker = this.breakers.get(endpoint);
-    if (!breaker) {
-      throw new Error(`Circuit breaker for ${endpoint} should exist after initialization`);
-    }
-    return breaker;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return this.breakers.get(endpoint)!; // Safe: we just set it above
   }
 
   /**
