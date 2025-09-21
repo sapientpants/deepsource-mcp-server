@@ -215,7 +215,11 @@ export class RetryBudgetManager {
     if (!this.budgets.has(endpoint)) {
       this.budgets.set(endpoint, new RetryBudget({ ...config, name: endpoint }));
     }
-    return this.budgets.get(endpoint)!;
+    const budget = this.budgets.get(endpoint);
+    if (!budget) {
+      throw new Error(`Retry budget for ${endpoint} should exist after initialization`);
+    }
+    return budget;
   }
 
   /**

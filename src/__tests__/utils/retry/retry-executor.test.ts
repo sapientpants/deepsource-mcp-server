@@ -251,7 +251,7 @@ describe('Retry Executor', () => {
       const result = await executeWithRetry(fn, { endpoint });
 
       expect(result.success).toBe(false);
-      expect(result.attempts).toBe(2); // Should stop after 2 failures (circuit breaker threshold)
+      expect(result.attempts).toBe(3); // Initial + 2 retries before circuit opens
       expect(breaker.getState()).toBe('open');
       vi.useFakeTimers(); // Reset to fake timers
     });

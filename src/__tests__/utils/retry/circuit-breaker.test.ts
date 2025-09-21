@@ -119,10 +119,11 @@ describe('Circuit Breaker', () => {
       expect(breaker.getState()).toBe(CircuitState.HALF_OPEN);
 
       // We should be able to make maxAttempts-1 more requests (since we just made one)
-      expect(breaker.canRequest()).toBe(true);
+      expect(breaker.canRequest()).toBe(true); // 2nd attempt
+      expect(breaker.canRequest()).toBe(true); // 3rd attempt
 
       // After reaching max attempts, should return false
-      expect(breaker.canRequest()).toBe(false);
+      expect(breaker.canRequest()).toBe(false); // 4th attempt exceeds limit
     });
   });
 

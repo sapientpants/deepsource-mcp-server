@@ -111,11 +111,12 @@ export class CircuitBreaker {
       case CircuitState.CLOSED:
         return true;
 
-      case CircuitState.OPEN:
+      case CircuitState.OPEN: {
         // Check if it's time to transition to half-open
         const timeSinceOpen = Date.now() - this.lastStateChange;
         if (timeSinceOpen >= this.config.recoveryTimeout) {
           this.transitionTo(CircuitState.HALF_OPEN);
+          this.halfOpenAttempts = 1; // Count this request as the first attempt
           return true;
         }
         logger.debug('Circuit breaker is open, rejecting request', {
@@ -124,6 +125,7 @@ export class CircuitBreaker {
           recoveryTimeout: this.config.recoveryTimeout,
         });
         return false;
+      }
 
       case CircuitState.HALF_OPEN:
         // Allow limited test requests
@@ -153,7 +155,7 @@ export class CircuitBreaker {
     this.cleanupOldEntries();
 
     switch (this.state) {
-      case CircuitState.HALF_OPEN:
+      case CircuitState.HALF_OPEN: {
         // Check if we have enough successes to close the circuit
         const recentSuccesses = this.getRecentSuccessCount();
         logger.debug('Success in half-open state', {
@@ -166,6 +168,7 @@ export class CircuitBreaker {
           this.transitionTo(CircuitState.CLOSED);
         }
         break;
+      }
 
       case CircuitState.CLOSED:
         // Normal operation, nothing special to do
@@ -188,7 +191,7 @@ export class CircuitBreaker {
     this.cleanupOldEntries();
 
     switch (this.state) {
-      case CircuitState.CLOSED:
+      case CircuitState.CLOSED: {
         // Check if we've exceeded the failure threshold
         const recentFailures = this.getRecentFailureCount();
         logger.debug('Failure in closed state', {
@@ -201,6 +204,7 @@ export class CircuitBreaker {
           this.transitionTo(CircuitState.OPEN);
         }
         break;
+      }
 
       case CircuitState.HALF_OPEN:
         // Any failure in half-open state reopens the circuit
@@ -350,7 +354,11 @@ export class CircuitBreakerManager {
     if (!this.breakers.has(endpoint)) {
       this.breakers.set(endpoint, new CircuitBreaker(endpoint, config));
     }
-    return this.breakers.get(endpoint)!;
+    const breaker = this.breakers.get(endpoint);
+    if (!breaker) {
+      throw new Error(`Circuit breaker for ${endpoint} should exist after initialization`);
+    }
+    return breaker;
   }
 
   /**
