@@ -288,10 +288,11 @@ describe('Retry Executor', () => {
       const fn = vi.fn().mockRejectedValue(error);
       const wrappedFn = withRetry(fn);
 
-      const promise = wrappedFn();
+      const promise = wrappedFn().catch((e) => e); // Catch to prevent unhandled rejection
       await vi.advanceTimersByTimeAsync(20000); // Advance through all retries
 
-      await expect(promise).rejects.toThrow();
+      const result = await promise;
+      expect(result).toBe(error);
       expect(fn).toHaveBeenCalledTimes(4); // Initial + 3 retries
     });
 
