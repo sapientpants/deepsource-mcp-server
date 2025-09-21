@@ -126,10 +126,8 @@ export class RetryBudget {
     let resetInMs = 0;
     if (this.retryTimestamps.length > 0) {
       const oldestTimestamp = this.retryTimestamps[0];
-      if (oldestTimestamp !== undefined) {
-        const timeSinceOldest = Date.now() - oldestTimestamp;
-        resetInMs = Math.max(0, this.config.timeWindow - timeSinceOldest);
-      }
+      const timeSinceOldest = Date.now() - oldestTimestamp;
+      resetInMs = Math.max(0, this.config.timeWindow - timeSinceOldest);
     }
 
     const consumedPercentage = (consumed / this.config.maxRetries) * 100;
