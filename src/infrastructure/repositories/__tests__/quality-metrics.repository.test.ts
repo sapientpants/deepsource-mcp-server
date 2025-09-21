@@ -2,7 +2,7 @@
  * @fileoverview Tests for QualityMetricsRepository
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { QualityMetricsRepository } from '../quality-metrics.repository.js';
 import { DeepSourceClient } from '../../../deepsource.js';
 import {
@@ -31,7 +31,7 @@ vi.mock('../../../utils/logging/logger.js', () => ({
 
 describe('QualityMetricsRepository', () => {
   let repository: QualityMetricsRepository;
-  let mockClient: anyed<DeepSourceClient>;
+  let mockClient: unknown;
   let mockApiMetrics: RepositoryMetric[];
 
   beforeEach(() => {
@@ -39,13 +39,13 @@ describe('QualityMetricsRepository', () => {
     vi.clearAllMocks();
 
     // Create mock DeepSourceClient
-    mockClient = {
+    (mockClient as any) = {
       listProjects: vi.fn(),
       getQualityMetrics: vi.fn(),
       setMetricThreshold: vi.fn(),
       updateMetricSetting: vi.fn(),
       listRuns: vi.fn(),
-    } as unknown as anyed<DeepSourceClient>;
+    };
 
     // Create test data
     mockApiMetrics = [
@@ -102,7 +102,7 @@ describe('QualityMetricsRepository', () => {
     ];
 
     // Setup default mock behavior
-    mockClient.listProjects.mockResolvedValue([
+    (mockClient as any).listProjects.mockResolvedValue([
       {
         key: asProjectKey('test-project'),
         name: 'Test Project',
@@ -117,7 +117,7 @@ describe('QualityMetricsRepository', () => {
     ]);
 
     // Mock listRuns to provide repository ID
-    mockClient.listRuns.mockResolvedValue({
+    (mockClient as any).listRuns.mockResolvedValue({
       items: [
         {
           id: 'run-1',
@@ -131,10 +131,10 @@ describe('QualityMetricsRepository', () => {
       pageInfo: { hasNextPage: boolean };
       totalCount: number;
     });
-    mockClient.getQualityMetrics.mockResolvedValue(mockApiMetrics);
+    (mockClient as any).getQualityMetrics.mockResolvedValue(mockApiMetrics);
 
     // Create repository instance
-    repository = new QualityMetricsRepository(mockClient);
+    repository = new QualityMetricsRepository(mockClient as DeepSourceClient);
   });
 
   describe('findById', () => {
@@ -172,7 +172,7 @@ describe('QualityMetricsRepository', () => {
     });
 
     it('should return empty array when no metrics exist', async () => {
-      mockClient.getQualityMetrics.mockResolvedValue([]);
+      (mockClient as any).getQualityMetrics.mockResolvedValue([]);
 
       const metrics = await repository.findByProject(asProjectKey('test-project'));
 
@@ -180,7 +180,7 @@ describe('QualityMetricsRepository', () => {
     });
 
     it('should throw error when project not found', async () => {
-      mockClient.listProjects.mockResolvedValue([]);
+      (mockClient as any).listProjects.mockResolvedValue([]);
 
       await expect(repository.findByProject(asProjectKey('test-project'))).rejects.toThrow(
         'Project not found: test-project'
@@ -194,7 +194,7 @@ describe('QualityMetricsRepository', () => {
       const shortcodeIn = [MetricShortcode.LCV];
 
       // Mock API to return only LCV metrics when filtered
-      mockClient.getQualityMetrics.mockResolvedValue([mockApiMetrics[0]]);
+      (mockClient as any).getQualityMetrics.mockResolvedValue([mockApiMetrics[0]]);
 
       const metrics = await repository.findByProjectWithFilter(projectKey, shortcodeIn);
 
@@ -215,7 +215,7 @@ describe('QualityMetricsRepository', () => {
     it('should return empty array when filtered metrics do not exist', async () => {
       const projectKey = asProjectKey('test-project');
       const shortcodeIn = [MetricShortcode.DDP];
-      mockClient.getQualityMetrics.mockResolvedValue([]);
+      (mockClient as any).getQualityMetrics.mockResolvedValue([]);
 
       const metrics = await repository.findByProjectWithFilter(projectKey, shortcodeIn);
 
@@ -227,7 +227,7 @@ describe('QualityMetricsRepository', () => {
       const projectKey = asProjectKey('test-project');
       const shortcodeIn = [MetricShortcode.LCV];
       const error = new Error('API Error');
-      mockClient.getQualityMetrics.mockRejectedValue(error);
+      (mockClient as any).getQualityMetrics.mockRejectedValue(error);
 
       await expect(repository.findByProjectWithFilter(projectKey, shortcodeIn)).rejects.toThrow(
         'API Error'
@@ -240,7 +240,7 @@ describe('QualityMetricsRepository', () => {
       const shortcodeIn = [MetricShortcode.BCV];
 
       // Return only BCV metrics
-      mockClient.getQualityMetrics.mockResolvedValue([mockApiMetrics[1]]);
+      (mockClient as any).getQualityMetrics.mockResolvedValue([mockApiMetrics[1]]);
 
       const metrics = await repository.findByProjectWithFilter(projectKey, shortcodeIn);
 
@@ -292,7 +292,7 @@ describe('QualityMetricsRepository', () => {
     });
 
     it('should return null when metric has no items', async () => {
-      mockClient.getQualityMetrics.mockResolvedValue([
+      (mockClient as any).getQualityMetrics.mockResolvedValue([
         {
           ...mockApiMetrics[0],
           items: [],
@@ -329,7 +329,7 @@ describe('QualityMetricsRepository', () => {
           thresholdStatus: 'PASSING' as const,
         })),
       }));
-      mockClient.getQualityMetrics.mockResolvedValue(passingMetrics);
+      (mockClient as any).getQualityMetrics.mockResolvedValue(passingMetrics);
 
       const failingMetrics = await repository.findFailingMetrics(asProjectKey('test-project'));
 
@@ -348,7 +348,7 @@ describe('QualityMetricsRepository', () => {
 
     it('should filter out non-reported metrics', async () => {
       // Mock some metrics as not reported
-      mockClient.getQualityMetrics.mockResolvedValue([
+      (mockClient as any).getQualityMetrics.mockResolvedValue([
         mockApiMetrics[0], // Reported
         { ...mockApiMetrics[1], isReported: false }, // Not reported
       ]);
@@ -383,7 +383,7 @@ describe('QualityMetricsRepository', () => {
     });
 
     it('should return 0 when no metrics exist', async () => {
-      mockClient.getQualityMetrics.mockResolvedValue([]);
+      (mockClient as any).getQualityMetrics.mockResolvedValue([]);
 
       const count = await repository.countByProject(asProjectKey('test-project'));
 
@@ -421,8 +421,8 @@ describe('QualityMetricsRepository', () => {
       expect(metrics).not.toBeNull();
       if (!metrics) return;
 
-      mockClient.setMetricThreshold.mockResolvedValue({ ok: true });
-      mockClient.updateMetricSetting.mockResolvedValue({ ok: true });
+      (mockClient as any).setMetricThreshold.mockResolvedValue({ ok: true });
+      (mockClient as any).updateMetricSetting.mockResolvedValue({ ok: true });
 
       await repository.save(metrics);
 
@@ -466,7 +466,7 @@ describe('QualityMetricsRepository', () => {
       expect(metrics).not.toBeNull();
       if (!metrics) return;
 
-      mockClient.setMetricThreshold.mockRejectedValue(new Error('API Error'));
+      (mockClient as any).setMetricThreshold.mockRejectedValue(new Error('API Error'));
 
       await expect(repository.save(metrics)).rejects.toThrow('API Error');
     });
@@ -508,6 +508,166 @@ describe('QualityMetricsRepository', () => {
       await repository.findFailingMetrics(projectKey);
 
       expect(mockClient.getQualityMetrics).toHaveBeenCalledTimes(4);
+    });
+  });
+
+  describe('getRepositoryId fallback', () => {
+    it('should use GraphQL fallback when listRuns returns no repository ID', async () => {
+      const projectKey = asProjectKey('test-project');
+
+      // Mock listRuns to return no repository ID
+      (mockClient as any).listRuns.mockResolvedValue({
+        items: [{ id: 'run-1' }], // No repository field
+        pageInfo: { hasNextPage: false },
+        totalCount: 1,
+      });
+
+      // Mock the axios client for direct GraphQL call
+      const mockPost = vi.fn().mockResolvedValue({
+        data: {
+          data: {
+            repository: {
+              id: 'fallback-repo-id'
+            }
+          }
+        }
+      });
+
+      // Add client property to mock
+      (mockClient as any).client = { post: mockPost };
+
+      const metrics = await repository.findByProject(projectKey);
+
+      expect(metrics).not.toBeNull();
+      expect(mockPost).toHaveBeenCalledWith('', expect.objectContaining({
+        query: expect.stringContaining('repository(login'),
+        variables: expect.objectContaining({
+          login: 'test',
+          name: 'Test Project',
+          provider: 'GITHUB'
+        })
+      }));
+    });
+
+    it('should handle GraphQL errors in fallback', async () => {
+      const projectKey = asProjectKey('test-project');
+
+      // Mock listRuns to return no repository ID
+      (mockClient as any).listRuns.mockResolvedValue({
+        items: [{ id: 'run-1' }],
+        pageInfo: { hasNextPage: false },
+        totalCount: 1,
+      });
+
+      // Mock GraphQL response with errors
+      const mockPost = vi.fn().mockResolvedValue({
+        data: {
+          errors: [
+            { message: 'Repository not found' }
+          ]
+        }
+      });
+
+      (mockClient as any).client = { post: mockPost };
+
+      await expect(repository.findByProject(projectKey)).rejects.toThrow('GraphQL Errors: Repository not found');
+    });
+
+    it('should handle missing repository ID in GraphQL response', async () => {
+      const projectKey = asProjectKey('test-project');
+
+      // Mock listRuns to return no repository ID
+      (mockClient as any).listRuns.mockResolvedValue({
+        items: [{ id: 'run-1' }],
+        pageInfo: { hasNextPage: false },
+        totalCount: 1,
+      });
+
+      // Mock GraphQL response with no repository ID
+      const mockPost = vi.fn().mockResolvedValue({
+        data: {
+          data: {}
+        }
+      });
+
+      (mockClient as any).client = { post: mockPost };
+
+      await expect(repository.findByProject(projectKey)).rejects.toThrow('Repository ID not found for project: test-project');
+    });
+
+    it('should handle errors in getRepositoryId', async () => {
+      const projectKey = asProjectKey('test-project');
+
+      // Mock listProjects to throw an error
+      (mockClient as any).listProjects.mockRejectedValue(new Error('Network error'));
+
+      await expect(repository.findByProject(projectKey)).rejects.toThrow('Network error');
+    });
+  });
+
+  describe('error handling in various methods', () => {
+    it('should handle error in findById with invalid ID', async () => {
+      const repository = new QualityMetricsRepository(mockClient);
+      const result = await repository.findById('invalid-id');
+      expect(result).toBeNull();
+    });
+
+    it('should propagate errors in findById', async () => {
+      (mockClient as any).getQualityMetrics.mockRejectedValue(new Error('API Error'));
+
+      await expect(repository.findById('test-project:AGGREGATE:LCV')).rejects.toThrow('API Error');
+    });
+
+    it('should propagate errors in countByProject', async () => {
+      (mockClient as any).getQualityMetrics.mockRejectedValue(new Error('Count error'));
+
+      await expect(repository.countByProject(asProjectKey('test-project'))).rejects.toThrow('Count error');
+    });
+
+    it('should propagate errors in countFailingByProject', async () => {
+      (mockClient as any).getQualityMetrics.mockRejectedValue(new Error('Count failing error'));
+
+      await expect(repository.countFailingByProject(asProjectKey('test-project'))).rejects.toThrow('Count failing error');
+    });
+
+    it('should propagate errors in exists', async () => {
+      (mockClient as any).getQualityMetrics.mockRejectedValue(new Error('Exists error'));
+
+      await expect(repository.exists(asProjectKey('test-project'), MetricShortcode.LCV)).rejects.toThrow('Exists error');
+    });
+
+    it('should propagate errors in findFailingMetrics', async () => {
+      (mockClient as any).getQualityMetrics.mockRejectedValue(new Error('Failing metrics error'));
+
+      await expect(repository.findFailingMetrics(asProjectKey('test-project'))).rejects.toThrow('Failing metrics error');
+    });
+
+    it('should propagate errors in findReportedMetrics', async () => {
+      (mockClient as any).getQualityMetrics.mockRejectedValue(new Error('Reported metrics error'));
+
+      await expect(repository.findReportedMetrics(asProjectKey('test-project'))).rejects.toThrow('Reported metrics error');
+    });
+
+    it('should propagate errors in findByCompositeId', async () => {
+      (mockClient as any).getQualityMetrics.mockRejectedValue(new Error('Composite ID error'));
+
+      const id = {
+        projectKey: asProjectKey('test-project'),
+        metricKey: MetricKey.AGGREGATE,
+        shortcode: MetricShortcode.LCV,
+      };
+
+      await expect(repository.findByCompositeId(id)).rejects.toThrow('Composite ID error');
+    });
+
+    it('should propagate errors in findByProjectAndMetric', async () => {
+      (mockClient as any).listProjects.mockRejectedValue(new Error('Find by project and metric error'));
+
+      await expect(repository.findByProjectAndMetric(
+        asProjectKey('test-project'),
+        MetricShortcode.LCV,
+        'AGGREGATE'
+      )).rejects.toThrow('Find by project and metric error');
     });
   });
 });
