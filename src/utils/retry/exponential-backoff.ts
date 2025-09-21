@@ -162,9 +162,9 @@ export function calculateRetryDelay(
  * @returns A promise that resolves after the specified duration
  * @public
  */
-export async function sleep(ms: number): Promise<void> {
+export function sleep(ms: number): Promise<void> {
   if (ms <= 0) {
-    return;
+    return Promise.resolve();
   }
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
