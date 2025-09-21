@@ -352,4 +352,28 @@ describe('CircuitBreakerManager', () => {
       expect(breaker.getState()).toBe(CircuitState.CLOSED);
     });
   });
+
+  describe('Default case handling', () => {
+    it('should handle unexpected state in recordSuccess', () => {
+      const breaker = new CircuitBreaker('test-unexpected-success');
+
+      // Force an unexpected state by manipulating the internal state
+      // @ts-expect-error - Accessing private property for testing
+      breaker['state'] = 'unexpected' as any;
+
+      // Should not throw, just log error
+      expect(() => breaker.recordSuccess()).not.toThrow();
+    });
+
+    it('should handle unexpected state in recordFailure', () => {
+      const breaker = new CircuitBreaker('test-unexpected-failure');
+
+      // Force an unexpected state by manipulating the internal state
+      // @ts-expect-error - Accessing private property for testing
+      breaker['state'] = 'unexpected' as any;
+
+      // Should not throw, just log error
+      expect(() => breaker.recordFailure()).not.toThrow();
+    });
+  });
 });
