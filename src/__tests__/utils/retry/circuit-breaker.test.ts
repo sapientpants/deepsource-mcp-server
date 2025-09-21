@@ -359,6 +359,7 @@ describe('CircuitBreakerManager', () => {
 
       // Force an unexpected state by manipulating the internal state
       // @ts-expect-error - Accessing private property for testing
+      // skipcq: JS-0323 - Intentionally using any to force invalid state for testing
       breaker['state'] = 'unexpected' as any;
 
       // Should not throw, just log error
@@ -370,6 +371,7 @@ describe('CircuitBreakerManager', () => {
 
       // Force an unexpected state by manipulating the internal state
       // @ts-expect-error - Accessing private property for testing
+      // skipcq: JS-0323 - Intentionally using any to force invalid state for testing
       breaker['state'] = 'unexpected' as any;
 
       // Should not throw, just log error

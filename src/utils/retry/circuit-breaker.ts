@@ -244,7 +244,7 @@ export class CircuitBreaker {
     const failureCount = this.getRecentFailureCount();
     const successCount = this.getRecentSuccessCount();
     const successRate =
-      (successCount + failureCount) > 0 ? (successCount / (successCount + failureCount)) * 100 : 0;
+      successCount + failureCount > 0 ? (successCount / (successCount + failureCount)) * 100 : 0;
 
     const stats: CircuitBreakerStats = {
       state: this.state,
