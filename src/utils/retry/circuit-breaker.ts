@@ -178,6 +178,14 @@ export class CircuitBreaker {
         // Shouldn't happen, but handle gracefully
         logger.warn('Success recorded while circuit is open', { name: this.name });
         break;
+
+      default:
+        // Log unexpected state
+        logger.error('Unexpected circuit state in recordSuccess', {
+          name: this.name,
+          state: this.state,
+        });
+        break;
     }
   }
 
@@ -214,6 +222,14 @@ export class CircuitBreaker {
 
       case CircuitState.OPEN:
         // Already open, nothing to do
+        break;
+
+      default:
+        // Log unexpected state
+        logger.error('Unexpected circuit state in recordFailure', {
+          name: this.name,
+          state: this.state,
+        });
         break;
     }
   }

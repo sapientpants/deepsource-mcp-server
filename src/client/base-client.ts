@@ -186,7 +186,7 @@ export class BaseDeepSourceClient {
       endpoint,
       extractRetryAfter: (error: unknown) => {
         // Extract Retry-After header from Axios errors
-        if (this.isAxiosError(error) && error.response?.headers?.['retry-after']) {
+        if (BaseDeepSourceClient.isAxiosError(error) && error.response?.headers?.['retry-after']) {
           return error.response.headers['retry-after'];
         }
         return undefined;
@@ -231,7 +231,7 @@ export class BaseDeepSourceClient {
    * @returns True if it's an Axios error
    * @private
    */
-  private isAxiosError(error: unknown): error is AxiosError {
+  private static isAxiosError(error: unknown): error is AxiosError {
     return (
       error !== null &&
       typeof error === 'object' &&
