@@ -212,11 +212,12 @@ export class RetryBudgetManager {
    * @public
    */
   getBudget(endpoint: string, config?: Partial<RetryBudgetConfig>): RetryBudget {
-    if (!this.budgets.has(endpoint)) {
-      this.budgets.set(endpoint, new RetryBudget({ ...config, name: endpoint }));
+    let budget = this.budgets.get(endpoint);
+    if (!budget) {
+      budget = new RetryBudget({ ...config, name: endpoint });
+      this.budgets.set(endpoint, budget);
     }
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return this.budgets.get(endpoint)!; // Safe: we just set it above
+    return budget;
   }
 
   /**

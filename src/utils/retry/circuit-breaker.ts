@@ -351,11 +351,12 @@ export class CircuitBreakerManager {
    * @public
    */
   getBreaker(endpoint: string, config?: Partial<CircuitBreakerConfig>): CircuitBreaker {
-    if (!this.breakers.has(endpoint)) {
-      this.breakers.set(endpoint, new CircuitBreaker(endpoint, config));
+    let breaker = this.breakers.get(endpoint);
+    if (!breaker) {
+      breaker = new CircuitBreaker(endpoint, config);
+      this.breakers.set(endpoint, breaker);
     }
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return this.breakers.get(endpoint)!; // Safe: we just set it above
+    return breaker;
   }
 
   /**
