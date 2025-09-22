@@ -70,8 +70,8 @@ importers:
         specifier: ^9.1.7
         version: 9.1.7
       jsonc-eslint-parser:
-        specifier: 2.4.0
-        version: 2.4.0
+        specifier: 2.4.1
+        version: 2.4.1
       lint-staged:
         specifier: ^16.1.6
         version: 16.1.6
@@ -648,6 +648,10 @@ packages:
   '@npmcli/agent@3.0.0':
     resolution: {integrity: sha512-S79NdEgDQd/NGCay6TCoVzXSj74skRZIKJcpJjC5lOq34SZzyI6MqtiiWoiVWoVrTcGjNeC4ipbh1VIHlpfF5Q==}
     engines: {node: ^18.17.0 || >=20.5.0}
+
+  '@npmcli/agent@4.0.0':
+    resolution: {integrity: sha512-kAQTcEN9E8ERLVg5AsGwLNoFb+oEG6engbqAU2P43gD4JEIkNGMHdVQ096FsOAAYpZPB0RSt0zgInKIAS1l5QA==}
+    engines: {node: ^20.17.0 || >=22.9.0}
 
   '@npmcli/arborist@9.1.4':
     resolution: {integrity: sha512-2Co31oEFlzT9hYjGahGL4PqDXXpA18tX9yu55j5on+m2uDiyBoljQjHNnnNVCji4pFUjawlHi23tQ4j2A5gHow==}
@@ -2284,8 +2288,8 @@ packages:
     resolution: {integrity: sha512-OCzaRMK8HobtX8fp37uIVmL8CY1IGc/a6gLsDqz3quExFR09/U78HUzWYr7T31UEB6+Eu0/8dkVD5fFDOl9a8w==}
     engines: {node: '>= 8'}
 
-  jsonc-eslint-parser@2.4.0:
-    resolution: {integrity: sha512-WYDyuc/uFcGp6YtM2H0uKmUwieOuzeE/5YocFJLnLfclZ4inf3mRn8ZVy1s7Hxji7Jxm6Ss8gqpexD/GlKoGgg==}
+  jsonc-eslint-parser@2.4.1:
+    resolution: {integrity: sha512-uuPNLJkKN8NXAlZlQ6kmUF9qO+T6Kyd7oV4+/7yy8Jz6+MZNyhPq8EdLpdfnPVzUC8qSf1b4j1azKaGnFsjmsw==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
   jsonc-parser@3.3.1:
@@ -2419,6 +2423,10 @@ packages:
 
   make-fetch-happen@15.0.1:
     resolution: {integrity: sha512-9GjpQcaUXO2xmre8JfALl8Oji8Jpo+SyY2HpqFFPHVczOld/I+JFRx9FkP/uedZzkJlI9uM5t/j6dGJv4BScQw==}
+    engines: {node: ^20.17.0 || >=22.9.0}
+
+  make-fetch-happen@15.0.2:
+    resolution: {integrity: sha512-sI1NY4lWlXBAfjmCtVWIIpBypbBdhHtcjnwnv+gtCnsaOffyFil3aidszGC8hgzJe+fT1qix05sWxmD/Bmf/oQ==}
     engines: {node: ^20.17.0 || >=22.9.0}
 
   markdown-it@14.1.0:
@@ -4479,6 +4487,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@npmcli/agent@4.0.0':
+    dependencies:
+      agent-base: 7.1.4
+      http-proxy-agent: 7.0.2
+      https-proxy-agent: 7.0.6
+      lru-cache: 11.2.1
+      socks-proxy-agent: 8.0.5
+    transitivePeerDependencies:
+      - supports-color
+
   '@npmcli/arborist@9.1.4':
     dependencies:
       '@isaacs/string-locale-compare': 1.1.0
@@ -4703,7 +4721,7 @@ snapshots:
       '@sigstore/bundle': 4.0.0
       '@sigstore/core': 3.0.0
       '@sigstore/protobuf-specs': 0.5.0
-      make-fetch-happen: 15.0.1
+      make-fetch-happen: 15.0.2
       proc-log: 5.0.0
       promise-retry: 2.0.1
     transitivePeerDependencies:
@@ -5637,21 +5655,21 @@ snapshots:
     dependencies:
       eslint: 9.35.0(jiti@2.5.1)
 
-  eslint-json-compat-utils@0.2.1(eslint@9.35.0(jiti@2.5.1))(jsonc-eslint-parser@2.4.0):
+  eslint-json-compat-utils@0.2.1(eslint@9.35.0(jiti@2.5.1))(jsonc-eslint-parser@2.4.1):
     dependencies:
       eslint: 9.35.0(jiti@2.5.1)
       esquery: 1.6.0
-      jsonc-eslint-parser: 2.4.0
+      jsonc-eslint-parser: 2.4.1
 
   eslint-plugin-jsonc@2.20.1(eslint@9.35.0(jiti@2.5.1)):
     dependencies:
       '@eslint-community/eslint-utils': 4.9.0(eslint@9.35.0(jiti@2.5.1))
       eslint: 9.35.0(jiti@2.5.1)
       eslint-compat-utils: 0.6.5(eslint@9.35.0(jiti@2.5.1))
-      eslint-json-compat-utils: 0.2.1(eslint@9.35.0(jiti@2.5.1))(jsonc-eslint-parser@2.4.0)
+      eslint-json-compat-utils: 0.2.1(eslint@9.35.0(jiti@2.5.1))(jsonc-eslint-parser@2.4.1)
       espree: 10.4.0
       graphemer: 1.4.0
-      jsonc-eslint-parser: 2.4.0
+      jsonc-eslint-parser: 2.4.1
       natural-compare: 1.4.0
       synckit: 0.11.11
     transitivePeerDependencies:
@@ -6317,7 +6335,7 @@ snapshots:
   jsonata@2.1.0:
     optional: true
 
-  jsonc-eslint-parser@2.4.0:
+  jsonc-eslint-parser@2.4.1:
     dependencies:
       acorn: 8.15.0
       eslint-visitor-keys: 3.4.3
@@ -6475,6 +6493,22 @@ snapshots:
   make-fetch-happen@15.0.1:
     dependencies:
       '@npmcli/agent': 3.0.0
+      cacache: 20.0.1
+      http-cache-semantics: 4.2.0
+      minipass: 7.1.2
+      minipass-fetch: 4.0.1
+      minipass-flush: 1.0.5
+      minipass-pipeline: 1.2.4
+      negotiator: 1.0.0
+      proc-log: 5.0.0
+      promise-retry: 2.0.1
+      ssri: 12.0.0
+    transitivePeerDependencies:
+      - supports-color
+
+  make-fetch-happen@15.0.2:
+    dependencies:
+      '@npmcli/agent': 4.0.0
       cacache: 20.0.1
       http-cache-semantics: 4.2.0
       minipass: 7.1.2
@@ -7713,7 +7747,7 @@ snapshots:
     dependencies:
       '@tufjs/models': 4.0.0
       debug: 4.4.3
-      make-fetch-happen: 15.0.1
+      make-fetch-happen: 15.0.2
     transitivePeerDependencies:
       - supports-color
 
