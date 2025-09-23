@@ -1,5 +1,49 @@
 # Changelog
 
+## 1.7.0
+
+### Minor Changes
+
+- [#180](https://github.com/sapientpants/deepsource-mcp-server/pull/180) [`4da304e`](https://github.com/sapientpants/deepsource-mcp-server/commit/4da304e1141c797f32d466b250882b85fb126d0a) - Add automatic retry with exponential backoff and circuit breaker
+
+  Implements intelligent retry logic with the following features:
+  - Exponential backoff with jitter to prevent thundering herd
+  - Circuit breaker pattern per endpoint to prevent cascade failures
+  - Retry budget management to limit resource consumption
+  - Respect for Retry-After headers from the API
+  - Automatic handling of transient failures (network, 502, 503, 504)
+  - Rate-limited requests (429) are automatically retried with appropriate delays
+
+  Configuration via environment variables:
+  - `RETRY_MAX_ATTEMPTS`: Maximum retry attempts (default: 3)
+  - `RETRY_BASE_DELAY_MS`: Base delay for exponential backoff (default: 1000ms)
+  - `RETRY_MAX_DELAY_MS`: Maximum delay between retries (default: 30000ms)
+  - `RETRY_BUDGET_PER_MINUTE`: Max retries per minute (default: 10)
+  - `CIRCUIT_BREAKER_THRESHOLD`: Failures before opening circuit (default: 5)
+  - `CIRCUIT_BREAKER_TIMEOUT_MS`: Recovery timeout (default: 30000ms)
+
+  Safety features:
+  - Only retries idempotent operations (queries/GET requests)
+  - Never retries mutations (update operations)
+  - Transparent to MCP clients - no user-visible errors during transient failures
+
+### Patch Changes
+
+- [#180](https://github.com/sapientpants/deepsource-mcp-server/pull/180) [`4da304e`](https://github.com/sapientpants/deepsource-mcp-server/commit/4da304e1141c797f32d466b250882b85fb126d0a) - Fix all DeepSource code quality issues
+  - JS-0356: Remove unused import in exponential-backoff test file
+  - JS-0339: Replace non-null assertions with proper null checks and error handling in circuit-breaker and retry-budget modules
+  - JS-0054: Fix lexical declaration scoping in switch case statements by adding block scope braces
+  - JS-0105: Make isAxiosError method static in base-client.ts since it doesn't use 'this'
+  - JS-0047: Add default cases to switch statements in recordSuccess and recordFailure methods
+  - JS-0045: Add explicit return statement in extractRetryAfter arrow function for consistency
+  - Update test expectations to match corrected circuit breaker behavior
+  - Fix unhandled promise rejection in retry-executor test
+
+- [#186](https://github.com/sapientpants/deepsource-mcp-server/pull/186) [`3453343`](https://github.com/sapientpants/deepsource-mcp-server/commit/3453343b8378d9e8f33ce1648bbbf94ec7dc5324) - Update pnpm from 10.15.1 to 10.17.0
+  - Updated packageManager field in package.json
+  - Updated pnpm version across all GitHub Actions workflows
+  - Ensures consistency and uses latest bug fixes
+
 ## 1.6.4
 
 ### Patch Changes
