@@ -527,10 +527,10 @@ describe('QualityMetricsRepository', () => {
         data: {
           data: {
             repository: {
-              id: 'fallback-repo-id'
-            }
-          }
-        }
+              id: 'fallback-repo-id',
+            },
+          },
+        },
       });
 
       // Add client property to mock
@@ -539,14 +539,17 @@ describe('QualityMetricsRepository', () => {
       const metrics = await repository.findByProject(projectKey);
 
       expect(metrics).not.toBeNull();
-      expect(mockPost).toHaveBeenCalledWith('', expect.objectContaining({
-        query: expect.stringContaining('repository(login'),
-        variables: expect.objectContaining({
-          login: 'test',
-          name: 'Test Project',
-          provider: 'GITHUB'
+      expect(mockPost).toHaveBeenCalledWith(
+        '',
+        expect.objectContaining({
+          query: expect.stringContaining('repository(login'),
+          variables: expect.objectContaining({
+            login: 'test',
+            name: 'Test Project',
+            provider: 'GITHUB',
+          }),
         })
-      }));
+      );
     });
 
     it('should handle GraphQL errors in fallback', async () => {
@@ -562,15 +565,15 @@ describe('QualityMetricsRepository', () => {
       // Mock GraphQL response with errors
       const mockPost = vi.fn().mockResolvedValue({
         data: {
-          errors: [
-            { message: 'Repository not found' }
-          ]
-        }
+          errors: [{ message: 'Repository not found' }],
+        },
       });
 
       (mockClient as any).client = { post: mockPost };
 
-      await expect(repository.findByProject(projectKey)).rejects.toThrow('GraphQL Errors: Repository not found');
+      await expect(repository.findByProject(projectKey)).rejects.toThrow(
+        'GraphQL Errors: Repository not found'
+      );
     });
 
     it('should handle missing repository ID in GraphQL response', async () => {
@@ -586,13 +589,15 @@ describe('QualityMetricsRepository', () => {
       // Mock GraphQL response with no repository ID
       const mockPost = vi.fn().mockResolvedValue({
         data: {
-          data: {}
-        }
+          data: {},
+        },
       });
 
       (mockClient as any).client = { post: mockPost };
 
-      await expect(repository.findByProject(projectKey)).rejects.toThrow('Repository ID not found for project: test-project');
+      await expect(repository.findByProject(projectKey)).rejects.toThrow(
+        'Repository ID not found for project: test-project'
+      );
     });
 
     it('should handle errors in getRepositoryId', async () => {
@@ -621,31 +626,41 @@ describe('QualityMetricsRepository', () => {
     it('should propagate errors in countByProject', async () => {
       (mockClient as any).getQualityMetrics.mockRejectedValue(new Error('Count error'));
 
-      await expect(repository.countByProject(asProjectKey('test-project'))).rejects.toThrow('Count error');
+      await expect(repository.countByProject(asProjectKey('test-project'))).rejects.toThrow(
+        'Count error'
+      );
     });
 
     it('should propagate errors in countFailingByProject', async () => {
       (mockClient as any).getQualityMetrics.mockRejectedValue(new Error('Count failing error'));
 
-      await expect(repository.countFailingByProject(asProjectKey('test-project'))).rejects.toThrow('Count failing error');
+      await expect(repository.countFailingByProject(asProjectKey('test-project'))).rejects.toThrow(
+        'Count failing error'
+      );
     });
 
     it('should propagate errors in exists', async () => {
       (mockClient as any).getQualityMetrics.mockRejectedValue(new Error('Exists error'));
 
-      await expect(repository.exists(asProjectKey('test-project'), MetricShortcode.LCV)).rejects.toThrow('Exists error');
+      await expect(
+        repository.exists(asProjectKey('test-project'), MetricShortcode.LCV)
+      ).rejects.toThrow('Exists error');
     });
 
     it('should propagate errors in findFailingMetrics', async () => {
       (mockClient as any).getQualityMetrics.mockRejectedValue(new Error('Failing metrics error'));
 
-      await expect(repository.findFailingMetrics(asProjectKey('test-project'))).rejects.toThrow('Failing metrics error');
+      await expect(repository.findFailingMetrics(asProjectKey('test-project'))).rejects.toThrow(
+        'Failing metrics error'
+      );
     });
 
     it('should propagate errors in findReportedMetrics', async () => {
       (mockClient as any).getQualityMetrics.mockRejectedValue(new Error('Reported metrics error'));
 
-      await expect(repository.findReportedMetrics(asProjectKey('test-project'))).rejects.toThrow('Reported metrics error');
+      await expect(repository.findReportedMetrics(asProjectKey('test-project'))).rejects.toThrow(
+        'Reported metrics error'
+      );
     });
 
     it('should propagate errors in findByCompositeId', async () => {
@@ -661,13 +676,17 @@ describe('QualityMetricsRepository', () => {
     });
 
     it('should propagate errors in findByProjectAndMetric', async () => {
-      (mockClient as any).listProjects.mockRejectedValue(new Error('Find by project and metric error'));
+      (mockClient as any).listProjects.mockRejectedValue(
+        new Error('Find by project and metric error')
+      );
 
-      await expect(repository.findByProjectAndMetric(
-        asProjectKey('test-project'),
-        MetricShortcode.LCV,
-        'AGGREGATE'
-      )).rejects.toThrow('Find by project and metric error');
+      await expect(
+        repository.findByProjectAndMetric(
+          asProjectKey('test-project'),
+          MetricShortcode.LCV,
+          'AGGREGATE'
+        )
+      ).rejects.toThrow('Find by project and metric error');
     });
   });
 });
