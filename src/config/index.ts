@@ -130,3 +130,24 @@ export function getApiKey(): string {
   const config = getConfig();
   return config.apiKey;
 }
+
+// Re-export feature flags
+export {
+  getFeatureFlags,
+  isFeatureEnabled,
+  getEnabledFeatures,
+  type FeatureFlags,
+} from './features.js';
+
+// Re-export default configurations
+export {
+  DEFAULT_SERVER_CONFIG,
+  DEFAULT_API_CONFIG,
+  DEFAULT_DISCOVERY_CONFIG,
+  getEnvironmentConfig,
+  ToolCategory,
+  ToolTag,
+  type ServerConfig,
+  type ApiConfig,
+  type DiscoveryConfig,
+} from './default.js';

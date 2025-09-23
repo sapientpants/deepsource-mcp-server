@@ -1,23 +1,17 @@
-#!/usr/bin/env node
-
 /**
- * @fileoverview Main entry point for the DeepSource MCP server using ToolRegistry
+ * @fileoverview Compatibility layer for modules that import from index-registry
  *
- * @deprecated This file is deprecated. Please use src/index.ts instead.
- * This file is provided for backward compatibility and will be removed in the next major version.
+ * This module provides backward compatibility for code that imports from
+ * the old index-registry.ts entry point. It redirects to the consolidated
+ * implementation in index.ts.
  *
- * Migration guide:
- * - Import from 'deepsource-mcp-server' or './index.js' instead of './index-registry.js'
- * - Use DeepSourceMCPServer.create() instead of manual registry configuration
- * - See MIGRATION.md for detailed migration instructions
+ * @deprecated This module is provided for backward compatibility only.
+ * New code should import directly from index.ts
+ *
+ * @packageDocumentation
  */
 
-import process from 'node:process';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { createLogger } from './utils/logging/logger.js';
-import { VERSION } from './version.js';
-// import { RepositoryFactory } from './infrastructure/factories/repository.factory.js';
 import { ToolRegistry } from './server/tool-registry.js';
 import {
   adaptQualityMetricsParams,
@@ -54,31 +48,21 @@ import {
   runToolSchema,
   recentRunIssuesToolSchema,
 } from './server/tool-definitions.js';
+import { createLogger } from './utils/logging/logger.js';
 
-// Environment variables are handled by the getApiKey function in config
-
-// Module logger
-const logger = createLogger('Main');
-
-// Log deprecation warning
-logger.warn(
-  'DEPRECATED: index-registry.ts is deprecated and will be removed in the next major version. ' +
-    'Please use index.ts instead. See MIGRATION.md for migration instructions.'
-);
-
-if (process.env.NODE_ENV !== 'test') {
-  // eslint-disable-next-line no-console
-  console.warn(
-    '\n⚠️  WARNING: This entry point (index-registry.ts) is deprecated.\n' +
-      'Please use the main index.ts entry point instead.\n' +
-      'This file will be removed in the next major version.\n'
-  );
-}
+const logger = createLogger('Compatibility');
 
 /**
  * Validates environment configuration
+ * @deprecated Use getConfig from config/index.js instead
  */
-export function validateEnvironment(): void {
+export function validateEnvironment() {
+  logger.warn(
+    'DEPRECATED: validateEnvironment() is deprecated. ' +
+      'Please use getConfig() from config/index.js instead. ' +
+      'This function will be removed in the next major version.'
+  );
+
   if (!process.env.DEEPSOURCE_API_KEY) {
     const errorMsg = 'DEEPSOURCE_API_KEY environment variable is required';
     logger.error(errorMsg);
@@ -89,15 +73,21 @@ export function validateEnvironment(): void {
 
 /**
  * Creates and configures the tool registry with all handlers
+ * @deprecated Use DeepSourceMCPServer from index.ts instead
  */
-export function createAndConfigureToolRegistry(server: McpServer): ToolRegistry {
+export function createAndConfigureToolRegistry(server: McpServer) {
+  logger.warn(
+    'DEPRECATED: createAndConfigureToolRegistry() is deprecated. ' +
+      'Please use DeepSourceMCPServer from index.ts instead. ' +
+      'This function will be removed in the next major version.'
+  );
+
   const toolRegistry = new ToolRegistry(server);
 
   // Register project listing tool
   toolRegistry.registerTool({
     ...projectsToolSchema,
     handler: async () => {
-      // No adaptation needed - no parameters
       return handleProjects();
     },
   });
@@ -178,67 +168,10 @@ export function createAndConfigureToolRegistry(server: McpServer): ToolRegistry 
     },
   });
 
-  logger.info('Tool registry configured', {
+  logger.info('Tool registry configured (compatibility mode)', {
     toolCount: toolRegistry.getToolNames().length,
     tools: toolRegistry.getToolNames(),
   });
 
   return toolRegistry;
 }
-
-/**
- * Main function that starts the MCP server
- */
-export async function main() {
-  logger.info('Starting DeepSource MCP Server (Registry Implementation)', {
-    version: VERSION,
-  });
-
-  // Validate environment
-  validateEnvironment();
-
-  // Create MCP server
-  const server = new McpServer({
-    name: 'deepsource-mcp-server',
-    version: VERSION,
-  });
-
-  // Create and configure tool registry
-  createAndConfigureToolRegistry(server);
-
-  // Set up transport
-  const transport = new StdioServerTransport();
-  logger.info('Transport initialized', { type: 'stdio' });
-
-  // Connect server to transport
-  await server.connect(transport);
-  logger.info('Server connected to transport');
-
-  logger.info('DeepSource MCP Server running (Registry Implementation)');
-}
-
-// Handle errors
-process.on('uncaughtException', (error) => {
-  logger.error('Uncaught exception', {
-    error: error.message,
-    stack: error.stack,
-  });
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled rejection', {
-    reason,
-    promise,
-  });
-  process.exit(1);
-});
-
-// Run the server
-main().catch((error) => {
-  logger.error('Failed to start server', {
-    error: error.message,
-    stack: error.stack,
-  });
-  process.exit(1);
-});
