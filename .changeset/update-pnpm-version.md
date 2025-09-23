@@ -2,7 +2,7 @@
 'deepsource-mcp-server': patch
 ---
 
-Update pnpm from 10.15.1 to 10.17.1
+Update pnpm from 10.15.1 to 10.17.0
 
 - Updated packageManager field in package.json
 - Updated pnpm version across all GitHub Actions workflows
