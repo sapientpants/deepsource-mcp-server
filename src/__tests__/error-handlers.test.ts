@@ -380,12 +380,19 @@ describe('Error Handlers', () => {
     });
 
     it('should handle 500+ errors', () => {
-      const serverErrors = [500, 502, 503, 504, 520].map((status) => createMockAxiosError(status));
+      const serverErrors = [
+        { status: 500, expectedMessage: 'Server error' },
+        { status: 502, expectedMessage: 'Bad Gateway' },
+        { status: 503, expectedMessage: 'Service Unavailable' },
+        { status: 504, expectedMessage: 'Gateway Timeout' },
+        { status: 520, expectedMessage: 'Server error' },
+      ];
 
-      for (const error of serverErrors) {
+      for (const { status, expectedMessage } of serverErrors) {
+        const error = createMockAxiosError(status);
         const result = handleHttpStatusError(error);
         expect(result).not.toBeNull();
-        expect(result?.message).toContain('Server error');
+        expect(result?.message).toContain(expectedMessage);
         expect(result?.category).toBe(ErrorCategory.SERVER);
         expect(result?.originalError).toBe(error);
       }
