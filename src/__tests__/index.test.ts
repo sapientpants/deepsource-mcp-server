@@ -43,6 +43,7 @@ vi.mock('../handlers/base/handler.factory.js', () => ({
       warn: vi.fn(),
     },
   })),
+  createBaseHandlerFactory: vi.fn(),
 }));
 
 vi.mock('../server/tool-registration.js', () => ({

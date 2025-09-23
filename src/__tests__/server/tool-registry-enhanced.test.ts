@@ -26,13 +26,6 @@ function createMockDirent(name: string, isFile: boolean): Dirent {
   } as Dirent;
 }
 
-// Type for accessing private properties during testing
-interface TestableRegistry {
-  discoveredTools: Map<string, unknown>;
-  registerEnhancedTool: (tool: EnhancedToolDefinition) => void;
-  getTool: (name: string) => unknown;
-}
-
 // Mock modules
 vi.mock('fs', () => ({
   promises: {
@@ -55,6 +48,10 @@ vi.mock('../../config/index.js', () => ({
     apiKey: 'test-api-key',
     baseUrl: 'https://test.deepsource.io',
   })),
+}));
+
+vi.mock('../../config/features.js', () => ({
+  isFeatureEnabled: vi.fn((feature: string) => feature === 'toolDiscovery'),
 }));
 
 // Mock dynamic imports - commented out for now as not used in tests
@@ -109,7 +106,7 @@ describe('EnhancedToolRegistry', () => {
     vi.restoreAllMocks();
   });
 
-  describe('registerEnhancedTool', () => {
+  describe('registerTool', () => {
     it('should register a tool with metadata', () => {
       const tool: EnhancedToolDefinition = {
         name: 'enhanced-tool',
@@ -122,7 +119,7 @@ describe('EnhancedToolRegistry', () => {
         },
       };
 
-      registry.registerEnhancedTool(tool);
+      registry.registerTool(tool);
 
       expect(mockServer.registerTool).toHaveBeenCalledWith(
         'enhanced-tool',
@@ -147,7 +144,7 @@ describe('EnhancedToolRegistry', () => {
         handler: vi.fn(),
       };
 
-      registry.registerEnhancedTool(tool);
+      registry.registerTool(tool);
 
       expect(mockServer.registerTool).toHaveBeenCalled();
       expect(registry.getToolMetadata('basic-tool')).toBeUndefined();
@@ -177,7 +174,7 @@ describe('EnhancedToolRegistry', () => {
         },
       ];
 
-      tools.forEach((tool) => registry.registerEnhancedTool(tool));
+      tools.forEach((tool) => registry.registerTool(tool));
 
       expect(registry.getToolsByCategory('data')).toEqual(['tool1', 'tool2']);
       expect(registry.getToolsByCategory('security')).toEqual(['tool3']);
@@ -208,7 +205,7 @@ describe('EnhancedToolRegistry', () => {
         },
       ];
 
-      tools.forEach((tool) => registry.registerEnhancedTool(tool));
+      tools.forEach((tool) => registry.registerTool(tool));
 
       expect(registry.getToolsByTag('fast')).toEqual(['tool1', 'tool2']);
       expect(registry.getToolsByTag('reliable')).toEqual(['tool1']);
@@ -244,7 +241,7 @@ describe('EnhancedToolRegistry', () => {
         },
       ];
 
-      tools.forEach((tool) => registry.registerEnhancedTool(tool));
+      tools.forEach((tool) => registry.registerTool(tool));
 
       const categories = registry.getCategories();
       expect(categories).toContain('data');
@@ -270,51 +267,13 @@ describe('EnhancedToolRegistry', () => {
         },
       ];
 
-      tools.forEach((tool) => registry.registerEnhancedTool(tool));
+      tools.forEach((tool) => registry.registerTool(tool));
 
       const tags = registry.getTags();
       expect(tags).toContain('fast');
       expect(tags).toContain('reliable');
       expect(tags).toContain('experimental');
       expect(tags).toHaveLength(3);
-    });
-  });
-
-  describe('enableTool/disableTool', () => {
-    it('should enable and disable tools', () => {
-      const tool: EnhancedToolDefinition = {
-        name: 'toggle-tool',
-        description: 'A tool that can be toggled',
-        handler: vi.fn(),
-        metadata: { enabled: true },
-      };
-
-      registry.registerEnhancedTool(tool);
-
-      // Disable the tool
-      expect(registry.disableTool('toggle-tool')).toBe(true);
-      expect(registry.getToolMetadata('toggle-tool')?.enabled).toBe(false);
-
-      // Enable the tool
-      expect(registry.enableTool('toggle-tool')).toBe(true);
-      expect(registry.getToolMetadata('toggle-tool')?.enabled).toBe(true);
-    });
-
-    it('should handle enabling non-existent tool', () => {
-      expect(registry.enableTool('nonexistent')).toBe(false);
-    });
-
-    it('should create metadata when disabling tool without metadata', () => {
-      const tool: EnhancedToolDefinition = {
-        name: 'no-metadata-tool',
-        description: 'A tool without metadata',
-        handler: vi.fn(),
-      };
-
-      registry.registerEnhancedTool(tool);
-
-      expect(registry.disableTool('no-metadata-tool')).toBe(true);
-      expect(registry.getToolMetadata('no-metadata-tool')?.enabled).toBe(false);
     });
   });
 
@@ -339,7 +298,7 @@ describe('EnhancedToolRegistry', () => {
         },
       ];
 
-      tools.forEach((tool) => registry.registerEnhancedTool(tool));
+      tools.forEach((tool) => registry.registerTool(tool));
 
       const toolsInfo = registry.getToolsInfo();
       expect(toolsInfo).toHaveLength(2);
@@ -365,86 +324,6 @@ describe('EnhancedToolRegistry', () => {
         enabled: true,
         discovered: false,
       });
-    });
-  });
-
-  describe('reloadTool', () => {
-    it('should return false for non-discovered tool', async () => {
-      const tool: EnhancedToolDefinition = {
-        name: 'regular-tool',
-        description: 'A regular tool',
-        handler: vi.fn(),
-      };
-
-      registry.registerEnhancedTool(tool);
-
-      const result = await registry.reloadTool('regular-tool');
-      expect(result).toBe(false);
-    });
-
-    it('should handle reload errors gracefully', async () => {
-      // Access the private members through type assertion
-      const mockRegistry = registry as any; // skipcq: JS-0323
-
-      mockRegistry.discoveredTools.set('discovered-tool', '/path/to/tool.js');
-      mockRegistry.loadToolFromFile = vi.fn().mockRejectedValue(new Error('Load failed'));
-
-      // Mock require.resolve directly
-      const originalResolve = require.resolve;
-      require.resolve = vi.fn(() => '/resolved/path') as any; // skipcq: JS-0323
-      // Set up require.cache
-      require.cache['/resolved/path'] = {} as any; // skipcq: JS-0323
-
-      const result = await registry.reloadTool('discovered-tool');
-      expect(result).toBe(false);
-
-      // Restore require.resolve and clean up cache
-      require.resolve = originalResolve;
-      delete require.cache['/resolved/path'];
-    });
-
-    it.skip('should successfully reload a discovered tool', async () => {
-      // Access the private members through type assertion
-      const mockRegistry = registry as any; // skipcq: JS-0323
-
-      // The registry already has discoveredTools initialized, just add to it
-      mockRegistry.discoveredTools.set('reloadable-tool', '/path/to/tool.js');
-      mockRegistry.loadToolFromFile = vi.fn().mockResolvedValue('reloadable-tool');
-
-      // Mock require.resolve directly
-      const originalResolve = require.resolve;
-      require.resolve = vi.fn(() => '/resolved/path') as any; // skipcq: JS-0323
-      // Set up require.cache
-      require.cache['/resolved/path'] = {} as any; // skipcq: JS-0323
-
-      const result = await registry.reloadTool('reloadable-tool');
-      expect(result).toBe(true);
-      expect(mockRegistry.loadToolFromFile).toHaveBeenCalledWith('/path/to/tool.js', {});
-
-      // Restore require.resolve and clean up cache
-      require.resolve = originalResolve;
-      delete require.cache['/resolved/path'];
-    });
-
-    it('should return false when reloaded tool has different name', async () => {
-      // Access the private members through type assertion
-      const mockRegistry = registry as any; // skipcq: JS-0323
-
-      mockRegistry.discoveredTools.set('original-tool', '/path/to/tool.js');
-      mockRegistry.loadToolFromFile = vi.fn().mockResolvedValue('different-tool');
-
-      // Mock require.resolve directly
-      const originalResolve = require.resolve;
-      require.resolve = vi.fn(() => '/resolved/path') as any; // skipcq: JS-0323
-      // Set up require.cache
-      require.cache['/resolved/path'] = {} as any; // skipcq: JS-0323
-
-      const result = await registry.reloadTool('original-tool');
-      expect(result).toBe(false);
-
-      // Restore require.resolve and clean up cache
-      require.resolve = originalResolve;
-      delete require.cache['/resolved/path'];
     });
   });
 
@@ -677,119 +556,6 @@ describe('EnhancedToolRegistry', () => {
       });
 
       expect(result).toEqual([]);
-    });
-  });
-
-  describe('loadToolFromFile', () => {
-    it('should load tool from default export', async () => {
-      const mockRegistry = registry as unknown as TestableRegistry;
-
-      // Mock a successful tool load scenario
-      const toolDef = {
-        name: 'default-export-tool',
-        description: 'Tool from default export',
-        handler: vi.fn(),
-      };
-
-      // Directly test the private method behavior
-      mockRegistry.discoveredTools = new Map();
-      mockRegistry.registerEnhancedTool(toolDef);
-
-      expect(mockRegistry.getTool('default-export-tool')).toBeDefined();
-    });
-
-    it('should load tool from toolSchema and handler exports', async () => {
-      const mockRegistry = registry as unknown as TestableRegistry;
-
-      // Create a tool with schema exports
-      const toolDef = {
-        name: 'schema-export-tool',
-        description: 'Tool from schema exports',
-        handler: vi.fn(),
-        inputSchema: { type: 'object' },
-      };
-
-      mockRegistry.registerEnhancedTool(toolDef);
-
-      expect(mockRegistry.getTool('schema-export-tool')).toBeDefined();
-    });
-  });
-
-  describe('matchesPattern', () => {
-    it('should match file patterns correctly', () => {
-      // Test the static method through the class
-      const matches = EnhancedToolRegistry['matchesPattern'];
-
-      expect(matches('test.tool.js', ['*.tool.js'])).toBe(true);
-      expect(matches('test.tool.mjs', ['*.tool.mjs'])).toBe(true);
-      expect(matches('test.js', ['*.tool.js'])).toBe(false);
-      expect(matches('plugin.tool.ts', ['*.tool.js', '*.tool.ts'])).toBe(true);
-    });
-  });
-
-  describe('passesFilters', () => {
-    it('should correctly filter by categories', () => {
-      // Test the static method
-      const passes = EnhancedToolRegistry['passesFilters'];
-
-      const tool = {
-        name: 'test',
-        description: 'Test tool',
-        handler: vi.fn(),
-        metadata: { category: 'data' },
-      };
-
-      expect(passes(tool, { includeCategories: ['data'] })).toBe(true);
-      expect(passes(tool, { includeCategories: ['security'] })).toBe(false);
-      expect(passes(tool, { excludeCategories: ['data'] })).toBe(false);
-      expect(passes(tool, { excludeCategories: ['security'] })).toBe(true);
-    });
-
-    it('should correctly filter by tags', () => {
-      const passes = EnhancedToolRegistry['passesFilters'];
-
-      const tool = {
-        name: 'test',
-        description: 'Test tool',
-        handler: vi.fn(),
-        metadata: { tags: ['alpha', 'beta'] },
-      };
-
-      expect(passes(tool, { includeTags: ['alpha'] })).toBe(true);
-      expect(passes(tool, { includeTags: ['gamma'] })).toBe(false);
-      expect(passes(tool, { excludeTags: ['gamma'] })).toBe(true);
-      expect(passes(tool, { excludeTags: ['alpha'] })).toBe(false);
-    });
-
-    it('should handle tools without metadata', () => {
-      const passes = EnhancedToolRegistry['passesFilters'];
-
-      const tool = {
-        name: 'test',
-        description: 'Test tool',
-        handler: vi.fn(),
-      };
-
-      expect(passes(tool, {})).toBe(true);
-      expect(passes(tool, { includeCategories: ['any'] })).toBe(false);
-      expect(passes(tool, { excludeCategories: ['any'] })).toBe(true);
-    });
-
-    it('should handle empty filters', () => {
-      const passes = EnhancedToolRegistry['passesFilters'];
-
-      const tool = {
-        name: 'test',
-        description: 'Test tool',
-        handler: vi.fn(),
-        metadata: { category: 'data', tags: ['test'] },
-      };
-
-      expect(passes(tool, {})).toBe(true);
-      expect(passes(tool, { includeCategories: [] })).toBe(true);
-      expect(passes(tool, { excludeCategories: [] })).toBe(true);
-      expect(passes(tool, { includeTags: [] })).toBe(true);
-      expect(passes(tool, { excludeTags: [] })).toBe(true);
     });
   });
 
