@@ -25,7 +25,7 @@ const logger = createLogger('Compatibility');
  * @returns true if environment is valid, false otherwise
  */
 export function validateEnvironment(): boolean {
-  console.warn(
+  logger.warn(
     'DEPRECATED: validateEnvironment() is deprecated. ' +
       'Please use getConfig() from config/index.js instead. ' +
       'This function will be removed in the next major version.'
@@ -33,7 +33,7 @@ export function validateEnvironment(): boolean {
 
   const apiKey = process.env.DEEPSOURCE_API_KEY;
   if (!apiKey || apiKey.trim() === '') {
-    console.error('DEEPSOURCE_API_KEY environment variable is not set or is empty');
+    logger.error('DEEPSOURCE_API_KEY environment variable is not set or is empty');
     return false;
   }
 
@@ -51,7 +51,7 @@ export function createAndConfigureToolRegistry(
   server: McpServer,
   handlerDeps?: BaseHandlerDeps
 ): ToolRegistry {
-  console.warn(
+  logger.warn(
     'DEPRECATED: createAndConfigureToolRegistry() is deprecated. ' +
       'Please use DeepSourceMCPServer.create() from server/mcp-server.js instead. ' +
       'This function will be removed in the next major version.'
@@ -68,7 +68,7 @@ export function createAndConfigureToolRegistry(
     registerDeepSourceTools(registry);
     logger.info('Successfully registered DeepSource tools in compatibility mode');
   } catch (error) {
-    console.error('Failed to register tools:', error);
+    logger.error('Failed to register tools:', error);
     // Don't throw - return the registry even if registration fails
   }
 
