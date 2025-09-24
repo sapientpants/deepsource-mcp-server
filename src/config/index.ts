@@ -127,7 +127,20 @@ export function hasApiKey(): boolean {
  * @throws MCPError if API key is not set
  */
 export function getApiKey(): string {
+  logger.debug('getApiKey() called', {
+    hasEnvVar: Boolean(process.env.DEEPSOURCE_API_KEY),
+    envVarLength: process.env.DEEPSOURCE_API_KEY?.length,
+    keyPrefix: process.env.DEEPSOURCE_API_KEY?.substring(0, 8),
+  });
+
   const config = getConfig();
+
+  logger.debug('API key retrieved from config', {
+    hasApiKey: Boolean(config.apiKey),
+    apiKeyLength: config.apiKey?.length,
+    keyPrefix: config.apiKey?.substring(0, 8),
+  });
+
   return config.apiKey;
 }
 

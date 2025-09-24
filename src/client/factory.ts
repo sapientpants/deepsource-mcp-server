@@ -37,6 +37,13 @@ export class DeepSourceClientFactory {
    * @public
    */
   constructor(apiKey: string, config: DeepSourceClientConfig = {}) {
+    logger.info('DeepSourceClientFactory constructor called', {
+      hasApiKey: Boolean(apiKey),
+      apiKeyLength: apiKey?.length,
+      keyPrefix: apiKey?.substring(0, 8),
+      configKeys: Object.keys(config),
+    });
+
     if (!apiKey) {
       logger.error('No API key provided to DeepSourceClientFactory');
       throw new Error('DeepSource API key is required');
@@ -45,7 +52,10 @@ export class DeepSourceClientFactory {
     this.apiKey = apiKey;
     this.config = config;
 
-    logger.debug('DeepSourceClientFactory created');
+    logger.info('DeepSourceClientFactory created successfully', {
+      apiKeyLength: this.apiKey.length,
+      hasConfig: Object.keys(this.config).length > 0,
+    });
   }
 
   /**
