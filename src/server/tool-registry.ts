@@ -7,6 +7,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { promises as fs } from 'fs';
 import { join } from 'path';
+import * as path from 'path';
 import { createLogger } from '../utils/logging/logger.js';
 import { HandlerFunction, BaseHandlerDeps } from '../handlers/base/handler.interface.js';
 import {
@@ -490,7 +491,13 @@ export class ToolRegistry {
    */
   private matchesPattern(filename: string, patterns: string[]): boolean {
     return patterns.some((pattern) => {
-      const regex = new RegExp(pattern.replace('*', '.*'));
+      // Convert glob pattern to regex
+      // Escape special regex characters except for *
+      const escaped = pattern.replace(/[-[\]{}()+?.,\\^$|#\s]/g, '\\$&');
+      // Replace * with [^/]* (matches any sequence except path separator)
+      // Anchor the pattern to match the entire filename
+      const regexStr = '^' + escaped.replace(/\*/g, '[^/]*') + '$';
+      const regex = new RegExp(regexStr);
       return regex.test(filename);
     });
   }
@@ -508,6 +515,22 @@ export class ToolRegistry {
     }
   ): Promise<string | null> {
     try {
+      // Security validation: ensure the file path is within expected directories
+      const normalizedPath = path.normalize(filePath);
+      const resolvedPath = path.resolve(normalizedPath);
+
+      // Check for path traversal attempts
+      if (normalizedPath.includes('..') || !resolvedPath.startsWith(process.cwd())) {
+        logger.error(`Security: Rejected file path outside project directory: ${filePath}`);
+        return null;
+      }
+
+      // Additional validation: ensure it's a JavaScript/TypeScript file
+      if (!normalizedPath.match(/\.(js|mjs|ts)$/)) {
+        logger.error(`Security: Rejected non-JavaScript file: ${filePath}`);
+        return null;
+      }
+
       logger.debug(`Loading tool from file: ${filePath}`);
       const module = (await import(filePath)) as Record<string, unknown>;
 

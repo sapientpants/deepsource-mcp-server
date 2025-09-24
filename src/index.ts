@@ -171,7 +171,13 @@ async function main(): Promise<void> {
 
 // Run the main function only when not in test mode and when executed directly
 /* istanbul ignore if */
-if (process.env.NODE_ENV !== 'test' && require.main === module) {
+// Check if this file is being run directly (ESM compatible)
+const isMainModule =
+  import.meta.url === `file://${process.argv[1]}` ||
+  import.meta.url === `file://${process.argv[1]}.ts` ||
+  import.meta.url === `file://${process.argv[1]}.js`;
+
+if (process.env.NODE_ENV !== 'test' && isMainModule) {
   main().catch((error) => {
     logger.error('Unhandled error in main', error);
     process.exit(1);
