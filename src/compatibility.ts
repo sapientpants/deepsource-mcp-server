@@ -65,7 +65,7 @@ export function createAndConfigureToolRegistry(
 
   try {
     // Register all DeepSource tools using the standard registration
-    registerDeepSourceTools(registry, deps);
+    registerDeepSourceTools(registry);
     logger.info('Successfully registered DeepSource tools in compatibility mode');
   } catch (error) {
     console.error('Failed to register tools:', error);
