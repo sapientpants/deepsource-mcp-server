@@ -1,177 +1,76 @@
 /**
- * @fileoverview Compatibility layer for modules that import from index-registry
+ * @fileoverview Backward compatibility layer for deprecated functions
  *
- * This module provides backward compatibility for code that imports from
- * the old index-registry.ts entry point. It redirects to the consolidated
- * implementation in index.ts.
+ * This module provides backward compatibility for code that uses
+ * deprecated functions from older versions of the DeepSource MCP Server.
  *
- * @deprecated This module is provided for backward compatibility only.
- * New code should import directly from index.ts
+ * @deprecated This entire module is deprecated and will be removed in v2.0.0
+ * Please migrate to the new APIs as documented in MIGRATION.md
  *
  * @packageDocumentation
  */
 
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ToolRegistry } from './server/tool-registry.js';
-import {
-  adaptQualityMetricsParams,
-  adaptUpdateMetricThresholdParams,
-  adaptUpdateMetricSettingParams,
-  adaptComplianceReportParams,
-  adaptProjectIssuesParams,
-  adaptDependencyVulnerabilitiesParams,
-  adaptProjectRunsParams,
-  adaptRunParams,
-  adaptRecentRunIssuesParams,
-} from './adapters/handler-adapters.js';
-import {
-  handleProjects,
-  handleDeepsourceQualityMetrics,
-  handleDeepsourceUpdateMetricThreshold,
-  handleDeepsourceUpdateMetricSetting,
-  handleDeepsourceComplianceReport,
-  handleDeepsourceProjectIssues,
-  handleDeepsourceDependencyVulnerabilities,
-  handleDeepsourceProjectRuns,
-  handleDeepsourceRun,
-  handleDeepsourceRecentRunIssues,
-} from './handlers/index.js';
-import {
-  projectsToolSchema,
-  qualityMetricsToolSchema,
-  updateMetricThresholdToolSchema,
-  updateMetricSettingToolSchema,
-  complianceReportToolSchema,
-  projectIssuesToolSchema,
-  dependencyVulnerabilitiesToolSchema,
-  runsToolSchema,
-  runToolSchema,
-  recentRunIssuesToolSchema,
-} from './server/tool-definitions.js';
+import { registerDeepSourceTools } from './server/tool-registration.js';
+import type { BaseHandlerDeps } from './handlers/base/handler.interface.js';
+import { createDefaultHandlerDeps } from './handlers/base/handler.factory.js';
 import { createLogger } from './utils/logging/logger.js';
 
 const logger = createLogger('Compatibility');
 
 /**
- * Validates environment configuration
- * @deprecated Use getConfig from config/index.js instead
+ * Validates that required environment variables are set
+ * @deprecated Use getConfig() from config/index.js instead
+ * @returns true if environment is valid, false otherwise
  */
-export function validateEnvironment() {
-  logger.warn(
+export function validateEnvironment(): boolean {
+  console.warn(
     'DEPRECATED: validateEnvironment() is deprecated. ' +
       'Please use getConfig() from config/index.js instead. ' +
       'This function will be removed in the next major version.'
   );
 
-  if (!process.env.DEEPSOURCE_API_KEY) {
-    const errorMsg = 'DEEPSOURCE_API_KEY environment variable is required';
-    logger.error(errorMsg);
-    process.exit(1);
+  const apiKey = process.env.DEEPSOURCE_API_KEY;
+  if (!apiKey || apiKey.trim() === '') {
+    console.error('DEEPSOURCE_API_KEY environment variable is not set or is empty');
+    return false;
   }
-  logger.info('Environment validated', { hasApiKey: true });
+
+  return true;
 }
 
 /**
- * Creates and configures the tool registry with all handlers
- * @deprecated Use DeepSourceMCPServer from index.ts instead
+ * Creates and configures a tool registry with all DeepSource tools
+ * @deprecated Use DeepSourceMCPServer.create() from server/mcp-server.js instead
+ * @param server - The MCP server instance
+ * @param handlerDeps - Optional custom handler dependencies
+ * @returns Configured tool registry
  */
-export function createAndConfigureToolRegistry(server: McpServer) {
-  logger.warn(
+export function createAndConfigureToolRegistry(
+  server: McpServer,
+  handlerDeps?: BaseHandlerDeps
+): ToolRegistry {
+  console.warn(
     'DEPRECATED: createAndConfigureToolRegistry() is deprecated. ' +
-      'Please use DeepSourceMCPServer from index.ts instead. ' +
+      'Please use DeepSourceMCPServer.create() from server/mcp-server.js instead. ' +
       'This function will be removed in the next major version.'
   );
 
-  const toolRegistry = new ToolRegistry(server);
+  // Create dependencies if not provided
+  const deps = handlerDeps || createDefaultHandlerDeps();
 
-  // Register project listing tool
-  toolRegistry.registerTool({
-    ...projectsToolSchema,
-    handler: async () => {
-      return handleProjects();
-    },
-  });
+  // Create registry with dependencies
+  const registry = new ToolRegistry(server, deps);
 
-  // Register quality metrics tools
-  toolRegistry.registerTool({
-    ...qualityMetricsToolSchema,
-    handler: async (params) => {
-      const adaptedParams = adaptQualityMetricsParams(params);
-      return handleDeepsourceQualityMetrics(adaptedParams);
-    },
-  });
+  try {
+    // Register all DeepSource tools using the standard registration
+    registerDeepSourceTools(registry, deps);
+    logger.info('Successfully registered DeepSource tools in compatibility mode');
+  } catch (error) {
+    console.error('Failed to register tools:', error);
+    // Don't throw - return the registry even if registration fails
+  }
 
-  toolRegistry.registerTool({
-    ...updateMetricThresholdToolSchema,
-    handler: async (params) => {
-      const adaptedParams = adaptUpdateMetricThresholdParams(params);
-      return handleDeepsourceUpdateMetricThreshold(adaptedParams);
-    },
-  });
-
-  toolRegistry.registerTool({
-    ...updateMetricSettingToolSchema,
-    handler: async (params) => {
-      const adaptedParams = adaptUpdateMetricSettingParams(params);
-      return handleDeepsourceUpdateMetricSetting(adaptedParams);
-    },
-  });
-
-  // Register compliance report tool
-  toolRegistry.registerTool({
-    ...complianceReportToolSchema,
-    handler: async (params) => {
-      const adaptedParams = adaptComplianceReportParams(params);
-      return handleDeepsourceComplianceReport(adaptedParams);
-    },
-  });
-
-  // Register issue tools
-  toolRegistry.registerTool({
-    ...projectIssuesToolSchema,
-    handler: async (params) => {
-      const adaptedParams = adaptProjectIssuesParams(params);
-      return handleDeepsourceProjectIssues(adaptedParams);
-    },
-  });
-
-  toolRegistry.registerTool({
-    ...dependencyVulnerabilitiesToolSchema,
-    handler: async (params) => {
-      const adaptedParams = adaptDependencyVulnerabilitiesParams(params);
-      return handleDeepsourceDependencyVulnerabilities(adaptedParams);
-    },
-  });
-
-  // Register run tools
-  toolRegistry.registerTool({
-    ...runsToolSchema,
-    handler: async (params) => {
-      const adaptedParams = adaptProjectRunsParams(params);
-      return handleDeepsourceProjectRuns(adaptedParams);
-    },
-  });
-
-  toolRegistry.registerTool({
-    ...runToolSchema,
-    handler: async (params) => {
-      const adaptedParams = adaptRunParams(params);
-      return handleDeepsourceRun(adaptedParams);
-    },
-  });
-
-  toolRegistry.registerTool({
-    ...recentRunIssuesToolSchema,
-    handler: async (params) => {
-      const adaptedParams = adaptRecentRunIssuesParams(params);
-      return handleDeepsourceRecentRunIssues(adaptedParams);
-    },
-  });
-
-  logger.info('Tool registry configured (compatibility mode)', {
-    toolCount: toolRegistry.getToolNames().length,
-    tools: toolRegistry.getToolNames(),
-  });
-
-  return toolRegistry;
+  return registry;
 }
