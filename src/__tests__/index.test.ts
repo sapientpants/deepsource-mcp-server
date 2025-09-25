@@ -115,7 +115,7 @@ describe('index.ts module', () => {
     initializeServer: () => Promise<void>;
   };
   let originalEnv: typeof process.env;
-  let consoleLogSpy: any;
+  let consoleLogSpy: ReturnType<typeof vi.spyOn>;
 
   beforeAll(async () => {
     // Save original env

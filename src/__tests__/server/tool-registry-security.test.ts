@@ -18,7 +18,22 @@ vi.mock('fs', () => ({
 
 // Mock dynamic import
 const mockDynamicImport = vi.fn();
-global.import = mockDynamicImport as any;
+// @ts-expect-error - Override global import for testing
+global.import = mockDynamicImport;
+
+// Type for accessing private static methods in tests
+type ToolRegistryStatic = typeof ToolRegistry & {
+  matchesPattern: (filename: string, patterns: string[]) => boolean;
+  passesFilters: (
+    tool: { metadata?: { category?: string; tags?: string[] } },
+    options: {
+      includeCategories?: string[];
+      excludeCategories?: string[];
+      includeTags?: string[];
+      excludeTags?: string[];
+    }
+  ) => boolean;
+};
 
 describe('ToolRegistry Security and Edge Cases', () => {
   // Note: This file now only tests public API methods and static helpers
@@ -91,7 +106,7 @@ describe('ToolRegistry Security and Edge Cases', () => {
         handler: vi.fn(),
       };
 
-      const passesFilters = (ToolRegistry as any).passesFilters;
+      const passesFilters = (ToolRegistry as unknown as ToolRegistryStatic).passesFilters;
 
       // Should pass when no filters
       expect(passesFilters(tool, {})).toBe(true);
@@ -114,7 +129,7 @@ describe('ToolRegistry Security and Edge Cases', () => {
         },
       };
 
-      const passesFilters = (ToolRegistry as any).passesFilters;
+      const passesFilters = (ToolRegistry as unknown as ToolRegistryStatic).passesFilters;
 
       // Empty arrays should not filter anything
       expect(passesFilters(tool, { includeCategories: [] })).toBe(true);
@@ -126,14 +141,14 @@ describe('ToolRegistry Security and Edge Cases', () => {
 
   describe('matchesPattern - Pattern Matching', () => {
     it('should match exact filenames', () => {
-      const matchesPattern = (ToolRegistry as any).matchesPattern;
+      const matchesPattern = (ToolRegistry as unknown as ToolRegistryStatic).matchesPattern;
 
       expect(matchesPattern('test.tool.js', ['test.tool.js'])).toBe(true);
       expect(matchesPattern('test.tool.js', ['other.tool.js'])).toBe(false);
     });
 
     it('should match wildcard patterns', () => {
-      const matchesPattern = (ToolRegistry as any).matchesPattern;
+      const matchesPattern = (ToolRegistry as unknown as ToolRegistryStatic).matchesPattern;
 
       expect(matchesPattern('test.tool.js', ['*.tool.js'])).toBe(true);
       expect(matchesPattern('test.tool.ts', ['*.tool.js'])).toBe(false);
@@ -142,7 +157,7 @@ describe('ToolRegistry Security and Edge Cases', () => {
     });
 
     it('should match multiple patterns', () => {
-      const matchesPattern = (ToolRegistry as any).matchesPattern;
+      const matchesPattern = (ToolRegistry as unknown as ToolRegistryStatic).matchesPattern;
 
       expect(matchesPattern('test.tool.js', ['*.tool.js', '*.tool.ts'])).toBe(true);
       expect(matchesPattern('test.tool.ts', ['*.tool.js', '*.tool.ts'])).toBe(true);
@@ -150,7 +165,7 @@ describe('ToolRegistry Security and Edge Cases', () => {
     });
 
     it('should handle special regex characters in patterns', () => {
-      const matchesPattern = (ToolRegistry as any).matchesPattern;
+      const matchesPattern = (ToolRegistry as unknown as ToolRegistryStatic).matchesPattern;
 
       // Dots should be treated literally except after *
       expect(matchesPattern('test.tool.js', ['test.tool.js'])).toBe(true);

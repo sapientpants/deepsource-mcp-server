@@ -21,7 +21,7 @@ vi.mock('../../server/tool-registry.js', () => ({
 describe('tool-registry-enhanced', () => {
   let mockServer: McpServer;
   let mockDeps: BaseHandlerDeps;
-  let consoleWarnSpy: any;
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     mockServer = {

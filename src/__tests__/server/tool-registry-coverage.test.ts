@@ -5,12 +5,26 @@
 import { describe, it, expect } from 'vitest';
 import { ToolRegistry } from '../../server/tool-registry.js';
 
+// Type for accessing private static methods in tests
+type ToolRegistryStatic = typeof ToolRegistry & {
+  matchesPattern: (filename: string, patterns: string[]) => boolean;
+  passesFilters: (
+    tool: { metadata?: { category?: string; tags?: string[] } },
+    options: {
+      includeCategories?: string[];
+      excludeCategories?: string[];
+      includeTags?: string[];
+      excludeTags?: string[];
+    }
+  ) => boolean;
+};
+
 describe('ToolRegistry - Coverage Tests', () => {
   // These tests only test static methods, so no setup is needed
 
   describe('Static helper methods', () => {
     it('matchesPattern should correctly match file patterns', () => {
-      const matchesPattern = (ToolRegistry as any).matchesPattern;
+      const matchesPattern = (ToolRegistry as unknown as ToolRegistryStatic).matchesPattern;
 
       // Test exact match
       expect(matchesPattern('test.js', ['test.js'])).toBe(true);
@@ -30,7 +44,7 @@ describe('ToolRegistry - Coverage Tests', () => {
     });
 
     it('passesFilters should handle various filter combinations', () => {
-      const passesFilters = (ToolRegistry as any).passesFilters;
+      const passesFilters = (ToolRegistry as unknown as ToolRegistryStatic).passesFilters;
 
       // Tool with full metadata
       const tool = {
@@ -85,12 +99,12 @@ describe('ToolRegistry - Coverage Tests', () => {
 
   describe('Tool discovery helpers', () => {
     it('should handle empty patterns array', () => {
-      const matchesPattern = (ToolRegistry as any).matchesPattern;
+      const matchesPattern = (ToolRegistry as unknown as ToolRegistryStatic).matchesPattern;
       expect(matchesPattern('file.js', [])).toBe(false);
     });
 
     it('should handle patterns with special characters', () => {
-      const matchesPattern = (ToolRegistry as any).matchesPattern;
+      const matchesPattern = (ToolRegistry as unknown as ToolRegistryStatic).matchesPattern;
 
       // Pattern with dots
       expect(matchesPattern('test.min.js', ['*.min.js'])).toBe(true);
@@ -106,7 +120,7 @@ describe('ToolRegistry - Coverage Tests', () => {
 
   describe('Filter edge cases', () => {
     it('should handle tools with partial metadata', () => {
-      const passesFilters = (ToolRegistry as any).passesFilters;
+      const passesFilters = (ToolRegistry as unknown as ToolRegistryStatic).passesFilters;
 
       const toolWithCategory = {
         name: 'tool',
@@ -136,7 +150,7 @@ describe('ToolRegistry - Coverage Tests', () => {
     });
 
     it('should handle empty metadata object', () => {
-      const passesFilters = (ToolRegistry as any).passesFilters;
+      const passesFilters = (ToolRegistry as unknown as ToolRegistryStatic).passesFilters;
 
       const tool = {
         name: 'tool',
@@ -152,7 +166,7 @@ describe('ToolRegistry - Coverage Tests', () => {
     });
 
     it('should handle filters with empty arrays', () => {
-      const passesFilters = (ToolRegistry as any).passesFilters;
+      const passesFilters = (ToolRegistry as unknown as ToolRegistryStatic).passesFilters;
 
       const tool = {
         name: 'tool',
@@ -172,7 +186,7 @@ describe('ToolRegistry - Coverage Tests', () => {
     });
 
     it('should handle multiple tag matching', () => {
-      const passesFilters = (ToolRegistry as any).passesFilters;
+      const passesFilters = (ToolRegistry as unknown as ToolRegistryStatic).passesFilters;
 
       const tool = {
         name: 'tool',
