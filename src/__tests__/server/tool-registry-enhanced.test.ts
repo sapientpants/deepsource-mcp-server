@@ -45,7 +45,10 @@ describe('tool-registry-enhanced', () => {
     };
 
     // Spy on console.warn
-    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+      // Intentionally empty - suppressing console output during tests
+      return undefined;
+    });
   });
 
   afterEach(() => {

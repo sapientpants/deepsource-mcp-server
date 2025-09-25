@@ -131,7 +131,10 @@ describe('index.ts module', () => {
   });
 
   beforeEach(() => {
-    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {
+      // Intentionally empty - suppressing console output during tests
+      return undefined;
+    });
     vi.clearAllMocks();
   });
 
