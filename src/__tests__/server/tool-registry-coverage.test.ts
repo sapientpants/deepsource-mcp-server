@@ -2,39 +2,11 @@
  * @fileoverview Tests for tool registry to improve code coverage
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { ToolRegistry } from '../../server/tool-registry.js';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { BaseHandlerDeps } from '../../handlers/base/handler.interface.js';
 
 describe('ToolRegistry - Coverage Tests', () => {
-  let mockServer: McpServer;
-  let mockDeps: BaseHandlerDeps;
-  let registry: ToolRegistry;
-
-  beforeEach(() => {
-    mockServer = {
-      registerTool: vi.fn(),
-      connect: vi.fn(),
-    } as unknown as McpServer;
-
-    mockDeps = {
-      getApiKey: vi.fn(() => 'test-api-key'),
-      clientFactory: {} as BaseHandlerDeps['clientFactory'],
-      projectRepository: {} as BaseHandlerDeps['projectRepository'],
-      analysisRunRepository: {} as BaseHandlerDeps['analysisRunRepository'],
-      metricsRepository: {} as BaseHandlerDeps['metricsRepository'],
-      complianceReportRepository: {} as BaseHandlerDeps['complianceReportRepository'],
-      logger: {
-        info: vi.fn(),
-        warn: vi.fn(),
-        error: vi.fn(),
-        debug: vi.fn(),
-      },
-    };
-
-    registry = new ToolRegistry(mockServer, mockDeps);
-  });
+  // These tests only test static methods, so no setup is needed
 
   describe('Static helper methods', () => {
     it('matchesPattern should correctly match file patterns', () => {

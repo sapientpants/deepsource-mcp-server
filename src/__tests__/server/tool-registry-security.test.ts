@@ -6,8 +6,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ToolRegistry, ToolDefinition } from '../../server/tool-registry.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { BaseHandlerDeps } from '../../handlers/base/handler.interface.js';
-import { promises as fs } from 'fs';
-import * as path from 'path';
 
 // Mock fs module
 vi.mock('fs', () => ({
