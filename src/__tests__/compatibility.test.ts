@@ -63,10 +63,7 @@ vi.mock('../handlers/base/handler.factory.js', () => ({
 }));
 
 // Import after mocks are set up
-import {
-  validateEnvironment,
-  createAndConfigureToolRegistry,
-} from '../compatibility.js';
+import { validateEnvironment, createAndConfigureToolRegistry } from '../compatibility.js';
 import { ToolRegistry } from '../server/tool-registry.js';
 import { registerDeepSourceTools } from '../server/tool-registration.js';
 import { createDefaultHandlerDeps } from '../handlers/base/handler.factory.js';
