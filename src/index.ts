@@ -33,7 +33,7 @@ export const mcpServer = {
 };
 
 // Initialize the DeepSource MCP server
-async function initializeServer(): Promise<void> {
+export async function initializeServer(): Promise<void> {
   try {
     logger.info('Initializing DeepSource MCP Server');
 
