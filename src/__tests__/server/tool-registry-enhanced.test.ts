@@ -2,8 +2,12 @@
  * @fileoverview Tests for tool-registry-enhanced.ts deprecated function
  */
 
+/* skipcq: JS-W1029 */
+// This test file intentionally uses the deprecated createEnhancedToolRegistry function
+// to verify that deprecation warnings are working correctly
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createEnhancedToolRegistry } from '../../server/tool-registry-enhanced.js';
+import { createEnhancedToolRegistry } from '../../server/tool-registry-enhanced.js'; // skipcq: JS-W1029
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { BaseHandlerDeps } from '../../handlers/base/handler.interface.js';
 
@@ -58,7 +62,7 @@ describe('tool-registry-enhanced', () => {
 
   describe('createEnhancedToolRegistry', () => {
     it('should create a ToolRegistry instance', () => {
-      const registry = createEnhancedToolRegistry(mockServer, mockDeps);
+      const registry = createEnhancedToolRegistry(mockServer, mockDeps); // skipcq: JS-W1029
 
       expect(registry).toBeDefined();
       expect(registry.registerTool).toBeDefined();
@@ -67,7 +71,7 @@ describe('tool-registry-enhanced', () => {
     });
 
     it('should log deprecation warning', () => {
-      createEnhancedToolRegistry(mockServer, mockDeps);
+      createEnhancedToolRegistry(mockServer, mockDeps); // skipcq: JS-W1029
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('WARNING: createEnhancedToolRegistry is deprecated')
@@ -83,7 +87,7 @@ describe('tool-registry-enhanced', () => {
     it('should pass server and dependencies to ToolRegistry', async () => {
       const { ToolRegistry } = vi.mocked(await import('../../server/tool-registry.js'));
 
-      createEnhancedToolRegistry(mockServer, mockDeps);
+      createEnhancedToolRegistry(mockServer, mockDeps); // skipcq: JS-W1029
 
       expect(ToolRegistry).toHaveBeenCalledWith(mockServer, mockDeps);
     });
@@ -91,7 +95,7 @@ describe('tool-registry-enhanced', () => {
     it('should work without dependencies', async () => {
       const { ToolRegistry } = vi.mocked(await import('../../server/tool-registry.js'));
 
-      const registry = createEnhancedToolRegistry(mockServer);
+      const registry = createEnhancedToolRegistry(mockServer); // skipcq: JS-W1029
 
       expect(registry).toBeDefined();
       expect(ToolRegistry).toHaveBeenCalledWith(mockServer, undefined);
@@ -99,7 +103,7 @@ describe('tool-registry-enhanced', () => {
     });
 
     it('should return a functional registry', async () => {
-      const registry = createEnhancedToolRegistry(mockServer, mockDeps);
+      const registry = createEnhancedToolRegistry(mockServer, mockDeps); // skipcq: JS-W1029
 
       // Verify the registry has expected methods and they work
       expect(registry.getToolNames()).toEqual(['tool1', 'tool2']);
@@ -107,9 +111,9 @@ describe('tool-registry-enhanced', () => {
     });
 
     it('should warn every time it is called', () => {
-      createEnhancedToolRegistry(mockServer, mockDeps);
-      createEnhancedToolRegistry(mockServer, mockDeps);
-      createEnhancedToolRegistry(mockServer, mockDeps);
+      createEnhancedToolRegistry(mockServer, mockDeps); // skipcq: JS-W1029
+      createEnhancedToolRegistry(mockServer, mockDeps); // skipcq: JS-W1029
+      createEnhancedToolRegistry(mockServer, mockDeps); // skipcq: JS-W1029
 
       expect(consoleWarnSpy).toHaveBeenCalledTimes(3);
       expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('deprecated'));
