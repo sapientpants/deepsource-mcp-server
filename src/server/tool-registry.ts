@@ -6,8 +6,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { promises as fs } from 'fs';
-import { join } from 'path';
-import * as path from 'path';
+import { join, normalize, resolve } from 'path';
 import { createLogger } from '../utils/logging/logger.js';
 import { HandlerFunction, BaseHandlerDeps } from '../handlers/base/handler.interface.js';
 import {
@@ -471,7 +470,7 @@ export class ToolRegistry {
         if (entry.isDirectory() && recursive) {
           const subTools = await this.scanDirectory(fullPath, patterns, recursive, filters);
           discoveredTools.push(...subTools);
-        } else if (entry.isFile() && this.matchesPattern(entry.name, patterns)) {
+        } else if (entry.isFile() && ToolRegistry.matchesPattern(entry.name, patterns)) {
           const toolName = await this.loadToolFromFile(fullPath, filters);
           if (toolName) {
             discoveredTools.push(toolName);
@@ -489,14 +488,14 @@ export class ToolRegistry {
   /**
    * Checks if a filename matches any of the patterns
    */
-  private matchesPattern(filename: string, patterns: string[]): boolean {
+  private static matchesPattern(filename: string, patterns: string[]): boolean {
     return patterns.some((pattern) => {
       // Convert glob pattern to regex
       // Escape special regex characters except for *
       const escaped = pattern.replace(/[-[\]{}()+?.,\\^$|#\s]/g, '\\$&');
       // Replace * with [^/]* (matches any sequence except path separator)
       // Anchor the pattern to match the entire filename
-      const regexStr = '^' + escaped.replace(/\*/g, '[^/]*') + '$';
+      const regexStr = `^${escaped.replace(/\*/g, '[^/]*')}$`;
       const regex = new RegExp(regexStr);
       return regex.test(filename);
     });
@@ -516,8 +515,8 @@ export class ToolRegistry {
   ): Promise<string | null> {
     try {
       // Security validation: ensure the file path is within expected directories
-      const normalizedPath = path.normalize(filePath);
-      const resolvedPath = path.resolve(normalizedPath);
+      const normalizedPath = normalize(filePath);
+      const resolvedPath = resolve(normalizedPath);
 
       // Check for path traversal attempts
       if (normalizedPath.includes('..') || !resolvedPath.startsWith(process.cwd())) {
@@ -526,7 +525,7 @@ export class ToolRegistry {
       }
 
       // Additional validation: ensure it's a JavaScript/TypeScript file
-      if (!normalizedPath.match(/\.(js|mjs|ts)$/)) {
+      if (!/\.(js|mjs|ts)$/.test(normalizedPath)) {
         logger.error(`Security: Rejected non-JavaScript file: ${filePath}`);
         return null;
       }
@@ -554,7 +553,7 @@ export class ToolRegistry {
         return null;
       }
 
-      if (!this.passesFilters(toolDef, filters)) {
+      if (!ToolRegistry.passesFilters(toolDef, filters)) {
         logger.debug(`Tool ${toolDef.name} filtered out`);
         return null;
       }
@@ -576,7 +575,7 @@ export class ToolRegistry {
   /**
    * Checks if a tool passes the configured filters
    */
-  private passesFilters(
+  private static passesFilters(
     tool: ToolDefinition,
     filters: {
       includeCategories?: string[];

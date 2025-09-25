@@ -4,10 +4,9 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
-  EnhancedToolRegistry,
-  EnhancedToolDefinition,
-  createEnhancedToolRegistry,
-} from '../../server/tool-registry-enhanced.js';
+  ToolRegistry,
+  ToolDefinition,
+} from '../../server/tool-registry.js';
 // import { wrapInApiResponse } from '../../handlers/base/handler.factory.js';
 import type { BaseHandlerDeps } from '../../handlers/base/handler.interface.js';
 import type { Dirent } from 'fs';
@@ -77,9 +76,9 @@ vi.mock('path', () => {
   };
 });
 
-describe('EnhancedToolRegistry', () => {
+describe('ToolRegistry', () => {
   let mockServer: any; // skipcq: JS-0323
-  let registry: EnhancedToolRegistry;
+  let registry: ToolRegistry;
   const mockDeps: BaseHandlerDeps = {
     getApiKey: vi.fn(() => 'test-api-key'),
     clientFactory: {} as BaseHandlerDeps['clientFactory'],
@@ -98,7 +97,7 @@ describe('EnhancedToolRegistry', () => {
       connect: vi.fn(),
     } as unknown as any; // skipcq: JS-0323
 
-    registry = new EnhancedToolRegistry(mockServer, mockDeps);
+    registry = new ToolRegistry(mockServer, mockDeps) as any;
     vi.clearAllMocks();
   });
 
@@ -561,8 +560,8 @@ describe('EnhancedToolRegistry', () => {
 
   describe('createEnhancedToolRegistry', () => {
     it('should create an enhanced tool registry instance', () => {
-      const instance = createEnhancedToolRegistry(mockServer, mockDeps);
-      expect(instance).toBeInstanceOf(EnhancedToolRegistry);
+      const instance = new ToolRegistry(mockServer, mockDeps);
+      expect(instance).toBeInstanceOf(ToolRegistry);
     });
   });
 });
