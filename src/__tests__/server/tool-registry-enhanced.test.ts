@@ -4,7 +4,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ToolRegistry, ToolDefinition } from '../../server/tool-registry.js';
-// import { wrapInApiResponse } from '../../handlers/base/handler.factory.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { BaseHandlerDeps } from '../../handlers/base/handler.interface.js';
 import type { Dirent } from 'fs';
 
@@ -74,7 +74,7 @@ vi.mock('path', () => {
 });
 
 describe('ToolRegistry', () => {
-  let mockServer: any; // skipcq: JS-0323
+  let mockServer: Pick<McpServer, 'registerTool' | 'connect'>;
   let registry: ToolRegistry;
   const mockDeps: BaseHandlerDeps = {
     getApiKey: vi.fn(() => 'test-api-key'),
@@ -92,9 +92,9 @@ describe('ToolRegistry', () => {
     mockServer = {
       registerTool: vi.fn(),
       connect: vi.fn(),
-    } as unknown as any; // skipcq: JS-0323
+    } as Pick<McpServer, 'registerTool' | 'connect'>;
 
-    registry = new ToolRegistry(mockServer, mockDeps) as any;
+    registry = new ToolRegistry(mockServer as McpServer, mockDeps);
     vi.clearAllMocks();
   });
 
@@ -104,7 +104,7 @@ describe('ToolRegistry', () => {
 
   describe('registerTool', () => {
     it('should register a tool with metadata', () => {
-      const tool: EnhancedToolDefinition = {
+      const tool: ToolDefinition = {
         name: 'enhanced-tool',
         description: 'An enhanced tool',
         handler: vi.fn(),
@@ -134,7 +134,7 @@ describe('ToolRegistry', () => {
     });
 
     it('should register a tool without metadata', () => {
-      const tool: EnhancedToolDefinition = {
+      const tool: ToolDefinition = {
         name: 'basic-tool',
         description: 'A basic tool',
         handler: vi.fn(),
@@ -149,7 +149,7 @@ describe('ToolRegistry', () => {
 
   describe('getToolsByCategory', () => {
     it('should return tools filtered by category', () => {
-      const tools: EnhancedToolDefinition[] = [
+      const tools: ToolDefinition[] = [
         {
           name: 'tool1',
           description: 'Tool 1',
@@ -180,7 +180,7 @@ describe('ToolRegistry', () => {
 
   describe('getToolsByTag', () => {
     it('should return tools filtered by tag', () => {
-      const tools: EnhancedToolDefinition[] = [
+      const tools: ToolDefinition[] = [
         {
           name: 'tool1',
           description: 'Tool 1',
@@ -211,7 +211,7 @@ describe('ToolRegistry', () => {
 
   describe('getCategories', () => {
     it('should return all unique categories', () => {
-      const tools: EnhancedToolDefinition[] = [
+      const tools: ToolDefinition[] = [
         {
           name: 'tool1',
           description: 'Tool 1',
@@ -248,7 +248,7 @@ describe('ToolRegistry', () => {
 
   describe('getTags', () => {
     it('should return all unique tags', () => {
-      const tools: EnhancedToolDefinition[] = [
+      const tools: ToolDefinition[] = [
         {
           name: 'tool1',
           description: 'Tool 1',
@@ -275,7 +275,7 @@ describe('ToolRegistry', () => {
 
   describe('getToolsInfo', () => {
     it('should return comprehensive tool information', () => {
-      const tools: EnhancedToolDefinition[] = [
+      const tools: ToolDefinition[] = [
         {
           name: 'info-tool-1',
           description: 'Information tool 1',
