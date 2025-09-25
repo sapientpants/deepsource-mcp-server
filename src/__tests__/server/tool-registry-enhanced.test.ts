@@ -3,10 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  ToolRegistry,
-  ToolDefinition,
-} from '../../server/tool-registry.js';
+import { ToolRegistry, ToolDefinition } from '../../server/tool-registry.js';
 // import { wrapInApiResponse } from '../../handlers/base/handler.factory.js';
 import type { BaseHandlerDeps } from '../../handlers/base/handler.interface.js';
 import type { Dirent } from 'fs';
