@@ -3,8 +3,13 @@
 /**
  * @fileoverview Main entry point for the DeepSource MCP server using ToolRegistry
  *
- * This implementation uses the domain-driven architecture with repository pattern
- * and type adapters to bridge between MCP tool schemas and domain handlers.
+ * @deprecated This file is deprecated. Please use src/index.ts instead.
+ * This file is provided for backward compatibility and will be removed in the next major version.
+ *
+ * Migration guide:
+ * - Import from 'deepsource-mcp-server' or './index.js' instead of './index-registry.js'
+ * - Use DeepSourceMCPServer.create() instead of manual registry configuration
+ * - See MIGRATION.md for detailed migration instructions
  */
 
 import process from 'node:process';
@@ -54,6 +59,21 @@ import {
 
 // Module logger
 const logger = createLogger('Main');
+
+// Log deprecation warning
+logger.warn(
+  'DEPRECATED: index-registry.ts is deprecated and will be removed in the next major version. ' +
+    'Please use index.ts instead. See MIGRATION.md for migration instructions.'
+);
+
+if (process.env.NODE_ENV !== 'test') {
+  // eslint-disable-next-line no-console
+  console.warn(
+    '\n⚠️  WARNING: This entry point (index-registry.ts) is deprecated.\n' +
+      'Please use the main index.ts entry point instead.\n' +
+      'This file will be removed in the next major version.\n'
+  );
+}
 
 /**
  * Validates environment configuration

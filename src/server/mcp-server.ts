@@ -196,6 +196,32 @@ export class DeepSourceMCPServer {
   }
 
   /**
+   * Discovers and loads tools from filesystem (requires FEATURE_TOOL_DISCOVERY)
+   *
+   * @param options - Discovery options
+   * @returns Array of discovered tool names
+   */
+  async discoverTools(options?: Record<string, unknown>): Promise<string[]> {
+    logger.info('Starting tool discovery from DeepSourceMCPServer');
+    return this.toolRegistry.discoverTools(options);
+  }
+
+  /**
+   * Gets enhanced tool information including metadata
+   */
+  getToolsInfo(): Array<{
+    name: string;
+    description: string;
+    category?: string;
+    version?: string;
+    tags?: string[];
+    enabled?: boolean;
+    discovered?: boolean;
+  }> {
+    return this.toolRegistry.getToolsInfo();
+  }
+
+  /**
    * Creates and optionally starts a DeepSource MCP server
    *
    * @param config - Server configuration

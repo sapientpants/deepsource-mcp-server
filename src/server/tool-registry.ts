@@ -5,6 +5,8 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { promises as fs } from 'fs';
+import { join, normalize, resolve } from 'path';
 import { createLogger } from '../utils/logging/logger.js';
 import { HandlerFunction, BaseHandlerDeps } from '../handlers/base/handler.interface.js';
 import {
@@ -13,6 +15,8 @@ import {
   createErrorResponse,
 } from '../handlers/base/handler.factory.js';
 import { logToolInvocation, logToolResult, logAndFormatError } from './tool-helpers.js';
+import { isFeatureEnabled } from '../config/features.js';
+import type { DiscoveryConfig } from '../config/default.js';
 
 const logger = createLogger('ToolRegistry');
 
@@ -31,6 +35,20 @@ type McpResponse = {
 };
 
 /**
+ * Tool metadata for categorization and filtering
+ */
+export interface ToolMetadata {
+  /** Tool category for grouping */
+  category?: string;
+  /** Tool version */
+  version?: string;
+  /** Tool tags for filtering */
+  tags?: string[];
+  /** Whether the tool is enabled by default */
+  enabled?: boolean;
+}
+
+/**
  * Tool definition interface
  */
 export interface ToolDefinition<TInput = unknown, TOutput = unknown> {
@@ -44,13 +62,22 @@ export interface ToolDefinition<TInput = unknown, TOutput = unknown> {
   outputSchema?: z.ZodType<TOutput> | z.ZodRawShape;
   /** Handler function */
   handler: HandlerFunction<TInput>;
+  /** Optional metadata for enhanced features */
+  metadata?: ToolMetadata;
 }
+
+/**
+ * Tool discovery options (compatible with DiscoveryConfig)
+ */
+export type ToolDiscoveryOptions = Partial<DiscoveryConfig>;
 
 /**
  * Registry for managing MCP tools
  */
 export class ToolRegistry {
   private tools = new Map<string, ToolDefinition<unknown, unknown>>();
+  private toolMetadata = new Map<string, ToolMetadata>();
+  private discoveredTools = new Map<string, string>(); // tool name -> file path
   private server: McpServer;
   private defaultDeps: BaseHandlerDeps;
 
@@ -67,6 +94,12 @@ export class ToolRegistry {
   registerTool<TInput = unknown, TOutput = unknown>(tool: ToolDefinition<TInput, TOutput>): void {
     if (this.tools.has(tool.name)) {
       logger.warn(`Tool ${tool.name} is already registered, overwriting`);
+    }
+
+    // Store metadata if provided
+    if (tool.metadata) {
+      this.toolMetadata.set(tool.name, tool.metadata);
+      logger.debug(`Stored metadata for tool: ${tool.name}`, tool.metadata);
     }
 
     this.tools.set(tool.name, tool as ToolDefinition<unknown, unknown>);
@@ -361,5 +394,325 @@ export class ToolRegistry {
   updateDefaultDeps(deps: BaseHandlerDeps): void {
     this.defaultDeps = deps;
     logger.debug('Default dependencies updated');
+  }
+
+  /**
+   * Discovers and loads tools from specified directories (requires FEATURE_TOOL_DISCOVERY)
+   * @param options - Discovery options
+   * @returns Array of discovered tool names
+   */
+  async discoverTools(options: ToolDiscoveryOptions = {}): Promise<string[]> {
+    if (!isFeatureEnabled('toolDiscovery')) {
+      logger.debug('Tool discovery is disabled by feature flag');
+      return [];
+    }
+
+    const {
+      directories = ['./tools'],
+      patterns = ['*.tool.js', '*.tool.mjs'],
+      recursive = true,
+      includeCategories,
+      excludeCategories,
+      includeTags,
+      excludeTags,
+    } = options;
+
+    logger.info('Starting tool discovery', { directories, patterns });
+    const discoveredTools: string[] = [];
+
+    for (const directory of directories) {
+      try {
+        const filterOptions: {
+          includeCategories?: string[];
+          excludeCategories?: string[];
+          includeTags?: string[];
+          excludeTags?: string[];
+        } = {};
+
+        if (includeCategories) filterOptions.includeCategories = includeCategories;
+        if (excludeCategories) filterOptions.excludeCategories = excludeCategories;
+        if (includeTags) filterOptions.includeTags = includeTags;
+        if (excludeTags) filterOptions.excludeTags = excludeTags;
+
+        const toolsFound = await this.scanDirectory(directory, patterns, recursive, filterOptions);
+        discoveredTools.push(...toolsFound);
+      } catch (error) {
+        logger.warn(`Failed to scan directory: ${directory}`, error);
+      }
+    }
+
+    logger.info(`Tool discovery complete. Found ${discoveredTools.length} tools`);
+    return discoveredTools;
+  }
+
+  /**
+   * Scans a directory for tool files (internal)
+   */
+  private async scanDirectory(
+    directory: string,
+    patterns: string[],
+    recursive: boolean,
+    filters: {
+      includeCategories?: string[];
+      excludeCategories?: string[];
+      includeTags?: string[];
+      excludeTags?: string[];
+    }
+  ): Promise<string[]> {
+    const discoveredTools: string[] = [];
+
+    try {
+      const entries = await fs.readdir(directory, { withFileTypes: true });
+
+      for (const entry of entries) {
+        const fullPath = join(directory, entry.name);
+
+        if (entry.isDirectory() && recursive) {
+          const subTools = await this.scanDirectory(fullPath, patterns, recursive, filters);
+          discoveredTools.push(...subTools);
+        } else if (entry.isFile() && ToolRegistry.matchesPattern(entry.name, patterns)) {
+          const toolName = await this.loadToolFromFile(fullPath, filters);
+          if (toolName) {
+            discoveredTools.push(toolName);
+            this.discoveredTools.set(toolName, fullPath);
+          }
+        }
+      }
+    } catch (error) {
+      logger.error(`Failed to scan directory: ${directory}`, error);
+    }
+
+    return discoveredTools;
+  }
+
+  /**
+   * Checks if a filename matches any of the patterns
+   */
+  private static matchesPattern(filename: string, patterns: string[]): boolean {
+    return patterns.some((pattern) => {
+      // Convert glob pattern to regex
+      // Escape special regex characters except for *
+      const escaped = pattern.replace(/[-[\]{}()+?.,\\^$|#\s]/g, '\\$&');
+      // Replace * with [^/]* (matches any sequence except path separator)
+      // Anchor the pattern to match the entire filename
+      const regexStr = `^${escaped.replace(/\*/g, '[^/]*')}$`;
+      const regex = new RegExp(regexStr);
+      return regex.test(filename);
+    });
+  }
+
+  /**
+   * Loads a tool from a file
+   */
+  private async loadToolFromFile(
+    filePath: string,
+    filters: {
+      includeCategories?: string[];
+      excludeCategories?: string[];
+      includeTags?: string[];
+      excludeTags?: string[];
+    }
+  ): Promise<string | null> {
+    try {
+      // Security validation: ensure the file path is within expected directories
+      const normalizedPath = normalize(filePath);
+      const resolvedPath = resolve(normalizedPath);
+
+      // Check for path traversal attempts
+      if (normalizedPath.includes('..') || !resolvedPath.startsWith(process.cwd())) {
+        logger.error(`Security: Rejected file path outside project directory: ${filePath}`);
+        return null;
+      }
+
+      // Additional validation: ensure it's a JavaScript/TypeScript file
+      if (!/\.(js|mjs|ts)$/.test(normalizedPath)) {
+        logger.error(`Security: Rejected non-JavaScript file: ${filePath}`);
+        return null;
+      }
+
+      logger.debug(`Loading tool from file: ${filePath}`);
+      const module = (await import(filePath)) as Record<string, unknown>;
+
+      let toolDef: ToolDefinition | null = null;
+
+      if (module.toolDefinition && typeof module.toolDefinition === 'object') {
+        toolDef = module.toolDefinition as ToolDefinition;
+      } else if (module.default && typeof module.default === 'object') {
+        const defaultExport = module.default as Record<string, unknown>;
+        if (
+          'name' in defaultExport &&
+          'handler' in defaultExport &&
+          'description' in defaultExport
+        ) {
+          toolDef = defaultExport as unknown as ToolDefinition;
+        }
+      }
+
+      if (!toolDef) {
+        logger.warn(`No valid tool definition found in: ${filePath}`);
+        return null;
+      }
+
+      if (!ToolRegistry.passesFilters(toolDef, filters)) {
+        logger.debug(`Tool ${toolDef.name} filtered out`);
+        return null;
+      }
+
+      if (toolDef.metadata?.enabled === false) {
+        logger.info(`Tool ${toolDef.name} is disabled, skipping registration`);
+        return null;
+      }
+
+      this.registerTool(toolDef);
+      logger.info(`Successfully loaded tool: ${toolDef.name} from ${filePath}`);
+      return toolDef.name;
+    } catch (error) {
+      logger.error(`Failed to load tool from file: ${filePath}`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Checks if a tool passes the configured filters
+   */
+  private static passesFilters(
+    tool: ToolDefinition,
+    filters: {
+      includeCategories?: string[];
+      excludeCategories?: string[];
+      includeTags?: string[];
+      excludeTags?: string[];
+    }
+  ): boolean {
+    const metadata = tool.metadata || {};
+
+    if (filters.includeCategories?.length) {
+      if (!metadata.category || !filters.includeCategories.includes(metadata.category)) {
+        return false;
+      }
+    }
+
+    if (filters.excludeCategories?.length) {
+      if (metadata.category && filters.excludeCategories.includes(metadata.category)) {
+        return false;
+      }
+    }
+
+    if (filters.includeTags?.length) {
+      if (!metadata.tags || !metadata.tags.some((tag) => filters.includeTags?.includes(tag))) {
+        return false;
+      }
+    }
+
+    if (filters.excludeTags?.length) {
+      if (metadata.tags?.some((tag) => filters.excludeTags?.includes(tag))) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Gets tool metadata
+   * @param name - Tool name
+   * @returns Tool metadata or undefined
+   */
+  getToolMetadata(name: string): ToolMetadata | undefined {
+    return this.toolMetadata.get(name);
+  }
+
+  /**
+   * Gets tools by category (requires metadata)
+   * @param category - Category to filter by
+   * @returns Array of tool names in the category
+   */
+  getToolsByCategory(category: string): string[] {
+    const tools: string[] = [];
+    for (const [name, metadata] of this.toolMetadata.entries()) {
+      if (metadata.category === category) {
+        tools.push(name);
+      }
+    }
+    return tools;
+  }
+
+  /**
+   * Gets tools by tag (requires metadata)
+   * @param tag - Tag to filter by
+   * @returns Array of tool names with the tag
+   */
+  getToolsByTag(tag: string): string[] {
+    const tools: string[] = [];
+    for (const [name, metadata] of this.toolMetadata.entries()) {
+      if (metadata.tags?.includes(tag)) {
+        tools.push(name);
+      }
+    }
+    return tools;
+  }
+
+  /**
+   * Gets all tool categories
+   * @returns Array of unique categories
+   */
+  getCategories(): string[] {
+    const categories = new Set<string>();
+    for (const metadata of this.toolMetadata.values()) {
+      if (metadata.category) {
+        categories.add(metadata.category);
+      }
+    }
+    return Array.from(categories);
+  }
+
+  /**
+   * Gets all tool tags
+   * @returns Array of unique tags
+   */
+  getTags(): string[] {
+    const tags = new Set<string>();
+    for (const metadata of this.toolMetadata.values()) {
+      if (metadata.tags) {
+        metadata.tags.forEach((tag) => tags.add(tag));
+      }
+    }
+    return Array.from(tags);
+  }
+
+  /**
+   * Gets enhanced tool information including metadata
+   * @returns Array of tool information objects
+   */
+  getToolsInfo(): Array<{
+    name: string;
+    description: string;
+    category?: string;
+    version?: string;
+    tags?: string[];
+    enabled?: boolean;
+    discovered?: boolean;
+  }> {
+    const toolsInfo = [];
+
+    for (const name of this.getToolNames()) {
+      const tool = this.getTool(name);
+      const metadata = this.getToolMetadata(name);
+      const discovered = this.discoveredTools.has(name);
+
+      if (tool) {
+        toolsInfo.push({
+          name: tool.name,
+          description: tool.description,
+          ...(metadata?.category && { category: metadata.category }),
+          ...(metadata?.version && { version: metadata.version }),
+          ...(metadata?.tags && { tags: metadata.tags }),
+          enabled: metadata?.enabled !== false,
+          discovered,
+        });
+      }
+    }
+
+    return toolsInfo;
   }
 }

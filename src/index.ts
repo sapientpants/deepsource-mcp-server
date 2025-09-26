@@ -13,6 +13,8 @@
 import { createLogger } from './utils/logging/logger.js';
 import { DeepSourceMCPServer } from './server/mcp-server.js';
 import { VERSION, getVersion } from './version.js';
+import { getFeatureFlags, logFeatureFlags } from './config/features.js';
+import { getEnvironmentConfig } from './config/default.js';
 
 // Create logger instance for index.ts
 const logger = createLogger('DeepSourceMCP:index');
@@ -31,18 +33,47 @@ export const mcpServer = {
 };
 
 // Initialize the DeepSource MCP server
-async function initializeServer(): Promise<void> {
+export async function initializeServer(): Promise<void> {
   try {
     logger.info('Initializing DeepSource MCP Server');
 
-    // Create server with default configuration
+    // Get feature flags and configuration
+    const features = getFeatureFlags();
+    const config = getEnvironmentConfig();
+
+    // Log feature flags in development
+    if (process.env.NODE_ENV === 'development' || features.enhancedLogging) {
+      logFeatureFlags(logger.debug.bind(logger));
+    }
+
+    // Create server with configuration
     _mcpServer = await DeepSourceMCPServer.create({
       autoRegisterTools: true,
       autoStart: false,
+      // Pass discovery config if tool discovery is enabled
+      ...(features.toolDiscovery && {
+        discoveryConfig: config.discovery,
+      }),
     });
+
+    // If tool discovery is enabled, perform discovery
+    if (features.toolDiscovery && _mcpServer) {
+      logger.info('Tool discovery enabled, scanning for additional tools...');
+      const discoveredTools = await _mcpServer.discoverTools(
+        config.discovery as unknown as Record<string, unknown>
+      );
+      if (discoveredTools.length > 0) {
+        logger.info(`Discovered ${discoveredTools.length} additional tools`, {
+          tools: discoveredTools,
+        });
+      }
+    }
 
     logger.info('DeepSource MCP Server initialized successfully', {
       tools: _mcpServer.getRegisteredTools(),
+      features: Object.entries(features)
+        .filter(([, enabled]) => enabled)
+        .map(([name]) => name),
     });
   } catch (error) {
     logger.error('Failed to initialize DeepSource MCP Server', error);
@@ -59,8 +90,17 @@ export function getMcpServer() {
 export function handleCliArgs(args: string[]): boolean {
   // Check for version flag before anything else
   if (args.includes('--version') || args.includes('-v')) {
+    const features = getFeatureFlags();
+    const enabledFeatures = Object.entries(features)
+      .filter(([, enabled]) => enabled)
+      .map(([name]) => name);
+
     // eslint-disable-next-line no-console
     console.log(`deepsource-mcp-server version ${VERSION}`);
+    if (enabledFeatures.length > 0) {
+      // eslint-disable-next-line no-console
+      console.log(`Enabled features: ${enabledFeatures.join(', ')}`);
+    }
     return true;
   }
 
@@ -73,9 +113,16 @@ export function handleCliArgs(args: string[]): boolean {
     console.log('  -v, --version  Display version information');
     console.log('  -h, --help     Display this help message');
     console.log('\nEnvironment Variables:');
-    console.log('  DEEPSOURCE_API_KEY  DeepSource API key (required)');
-    console.log('  LOG_FILE            Path to log file (optional)');
-    console.log('  LOG_LEVEL           Minimum log level: DEBUG, INFO, WARN, ERROR (optional)');
+    console.log('  DEEPSOURCE_API_KEY             DeepSource API key (required)');
+    console.log('  LOG_FILE                       Path to log file (optional)');
+    console.log(
+      '  LOG_LEVEL                      Minimum log level: DEBUG, INFO, WARN, ERROR (optional)'
+    );
+    console.log('\nFeature Flags:');
+    console.log('  FEATURE_TOOL_DISCOVERY         Enable automatic tool discovery (optional)');
+    console.log('  FEATURE_ENHANCED_LOGGING       Enable enhanced logging (optional)');
+    console.log('  FEATURE_METRICS                Enable metrics collection (optional)');
+    console.log('  FEATURE_CACHE                  Enable caching layer (optional)');
     /* eslint-enable no-console */
     return true;
   }
@@ -93,11 +140,17 @@ async function main(): Promise<void> {
   }
 
   try {
-    // Log startup with version
+    // Log startup with version and features
+    const features = getFeatureFlags();
+    const enabledFeatures = Object.entries(features)
+      .filter(([, enabled]) => enabled)
+      .map(([name]) => name);
+
     logger.info(`Starting DeepSource MCP Server v${VERSION}`, {
       version: VERSION,
       node: process.version,
       platform: process.platform,
+      features: enabledFeatures,
     });
 
     // Initialize the server
@@ -116,16 +169,25 @@ async function main(): Promise<void> {
   }
 }
 
-// Run the main function only when not in test mode
+// Run the main function only when not in test mode and when executed directly
 /* istanbul ignore if */
-if (process.env.NODE_ENV !== 'test') {
+// Check if this file is being run directly (ESM compatible)
+const isMainModule =
+  import.meta.url === `file://${process.argv[1]}` ||
+  import.meta.url === `file://${process.argv[1]}.ts` ||
+  import.meta.url === `file://${process.argv[1]}.js`;
+
+if (process.env.NODE_ENV !== 'test' && isMainModule) {
   main().catch((error) => {
     logger.error('Unhandled error in main', error);
     process.exit(1);
   });
-} else {
+} else if (process.env.NODE_ENV === 'test') {
   // In test mode, just initialize the server without starting it
   initializeServer().catch((error) => {
     logger.error('Failed to initialize server in test mode', error);
   });
 }
+
+// Export for backward compatibility with modules that import from index-registry
+export { validateEnvironment, createAndConfigureToolRegistry } from './compatibility.js';

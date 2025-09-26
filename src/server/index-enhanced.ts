@@ -1,5 +1,14 @@
 /**
  * @fileoverview Enhanced MCP server setup with automatic tool discovery
+ *
+ * @deprecated This file is deprecated. Tool discovery functionality has been
+ * integrated into the main server and can be enabled via the FEATURE_TOOL_DISCOVERY
+ * environment variable. Please use src/index.ts instead.
+ *
+ * Migration guide:
+ * - Set FEATURE_TOOL_DISCOVERY=true to enable tool discovery
+ * - Import DeepSourceMCPServer from index.ts
+ * - See MIGRATION.md for detailed migration instructions
  */
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -11,6 +20,13 @@ import { getToolDiscoveryConfig } from '../config/tool-discovery.config.js';
 import { VERSION } from '../version.js';
 
 const logger = createLogger('EnhancedMCPServer');
+
+// Log deprecation warning
+logger.warn(
+  'DEPRECATED: server/index-enhanced.ts is deprecated. ' +
+    'Tool discovery is now available in the main server via FEATURE_TOOL_DISCOVERY=true. ' +
+    'This file will be removed in the next major version.'
+);
 
 /**
  * Initializes and runs the enhanced MCP server with tool discovery
