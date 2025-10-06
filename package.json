@@ -92,7 +92,7 @@
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.7",
-    "@commitlint/cli": "^19.8.1",
+    "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^19.8.1",
     "@cyclonedx/cdxgen": "11.8.0",
     "@types/node": "^24.5.2",
