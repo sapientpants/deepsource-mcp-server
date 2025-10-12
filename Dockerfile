@@ -25,8 +25,20 @@ RUN pnpm run build
 RUN rm -rf node_modules && \
     pnpm install --frozen-lockfile --prod --ignore-scripts
 
+# Create non-root user for security (DS002)
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001 && \
+    chown -R nodejs:nodejs /app
+
+# Switch to non-root user
+USER nodejs
+
 # Expose the port the app runs on
 EXPOSE 3000
+
+# Add health check (DS026)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD node -e "process.exit(0)"
 
 # Start the server
 CMD ["node", "--experimental-specifier-resolution=node", "dist/index.js"] 
