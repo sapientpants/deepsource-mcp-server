@@ -7,9 +7,6 @@
 
 name: Reusable Validate
 
-permissions:
-  contents: read
-
 on:
   workflow_call:
     inputs:
@@ -21,10 +18,14 @@ on:
         description: 'pnpm version (should match package.json packageManager)'
         type: string
         default: '10.17.0' # UPDATE: When upgrading pnpm
+      validate-changesets:
+        description: 'validate that a changeset exists on the branch'
+        type: boolean
+        default: false
     secrets:
-      DEEPSOURCE_DSN:
-        description: 'DeepSource DSN for test coverage reporting'
-        required: false
+      SONAR_TOKEN:
+        description: 'SonarCloud authentication token'
+        required: true
 
 # EXAMPLE USAGE:
 # jobs:
@@ -34,10 +35,55 @@ on:
 #       upload-coverage: true  # For PRs to show coverage
 
 jobs:
-  validate:
+  test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read # Minimal permission for checkout
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for accurate analysis
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ inputs.pnpm-version }}
+          run_install: false
+          standalone: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm # Cache dependencies for speed
+
+      - name: Install dependencies
+        # Ensures exact versions from lock file
+        # FAILS IF: Lock file out of sync with package.json
+        run: pnpm install --frozen-lockfile
+
+      - name: Tests with coverage
+        # Run test suite with coverage
+        # Coverage enforces 80% minimum threshold for all metrics
+        # FAILS IF: Tests fail or coverage below 80% (when coverage enabled)
+        # To debug: Check test output and coverage/index.html
+        run: pnpm test:coverage
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Upload coverage
+        # Make coverage reports available for review
+        # Download from Actions tab to view detailed HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ github.sha }}
+          path: coverage/
+          retention-days: 7 # Keep for a week for PR reviews
+
+  lint:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -66,18 +112,6 @@ jobs:
       # VALIDATION CHECKS
       # All checks run in sequence to provide clear failure messages
       # =============================================================================
-
-      - name: Security audit
-        # Check for known vulnerabilities in dependencies
-        # FAILS IF: Critical vulnerabilities found
-        # To fix: Run 'pnpm update' or add overrides in package.json
-        run: pnpm audit --audit-level critical
-
-      - name: Check for unused dependencies
-        # Validate all declared dependencies are actually used
-        # FAILS IF: Unused dependencies found
-        # To fix: Remove unused deps or add to .depcheckrc ignore list
-        run: pnpm deps:check
 
       - name: Type checking
         # Validate TypeScript types without emitting files
@@ -111,25 +145,15 @@ jobs:
         # To debug: Run 'pnpm lint:workflows' locally
         run: pnpm lint:workflows
 
-      - name: Tests with coverage
-        # Run test suite with coverage
-        # Coverage enforces 80% minimum threshold for all metrics
-        # FAILS IF: Tests fail or coverage below 80% (when coverage enabled)
-        # To debug: Check test output and coverage/index.html
-        run: pnpm test:coverage
+      - name: Fetch main branch for changesets
+        if: inputs.validate-changesets
+        # Need main branch to compare changesets
+        run: git fetch origin main:main
 
-      - name: Report test coverage to DeepSource
-        uses: deepsourcelabs/test-coverage-action@v1.1.3
-        with:
-          key: javascript
-          coverage-file: coverage/lcov.info
-          dsn: ${{ secrets.DEEPSOURCE_DSN }}
-
-      - name: Upload coverage
-        # Make coverage reports available for review
-        # Download from Actions tab to view detailed HTML report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-${{ github.sha }}
-          path: coverage/
-          retention-days: 7 # Keep for a week for PR reviews
+      - name: Changeset status
+        if: inputs.validate-changesets
+        # Validates that changesets exist for features/fixes
+        # FAILS IF: feat/fix commits exist without changesets
+        # To fix: Run 'pnpm changeset' and commit the generated file
+        # For non-code changes: Run 'pnpm changeset --empty'
+        run: pnpm changeset:status

@@ -17,6 +17,12 @@ on:
         required: true
         type: string
 
+# Allow only one publish workflow per branch
+# cancel-in-progress: false to allow multiple releases to proceed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 # Global environment variables for consistency
 env:
   PNPM_VERSION: 10.17.0 # Pinned: Must match packageManager in package.json
@@ -43,6 +49,10 @@ jobs:
     # Only runs if ENABLE_NPM_RELEASE variable is set to 'true'
     # Configure in Settings > Secrets and variables > Variables
     if: vars.ENABLE_NPM_RELEASE == 'true'
+    permissions:
+      contents: read
+      id-token: write # Required for npm provenance
+      actions: read # Required to download artifacts
     steps:
       - name: Determine version
         id: version
@@ -62,29 +72,65 @@ jobs:
           # This ensures we publish exactly what was released
           ref: ${{ steps.version.outputs.tag }}
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-          run_install: false
-          standalone: true
-
       - name: Setup Node.js
+        # Node.js is required for npm publish command
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
           # Configure npm registry for authentication
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Install dependencies
-        # frozen-lockfile ensures exact versions from release
-        run: pnpm install --frozen-lockfile
+      - name: Determine artifact source
+        id: artifact
+        # Use shared script to find the correct NPM package artifact from the release build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          chmod +x .github/scripts/determine-artifact.sh
+          .github/scripts/determine-artifact.sh \
+            --tag "${{ steps.version.outputs.tag }}" \
+            --repo "${{ github.repository }}" \
+            --version "${{ steps.version.outputs.version }}" \
+            --prefix "npm-package" \
+            --output "$GITHUB_OUTPUT"
 
-      - name: Build
-        # Build from source to ensure latest code
-        # FAILS IF: TypeScript errors, build configuration issues
-        run: pnpm build
+      - name: Download pre-built NPM package
+        id: download
+        # Download the pre-built, pre-scanned NPM package from main workflow
+        # This ensures we publish exactly what was tested
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.artifact_name }}
+          path: ./npm-artifact
+          run-id: ${{ steps.artifact.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract pre-built package
+        run: |
+          # Check if any .tgz files exist
+          TARBALL=$(find ./npm-artifact -name "*.tgz" -type f | head -1)
+          if [ -z "$TARBALL" ]; then
+            echo "❌ No .tgz file found in artifact!"
+            echo "Contents of ./npm-artifact:"
+            ls -la ./npm-artifact/
+            exit 1
+          fi
+
+          echo "✅ Using pre-built NPM package from main workflow"
+          echo "📦 Extracting: $TARBALL"
+          tar -xzf "$TARBALL"
+
+          # The package extracts to a 'package' directory
+          # We need to move its contents to the current directory
+          if [ -d package ]; then
+            cp -r package/* .
+            rm -rf package
+          fi
+
+          echo "📋 Verified package contents from manifest"
+          if [ -f ./npm-artifact/npm-package-manifest.txt ]; then
+            echo "Package contains $(wc -l < ./npm-artifact/npm-package-manifest.txt) files"
+          fi
 
       - name: Check NPM token
         id: check-npm
@@ -103,8 +149,10 @@ jobs:
       - name: Publish to NPM
         if: steps.check-npm.outputs.has_token == 'true'
         run: |
-          # Remove private flag to allow public publishing
-          jq 'del(.private)' package.json > tmp.json && mv tmp.json package.json
+          # Remove private flag and prepare script (which runs husky)
+          # The prepare script runs even with --ignore-scripts, so we must remove it
+          jq 'del(.private) | del(.scripts.prepare)' package.json > tmp.json && mv tmp.json package.json
+
           # Publish with provenance for supply chain security
           # --provenance creates a signed attestation of the build
           npm publish --provenance --access public
@@ -123,6 +171,11 @@ jobs:
     # Only runs if ENABLE_GITHUB_PACKAGES variable is set
     # Useful for private packages within organization
     if: vars.ENABLE_GITHUB_PACKAGES == 'true'
+    permissions:
+      contents: read
+      packages: write # Required to publish to GitHub Packages
+      id-token: write # Required for provenance
+      actions: read # Required to download artifacts
     steps:
       - name: Determine version
         id: version
@@ -138,32 +191,65 @@ jobs:
         with:
           ref: ${{ steps.version.outputs.tag }}
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-          run_install: false
-          standalone: true
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
           # GitHub Packages npm registry URL
           registry-url: 'https://npm.pkg.github.com'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Determine artifact source
+        id: artifact
+        # Use shared script to find the correct NPM package artifact (same as npm job)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          chmod +x .github/scripts/determine-artifact.sh
+          .github/scripts/determine-artifact.sh \
+            --tag "${{ steps.version.outputs.tag }}" \
+            --repo "${{ github.repository }}" \
+            --version "${{ steps.version.outputs.version }}" \
+            --prefix "npm-package" \
+            --output "$GITHUB_OUTPUT"
 
-      - name: Build
-        run: pnpm build
+      - name: Download pre-built NPM package
+        id: download
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.artifact_name }}
+          path: ./npm-artifact
+          run-id: ${{ steps.artifact.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract pre-built package
+        run: |
+          # Check if any .tgz files exist
+          TARBALL=$(find ./npm-artifact -name "*.tgz" -type f | head -1)
+          if [ -z "$TARBALL" ]; then
+            echo "❌ No .tgz file found in artifact!"
+            echo "Contents of ./npm-artifact:"
+            ls -la ./npm-artifact/
+            exit 1
+          fi
+
+          echo "✅ Using pre-built NPM package from main workflow"
+          echo "📦 Extracting: $TARBALL"
+          tar -xzf "$TARBALL"
+
+          # The package extracts to a 'package' directory
+          if [ -d package ]; then
+            cp -r package/* .
+            rm -rf package
+          fi
+
+          echo "📋 Verified package contents"
 
       - name: Publish to GitHub Packages
         run: |
-          # Scope package name to organization (required for GitHub Packages)
-          # Changes 'my-package' to '@org/my-package'
-          jq '.name = "@${{ github.repository_owner }}/" + .name | del(.private)' package.json > tmp.json && mv tmp.json package.json
+          # Scope package name to organization and remove private flag and prepare script
+          # The prepare script runs even with --ignore-scripts, so we must remove it
+          jq '.name = "@${{ github.repository_owner }}/" + .name | del(.private) | del(.scripts.prepare)' package.json > tmp.json && mv tmp.json package.json
+
           npm publish --access public
         env:
           # SECURITY: Uses GITHUB_TOKEN for authentication
@@ -172,7 +258,7 @@ jobs:
 
   # =============================================================================
   # DOCKER HUB PUBLISHING
-  # Builds and publishes multi-platform Docker images
+  # Copies pre-built multi-platform image from GHCR to Docker Hub
   # =============================================================================
 
   docker:
@@ -183,8 +269,7 @@ jobs:
     if: vars.ENABLE_DOCKER_RELEASE == 'true'
     permissions:
       contents: read
-      packages: write # Push to GitHub Container Registry if needed
-      security-events: write # Upload vulnerability scan results
+      packages: read # Read from GitHub Container Registry
     steps:
       - name: Determine version
         id: version
@@ -192,12 +277,8 @@ jobs:
           VERSION="${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag }}"
           VERSION="${VERSION#v}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "🐳 Building Docker image: $VERSION"
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: v${{ steps.version.outputs.version }}
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+          echo "🐳 Publishing Docker image: $VERSION"
 
       - name: Check Docker credentials
         id: check-docker
@@ -214,89 +295,57 @@ jobs:
             exit 0
           fi
 
-      - name: Set up QEMU
-        # Required for multi-platform builds (arm64)
-        if: steps.check-docker.outputs.has_credentials == 'true'
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Docker Buildx
-        # Advanced Docker builder with cache support
+        # Required for imagetools commands
         if: steps.check-docker.outputs.has_credentials == 'true'
         uses: docker/setup-buildx-action@v3
 
+      - name: Login to GitHub Container Registry
+        # Login to GHCR to pull the pre-built image
+        if: steps.check-docker.outputs.has_credentials == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Login to Docker Hub
-        # SECURITY: Authenticate with Docker Hub
+        # SECURITY: Authenticate with Docker Hub for pushing
         if: steps.check-docker.outputs.has_credentials == 'true'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata
-        id: meta
+      - name: Copy image from GHCR to Docker Hub
+        # Use buildx imagetools to copy multi-platform image between registries
+        # This properly handles multi-platform manifest lists
         if: steps.check-docker.outputs.has_credentials == 'true'
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}
-          tags: |
-            type=semver,pattern={{version}},value=${{ steps.version.outputs.version }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ steps.version.outputs.version }}
-            type=semver,pattern={{major}},value=${{ steps.version.outputs.version }}
-            type=raw,value=latest
+        run: |
+          SOURCE_IMAGE="ghcr.io/${{ github.repository_owner }}/deepsource-mcp-server"
+          TARGET_REPO="${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}"
+          VERSION="${{ steps.version.outputs.version }}"
 
-      - name: Build Docker image
-        # Initial build for vulnerability scanning (amd64 only)
-        # Multi-platform build happens after security scan passes
-        if: steps.check-docker.outputs.has_credentials == 'true'
-        id: build
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: linux/amd64 # Single platform for scanning
-          push: false # Don't push yet, scan first
-          load: true # Load into Docker for scanning
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha # Use GitHub Actions cache
-          cache-to: type=gha,mode=max # Maximum cache retention
-          build-args: VERSION=${{ steps.version.outputs.version }}
+          echo "📤 Copying multi-platform image from GHCR to Docker Hub..."
+          echo "Source: $SOURCE_IMAGE:$VERSION"
+          echo "Target: $TARGET_REPO:$VERSION"
 
-      - name: Scan Docker image for vulnerabilities
-        # SECURITY: Scan image before publishing
-        # FAILS IF: Critical or high vulnerabilities found
-        # To debug: Check trivy-results.sarif in Security tab
-        # To allow: Add CVEs to .trivyignore with justification
-        if: steps.check-docker.outputs.has_credentials == 'true'
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:${{ steps.version.outputs.version }}
-          format: 'sarif' # GitHub Security format
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH' # Fail on serious issues
-          ignore-unfixed: false # Don't ignore unfixed CVEs
-          exit-code: '1' # Fail workflow if vulnerabilities found
+          # Copy image with version tag
+          docker buildx imagetools create \
+            --tag $TARGET_REPO:$VERSION \
+            $SOURCE_IMAGE:$VERSION
 
-      - name: Upload Trivy results to GitHub Security
-        if: always() && steps.check-docker.outputs.has_credentials == 'true'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
-          category: 'container-scan'
+          echo "🏷️ Creating additional tags..."
+          # Create alias tags for latest, major, and major.minor versions
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
 
-      - name: Push Docker image to Docker Hub
-        # Multi-platform build and push after security scan passes
-        # Builds for both amd64 (Intel/AMD) and arm64 (Apple Silicon, AWS Graviton)
-        if: steps.check-docker.outputs.has_credentials == 'true'
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64 # Multi-platform support
-          push: true # Push to registry
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha # Reuse cache from scan build
-          cache-to: type=gha,mode=max
-          build-args: VERSION=${{ steps.version.outputs.version }}
+          docker buildx imagetools create --tag $TARGET_REPO:latest $TARGET_REPO:$VERSION
+          docker buildx imagetools create --tag $TARGET_REPO:$MAJOR $TARGET_REPO:$VERSION
+          docker buildx imagetools create --tag $TARGET_REPO:$MAJOR.$MINOR $TARGET_REPO:$VERSION
+
+          echo "✅ Docker image published successfully to Docker Hub"
+          echo "📋 Published tags: $VERSION, latest, $MAJOR, $MAJOR.$MINOR"
 
   # =============================================================================
   # NOTIFICATION
