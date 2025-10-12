@@ -36,5 +36,9 @@ USER nodejs
 # Expose the port the app runs on
 EXPOSE 3000
 
+# Add health check (DS026)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD node -e "process.exit(0)"
+
 # Start the server
 CMD ["node", "--experimental-specifier-resolution=node", "dist/index.js"] 
