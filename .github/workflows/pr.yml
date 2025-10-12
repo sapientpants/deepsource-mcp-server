@@ -41,7 +41,7 @@ jobs:
   validate:
     uses: ./.github/workflows/reusable-validate.yml
     secrets:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      DEEPSOURCE_DSN: ${{ secrets.DEEPSOURCE_DSN }}
     with:
       validate-changesets: true
 
