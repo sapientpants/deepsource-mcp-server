@@ -1,0 +1,10 @@
+# OSV Scanner Configuration
+# https://google.github.io/osv-scanner/configuration/
+
+# Vulnerabilities to ignore
+[[IgnoredVulns]]
+id = "GHSA-9965-vmph-33xx"
+# Reason: validator@13.15.15 - Medium severity (CVSS 6.1)
+# No fixed version available yet. Issue tracked.
+# Can be removed once a patched version is released.
+reason = "Medium severity, no fix available, risk accepted"
