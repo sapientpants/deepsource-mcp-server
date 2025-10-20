@@ -188,6 +188,24 @@ Structured error categorization:
 - `LOG_FILE` (optional): File path for log output
 - `LOG_LEVEL` (optional): Minimum log level (DEBUG, INFO, WARN, ERROR)
 
+## Dependency Management
+
+### Zod Version Pinning
+
+**IMPORTANT**: The `zod` dependency must be pinned to the exact version used by `@modelcontextprotocol/sdk`.
+
+- **Current version**: `3.25.76` (pinned, no caret)
+- **Reason**: We use zod directly in `src/utils/graphql/processors/run-checks-processor.ts` for GraphQL response validation
+- **Maintenance**: When updating `@modelcontextprotocol/sdk`, check its zod dependency version and update our pinned version to match
+
+To check the MCP SDK's zod version:
+
+```bash
+pnpm list zod --depth=1
+```
+
+This ensures compatibility and avoids duplicate zod versions in the dependency tree.
+
 ## Development Guidelines
 
 ### Code Quality Rules
