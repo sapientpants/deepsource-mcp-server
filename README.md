@@ -1,6 +1,6 @@
 # DeepSource MCP Server
 
-[![CI](https://github.com/sapientpants/deepsource-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/sapientpants/deepsource-mcp-server/actions/workflows/ci.yml)
+[![Main](https://github.com/sapientpants/deepsource-mcp-server/actions/workflows/main.yml/badge.svg)](https://github.com/sapientpants/deepsource-mcp-server/actions/workflows/main.yml)
 [![DeepSource](https://app.deepsource.com/gh/sapientpants/deepsource-mcp-server.svg/?label=code+coverage&show_trend=true&token=9XrIHVVGs9oZ-6fFSOPah2Ws)](https://app.deepsource.com/gh/sapientpants/deepsource-mcp-server/)
 [![DeepSource](https://app.deepsource.com/gh/sapientpants/deepsource-mcp-server.svg/?label=active+issues&show_trend=true&token=9XrIHVVGs9oZ-6fFSOPah2Ws)](https://app.deepsource.com/gh/sapientpants/deepsource-mcp-server/)
 [![DeepSource](https://app.deepsource.com/gh/sapientpants/deepsource-mcp-server.svg/?label=resolved+issues&show_trend=true&token=9XrIHVVGs9oZ-6fFSOPah2Ws)](https://app.deepsource.com/gh/sapientpants/deepsource-mcp-server/)
